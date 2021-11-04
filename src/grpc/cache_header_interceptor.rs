@@ -15,6 +15,8 @@ impl tonic::service::Interceptor for CacheHeaderInterceptor {
             "authorization",
             tonic::metadata::AsciiMetadataValue::from_str(self.auth_key.as_str()).unwrap(),
         );
+        // for reasons unknown, tonic seems to be stripping out the content-type. So we need to add this as
+        // a workaround so that the requests are successful
         result.metadata_mut().insert(
             "content-type",
             tonic::metadata::AsciiMetadataValue::from_str("application/grpc").unwrap(),
