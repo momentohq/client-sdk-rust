@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "grpc.cache_client";
+
+package cache_client;
+
+
+enum ECacheResult {
+  Internal_Server_Error = 0;
+  Ok = 1;
+  Hit = 2;
+  Miss = 3;
+  Bad_Request = 4;
+  Unauthorized = 5;
+  Service_Unavailable = 6;
+}
+
+
+service Scs {
+  rpc Get (GetRequest) returns (GetResponse) {}
+  rpc Set (SetRequest) returns (SetResponse) {}
+}
+
+
+message GetRequest {
+  bytes cache_key = 1;
+}
+
+message GetResponse {
+  ECacheResult result = 1;
+  bytes cache_body = 2;
+  string message = 3;
+}
+
+message SetRequest {
+  bytes cache_key = 1;
+  bytes cache_body = 2;
+  uint32 ttl_milliseconds = 3;
+}
+
+message SetResponse {
+  ECacheResult result = 1;
+  string message = 2;
+}
