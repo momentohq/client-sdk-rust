@@ -36,7 +36,9 @@ impl Momento {
     /// ```
     /// # tokio_test::block_on(async {
     ///     use momento::sdk::Momento;
-    ///     let momento = Momento::new("auth_token".to_string()).await;
+    ///     use std::env;
+    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    ///     let momento = Momento::new(auth_token).await;
     /// # })
     /// ```
     pub async fn new(auth_key: String) -> Result<Self, MomentoError> {
@@ -74,8 +76,11 @@ impl Momento {
     /// ```
     /// # tokio_test::block_on(async {
     ///     use momento::sdk::Momento;
-    ///     let mut momento = Momento::new("auth_token".to_string()).await.unwrap();
-    ///     let cache = momento.get_cache("my_cache", 1000).await.unwrap();
+    ///     use std::env;
+    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    ///     let cache_name = env::var("TEST_CACHE_NAME").expect("TEST_CACHE_NAME must be set");
+    ///     let mut momento = Momento::new(auth_token).await.unwrap();
+    ///     let cache = momento.get_cache(&cache_name, 1000).await.unwrap();
     /// # })
     /// ```
     pub async fn get_cache(
@@ -98,16 +103,6 @@ impl Momento {
     /// # Arguments
     ///
     /// * `name` - name of cache to create
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # tokio_test::block_on(async {
-    ///     use momento::sdk::Momento;
-    ///     let mut momento = Momento::new("auth_token".to_string()).await.unwrap();
-    ///     momento.create_cache("my_cache").await.unwrap();
-    /// # })
-    /// ```
     pub async fn create_cache(&mut self, name: &str) -> Result<(), MomentoError> {
         let request = Request::new(CreateCacheRequest {
             cache_name: name.to_string(),
@@ -128,8 +123,10 @@ impl Momento {
     /// ```
     /// # tokio_test::block_on(async {
     ///     use momento::sdk::Momento;
-    ///     let mut momento = Momento::new("auth_token".to_string()).await.unwrap();
-    ///     momento.delete_cache("my_cache").await.unwrap();
+    ///     use std::env;
+    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    ///     let mut momento = Momento::new(auth_token).await.unwrap();
+    ///     momento.delete_cache("my_cache").await;
     /// # })
     /// ```
     pub async fn delete_cache(&mut self, name: &str) -> Result<(), MomentoError> {

@@ -24,5 +24,7 @@ jobs:
         run: cargo fmt -- --check
       - name: Unit Tests
         run: cargo test --lib
+      - name: Doc Tests
+        run: cargo test --doc
       - name: Integration Tests
         run: cargo test --tests

@@ -124,13 +124,17 @@ impl CacheClient {
     ///
     /// ```
     /// # tokio_test::block_on(async {
-    ///     use momento::sdk::Momento;
-    ///     let mut momento = Momento::new("auth_token".to_string()).await;
-    ///     let mut cache = momento.get_cache("my_cache", 100).await;
+    ///     use std::env;
+    ///     use momento::{response::cache_get_response::MomentoGetStatus, sdk::Momento};
+    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    ///     let cache_name = env::var("TEST_CACHE_NAME").expect("TEST_CACHE_NAME must be set");
+    ///     let mut momento = Momento::new(auth_token).await.unwrap();
+    ///     let mut cache = momento.get_cache(&cache_name, 100).await.unwrap();
     ///     let resp = cache.get("cache_key").await.unwrap();
     ///     match resp.result {
     ///         MomentoGetStatus::HIT => println!("cache hit!"),
-    ///         MomentoGetStatus::MISS => println!("cache miss")
+    ///         MomentoGetStatus::MISS => println!("cache miss"),
+    ///         _ => println!("error occurred")
     ///     };
     ///
     ///     println!("cache value: {}", resp.as_string());
@@ -175,12 +179,15 @@ impl CacheClient {
     /// ```
     /// # tokio_test::block_on(async {
     ///     use momento::sdk::Momento;
-    ///     let mut momento = Momento::new("auth_token".to_string()).await;
-    ///     let mut cache = momento.get_cache("my_cache", 100).await;
+    ///     use std::env;
+    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    ///     let cache_name = env::var("TEST_CACHE_NAME").expect("TEST_CACHE_NAME must be set");
+    ///     let mut momento = Momento::new(auth_token).await.unwrap();
+    ///     let mut cache = momento.get_cache(&cache_name, 100).await.unwrap();
     ///     cache.set("cache_key", "cache_value", None).await;
     ///
     ///     // overriding default ttl
-    ///     cache.set("cache_key", "cache_value", 1).await;
+    ///     cache.set("cache_key", "cache_value", Some(1)).await;
     /// # })
     /// ```
     pub async fn set<I: MomentoRequest>(
