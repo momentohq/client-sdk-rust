@@ -21,7 +21,7 @@ jobs:
       - name: Cargo Check
         run: cargo check
       - name: Rustfmt
-        run: cargo fmt --check
+        run: cargo fmt -h
       - name: Unit Tests
         run: cargo test --lib
       - name: Integration Tests

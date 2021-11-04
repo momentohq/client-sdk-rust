@@ -105,7 +105,6 @@ impl CacheClient {
                 Ok(_) => return Ok(()),
                 Err(e) => match e {
                     MomentoError::InternalServerError => "",
-                    MomentoError::Unavailable => "",
                     _ => return Err(e),
                 },
             };
