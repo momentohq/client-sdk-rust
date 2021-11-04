@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use std::{env, time::Duration, thread::sleep};
+    use std::{env, thread::sleep, time::Duration};
 
     use momento::{response::cache_get_response::MomentoGetStatus, sdk::Momento};
     use uuid::Uuid;
