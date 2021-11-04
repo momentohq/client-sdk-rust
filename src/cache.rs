@@ -109,7 +109,7 @@ impl CacheClient {
                     _ => return Err(e),
                 },
             };
-            sleep(Duration::new(0, backoff_millis * 1000));
+            sleep(Duration::new(0, backoff_millis * 1000)).await;
         }
         Err(MomentoError::InternalServerError)
     }

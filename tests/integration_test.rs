@@ -1,8 +1,9 @@
 #[cfg(test)]
 mod tests {
-    use std::{env, thread::sleep, time::Duration};
+    use std::{env, time::Duration};
 
     use momento::{response::cache_get_response::MomentoGetStatus, sdk::Momento};
+    use tokio::time::sleep;
     use uuid::Uuid;
 
     async fn get_momento_instance() -> Momento {
