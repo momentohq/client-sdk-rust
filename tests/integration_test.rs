@@ -52,7 +52,7 @@ mod tests {
             .set(cache_key.clone(), cache_body.clone(), None)
             .await
             .unwrap();
-        sleep(Duration::new(1, 0));
+        sleep(Duration::new(1, 0)).await;
         let result = cache.get(cache_key.clone()).await.unwrap();
         assert!(matches!(result.result, MomentoGetStatus::MISS));
     }
