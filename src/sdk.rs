@@ -25,6 +25,20 @@ pub struct Momento {
 }
 
 impl Momento {
+    /// Returns an instance of a Momento client
+    ///
+    /// # Arguments
+    ///
+    /// * `auth_key` - Momento jwt
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # tokio_test::block_on(async {
+    ///     use momento::sdk::Momento;
+    ///     let momento = Momento::new("auth_token".to_string()).await;
+    /// # })
+    /// ```
     pub async fn new(auth_key: String) -> Result<Self, MomentoError> {
         let claims = decode_jwt(&auth_key)?;
         let formatted_cp_endpoint = format!("https://{}:443", claims.cp);
@@ -48,6 +62,22 @@ impl Momento {
         });
     }
 
+    /// Gets a MomentoCache to perform gets and sets on
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - name of cache to get
+    /// * `default_ttl_seconds` - the default number of seconds for items to live in the Momento cache, can be overriden
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # tokio_test::block_on(async {
+    ///     use momento::sdk::Momento;
+    ///     let mut momento = Momento::new("auth_token".to_string()).await.unwrap();
+    ///     let cache = momento.get_cache("my_cache", 1000).await.unwrap();
+    /// # })
+    /// ```
     pub async fn get_cache(
         &mut self,
         name: &str,
@@ -63,6 +93,21 @@ impl Momento {
         return Ok(client);
     }
 
+    /// Creates a new Momento cache
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - name of cache to create
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # tokio_test::block_on(async {
+    ///     use momento::sdk::Momento;
+    ///     let mut momento = Momento::new("auth_token".to_string()).await.unwrap();
+    ///     momento.create_cache("my_cache").await.unwrap();
+    /// # })
+    /// ```
     pub async fn create_cache(&mut self, name: &str) -> Result<(), MomentoError> {
         let request = Request::new(CreateCacheRequest {
             cache_name: name.to_string(),
@@ -72,6 +117,21 @@ impl Momento {
         Ok(())
     }
 
+    /// Deletes a Momento cache, and all of its contents
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - name of cache to delete
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # tokio_test::block_on(async {
+    ///     use momento::sdk::Momento;
+    ///     let mut momento = Momento::new("auth_token".to_string()).await.unwrap();
+    ///     momento.delete_cache("my_cache").await.unwrap();
+    /// # })
+    /// ```
     pub async fn delete_cache(&mut self, name: &str) -> Result<(), MomentoError> {
         let request = Request::new(DeleteCacheRequest {
             cache_name: name.to_string(),

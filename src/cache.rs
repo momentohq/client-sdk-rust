@@ -114,6 +114,28 @@ impl CacheClient {
         Err(MomentoError::InternalServerError)
     }
 
+    /// Gets an item from a Momento Cache
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - cache key
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # tokio_test::block_on(async {
+    ///     use momento::sdk::Momento;
+    ///     let mut momento = Momento::new("auth_token".to_string()).await;
+    ///     let mut cache = momento.get_cache("my_cache", 100).await;
+    ///     let resp = cache.get("cache_key").await.unwrap();
+    ///     match resp.result {
+    ///         MomentoGetStatus::HIT => println!("cache hit!"),
+    ///         MomentoGetStatus::MISS => println!("cache miss")
+    ///     };
+    ///
+    ///     println!("cache value: {}", resp.as_string());
+    /// # })
+    /// ```
     pub async fn get<I: MomentoRequest>(&self, key: I) -> Result<MomentoGetResponse, MomentoError> {
         let get_request = Request::new(GetRequest {
             cache_key: key.into_bytes(),
@@ -140,6 +162,27 @@ impl CacheClient {
         }
     }
 
+    /// Sets an item in a Momento Cache
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_key`
+    /// * `cache_body`
+    /// * `ttl_seconds` - If None is passed, uses the caches default ttl
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # tokio_test::block_on(async {
+    ///     use momento::sdk::Momento;
+    ///     let mut momento = Momento::new("auth_token".to_string()).await;
+    ///     let mut cache = momento.get_cache("my_cache", 100).await;
+    ///     cache.set("cache_key", "cache_value", None).await;
+    ///
+    ///     // overriding default ttl
+    ///     cache.set("cache_key", "cache_value", 1).await;
+    /// # })
+    /// ```
     pub async fn set<I: MomentoRequest>(
         &self,
         key: I,
