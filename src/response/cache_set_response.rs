@@ -1,7 +1,7 @@
 #[derive(Debug)]
 pub enum MomentoSetStatus {
     OK,
-    ERROR
+    ERROR,
 }
 #[derive(Debug)]
 pub struct MomentoSetResponse {

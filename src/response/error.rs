@@ -1,6 +1,6 @@
-use std::{fmt};
+use std::fmt;
 
-use tonic::{Status, codegen::http};
+use tonic::{codegen::http, Status};
 
 #[derive(Debug)]
 pub enum MomentoError {
@@ -12,7 +12,7 @@ pub enum MomentoError {
     Unauthenticated,
     Unavailable,
     NotFound(String),
-    AlreadyExists
+    AlreadyExists,
 }
 
 impl std::fmt::Display for MomentoError {
@@ -31,8 +31,7 @@ impl std::fmt::Display for MomentoError {
     }
 }
 
-impl std::error::Error for MomentoError{}
-
+impl std::error::Error for MomentoError {}
 
 impl From<http::uri::InvalidUri> for MomentoError {
     fn from(e: http::uri::InvalidUri) -> Self {
