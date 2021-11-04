@@ -4,9 +4,10 @@ pub mod cache_client {
 
 use std::{
     convert::TryFrom,
-    thread::sleep,
     time::{Duration, SystemTime},
 };
+
+use tokio::time::sleep;
 
 use tonic::{
     codegen::InterceptedService,
