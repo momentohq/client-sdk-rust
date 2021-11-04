@@ -5,8 +5,7 @@ pub mod control_client {
 use std::convert::TryFrom;
 
 use control_client::{
-    scs_control_client::ScsControlClient, CreateCacheRequest, CreateCacheResponse,
-    DeleteCacheRequest, DeleteCacheResponse,
+    scs_control_client::ScsControlClient, CreateCacheRequest, DeleteCacheRequest,
 };
 use tonic::{
     codegen::InterceptedService,

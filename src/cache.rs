@@ -92,11 +92,11 @@ impl CacheClient {
         );
         let client = ScsClient::new(interceptor);
         self.client = Some(client);
-        self.wait_til_ready().await?;
+        self.wait_until_ready().await?;
         Ok(())
     }
 
-    async fn wait_til_ready(&self) -> Result<(), MomentoError> {
+    async fn wait_until_ready(&self) -> Result<(), MomentoError> {
         let backoff_millis = 50;
         let max_connect_time_seconds = 5;
         let start = SystemTime::now();
