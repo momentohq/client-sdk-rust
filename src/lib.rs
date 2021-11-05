@@ -1,6 +1,6 @@
 pub mod cache;
+mod generated;
 mod grpc;
 mod jwt;
-mod generated;
 pub mod response;
 pub mod sdk;

@@ -5,7 +5,15 @@ use tonic::{
     Request,
 };
 
-use crate::{cache::CacheClient, generated::control_client::{CreateCacheRequest, DeleteCacheRequest, scs_control_client::ScsControlClient}, grpc::auth_header_interceptor::AuthHeaderInterceptor, jwt::decode_jwt, response::error::MomentoError};
+use crate::{
+    cache::CacheClient,
+    generated::control_client::{
+        scs_control_client::ScsControlClient, CreateCacheRequest, DeleteCacheRequest,
+    },
+    grpc::auth_header_interceptor::AuthHeaderInterceptor,
+    jwt::decode_jwt,
+    response::error::MomentoError,
+};
 
 pub struct Momento {
     client: ScsControlClient<InterceptedService<Channel, AuthHeaderInterceptor>>,

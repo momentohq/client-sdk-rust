@@ -11,7 +11,10 @@ use tonic::{
     Request,
 };
 
-use crate::{generated::cache_client::{ECacheResult, GetRequest, SetRequest, scs_client::ScsClient}, response::cache_get_response::MomentoGetResponse};
+use crate::{
+    generated::cache_client::{scs_client::ScsClient, ECacheResult, GetRequest, SetRequest},
+    response::cache_get_response::MomentoGetResponse,
+};
 use crate::{
     grpc::cache_header_interceptor::CacheHeaderInterceptor,
     response::{
