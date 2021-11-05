@@ -1,12 +1,4 @@
-pub mod control_client {
-    tonic::include_proto!("control_client");
-}
-
 use std::convert::TryFrom;
-
-use control_client::{
-    scs_control_client::ScsControlClient, CreateCacheRequest, DeleteCacheRequest,
-};
 use tonic::{
     codegen::InterceptedService,
     transport::{Channel, ClientTlsConfig, Uri},
@@ -14,7 +6,12 @@ use tonic::{
 };
 
 use crate::{
-    cache::CacheClient, grpc::auth_header_interceptor::AuthHeaderInterceptor, jwt::decode_jwt,
+    cache::CacheClient,
+    generated::control_client::{
+        scs_control_client::ScsControlClient, CreateCacheRequest, DeleteCacheRequest,
+    },
+    grpc::auth_header_interceptor::AuthHeaderInterceptor,
+    jwt::decode_jwt,
     response::error::MomentoError,
 };
 

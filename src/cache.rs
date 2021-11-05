@@ -1,7 +1,3 @@
-pub mod cache_client {
-    tonic::include_proto!("cache_client");
-}
-
 use std::{
     convert::TryFrom,
     time::{Duration, SystemTime},
@@ -15,9 +11,10 @@ use tonic::{
     Request,
 };
 
-use cache_client::{scs_client::ScsClient, ECacheResult, GetRequest, SetRequest};
-
-use crate::response::cache_get_response::MomentoGetResponse;
+use crate::{
+    generated::cache_client::{scs_client::ScsClient, ECacheResult, GetRequest, SetRequest},
+    response::cache_get_response::MomentoGetResponse,
+};
 use crate::{
     grpc::cache_header_interceptor::CacheHeaderInterceptor,
     response::{
