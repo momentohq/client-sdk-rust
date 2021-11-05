@@ -1,22 +1,11 @@
-pub mod control_client {
-    tonic::include_proto!("control_client");
-}
-
 use std::convert::TryFrom;
-
-use control_client::{
-    scs_control_client::ScsControlClient, CreateCacheRequest, DeleteCacheRequest,
-};
 use tonic::{
     codegen::InterceptedService,
     transport::{Channel, ClientTlsConfig, Uri},
     Request,
 };
 
-use crate::{
-    cache::CacheClient, grpc::auth_header_interceptor::AuthHeaderInterceptor, jwt::decode_jwt,
-    response::error::MomentoError,
-};
+use crate::{cache::CacheClient, generated::control_client::{CreateCacheRequest, DeleteCacheRequest, scs_control_client::ScsControlClient}, grpc::auth_header_interceptor::AuthHeaderInterceptor, jwt::decode_jwt, response::error::MomentoError};
 
 pub struct Momento {
     client: ScsControlClient<InterceptedService<Channel, AuthHeaderInterceptor>>,

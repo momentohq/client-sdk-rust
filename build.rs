@@ -3,7 +3,7 @@ use std::io::Result;
 fn main() -> Result<()> {
     tonic_build::configure()
         .build_server(false)
-        // .out_dir("src/generated")
+        .out_dir("src/generated")
         .compile(
             &[
                 "src/protos/controlclient.proto",
