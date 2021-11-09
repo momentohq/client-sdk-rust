@@ -72,6 +72,6 @@ mod tests {
         let result = cache.get(cache_key.clone()).await.unwrap();
         assert!(matches!(result.result, MomentoGetStatus::HIT));
         assert_eq!(result.value, cache_body.as_bytes());
-//         mm.delete_cache(&cache_name).await.unwrap();
+        //         mm.delete_cache(&cache_name).await.unwrap();
     }
 }
