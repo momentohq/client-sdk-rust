@@ -89,26 +89,18 @@ impl CacheClient {
         );
         let client = ScsClient::new(interceptor);
         self.client = Some(client);
-        self.wait_until_ready().await?;
+        self.verify_cache_exists().await?;
         Ok(())
     }
 
-    async fn wait_until_ready(&self) -> Result<(), MomentoError> {
-        let backoff_millis = 50;
-        let max_connect_time_seconds = 5;
-        let start = SystemTime::now();
-        while start.elapsed().unwrap().as_secs() < max_connect_time_seconds {
-            let get_response = self.get("0000".to_string()).await;
-            match get_response {
-                Ok(_) => return Ok(()),
-                Err(e) => match e {
-                    MomentoError::InternalServerError => "",
-                    _ => return Err(e),
-                },
-            };
-            sleep(Duration::new(0, backoff_millis * 1000)).await;
-        }
-        Err(MomentoError::InternalServerError)
+    async fn verify_cache_exists(&self) -> Result<(), MomentoError> {
+        let get_response = self.get("0000".to_string()).await;
+        match get_response {
+            Ok(_) => return Ok(()),
+            Err(e) => match e {
+                _ => return Err(e),
+            },
+        };
     }
 
     /// Gets an item from a Momento Cache
