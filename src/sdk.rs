@@ -5,15 +5,7 @@ use tonic::{
     Request,
 };
 
-use crate::{
-    cache::CacheClient,
-    generated::control_client::{
-        scs_control_client::ScsControlClient, CreateCacheRequest, DeleteCacheRequest,
-    },
-    grpc::auth_header_interceptor::AuthHeaderInterceptor,
-    jwt::decode_jwt,
-    response::error::MomentoError,
-};
+use crate::{cache::CacheClient, generated::control_client::{CreateCacheRequest, DeleteCacheRequest, ListCachesRequest, scs_control_client::ScsControlClient}, grpc::auth_header_interceptor::AuthHeaderInterceptor, jwt::decode_jwt, response::{error::MomentoError, list_cache_response::{MomentoCache, MomentoListCacheResult}}};
 
 pub struct Momento {
     client: ScsControlClient<InterceptedService<Channel, AuthHeaderInterceptor>>,
@@ -123,7 +115,7 @@ impl Momento {
     ///     use std::env;
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let mut momento = Momento::new(auth_token).await.unwrap();
-    ///     momento.delete_cache("my_cache").await;
+    ///     momento.delete_cache("my_cache").await.unwrap();
     /// # })
     /// ```
     pub async fn delete_cache(&mut self, name: &str) -> Result<(), MomentoError> {
@@ -132,5 +124,31 @@ impl Momento {
         });
         self.client.delete_cache(request).await?;
         Ok(())
+    }
+
+    /// Lists all Momento caches
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # tokio_test::block_on(async {
+    ///     use momento::sdk::Momento;
+    ///     use std::env;
+    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    ///     let mut momento = Momento::new(auth_token).await.unwrap();
+    ///     let caches = momento.list_caches(None).await;
+    /// # })
+    /// ```
+    pub async fn list_caches(&mut self, next_token: Option<&str>) -> Result<MomentoListCacheResult, MomentoError> {
+        let request = Request::new(ListCachesRequest { 
+            next_token: next_token.unwrap_or_default().to_string()
+         });
+        let res = self.client.list_caches(request).await?.into_inner();
+        let caches = res.cache.iter().map(|cache| MomentoCache{ cache_name: cache.cache_name.to_string() }).collect();
+        let response = MomentoListCacheResult {
+            caches: caches,
+            next_token: res.next_token.to_string()
+        };
+        Ok(response)
     }
 }
