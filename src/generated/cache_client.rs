@@ -31,13 +31,10 @@ pub struct SetResponse {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 pub enum ECacheResult {
-    InternalServerError = 0,
+    Invalid = 0,
     Ok = 1,
     Hit = 2,
     Miss = 3,
-    BadRequest = 4,
-    Unauthorized = 5,
-    ServiceUnavailable = 6,
 }
 #[doc = r" Generated client implementations."]
 pub mod scs_client {

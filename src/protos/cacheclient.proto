@@ -7,13 +7,12 @@ package cache_client;
 
 
 enum ECacheResult {
-  Internal_Server_Error = 0;
+  Invalid = 0;
   Ok = 1;
   Hit = 2;
   Miss = 3;
-  Bad_Request = 4;
-  Unauthorized = 5;
-  Service_Unavailable = 6;
+
+  reserved 4 to 6;
 }
 
 
