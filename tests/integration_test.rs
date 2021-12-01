@@ -78,6 +78,6 @@ mod tests {
     #[tokio::test]
     async fn list_caches() {
         let mut mm = get_momento_instance().await;
-        mm.list_caches(None).await;
+        mm.list_caches(None).await.unwrap();
     }
 }
