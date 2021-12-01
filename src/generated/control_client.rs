@@ -12,6 +12,23 @@ pub struct CreateCacheRequest {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CreateCacheResponse {}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListCachesRequest {
+    #[prost(string, tag = "1")]
+    pub next_token: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Cache {
+    #[prost(string, tag = "1")]
+    pub cache_name: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListCachesResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub cache: ::prost::alloc::vec::Vec<Cache>,
+    #[prost(string, tag = "2")]
+    pub next_token: ::prost::alloc::string::String,
+}
 #[doc = r" Generated client implementations."]
 pub mod scs_control_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
@@ -100,6 +117,21 @@ pub mod scs_control_client {
             let codec = tonic::codec::ProstCodec::default();
             let path =
                 http::uri::PathAndQuery::from_static("/control_client.ScsControl/DeleteCache");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        pub async fn list_caches(
+            &mut self,
+            request: impl tonic::IntoRequest<super::ListCachesRequest>,
+        ) -> Result<tonic::Response<super::ListCachesResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path =
+                http::uri::PathAndQuery::from_static("/control_client.ScsControl/ListCaches");
             self.inner.unary(request.into_request(), path, codec).await
         }
     }
