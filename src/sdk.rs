@@ -127,7 +127,7 @@ impl Momento {
     ///     use std::env;
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let mut momento = Momento::new(auth_token).await.unwrap();
-    ///     momento.delete_cache("my_cache").await.unwrap();
+    ///     momento.delete_cache("my_cache").await;
     /// # })
     /// ```
     pub async fn delete_cache(&mut self, name: &str) -> Result<(), MomentoError> {
