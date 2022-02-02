@@ -89,18 +89,7 @@ impl CacheClient {
         );
         let client = ScsClient::new(interceptor);
         self.client = Some(client);
-        self.verify_cache_exists().await?;
         Ok(())
-    }
-
-    async fn verify_cache_exists(&self) -> Result<(), MomentoError> {
-        let get_response = self.get("0000".to_string()).await;
-        match get_response {
-            Ok(_) => return Ok(()),
-            Err(e) => match e {
-                _ => return Err(e),
-            },
-        };
     }
 
     /// Gets an item from a Momento Cache
