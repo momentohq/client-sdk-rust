@@ -5,6 +5,8 @@ use tonic::{
     Request,
 };
 
+use crate::endpoint_resolver::MomentoEndpointsResolver;
+use crate::grpc::cache_header_interceptor::CacheHeaderInterceptor;
 use crate::{
     generated::control_client::{
         scs_control_client::ScsControlClient, CreateCacheRequest, DeleteCacheRequest,
@@ -16,18 +18,14 @@ use crate::{
         list_cache_response::{MomentoCache, MomentoListCacheResult},
     },
 };
-use crate::endpoint_resolver::MomentoEndpointsResolver;
-use crate::grpc::cache_header_interceptor::CacheHeaderInterceptor;
 
-use crate::{
-    generated::cache_client::{scs_data_client::ScsDataClient, ECacheResult, GetRequest, SetRequest},
-    response::cache_get_response::MomentoGetResponse,
+use crate::response::{
+    cache_get_response::MomentoGetStatus,
+    cache_set_response::{MomentoSetResponse, MomentoSetStatus},
 };
 use crate::{
-    response::{
-        cache_get_response::MomentoGetStatus,
-        cache_set_response::{MomentoSetResponse, MomentoSetStatus},
-    },
+    generated::cache_client::{scs_client::ScsClient, ECacheResult, GetRequest, SetRequest},
+    response::cache_get_response::MomentoGetResponse,
 };
 pub trait MomentoRequest {
     fn into_bytes(self) -> Vec<u8>;
@@ -53,10 +51,8 @@ impl MomentoRequest for &str {
 
 pub struct SimpleCacheClient {
     control_client: ScsControlClient<InterceptedService<Channel, AuthHeaderInterceptor>>,
-    data_client: ScsDataClient<InterceptedService<Channel, CacheHeaderInterceptor>>,
-    // cache_endpoint: String,
-    // auth_key: String,
-    item_default_ttl_seconds: u32
+    data_client: ScsClient<InterceptedService<Channel, CacheHeaderInterceptor>>,
+    item_default_ttl_seconds: u32,
 }
 
 impl SimpleCacheClient {
@@ -64,8 +60,8 @@ impl SimpleCacheClient {
     ///
     /// # Arguments
     ///
-    /// * `auth_key` - Momento jwt
-    ///
+    /// * `auth_token` - Momento Token
+    /// * `item_default_ttl_seconds` - Default TTL for items put into a cache
     /// # Examples
     ///
     /// ```
@@ -73,26 +69,36 @@ impl SimpleCacheClient {
     ///     use momento::simple_cache_client::SimpleCacheClient;
     ///     use std::env;
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let momento = SimpleCacheClient::new(auth_token, 5).await;
+    ///     let default_ttl = 30;
+    ///     let momento = SimpleCacheClient::new(auth_token, default_ttl).await;
     /// # })
     /// ```
     pub async fn new(auth_token: String, default_ttl_seconds: u32) -> Result<Self, MomentoError> {
         let momento_endpoints = MomentoEndpointsResolver::resolve(&auth_token, &None);
         let control_endpoint = momento_endpoints.control_endpoint.as_str();
         let data_endpoint = momento_endpoints.data_endpoint.as_str();
-        let control_client = SimpleCacheClient::build_control_client(auth_token.clone(), control_endpoint.to_string()).await;
-        let data_client = SimpleCacheClient::build_data_client(auth_token.clone(), data_endpoint.to_string()).await;
+        let control_client = SimpleCacheClient::build_control_client(
+            auth_token.clone(),
+            control_endpoint.to_string(),
+        )
+        .await;
+        let data_client =
+            SimpleCacheClient::build_data_client(auth_token.clone(), data_endpoint.to_string())
+                .await;
 
         let simple_cache_client = Self {
             control_client: control_client.unwrap(),
             data_client: data_client.unwrap(),
-            item_default_ttl_seconds: default_ttl_seconds
+            item_default_ttl_seconds: default_ttl_seconds,
         };
         return Ok(simple_cache_client);
-
     }
 
-    async fn build_control_client(auth_token: String, endpoint: String) -> Result<ScsControlClient<InterceptedService<Channel, AuthHeaderInterceptor>>, MomentoError> {
+    async fn build_control_client(
+        auth_token: String,
+        endpoint: String,
+    ) -> Result<ScsControlClient<InterceptedService<Channel, AuthHeaderInterceptor>>, MomentoError>
+    {
         let uri = Uri::try_from(endpoint)?;
         let channel = Channel::builder(uri)
             .tls_config(ClientTlsConfig::default())
@@ -107,10 +113,13 @@ impl SimpleCacheClient {
             },
         );
         let client = ScsControlClient::new(interceptor);
-        return Ok(client)
+        return Ok(client);
     }
 
-    async fn build_data_client(auth_token: String, endpoint: String) -> Result<ScsDataClient<InterceptedService<Channel, CacheHeaderInterceptor>>, MomentoError> {
+    async fn build_data_client(
+        auth_token: String,
+        endpoint: String,
+    ) -> Result<ScsClient<InterceptedService<Channel, CacheHeaderInterceptor>>, MomentoError> {
         let uri = Uri::try_from(endpoint)?;
         let channel = Channel::builder(uri)
             .tls_config(ClientTlsConfig::default())
@@ -118,12 +127,12 @@ impl SimpleCacheClient {
             .connect()
             .await?;
         let interceptor = InterceptedService::new(
-           channel.clone(),
+            channel.clone(),
             CacheHeaderInterceptor {
                 auth_key: auth_token.clone(),
             },
         );
-        let client = ScsDataClient::new(interceptor);
+        let client = ScsClient::new(interceptor);
         return Ok(client);
     }
 
@@ -208,7 +217,7 @@ impl SimpleCacheClient {
     /// * `cache_name` - name of cache
     /// * `cache_key`
     /// * `cache_body`
-    /// * `ttl_seconds` - If None is passed, uses the caches default ttl
+    /// * `ttl_seconds` - If None is passed, uses the client's default ttl
     ///
     /// # Examples
     ///
@@ -232,14 +241,14 @@ impl SimpleCacheClient {
         body: I,
         ttl_seconds: Option<u32>,
     ) -> Result<MomentoSetResponse, MomentoError> {
-        let mut request= tonic::Request::new(SetRequest {
+        let mut request = tonic::Request::new(SetRequest {
             cache_key: key.into_bytes(),
             cache_body: body.into_bytes(),
             ttl_milliseconds: ttl_seconds.unwrap_or(self.item_default_ttl_seconds) * 1000,
         });
         request.metadata_mut().append(
             "cache",
-            tonic::metadata::AsciiMetadataValue::from_str(cache_name.as_str()).unwrap()
+            tonic::metadata::AsciiMetadataValue::from_str(cache_name.as_str()).unwrap(),
         );
         let _ = self.data_client.set(request).await?;
         Ok(MomentoSetResponse {
@@ -276,14 +285,14 @@ impl SimpleCacheClient {
     pub async fn get<I: MomentoRequest>(
         &mut self,
         cache_name: String,
-        key: I
+        key: I,
     ) -> Result<MomentoGetResponse, MomentoError> {
         let mut request = tonic::Request::new(GetRequest {
             cache_key: key.into_bytes(),
         });
         request.metadata_mut().append(
             "cache",
-            tonic::metadata::AsciiMetadataValue::from_str(cache_name.as_str()).unwrap()
+            tonic::metadata::AsciiMetadataValue::from_str(cache_name.as_str()).unwrap(),
         );
 
         let response = self.data_client.get(request).await?.into_inner();
@@ -297,6 +306,6 @@ impl SimpleCacheClient {
                 value: response.cache_body,
             }),
             _ => todo!(),
-        }
+        };
     }
 }

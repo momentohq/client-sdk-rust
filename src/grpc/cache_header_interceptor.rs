@@ -18,16 +18,10 @@ impl tonic::service::Interceptor for CacheHeaderInterceptor {
             tonic::metadata::AsciiMetadataValue::from_str("application/grpc").unwrap(),
         );
 
-
-        let cache_name = request_metadata
-            .get("cache")
-            .unwrap();
+        let cache_name = request_metadata.get("cache").unwrap();
 
         // need to re-add our `cache` header back into the interceptor or it will be stripped out
-        result.metadata_mut().insert(
-            "cache",
-            cache_name.clone()
-        );
+        result.metadata_mut().insert("cache", cache_name.clone());
         Ok(result)
     }
 }

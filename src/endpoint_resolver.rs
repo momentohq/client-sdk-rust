@@ -1,33 +1,24 @@
-use crate::{
-    jwt::{
-        Claims,
-        decode_jwt
-    }
-};
-
+use crate::jwt::{decode_jwt, Claims};
 
 pub struct MomentoEndpoints {
     pub control_endpoint: String,
-    pub data_endpoint: String
+    pub data_endpoint: String,
 }
 
-pub struct MomentoEndpointsResolver {
-}
+pub struct MomentoEndpointsResolver {}
 
 const CONTROL_ENDPOINT_PREFIX: &str = "control.";
 const DATA_ENDPOINT_PREFIX: &str = "data.";
 
 impl MomentoEndpointsResolver {
-
-
     pub fn resolve(auth_token: &str, hosted_zone: &Option<String>) -> MomentoEndpoints {
         let claims = decode_jwt(&auth_token).unwrap();
         let control_endpoint = MomentoEndpointsResolver::get_control_endpoint(&claims, hosted_zone);
         let data_endpoint = MomentoEndpointsResolver::get_data_endpoint(&claims, hosted_zone);
         return MomentoEndpoints {
             control_endpoint: control_endpoint,
-            data_endpoint: data_endpoint
-        }
+            data_endpoint: data_endpoint,
+        };
     }
 
     fn get_control_endpoint(claims: &Claims, hosted_zone: &Option<String>) -> String {
@@ -44,13 +35,21 @@ impl MomentoEndpointsResolver {
         if hosted_zone.is_none() {
             return None;
         }
-        return Some(format!("{}{}", CONTROL_ENDPOINT_PREFIX, hosted_zone.clone().unwrap()));
+        return Some(format!(
+            "{}{}",
+            CONTROL_ENDPOINT_PREFIX,
+            hosted_zone.clone().unwrap()
+        ));
     }
 
     fn get_data_endpoint_from_hosted_zone(hosted_zone: &Option<String>) -> Option<String> {
         if hosted_zone.is_none() {
             return None;
         }
-        return Some(format!("{}{}", DATA_ENDPOINT_PREFIX, hosted_zone.clone().unwrap()));
+        return Some(format!(
+            "{}{}",
+            DATA_ENDPOINT_PREFIX,
+            hosted_zone.clone().unwrap()
+        ));
     }
 }
