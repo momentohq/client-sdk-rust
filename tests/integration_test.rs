@@ -22,7 +22,7 @@ mod tests {
         let cache_name = get_shared_cache_name();
         let cache_key = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance().await;
-        let result = mm.get(cache_name, cache_key).await.unwrap();
+        let result = mm.get(&cache_name, cache_key).await.unwrap();
         assert!(matches!(result.result, MomentoGetStatus::MISS));
     }
 
@@ -33,14 +33,14 @@ mod tests {
         let cache_body = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance().await;
         mm.set(
-            cache_name.clone(),
+            &cache_name,
             cache_key.clone(),
             cache_body.clone(),
             None,
         )
         .await
         .unwrap();
-        let result = mm.get(cache_name.clone(), cache_key.clone()).await.unwrap();
+        let result = mm.get(&cache_name, cache_key.clone()).await.unwrap();
         assert!(matches!(result.result, MomentoGetStatus::HIT));
         assert_eq!(result.value, cache_body.as_bytes());
     }
@@ -52,7 +52,7 @@ mod tests {
         let cache_body = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance().await;
         mm.set(
-            cache_name.clone(),
+            &cache_name,
             cache_key.clone(),
             cache_body.clone(),
             None,
@@ -60,7 +60,7 @@ mod tests {
         .await
         .unwrap();
         sleep(Duration::new(1, 0)).await;
-        let result = mm.get(cache_name.clone(), cache_key.clone()).await.unwrap();
+        let result = mm.get(&cache_name, cache_key.clone()).await.unwrap();
         assert!(matches!(result.result, MomentoGetStatus::MISS));
     }
 
@@ -72,14 +72,14 @@ mod tests {
         let mut mm = get_momento_instance().await;
         mm.create_cache(&cache_name).await.unwrap();
         mm.set(
-            cache_name.clone(),
+            &cache_name,
             cache_key.clone(),
             cache_body.clone(),
             None,
         )
         .await
         .unwrap();
-        let result = mm.get(cache_name.clone(), cache_key.clone()).await.unwrap();
+        let result = mm.get(&cache_name, cache_key.clone()).await.unwrap();
         assert!(matches!(result.result, MomentoGetStatus::HIT));
         assert_eq!(result.value, cache_body.as_bytes());
         mm.delete_cache(&cache_name).await.unwrap();

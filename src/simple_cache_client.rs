@@ -228,15 +228,15 @@ impl SimpleCacheClient {
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = env::var("TEST_CACHE_NAME").expect("TEST_CACHE_NAME must be set");
     ///     let mut momento = SimpleCacheClient::new(auth_token, 30).await.unwrap();
-    ///     momento.set(cache_name, "cache_key", "cache_value", None).await;
+    ///     momento.set(&cache_name, "cache_key", "cache_value", None).await;
     ///
     ///     // overriding default ttl
-    ///     cache.set(cache_name, "cache_key", "cache_value", Some(10)).await;
+    ///     momento.set(&cache_name, "cache_key", "cache_value", Some(10)).await;
     /// # })
     /// ```
     pub async fn set<I: MomentoRequest>(
         &mut self,
-        cache_name: String,
+        cache_name: &str,
         key: I,
         body: I,
         ttl_seconds: Option<u32>,
@@ -248,7 +248,7 @@ impl SimpleCacheClient {
         });
         request.metadata_mut().append(
             "cache",
-            tonic::metadata::AsciiMetadataValue::from_str(cache_name.as_str()).unwrap(),
+            tonic::metadata::AsciiMetadataValue::from_str(&cache_name).unwrap(),
         );
         let _ = self.data_client.set(request).await?;
         Ok(MomentoSetResponse {
@@ -272,7 +272,7 @@ impl SimpleCacheClient {
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = env::var("TEST_CACHE_NAME").expect("TEST_CACHE_NAME must be set");
     ///     let mut momento = SimpleCacheClient::new(auth_token, 30).await.unwrap();
-    ///     let resp = momento.get(cache_name, "cache_key").await.unwrap();
+    ///     let resp = momento.get(&cache_name, "cache_key").await.unwrap();
     ///     match resp.result {
     ///         MomentoGetStatus::HIT => println!("cache hit!"),
     ///         MomentoGetStatus::MISS => println!("cache miss"),
@@ -284,7 +284,7 @@ impl SimpleCacheClient {
     /// ```
     pub async fn get<I: MomentoRequest>(
         &mut self,
-        cache_name: String,
+        cache_name: &str,
         key: I,
     ) -> Result<MomentoGetResponse, MomentoError> {
         let mut request = tonic::Request::new(GetRequest {
@@ -292,7 +292,7 @@ impl SimpleCacheClient {
         });
         request.metadata_mut().append(
             "cache",
-            tonic::metadata::AsciiMetadataValue::from_str(cache_name.as_str()).unwrap(),
+            tonic::metadata::AsciiMetadataValue::from_str(&cache_name).unwrap(),
         );
 
         let response = self.data_client.get(request).await?.into_inner();
