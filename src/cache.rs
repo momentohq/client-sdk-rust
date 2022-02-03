@@ -12,7 +12,7 @@ use tonic::{
 };
 
 use crate::{
-    generated::cache_client::{scs_client::ScsClient, ECacheResult, GetRequest, SetRequest},
+    generated::cache_client::{scs_data_client::ScsDataClient, ECacheResult, GetRequest, SetRequest},
     response::cache_get_response::MomentoGetResponse,
 };
 use crate::{
@@ -46,7 +46,7 @@ impl MomentoRequest for &str {
 }
 
 pub struct CacheClient {
-    client: Option<ScsClient<InterceptedService<Channel, CacheHeaderInterceptor>>>,
+    client: Option<ScsDataClient<InterceptedService<Channel, CacheHeaderInterceptor>>>,
     channel: Option<tonic::transport::Channel>,
     endpoint: String,
     auth_key: String,
@@ -71,7 +71,7 @@ impl CacheClient {
         };
     }
 
-    pub async fn connect(&mut self) -> Result<(), MomentoError> {
+    pub async fn connect(&mut self,  cache_name: String) -> Result<(), MomentoError> {
         let uri = Uri::try_from(self.endpoint.as_str())?;
         let channel = Channel::builder(uri)
             .tls_config(ClientTlsConfig::default())
@@ -84,103 +84,21 @@ impl CacheClient {
             self.channel.clone().unwrap(),
             CacheHeaderInterceptor {
                 auth_key: self.auth_key.to_string(),
-                cache_name: self.cache_name.to_string(),
+                cache_name: cache_name,
             },
         );
-        let client = ScsClient::new(interceptor);
+        let client = ScsDataClient::new(interceptor);
         self.client = Some(client);
-        self.verify_cache_exists().await?;
         Ok(())
     }
 
-    async fn verify_cache_exists(&self) -> Result<(), MomentoError> {
-        let get_response = self.get("0000".to_string()).await;
-        match get_response {
-            Ok(_) => return Ok(()),
-            Err(e) => match e {
-                _ => return Err(e),
-            },
-        };
-    }
 
-    /// Gets an item from a Momento Cache
-    ///
-    /// # Arguments
-    ///
-    /// * `key` - cache key
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # tokio_test::block_on(async {
-    ///     use std::env;
-    ///     use momento::{response::cache_get_response::MomentoGetStatus, sdk::Momento};
-    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let cache_name = env::var("TEST_CACHE_NAME").expect("TEST_CACHE_NAME must be set");
-    ///     let mut momento = Momento::new(auth_token).await.unwrap();
-    ///     let mut cache = momento.get_cache(&cache_name, 100).await.unwrap();
-    ///     let resp = cache.get("cache_key").await.unwrap();
-    ///     match resp.result {
-    ///         MomentoGetStatus::HIT => println!("cache hit!"),
-    ///         MomentoGetStatus::MISS => println!("cache miss"),
-    ///         _ => println!("error occurred")
-    ///     };
-    ///
-    ///     println!("cache value: {}", resp.as_string());
-    /// # })
-    /// ```
-    pub async fn get<I: MomentoRequest>(&self, key: I) -> Result<MomentoGetResponse, MomentoError> {
-        let get_request = Request::new(GetRequest {
-            cache_key: key.into_bytes(),
-        });
 
-        let response = self
-            .client
-            .as_ref()
-            .unwrap()
-            .clone()
-            .get(get_request)
-            .await?;
-        let get_response = response.into_inner();
-        match get_response.result() {
-            ECacheResult::Hit => Ok(MomentoGetResponse {
-                result: MomentoGetStatus::HIT,
-                value: get_response.cache_body,
-            }),
-            ECacheResult::Miss => Ok(MomentoGetResponse {
-                result: MomentoGetStatus::MISS,
-                value: get_response.cache_body,
-            }),
-            _ => todo!(),
-        }
-    }
 
-    /// Sets an item in a Momento Cache
-    ///
-    /// # Arguments
-    ///
-    /// * `cache_key`
-    /// * `cache_body`
-    /// * `ttl_seconds` - If None is passed, uses the caches default ttl
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # tokio_test::block_on(async {
-    ///     use momento::sdk::Momento;
-    ///     use std::env;
-    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let cache_name = env::var("TEST_CACHE_NAME").expect("TEST_CACHE_NAME must be set");
-    ///     let mut momento = Momento::new(auth_token).await.unwrap();
-    ///     let mut cache = momento.get_cache(&cache_name, 100).await.unwrap();
-    ///     cache.set("cache_key", "cache_value", None).await;
-    ///
-    ///     // overriding default ttl
-    ///     cache.set("cache_key", "cache_value", Some(1)).await;
-    /// # })
-    /// ```
+
     pub async fn set<I: MomentoRequest>(
         &self,
+        cache_name: String,
         key: I,
         body: I,
         ttl_seconds: Option<u32>,

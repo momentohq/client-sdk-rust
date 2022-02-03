@@ -37,14 +37,14 @@ pub enum ECacheResult {
     Miss = 3,
 }
 #[doc = r" Generated client implementations."]
-pub mod scs_client {
+pub mod scs_data_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
     #[derive(Debug, Clone)]
-    pub struct ScsClient<T> {
+    pub struct ScsDataClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl ScsClient<tonic::transport::Channel> {
+    impl ScsDataClient<tonic::transport::Channel> {
         #[doc = r" Attempt to create a new client by connecting to a given endpoint."]
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -55,7 +55,7 @@ pub mod scs_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> ScsClient<T>
+    impl<T> ScsDataClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::ResponseBody: Body + Send + 'static,
@@ -66,7 +66,7 @@ pub mod scs_client {
             let inner = tonic::client::Grpc::new(inner);
             Self { inner }
         }
-        pub fn with_interceptor<F>(inner: T, interceptor: F) -> ScsClient<InterceptedService<T, F>>
+        pub fn with_interceptor<F>(inner: T, interceptor: F) -> ScsDataClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T: tonic::codegen::Service<
@@ -78,7 +78,7 @@ pub mod scs_client {
             <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error:
                 Into<StdError> + Send + Sync,
         {
-            ScsClient::new(InterceptedService::new(inner, interceptor))
+            ScsDataClient::new(InterceptedService::new(inner, interceptor))
         }
         #[doc = r" Compress requests with `gzip`."]
         #[doc = r""]
