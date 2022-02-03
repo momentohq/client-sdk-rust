@@ -2,13 +2,15 @@
 mod tests {
     use std::{env, time::Duration};
 
-    use momento::{response::cache_get_response::MomentoGetStatus, sdk::Momento};
+    use momento::{
+        response::cache_get_response::MomentoGetStatus, simple_cache_client::SimpleCacheClient,
+    };
     use tokio::time::sleep;
     use uuid::Uuid;
 
-    async fn get_momento_instance() -> Momento {
+    async fn get_momento_instance() -> SimpleCacheClient {
         let auth_token = env::var("TEST_AUTH_TOKEN").expect("env var TEST_AUTH_TOKEN must be set");
-        return Momento::new(auth_token).await.unwrap();
+        return SimpleCacheClient::new(auth_token, 5).await.unwrap();
     }
 
     fn get_shared_cache_name() -> String {
@@ -20,8 +22,7 @@ mod tests {
         let cache_name = get_shared_cache_name();
         let cache_key = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance().await;
-        let cache = mm.get_cache(cache_name.as_str(), 10).await.unwrap();
-        let result = cache.get(cache_key).await.unwrap();
+        let result = mm.get(&cache_name, cache_key).await.unwrap();
         assert!(matches!(result.result, MomentoGetStatus::MISS));
     }
 
@@ -31,12 +32,10 @@ mod tests {
         let cache_key = Uuid::new_v4().to_string();
         let cache_body = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance().await;
-        let cache = mm.get_cache(cache_name.as_str(), 10).await.unwrap();
-        cache
-            .set(cache_key.clone(), cache_body.clone(), None)
+        mm.set(&cache_name, cache_key.clone(), cache_body.clone(), None)
             .await
             .unwrap();
-        let result = cache.get(cache_key.clone()).await.unwrap();
+        let result = mm.get(&cache_name, cache_key.clone()).await.unwrap();
         assert!(matches!(result.result, MomentoGetStatus::HIT));
         assert_eq!(result.value, cache_body.as_bytes());
     }
@@ -47,13 +46,11 @@ mod tests {
         let cache_key = Uuid::new_v4().to_string();
         let cache_body = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance().await;
-        let cache = mm.get_cache(cache_name.as_str(), 1).await.unwrap();
-        cache
-            .set(cache_key.clone(), cache_body.clone(), None)
+        mm.set(&cache_name, cache_key.clone(), cache_body.clone(), None)
             .await
             .unwrap();
         sleep(Duration::new(1, 0)).await;
-        let result = cache.get(cache_key.clone()).await.unwrap();
+        let result = mm.get(&cache_name, cache_key.clone()).await.unwrap();
         assert!(matches!(result.result, MomentoGetStatus::MISS));
     }
 
@@ -64,12 +61,10 @@ mod tests {
         let cache_body = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance().await;
         mm.create_cache(&cache_name).await.unwrap();
-        let cache = mm.get_cache(&cache_name, 10).await.unwrap();
-        cache
-            .set(cache_key.clone(), cache_body.clone(), None)
+        mm.set(&cache_name, cache_key.clone(), cache_body.clone(), None)
             .await
             .unwrap();
-        let result = cache.get(cache_key.clone()).await.unwrap();
+        let result = mm.get(&cache_name, cache_key.clone()).await.unwrap();
         assert!(matches!(result.result, MomentoGetStatus::HIT));
         assert_eq!(result.value, cache_body.as_bytes());
         mm.delete_cache(&cache_name).await.unwrap();
