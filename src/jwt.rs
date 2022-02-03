@@ -10,6 +10,11 @@ pub struct Claims {
 }
 
 pub fn decode_jwt(jwt: &str) -> Result<Claims, MomentoError> {
+    if jwt.is_empty() {
+        return Err(MomentoError::ClientSdkError(
+            "Malformed Auth Token".to_string(),
+        ));
+    }
     let token = dangerous_insecure_decode::<Claims>(jwt)?;
     Ok(token.claims)
 }
@@ -31,6 +36,7 @@ mod tests {
     #[test]
     fn invalid_jwt() {
         let e = decode_jwt("").unwrap_err();
-        assert!(matches!(e, MomentoError::InvalidJwt));
+        let _err_msg = "Failed to parse Auth Token".to_owned();
+        assert!(matches!(e, MomentoError::ClientSdkError(_err_msg)));
     }
 }

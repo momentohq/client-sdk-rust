@@ -142,6 +142,7 @@ impl SimpleCacheClient {
     ///
     /// * `name` - name of cache to create
     pub async fn create_cache(&mut self, name: &str) -> Result<(), MomentoError> {
+        self._is_cache_name_valid(&name)?;
         let request = Request::new(CreateCacheRequest {
             cache_name: name.to_string(),
         });
@@ -168,6 +169,7 @@ impl SimpleCacheClient {
     /// # })
     /// ```
     pub async fn delete_cache(&mut self, name: &str) -> Result<(), MomentoError> {
+        self._is_cache_name_valid(&name)?;
         let request = Request::new(DeleteCacheRequest {
             cache_name: name.to_string(),
         });
@@ -204,7 +206,7 @@ impl SimpleCacheClient {
             })
             .collect();
         let response = MomentoListCacheResult {
-            caches: caches,
+            caches,
             next_token: res.next_token.to_string(),
         };
         Ok(response)
@@ -241,6 +243,7 @@ impl SimpleCacheClient {
         body: I,
         ttl_seconds: Option<u32>,
     ) -> Result<MomentoSetResponse, MomentoError> {
+        self._is_cache_name_valid(&cache_name)?;
         let mut request = tonic::Request::new(SetRequest {
             cache_key: key.into_bytes(),
             cache_body: body.into_bytes(),
@@ -287,6 +290,7 @@ impl SimpleCacheClient {
         cache_name: &str,
         key: I,
     ) -> Result<MomentoGetResponse, MomentoError> {
+        self._is_cache_name_valid(&cache_name)?;
         let mut request = tonic::Request::new(GetRequest {
             cache_key: key.into_bytes(),
         });
@@ -294,7 +298,6 @@ impl SimpleCacheClient {
             "cache",
             tonic::metadata::AsciiMetadataValue::from_str(&cache_name).unwrap(),
         );
-
         let response = self.data_client.get(request).await?.into_inner();
         return match response.result() {
             ECacheResult::Hit => Ok(MomentoGetResponse {
@@ -307,5 +310,14 @@ impl SimpleCacheClient {
             }),
             _ => todo!(),
         };
+    }
+
+    fn _is_cache_name_valid(&mut self, cache_name: &str) -> Result<(), MomentoError> {
+        if cache_name.trim().is_empty() {
+            return Err(MomentoError::InvalidArgument(
+                "Cache name cannot be empty".to_string(),
+            ));
+        }
+        return Ok(());
     }
 }

@@ -2,25 +2,33 @@ use tonic::codegen::http;
 
 #[derive(Debug)]
 pub enum MomentoError {
-    InvalidJwt,
-    ValidationError(String),
-    InternalServerError,
-    PermissionDenied,
-    Unauthenticated,
+    InternalServerError(String),
+    BadRequest(String),
+    PermissionDenied(String),
+    Unauthenticated(String),
     NotFound(String),
-    AlreadyExists,
+    AlreadyExists(String),
+    Cancelled(String),
+    Timeout(String),
+    LimitExceeded(String),
+    ClientSdkError(String),
+    InvalidArgument(String),
 }
 
 impl std::fmt::Display for MomentoError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MomentoError::InvalidJwt => write!(f, "Invalid jwt passed"),
-            MomentoError::ValidationError(e) => write!(f, "Invalid argument passed: {}", e),
-            MomentoError::InternalServerError => write!(f, "Internal server error"),
-            MomentoError::PermissionDenied => write!(f, "Permission denied"),
-            MomentoError::Unauthenticated => write!(f, "User not authenticated"),
-            MomentoError::NotFound(e) => write!(f, "{}", e),
-            MomentoError::AlreadyExists => write!(f, "Cache already exists"),
+            MomentoError::InternalServerError(e)
+            | MomentoError::BadRequest(e)
+            | MomentoError::PermissionDenied(e)
+            | MomentoError::Unauthenticated(e)
+            | MomentoError::NotFound(e)
+            | MomentoError::AlreadyExists(e)
+            | MomentoError::Cancelled(e)
+            | MomentoError::Timeout(e)
+            | MomentoError::LimitExceeded(e)
+            | MomentoError::ClientSdkError(e)
+            | MomentoError::InvalidArgument(e) => write!(f, "{}", e),
         }
     }
 }
@@ -30,25 +38,26 @@ impl std::error::Error for MomentoError {}
 impl From<http::uri::InvalidUri> for MomentoError {
     fn from(e: http::uri::InvalidUri) -> Self {
         // the uri gets derived from the jwt
-        Self::InvalidJwt
+        Self::ClientSdkError(e.to_string())
     }
 }
 
 impl From<jsonwebtoken::errors::Error> for MomentoError {
-    fn from(e: jsonwebtoken::errors::Error) -> Self {
-        Self::InvalidJwt
+    fn from(_: jsonwebtoken::errors::Error) -> Self {
+        let err_msg = "Failed to parse Auth Token".to_string();
+        Self::ClientSdkError(err_msg)
     }
 }
 
 impl From<String> for MomentoError {
     fn from(s: String) -> Self {
-        Self::ValidationError(s)
+        Self::BadRequest(s)
     }
 }
 
 impl From<tonic::transport::Error> for MomentoError {
     fn from(e: tonic::transport::Error) -> Self {
-        Self::InternalServerError
+        Self::InternalServerError(e.to_string())
     }
 }
 
@@ -60,14 +69,24 @@ impl From<tonic::Status> for MomentoError {
 
 fn status_to_error(status: tonic::Status) -> MomentoError {
     match status.code() {
-        tonic::Code::InvalidArgument => MomentoError::ValidationError(status.message().to_string()),
-        tonic::Code::NotFound => MomentoError::NotFound(status.message().to_string()),
-        tonic::Code::AlreadyExists => MomentoError::AlreadyExists,
-        tonic::Code::PermissionDenied => MomentoError::PermissionDenied,
-        tonic::Code::FailedPrecondition => {
-            MomentoError::ValidationError(status.message().to_string())
+        tonic::Code::InvalidArgument
+        | tonic::Code::Unimplemented
+        | tonic::Code::OutOfRange
+        | tonic::Code::FailedPrecondition => MomentoError::BadRequest(status.message().to_string()),
+        tonic::Code::Cancelled => MomentoError::Cancelled(status.message().to_string()),
+        tonic::Code::DeadlineExceeded => MomentoError::Timeout(status.message().to_string()),
+        tonic::Code::PermissionDenied => {
+            MomentoError::PermissionDenied(status.message().to_string())
         }
-        tonic::Code::Unauthenticated => MomentoError::Unauthenticated,
-        _ => MomentoError::InternalServerError,
+        tonic::Code::Unauthenticated => MomentoError::Unauthenticated(status.message().to_string()),
+        tonic::Code::ResourceExhausted => MomentoError::LimitExceeded(status.message().to_string()),
+        tonic::Code::NotFound => MomentoError::NotFound(status.message().to_string()),
+        tonic::Code::AlreadyExists => MomentoError::AlreadyExists(status.message().to_string()),
+        tonic::Code::Unknown
+        | tonic::Code::Aborted
+        | tonic::Code::Internal
+        | tonic::Code::Unavailable
+        | tonic::Code::DataLoss
+        | _ => MomentoError::InternalServerError(status.message().to_string()),
     }
 }
