@@ -16,8 +16,8 @@ impl MomentoEndpointsResolver {
         let control_endpoint = MomentoEndpointsResolver::get_control_endpoint(&claims, hosted_zone);
         let data_endpoint = MomentoEndpointsResolver::get_data_endpoint(&claims, hosted_zone);
         return MomentoEndpoints {
-            control_endpoint: control_endpoint,
-            data_endpoint: data_endpoint,
+            control_endpoint,
+            data_endpoint,
         };
     }
 

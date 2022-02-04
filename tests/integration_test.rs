@@ -2,6 +2,7 @@
 mod tests {
     use std::{env, time::Duration};
 
+    use momento::response::error::MomentoError;
     use momento::{
         response::cache_get_response::MomentoGetStatus, simple_cache_client::SimpleCacheClient,
     };
@@ -24,6 +25,18 @@ mod tests {
         let mut mm = get_momento_instance().await;
         let result = mm.get(&cache_name, cache_key).await.unwrap();
         assert!(matches!(result.result, MomentoGetStatus::MISS));
+    }
+
+    #[tokio::test]
+    async fn cache_validation() {
+        let cache_name = "";
+        let mut mm = get_momento_instance().await;
+        let result = mm.create_cache(cache_name).await.unwrap_err();
+        let _err_msg = "Cache name cannot be empty".to_string();
+        assert!(matches!(
+            result,
+            MomentoError::InvalidArgument(_err_message)
+        ))
     }
 
     #[tokio::test]
