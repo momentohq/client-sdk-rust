@@ -105,6 +105,7 @@ mod tests {
         let mut client = SimpleCacheClient::new(bad_control_plane_jwt, 5)
             .await
             .unwrap();
+
         // Unable to reach control plane
         let create_cache_result = client.create_cache("cache").await.unwrap_err();
         let _err_msg_internal = "error trying to connect: dns error: failed to lookup address information: nodename nor servname provided, or not known".to_string();
@@ -143,6 +144,7 @@ mod tests {
             + "."
             + &jwt_invalid_signature_base_64.clone();
         let mut client = SimpleCacheClient::new(bad_data_plane_jwt, 5).await.unwrap();
+
         // Can reach control plane
         let create_cache_result = client.create_cache("cache").await.unwrap_err();
         let _err_msg_unauthenticated = "Invalid signature".to_string();
