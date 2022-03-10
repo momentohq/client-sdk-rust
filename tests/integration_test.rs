@@ -88,4 +88,82 @@ mod tests {
         let mut mm = get_momento_instance().await;
         mm.list_caches(None).await.unwrap();
     }
+
+    #[tokio::test]
+    async fn invalid_control_token_can_still_initialize_sdk() {
+        let jwt_header_base64: String = String::from("eyJhbGciOiJIUzUxMiJ9");
+        let jwt_invalid_signature_base_64: String =
+            String::from("gdghdjjfjyehhdkkkskskmmls76573jnajhjjjhjdhnndy");
+        // {"sub":"squirrel","cp":"invalidcontrol.cell-alpha-dev.preprod.a.momentohq.com","c":"cache.cell-alpha-dev.preprod.a.momentohq.com"}
+        let jwt_payload_bad_control_plane_base64: String = String::from("eyJzdWIiOiJzcXVpcnJlbCIsImNwIjoiaW52YWxpZGNvbnRyb2wuY2VsbC1hbHBoYS1kZXYucHJlcHJvZC5hLm1vbWVudG9ocS5jb20iLCJjIjoiY2FjaGUuY2VsbC1hbHBoYS1kZXYucHJlcHJvZC5hLm1vbWVudG9ocS5jb20ifQ");
+        // This JWT will result in UNAUTHENTICATED from the reachable backend since they have made up signatures
+        let bad_control_plane_jwt = jwt_header_base64.clone()
+            + "."
+            + &jwt_payload_bad_control_plane_base64.clone()
+            + "."
+            + &jwt_invalid_signature_base_64.clone();
+        let mut client = SimpleCacheClient::new(bad_control_plane_jwt, 5)
+            .await
+            .unwrap();
+        // Unable to reach control plane
+        let create_cache_result = client.create_cache("cache").await.unwrap_err();
+        let _err_msg_internal = "error trying to connect: dns error: failed to lookup address information: nodename nor servname provided, or not known".to_string();
+        assert!(matches!(
+            create_cache_result,
+            MomentoError::InternalServerError(_err_msg_internal)
+        ));
+        // Can reach data plane
+        let set_result = client
+            .set("cache", "hello", "world", None)
+            .await
+            .unwrap_err();
+        let _err_msg_unauthenticated = "Invalid signature".to_string();
+        assert!(matches!(
+            set_result,
+            MomentoError::Unauthenticated(_err_msg)
+        ));
+        let get_result = client.get("cache", "hello").await.unwrap_err();
+        assert!(matches!(
+            get_result,
+            MomentoError::Unauthenticated(_err_msg_unauthenticated)
+        ));
+    }
+
+    #[tokio::test]
+    async fn invalid_data_token_can_still_initialize_sdk() {
+        let jwt_header_base64: String = String::from("eyJhbGciOiJIUzUxMiJ9");
+        let jwt_invalid_signature_base_64: String =
+            String::from("gdghdjjfjyehhdkkkskskmmls76573jnajhjjjhjdhnndy");
+        // {"sub":"squirrel","cp":"control.cell-alpha-dev.preprod.a.momentohq.com","c":"invalidcache.cell-alpha-dev.preprod.a.momentohq.com"}
+        let jwt_payload_bad_data_plane_base64: String = String::from("eyJzdWIiOiJzcXVpcnJlbCIsImNwIjoiY29udHJvbC5jZWxsLWFscGhhLWRldi5wcmVwcm9kLmEubW9tZW50b2hxLmNvbSIsImMiOiJpbnZhbGlkY2FjaGUuY2VsbC1hbHBoYS1kZXYucHJlcHJvZC5hLm1vbWVudG9ocS5jb20ifQ");
+        // This JWT will result in UNAUTHENTICATED from the reachable backend since they have made up signatures
+        let bad_data_plane_jwt = jwt_header_base64.clone()
+            + "."
+            + &jwt_payload_bad_data_plane_base64.clone()
+            + "."
+            + &jwt_invalid_signature_base_64.clone();
+        let mut client = SimpleCacheClient::new(bad_data_plane_jwt, 5).await.unwrap();
+        // Can reach control plane
+        let create_cache_result = client.create_cache("cache").await.unwrap_err();
+        let _err_msg_unauthenticated = "Invalid signature".to_string();
+        assert!(matches!(
+            create_cache_result,
+            MomentoError::Unauthenticated(_err_msg_unauthenticated)
+        ));
+        // Unable to reach data plane
+        let set_result = client
+            .set("cache", "hello", "world", None)
+            .await
+            .unwrap_err();
+        let _err_msg_internal = "error trying to connect: dns error: failed to lookup address information: nodename nor servname provided, or not known".to_string();
+        assert!(matches!(
+            set_result,
+            MomentoError::InternalServerError(_err_msg_internal)
+        ));
+        let get_result = client.get("cache", "hello").await.unwrap_err();
+        assert!(matches!(
+            get_result,
+            MomentoError::InternalServerError(_err_msg_internal)
+        ));
+    }
 }

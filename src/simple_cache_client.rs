@@ -103,8 +103,7 @@ impl SimpleCacheClient {
         let channel = Channel::builder(uri)
             .tls_config(ClientTlsConfig::default())
             .unwrap()
-            .connect()
-            .await?;
+            .connect_lazy();
 
         let interceptor = InterceptedService::new(
             channel.clone(),
@@ -124,8 +123,8 @@ impl SimpleCacheClient {
         let channel = Channel::builder(uri)
             .tls_config(ClientTlsConfig::default())
             .unwrap()
-            .connect()
-            .await?;
+            .connect_lazy();
+
         let interceptor = InterceptedService::new(
             channel.clone(),
             CacheHeaderInterceptor {
