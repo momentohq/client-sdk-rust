@@ -5,8 +5,8 @@ pub fn is_ttl_valid(ttl: &u32) -> Result<(), MomentoError> {
     let max_ttl = u32::MAX / 1000 as u32;
     if *ttl > max_ttl {
         return Err(MomentoError::InvalidArgument(format!(
-            "TTL needs to be less than {}",
-            ttl
+            "TTL provided, {}, needs to be less than the maximum TTL {}",
+            ttl, max_ttl
         )));
     }
     return Ok(());

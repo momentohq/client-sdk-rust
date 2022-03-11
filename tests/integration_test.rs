@@ -44,10 +44,16 @@ mod tests {
         let cache_body = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance().await;
         mm.create_cache(&cache_name).await.unwrap();
+        let ttl: u32 = 42949678;
+        let max_ttl = u32::MAX / 1000 as u32;
         let result = mm
-            .set(&cache_name, cache_key, cache_body, Some(42949678)) // 42949678 > 2^32/1000
+            .set(&cache_name, cache_key, cache_body, Some(ttl.clone())) // 42949678 > 2^32/1000
             .await
             .unwrap_err();
+        let _err_message = format!(
+            "TTL provided, {}, needs to be less than the maximum TTL {}",
+            ttl, max_ttl
+        );
         assert!(matches!(
             result,
             MomentoError::InvalidArgument(_err_message)
