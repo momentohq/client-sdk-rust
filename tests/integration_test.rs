@@ -45,7 +45,7 @@ mod tests {
         let mut mm = get_momento_instance().await;
         mm.create_cache(&cache_name).await.unwrap();
         let result = mm
-            .set(&cache_name, cache_key, cache_body, Some(42949678))
+            .set(&cache_name, cache_key, cache_body, Some(42949678)) // 42949678 > 2^32/1000
             .await
             .unwrap_err();
         assert!(matches!(
