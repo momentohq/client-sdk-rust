@@ -49,6 +49,65 @@ impl MomentoRequest for &str {
     }
 }
 
+#[derive(Clone)]
+pub struct SimpleCacheClientBuilder {
+    control_channel: Channel,
+    data_channel: Channel,
+    auth_token: String,
+    default_ttl_seconds: u32,
+}
+
+impl SimpleCacheClientBuilder {
+    pub async fn new(auth_token: String, default_ttl_seconds: u32) -> Result<Self, MomentoError> {
+        let momento_endpoints = MomentoEndpointsResolver::resolve(&auth_token, &None);
+        let control_endpoint = Uri::try_from(momento_endpoints.control_endpoint.as_str())?;
+        let data_endpoint = Uri::try_from(momento_endpoints.data_endpoint.as_str())?;
+
+        let control_channel = Channel::builder(control_endpoint)
+            .tls_config(ClientTlsConfig::default())
+            .unwrap()
+            .connect()
+            .await?;
+
+        let data_channel = Channel::builder(data_endpoint)
+            .tls_config(ClientTlsConfig::default())
+            .unwrap()
+            .connect()
+            .await?;
+
+        Ok(Self {
+            control_channel,
+            data_channel,
+            auth_token,
+            default_ttl_seconds,
+        })
+    }
+
+    pub fn build(self) -> SimpleCacheClient {
+        let control_interceptor = InterceptedService::new(
+            self.control_channel.clone(),
+            AuthHeaderInterceptor {
+                auth_key: self.auth_token.clone(),
+            },
+        );
+        let control_client = ScsControlClient::new(control_interceptor);
+
+        let data_interceptor = InterceptedService::new(
+            self.data_channel.clone(),
+            CacheHeaderInterceptor {
+                auth_key: self.auth_token.clone(),
+            },
+        );
+        let data_client = ScsClient::new(data_interceptor);
+
+        SimpleCacheClient {
+            control_client,
+            data_client,
+            item_default_ttl_seconds: self.default_ttl_seconds,
+        }
+    }
+}
+
 pub struct SimpleCacheClient {
     control_client: ScsControlClient<InterceptedService<Channel, AuthHeaderInterceptor>>,
     data_client: ScsClient<InterceptedService<Channel, CacheHeaderInterceptor>>,
