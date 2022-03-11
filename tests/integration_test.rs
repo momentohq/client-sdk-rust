@@ -65,7 +65,7 @@ mod tests {
             .unwrap();
         sleep(Duration::new(1, 0)).await;
         let result = mm.get(&cache_name, cache_key.clone()).await.unwrap();
-        assert!(matches!(result.result, MomentoGetStatus::MISS));
+        assert!(matches!(result.result, MomentoGetStatus::HIT));
         mm.delete_cache(&cache_name).await.unwrap();
     }
 
