@@ -38,6 +38,24 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn ttl_validation() {
+        let cache_name = Uuid::new_v4().to_string();
+        let cache_key = Uuid::new_v4().to_string();
+        let cache_body = Uuid::new_v4().to_string();
+        let mut mm = get_momento_instance().await;
+        mm.create_cache(&cache_name).await.unwrap();
+        let result = mm
+            .set(&cache_name, cache_key, cache_body, Some(42949678))
+            .await
+            .unwrap_err();
+        assert!(matches!(
+            result,
+            MomentoError::InvalidArgument(_err_message)
+        ));
+        mm.delete_cache(&cache_name).await.unwrap();
+    }
+
+    #[tokio::test]
     async fn cache_hit() {
         let cache_name = Uuid::new_v4().to_string();
         let cache_key = Uuid::new_v4().to_string();

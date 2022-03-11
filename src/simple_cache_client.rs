@@ -23,6 +23,7 @@ use crate::response::{
     cache_get_response::MomentoGetStatus,
     cache_set_response::{MomentoSetResponse, MomentoSetStatus},
 };
+use crate::utils;
 use crate::{
     generated::cache_client::{scs_client::ScsClient, ECacheResult, GetRequest, SetRequest},
     response::cache_get_response::MomentoGetResponse,
@@ -75,12 +76,15 @@ impl SimpleCacheClientBuilder {
             .connect()
             .await?;
 
-        Ok(Self {
-            control_channel,
-            data_channel,
-            auth_token,
-            default_ttl_seconds,
-        })
+        match utils::is_ttl_valid(&default_ttl_seconds) {
+            Ok(_) => Ok(Self {
+                control_channel,
+                data_channel,
+                auth_token,
+                default_ttl_seconds,
+            }),
+            Err(e) => Err(e),
+        }
     }
 
     pub fn build(self) -> SimpleCacheClient {
@@ -312,10 +316,15 @@ impl SimpleCacheClient {
         ttl_seconds: Option<u32>,
     ) -> Result<MomentoSetResponse, MomentoError> {
         self._is_cache_name_valid(&cache_name)?;
+        let temp_ttl = ttl_seconds.unwrap_or(self.item_default_ttl_seconds);
+        let ttl_to_use = match utils::is_ttl_valid(&temp_ttl) {
+            Ok(_) => temp_ttl * 1000,
+            Err(e) => return Err(e),
+        };
         let mut request = tonic::Request::new(SetRequest {
             cache_key: key.into_bytes(),
             cache_body: body.into_bytes(),
-            ttl_milliseconds: ttl_seconds.unwrap_or(self.item_default_ttl_seconds) * 1000,
+            ttl_milliseconds: ttl_to_use,
         });
         request.metadata_mut().append(
             "cache",
