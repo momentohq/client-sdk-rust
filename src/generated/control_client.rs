@@ -29,6 +29,25 @@ pub struct ListCachesResponse {
     #[prost(string, tag = "2")]
     pub next_token: ::prost::alloc::string::String,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CreateSigningKeyRequest {
+    #[prost(uint32, tag = "1")]
+    pub ttl_minutes: u32,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CreateSigningKeyResponse {
+    #[prost(string, tag = "1")]
+    pub key: ::prost::alloc::string::String,
+    #[prost(uint64, tag = "2")]
+    pub expires_at: u64,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RevokeSigningKeyRequest {
+    #[prost(string, tag = "1")]
+    pub key_id: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RevokeSigningKeyResponse {}
 #[doc = r" Generated client implementations."]
 pub mod scs_control_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
@@ -132,6 +151,36 @@ pub mod scs_control_client {
             let codec = tonic::codec::ProstCodec::default();
             let path =
                 http::uri::PathAndQuery::from_static("/control_client.ScsControl/ListCaches");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        pub async fn create_signing_key(
+            &mut self,
+            request: impl tonic::IntoRequest<super::CreateSigningKeyRequest>,
+        ) -> Result<tonic::Response<super::CreateSigningKeyResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path =
+                http::uri::PathAndQuery::from_static("/control_client.ScsControl/CreateSigningKey");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        pub async fn revoke_signing_key(
+            &mut self,
+            request: impl tonic::IntoRequest<super::RevokeSigningKeyRequest>,
+        ) -> Result<tonic::Response<super::RevokeSigningKeyResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path =
+                http::uri::PathAndQuery::from_static("/control_client.ScsControl/RevokeSigningKey");
             self.inner.unary(request.into_request(), path, codec).await
         }
     }

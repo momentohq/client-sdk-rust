@@ -5,6 +5,7 @@ use crate::response::error::MomentoError;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
+    pub sub: String,
     pub c: String,
     pub cp: String,
 }

@@ -8,6 +8,7 @@ mod tests {
     };
     use tokio::time::sleep;
     use uuid::Uuid;
+    use serde_json::Value;
 
     async fn get_momento_instance() -> SimpleCacheClient {
         let auth_token = env::var("TEST_AUTH_TOKEN").expect("env var TEST_AUTH_TOKEN must be set");
@@ -34,6 +35,17 @@ mod tests {
         assert!(matches!(
             result,
             MomentoError::InvalidArgument(_err_message)
+        ))
+    }
+
+    #[tokio::test]
+    async fn key_id_validation() {
+        let key_id = "";
+        let mut mm = get_momento_instance().await;
+        let result = mm.revoke_signing_key(key_id).await.unwrap_err();
+        assert!(matches!(
+            result,
+            MomentoError::InvalidArgument(_)
         ))
     }
 
@@ -116,6 +128,21 @@ mod tests {
         mm.create_cache(&cache_name).await.unwrap();
         mm.list_caches(None).await.unwrap();
         mm.delete_cache(&cache_name).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn create_revoke_signing_key() {
+        let mut mm = get_momento_instance().await;
+        let response = mm.create_signing_key(10).await.unwrap();
+        let data: Value = serde_json::from_str(response.key.as_str()).unwrap();
+        let obj = data.as_object().unwrap();
+
+        let auth_token = env::var("TEST_AUTH_TOKEN").expect("env var TEST_AUTH_TOKEN must be set");
+        let strings: Vec<&str> = auth_token.split(".").collect();
+        assert!(std::str::from_utf8(base64_url::decode(strings[1]).unwrap().as_slice()).unwrap().contains(response.user_id.as_str()));
+
+        let kid = obj.get("kid").unwrap();
+        mm.revoke_signing_key(&kid.as_str().unwrap()).await.unwrap();
     }
 
     #[tokio::test]
