@@ -9,15 +9,14 @@ use crate::endpoint_resolver::MomentoEndpointsResolver;
 use crate::grpc::cache_header_interceptor::CacheHeaderInterceptor;
 use crate::{
     generated::control_client::{
-        scs_control_client::ScsControlClient,
-        CreateCacheRequest, DeleteCacheRequest, ListCachesRequest,
-        CreateSigningKeyRequest, RevokeSigningKeyRequest,
+        scs_control_client::ScsControlClient, CreateCacheRequest, CreateSigningKeyRequest,
+        DeleteCacheRequest, ListCachesRequest, RevokeSigningKeyRequest,
     },
     grpc::auth_header_interceptor::AuthHeaderInterceptor,
     response::{
+        create_signing_key_response::MomentoCreateSigningKeyResponse,
         error::MomentoError,
         list_cache_response::{MomentoCache, MomentoListCacheResult},
-        create_signing_key_response::MomentoCreateSigningKeyResponse,
     },
 };
 
@@ -159,11 +158,13 @@ impl SimpleCacheClient {
         let control_client = SimpleCacheClient::build_control_client(
             auth_token.clone(),
             control_endpoint.as_str().to_string(),
-        ).await;
+        )
+        .await;
         let data_client = SimpleCacheClient::build_data_client(
             auth_token.clone(),
-            data_endpoint.as_str().to_string()
-        ).await;
+            data_endpoint.as_str().to_string(),
+        )
+        .await;
 
         let simple_cache_client = Self {
             subject,
@@ -304,11 +305,18 @@ impl SimpleCacheClient {
     /// # Arguments
     ///
     /// * `ttl_minutes` - key's time-to-live in minutes
-    pub async fn create_signing_key(&mut self, ttl_minutes: u32) -> Result<MomentoCreateSigningKeyResponse, MomentoError> {
+    pub async fn create_signing_key(
+        &mut self,
+        ttl_minutes: u32,
+    ) -> Result<MomentoCreateSigningKeyResponse, MomentoError> {
         let request = Request::new(CreateSigningKeyRequest {
             ttl_minutes: ttl_minutes,
         });
-        let res = self.control_client.create_signing_key(request).await?.into_inner();
+        let res = self
+            .control_client
+            .create_signing_key(request)
+            .await?
+            .into_inner();
         let response = MomentoCreateSigningKeyResponse {
             user_id: self.subject.as_str().to_string(),
             endpoint: self.data_endpoint.as_str().to_string(),

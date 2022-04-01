@@ -6,9 +6,9 @@ mod tests {
     use momento::{
         response::cache_get_response::MomentoGetStatus, simple_cache_client::SimpleCacheClient,
     };
+    use serde_json::Value;
     use tokio::time::sleep;
     use uuid::Uuid;
-    use serde_json::Value;
 
     async fn get_momento_instance() -> SimpleCacheClient {
         let auth_token = env::var("TEST_AUTH_TOKEN").expect("env var TEST_AUTH_TOKEN must be set");
@@ -43,10 +43,7 @@ mod tests {
         let key_id = "";
         let mut mm = get_momento_instance().await;
         let result = mm.revoke_signing_key(key_id).await.unwrap_err();
-        assert!(matches!(
-            result,
-            MomentoError::InvalidArgument(_)
-        ))
+        assert!(matches!(result, MomentoError::InvalidArgument(_)))
     }
 
     #[tokio::test]
@@ -139,7 +136,11 @@ mod tests {
 
         let auth_token = env::var("TEST_AUTH_TOKEN").expect("env var TEST_AUTH_TOKEN must be set");
         let strings: Vec<&str> = auth_token.split(".").collect();
-        assert!(std::str::from_utf8(base64_url::decode(strings[1]).unwrap().as_slice()).unwrap().contains(response.user_id.as_str()));
+        assert!(
+            std::str::from_utf8(base64_url::decode(strings[1]).unwrap().as_slice())
+                .unwrap()
+                .contains(response.user_id.as_str())
+        );
 
         let kid = obj.get("kid").unwrap();
         mm.revoke_signing_key(&kid.as_str().unwrap()).await.unwrap();

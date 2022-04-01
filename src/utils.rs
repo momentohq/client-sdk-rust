@@ -1,5 +1,5 @@
-use crate::response::error::MomentoError;
 use crate::jwt::decode_jwt;
+use crate::response::error::MomentoError;
 
 pub fn is_ttl_valid(ttl: &u32) -> Result<(), MomentoError> {
     // max_ttl will be 4294967 since 2^32 / 1000 = 4294967.296
