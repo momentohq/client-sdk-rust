@@ -9,11 +9,12 @@ use crate::endpoint_resolver::MomentoEndpointsResolver;
 use crate::grpc::cache_header_interceptor::CacheHeaderInterceptor;
 use crate::{
     generated::control_client::{
-        scs_control_client::ScsControlClient, CreateCacheRequest, DeleteCacheRequest,
-        ListCachesRequest,
+        scs_control_client::ScsControlClient, CreateCacheRequest, CreateSigningKeyRequest,
+        DeleteCacheRequest, ListCachesRequest, RevokeSigningKeyRequest,
     },
     grpc::auth_header_interceptor::AuthHeaderInterceptor,
     response::{
+        create_signing_key_response::MomentoCreateSigningKeyResponse,
         error::MomentoError,
         list_cache_response::{MomentoCache, MomentoListCacheResult},
     },
@@ -52,6 +53,8 @@ impl MomentoRequest for &str {
 
 #[derive(Clone)]
 pub struct SimpleCacheClientBuilder {
+    subject: String,
+    data_endpoint: String,
     control_channel: Channel,
     data_channel: Channel,
     auth_token: String,
@@ -60,17 +63,21 @@ pub struct SimpleCacheClientBuilder {
 
 impl SimpleCacheClientBuilder {
     pub async fn new(auth_token: String, default_ttl_seconds: u32) -> Result<Self, MomentoError> {
-        let momento_endpoints = MomentoEndpointsResolver::resolve(&auth_token, &None);
-        let control_endpoint = Uri::try_from(momento_endpoints.control_endpoint.as_str())?;
-        let data_endpoint = Uri::try_from(momento_endpoints.data_endpoint.as_str())?;
+        let subject = utils::get_sub(&auth_token);
 
-        let control_channel = Channel::builder(control_endpoint)
+        let momento_endpoints = MomentoEndpointsResolver::resolve(&auth_token, &None);
+        let control_endpoint = momento_endpoints.control_endpoint;
+        let data_endpoint = momento_endpoints.data_endpoint;
+        let control_endpoint_uri = Uri::try_from(control_endpoint.as_str())?;
+        let data_endpoint_uri = Uri::try_from(data_endpoint.as_str())?;
+
+        let control_channel = Channel::builder(control_endpoint_uri)
             .tls_config(ClientTlsConfig::default())
             .unwrap()
             .connect()
             .await?;
 
-        let data_channel = Channel::builder(data_endpoint)
+        let data_channel = Channel::builder(data_endpoint_uri)
             .tls_config(ClientTlsConfig::default())
             .unwrap()
             .connect()
@@ -78,6 +85,8 @@ impl SimpleCacheClientBuilder {
 
         match utils::is_ttl_valid(&default_ttl_seconds) {
             Ok(_) => Ok(Self {
+                subject,
+                data_endpoint,
                 control_channel,
                 data_channel,
                 auth_token,
@@ -105,6 +114,8 @@ impl SimpleCacheClientBuilder {
         let data_client = ScsClient::new(data_interceptor);
 
         SimpleCacheClient {
+            subject: self.subject,
+            data_endpoint: self.data_endpoint,
             control_client,
             data_client,
             item_default_ttl_seconds: self.default_ttl_seconds,
@@ -113,6 +124,8 @@ impl SimpleCacheClientBuilder {
 }
 
 pub struct SimpleCacheClient {
+    subject: String,
+    data_endpoint: String,
     control_client: ScsControlClient<InterceptedService<Channel, AuthHeaderInterceptor>>,
     data_client: ScsClient<InterceptedService<Channel, CacheHeaderInterceptor>>,
     item_default_ttl_seconds: u32,
@@ -137,19 +150,25 @@ impl SimpleCacheClient {
     /// # })
     /// ```
     pub async fn new(auth_token: String, default_ttl_seconds: u32) -> Result<Self, MomentoError> {
+        let subject = utils::get_sub(&auth_token);
+
         let momento_endpoints = MomentoEndpointsResolver::resolve(&auth_token, &None);
-        let control_endpoint = momento_endpoints.control_endpoint.as_str();
-        let data_endpoint = momento_endpoints.data_endpoint.as_str();
+        let control_endpoint = momento_endpoints.control_endpoint;
+        let data_endpoint = momento_endpoints.data_endpoint;
         let control_client = SimpleCacheClient::build_control_client(
             auth_token.clone(),
-            control_endpoint.to_string(),
+            control_endpoint.as_str().to_string(),
         )
         .await;
-        let data_client =
-            SimpleCacheClient::build_data_client(auth_token.clone(), data_endpoint.to_string())
-                .await;
+        let data_client = SimpleCacheClient::build_data_client(
+            auth_token.clone(),
+            data_endpoint.as_str().to_string(),
+        )
+        .await;
 
         let simple_cache_client = Self {
+            subject,
+            data_endpoint,
             control_client: control_client.unwrap(),
             data_client: data_client.unwrap(),
             item_default_ttl_seconds: default_ttl_seconds,
@@ -204,7 +223,7 @@ impl SimpleCacheClient {
     ///
     /// * `name` - name of cache to create
     pub async fn create_cache(&mut self, name: &str) -> Result<(), MomentoError> {
-        self._is_cache_name_valid(&name)?;
+        utils::is_cache_name_valid(&name)?;
         let request = Request::new(CreateCacheRequest {
             cache_name: name.to_string(),
         });
@@ -234,7 +253,7 @@ impl SimpleCacheClient {
     /// # })
     /// ```
     pub async fn delete_cache(&mut self, name: &str) -> Result<(), MomentoError> {
-        self._is_cache_name_valid(&name)?;
+        utils::is_cache_name_valid(&name)?;
         let request = Request::new(DeleteCacheRequest {
             cache_name: name.to_string(),
         });
@@ -281,6 +300,46 @@ impl SimpleCacheClient {
         Ok(response)
     }
 
+    /// Creates a new Momento signing key
+    ///
+    /// # Arguments
+    ///
+    /// * `ttl_minutes` - key's time-to-live in minutes
+    pub async fn create_signing_key(
+        &mut self,
+        ttl_minutes: u32,
+    ) -> Result<MomentoCreateSigningKeyResponse, MomentoError> {
+        let request = Request::new(CreateSigningKeyRequest {
+            ttl_minutes: ttl_minutes,
+        });
+        let res = self
+            .control_client
+            .create_signing_key(request)
+            .await?
+            .into_inner();
+        let response = MomentoCreateSigningKeyResponse {
+            user_id: self.subject.as_str().to_string(),
+            endpoint: self.data_endpoint.as_str().to_string(),
+            key: res.key,
+            expires_at: res.expires_at,
+        };
+        Ok(response)
+    }
+
+    /// Revokes a Momento signing key, all tokens signed by which will be invalid
+    ///
+    /// # Arguments
+    ///
+    /// * `key_id` - the kid (key ID) of the key to revoke
+    pub async fn revoke_signing_key(&mut self, key_id: &str) -> Result<(), MomentoError> {
+        utils::is_key_id_valid(&key_id)?;
+        let request = Request::new(RevokeSigningKeyRequest {
+            key_id: key_id.to_string(),
+        });
+        self.control_client.revoke_signing_key(request).await?;
+        Ok(())
+    }
+
     /// Sets an item in a Momento Cache
     ///
     /// # Arguments
@@ -315,7 +374,7 @@ impl SimpleCacheClient {
         body: I,
         ttl_seconds: Option<u32>,
     ) -> Result<MomentoSetResponse, MomentoError> {
-        self._is_cache_name_valid(&cache_name)?;
+        utils::is_cache_name_valid(&cache_name)?;
         let temp_ttl = ttl_seconds.unwrap_or(self.item_default_ttl_seconds);
         let ttl_to_use = match utils::is_ttl_valid(&temp_ttl) {
             Ok(_) => temp_ttl * 1000,
@@ -370,7 +429,7 @@ impl SimpleCacheClient {
         cache_name: &str,
         key: I,
     ) -> Result<MomentoGetResponse, MomentoError> {
-        self._is_cache_name_valid(&cache_name)?;
+        utils::is_cache_name_valid(&cache_name)?;
         let mut request = tonic::Request::new(GetRequest {
             cache_key: key.into_bytes(),
         });
@@ -390,14 +449,5 @@ impl SimpleCacheClient {
             }),
             _ => todo!(),
         };
-    }
-
-    fn _is_cache_name_valid(&mut self, cache_name: &str) -> Result<(), MomentoError> {
-        if cache_name.trim().is_empty() {
-            return Err(MomentoError::InvalidArgument(
-                "Cache name cannot be empty".to_string(),
-            ));
-        }
-        return Ok(());
     }
 }
