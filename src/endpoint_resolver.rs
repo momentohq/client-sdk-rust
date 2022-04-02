@@ -1,4 +1,5 @@
-use crate::jwt::{decode_jwt, Claims};
+use crate::jwt::Claims;
+use crate::utils;
 
 pub struct MomentoEndpoints {
     pub control_endpoint: String,
@@ -12,7 +13,7 @@ const DATA_ENDPOINT_PREFIX: &str = "data.";
 
 impl MomentoEndpointsResolver {
     pub fn resolve(auth_token: &str, hosted_zone: &Option<String>) -> MomentoEndpoints {
-        let claims = decode_jwt(&auth_token).unwrap();
+        let claims = utils::get_claims(auth_token);
         let control_endpoint = MomentoEndpointsResolver::get_control_endpoint(&claims, hosted_zone);
         let data_endpoint = MomentoEndpointsResolver::get_data_endpoint(&claims, hosted_zone);
         return MomentoEndpoints {

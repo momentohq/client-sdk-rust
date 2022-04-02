@@ -1,4 +1,4 @@
-use crate::jwt::decode_jwt;
+use crate::jwt::{decode_jwt, Claims};
 use crate::response::error::MomentoError;
 
 pub fn is_ttl_valid(ttl: &u32) -> Result<(), MomentoError> {
@@ -31,6 +31,6 @@ pub fn is_key_id_valid(key_id: &str) -> Result<(), MomentoError> {
     return Ok(());
 }
 
-pub fn get_sub(auth_token: &str) -> String {
-    return decode_jwt(&auth_token).unwrap().sub;
+pub fn get_claims(auth_token: &str) -> Claims {
+    return decode_jwt(&auth_token).unwrap();
 }

@@ -131,19 +131,21 @@ mod tests {
     async fn create_revoke_signing_key() {
         let mut mm = get_momento_instance().await;
         let response = mm.create_signing_key(10).await.unwrap();
-        let data: Value = serde_json::from_str(response.key.as_str()).unwrap();
-        let obj = data.as_object().unwrap();
+
+        let key: Value = serde_json::from_str(&response.key).unwrap();
+        let obj = key.as_object().unwrap();
+        let kid = obj.get("kid").unwrap();
+        assert_eq!(kid.as_str().unwrap(), response.key_id);
 
         let auth_token = env::var("TEST_AUTH_TOKEN").expect("env var TEST_AUTH_TOKEN must be set");
-        let strings: Vec<&str> = auth_token.split(".").collect();
+        let parts: Vec<&str> = auth_token.split(".").collect();
         assert!(
-            std::str::from_utf8(base64_url::decode(strings[1]).unwrap().as_slice())
+            std::str::from_utf8(base64_url::decode(parts[1]).unwrap().as_slice())
                 .unwrap()
-                .contains(response.user_id.as_str())
+                .contains(&response.endpoint)
         );
 
-        let kid = obj.get("kid").unwrap();
-        mm.revoke_signing_key(&kid.as_str().unwrap()).await.unwrap();
+        mm.revoke_signing_key(&response.key_id).await.unwrap();
     }
 
     #[tokio::test]
