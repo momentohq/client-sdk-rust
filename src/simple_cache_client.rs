@@ -180,9 +180,9 @@ impl SimpleCacheClient {
             .connect_lazy();
 
         let interceptor = InterceptedService::new(
-            channel.clone(),
+            channel,
             AuthHeaderInterceptor {
-                auth_key: auth_token.clone(),
+                auth_key: auth_token,
             },
         );
         let client = ScsControlClient::new(interceptor);
@@ -200,9 +200,9 @@ impl SimpleCacheClient {
             .connect_lazy();
 
         let interceptor = InterceptedService::new(
-            channel.clone(),
+            channel,
             CacheHeaderInterceptor {
-                auth_key: auth_token.clone(),
+                auth_key: auth_token,
             },
         );
         let client = ScsClient::new(interceptor);
