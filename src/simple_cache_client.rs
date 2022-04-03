@@ -95,7 +95,7 @@ impl SimpleCacheClientBuilder {
 
     pub fn build(self) -> SimpleCacheClient {
         let control_interceptor = InterceptedService::new(
-            self.control_channel.clone(),
+            self.control_channel,
             AuthHeaderInterceptor {
                 auth_key: self.auth_token.clone(),
             },
@@ -103,7 +103,7 @@ impl SimpleCacheClientBuilder {
         let control_client = ScsControlClient::new(control_interceptor);
 
         let data_interceptor = InterceptedService::new(
-            self.data_channel.clone(),
+            self.data_channel,
             CacheHeaderInterceptor {
                 auth_key: self.auth_token.clone(),
             },
@@ -111,7 +111,7 @@ impl SimpleCacheClientBuilder {
         let data_client = ScsClient::new(data_interceptor);
 
         SimpleCacheClient {
-            data_endpoint: self.data_endpoint.clone(),
+            data_endpoint: self.data_endpoint,
             control_client,
             data_client,
             item_default_ttl_seconds: self.default_ttl_seconds,
