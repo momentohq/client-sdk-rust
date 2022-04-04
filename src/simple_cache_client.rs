@@ -1,5 +1,6 @@
 use serde_json::Value;
 use std::convert::TryFrom;
+use std::time::Duration;
 use tonic::{
     codegen::InterceptedService,
     transport::{Channel, ClientTlsConfig, Uri},
@@ -216,9 +217,10 @@ impl SimpleCacheClient {
     /// * `name` - name of cache to create
     pub async fn create_cache(&mut self, name: &str) -> Result<(), MomentoError> {
         utils::is_cache_name_valid(&name)?;
-        let request = Request::new(CreateCacheRequest {
+        let mut request = Request::new(CreateCacheRequest {
             cache_name: name.to_string(),
         });
+        request.set_timeout(Duration::from_secs(60));
 
         self.control_client.create_cache(request).await?;
         Ok(())
@@ -246,9 +248,11 @@ impl SimpleCacheClient {
     /// ```
     pub async fn delete_cache(&mut self, name: &str) -> Result<(), MomentoError> {
         utils::is_cache_name_valid(&name)?;
-        let request = Request::new(DeleteCacheRequest {
+        let mut request = Request::new(DeleteCacheRequest {
             cache_name: name.to_string(),
         });
+        request.set_timeout(Duration::from_secs(60));
+
         self.control_client.delete_cache(request).await?;
         Ok(())
     }
@@ -274,9 +278,10 @@ impl SimpleCacheClient {
         &mut self,
         next_token: Option<&str>,
     ) -> Result<MomentoListCacheResult, MomentoError> {
-        let request = Request::new(ListCachesRequest {
+        let mut request = Request::new(ListCachesRequest {
             next_token: next_token.unwrap_or_default().to_string(),
         });
+        request.set_timeout(Duration::from_secs(60));
         let res = self.control_client.list_caches(request).await?.into_inner();
         let caches = res
             .cache
@@ -301,9 +306,10 @@ impl SimpleCacheClient {
         &mut self,
         ttl_minutes: u32,
     ) -> Result<MomentoCreateSigningKeyResponse, MomentoError> {
-        let request = Request::new(CreateSigningKeyRequest {
+        let mut request = Request::new(CreateSigningKeyRequest {
             ttl_minutes: ttl_minutes,
         });
+        request.set_timeout(Duration::from_secs(60));
         let res = self
             .control_client
             .create_signing_key(request)
@@ -328,9 +334,10 @@ impl SimpleCacheClient {
     /// * `key_id` - the ID of the key to revoke
     pub async fn revoke_signing_key(&mut self, key_id: &str) -> Result<(), MomentoError> {
         utils::is_key_id_valid(&key_id)?;
-        let request = Request::new(RevokeSigningKeyRequest {
+        let mut request = Request::new(RevokeSigningKeyRequest {
             key_id: key_id.to_string(),
         });
+        request.set_timeout(Duration::from_secs(60));
         self.control_client.revoke_signing_key(request).await?;
         Ok(())
     }
@@ -384,6 +391,7 @@ impl SimpleCacheClient {
             "cache",
             tonic::metadata::AsciiMetadataValue::from_str(&cache_name).unwrap(),
         );
+        request.set_timeout(Duration::from_secs(5));
         let _ = self.data_client.set(request).await?;
         Ok(MomentoSetResponse {
             result: MomentoSetStatus::OK,
@@ -432,6 +440,7 @@ impl SimpleCacheClient {
             "cache",
             tonic::metadata::AsciiMetadataValue::from_str(&cache_name).unwrap(),
         );
+        request.set_timeout(Duration::from_secs(5));
         let response = self.data_client.get(request).await?.into_inner();
         return match response.result() {
             ECacheResult::Hit => Ok(MomentoGetResponse {
