@@ -1,3 +1,4 @@
+use serde_json::Value;
 use std::convert::TryFrom;
 use tonic::{
     codegen::InterceptedService,
@@ -53,7 +54,6 @@ impl MomentoRequest for &str {
 
 #[derive(Clone)]
 pub struct SimpleCacheClientBuilder {
-    subject: String,
     data_endpoint: String,
     control_channel: Channel,
     data_channel: Channel,
@@ -63,13 +63,11 @@ pub struct SimpleCacheClientBuilder {
 
 impl SimpleCacheClientBuilder {
     pub async fn new(auth_token: String, default_ttl_seconds: u32) -> Result<Self, MomentoError> {
-        let subject = utils::get_sub(&auth_token);
+        let data_endpoint = utils::get_claims(&auth_token).c;
 
         let momento_endpoints = MomentoEndpointsResolver::resolve(&auth_token, &None);
-        let control_endpoint = momento_endpoints.control_endpoint;
-        let data_endpoint = momento_endpoints.data_endpoint;
-        let control_endpoint_uri = Uri::try_from(control_endpoint.as_str())?;
-        let data_endpoint_uri = Uri::try_from(data_endpoint.as_str())?;
+        let control_endpoint_uri = Uri::try_from(&momento_endpoints.control_endpoint)?;
+        let data_endpoint_uri = Uri::try_from(&momento_endpoints.data_endpoint)?;
 
         let control_channel = Channel::builder(control_endpoint_uri)
             .tls_config(ClientTlsConfig::default())
@@ -85,7 +83,6 @@ impl SimpleCacheClientBuilder {
 
         match utils::is_ttl_valid(&default_ttl_seconds) {
             Ok(_) => Ok(Self {
-                subject,
                 data_endpoint,
                 control_channel,
                 data_channel,
@@ -98,7 +95,7 @@ impl SimpleCacheClientBuilder {
 
     pub fn build(self) -> SimpleCacheClient {
         let control_interceptor = InterceptedService::new(
-            self.control_channel.clone(),
+            self.control_channel,
             AuthHeaderInterceptor {
                 auth_key: self.auth_token.clone(),
             },
@@ -106,7 +103,7 @@ impl SimpleCacheClientBuilder {
         let control_client = ScsControlClient::new(control_interceptor);
 
         let data_interceptor = InterceptedService::new(
-            self.data_channel.clone(),
+            self.data_channel,
             CacheHeaderInterceptor {
                 auth_key: self.auth_token.clone(),
             },
@@ -114,7 +111,6 @@ impl SimpleCacheClientBuilder {
         let data_client = ScsClient::new(data_interceptor);
 
         SimpleCacheClient {
-            subject: self.subject,
             data_endpoint: self.data_endpoint,
             control_client,
             data_client,
@@ -124,7 +120,6 @@ impl SimpleCacheClientBuilder {
 }
 
 pub struct SimpleCacheClient {
-    subject: String,
     data_endpoint: String,
     control_client: ScsControlClient<InterceptedService<Channel, AuthHeaderInterceptor>>,
     data_client: ScsClient<InterceptedService<Channel, CacheHeaderInterceptor>>,
@@ -150,24 +145,21 @@ impl SimpleCacheClient {
     /// # })
     /// ```
     pub async fn new(auth_token: String, default_ttl_seconds: u32) -> Result<Self, MomentoError> {
-        let subject = utils::get_sub(&auth_token);
+        let data_endpoint = utils::get_claims(&auth_token).c;
 
         let momento_endpoints = MomentoEndpointsResolver::resolve(&auth_token, &None);
-        let control_endpoint = momento_endpoints.control_endpoint;
-        let data_endpoint = momento_endpoints.data_endpoint;
         let control_client = SimpleCacheClient::build_control_client(
             auth_token.clone(),
-            control_endpoint.as_str().to_string(),
+            momento_endpoints.control_endpoint,
         )
         .await;
         let data_client = SimpleCacheClient::build_data_client(
             auth_token.clone(),
-            data_endpoint.as_str().to_string(),
+            momento_endpoints.data_endpoint,
         )
         .await;
 
         let simple_cache_client = Self {
-            subject,
             data_endpoint,
             control_client: control_client.unwrap(),
             data_client: data_client.unwrap(),
@@ -188,9 +180,9 @@ impl SimpleCacheClient {
             .connect_lazy();
 
         let interceptor = InterceptedService::new(
-            channel.clone(),
+            channel,
             AuthHeaderInterceptor {
-                auth_key: auth_token.clone(),
+                auth_key: auth_token,
             },
         );
         let client = ScsControlClient::new(interceptor);
@@ -208,9 +200,9 @@ impl SimpleCacheClient {
             .connect_lazy();
 
         let interceptor = InterceptedService::new(
-            channel.clone(),
+            channel,
             CacheHeaderInterceptor {
-                auth_key: auth_token.clone(),
+                auth_key: auth_token,
             },
         );
         let client = ScsClient::new(interceptor);
@@ -317,11 +309,14 @@ impl SimpleCacheClient {
             .create_signing_key(request)
             .await?
             .into_inner();
+        let key: Value = serde_json::from_str(&res.key).unwrap();
+        let obj = key.as_object().unwrap();
+        let kid = obj.get("kid").unwrap();
         let response = MomentoCreateSigningKeyResponse {
-            user_id: self.subject.as_str().to_string(),
-            endpoint: self.data_endpoint.as_str().to_string(),
+            key_id: kid.as_str().unwrap().to_owned(),
             key: res.key,
             expires_at: res.expires_at,
+            endpoint: self.data_endpoint.clone(),
         };
         Ok(response)
     }
@@ -330,7 +325,7 @@ impl SimpleCacheClient {
     ///
     /// # Arguments
     ///
-    /// * `key_id` - the kid (key ID) of the key to revoke
+    /// * `key_id` - the ID of the key to revoke
     pub async fn revoke_signing_key(&mut self, key_id: &str) -> Result<(), MomentoError> {
         utils::is_key_id_valid(&key_id)?;
         let request = Request::new(RevokeSigningKeyRequest {
