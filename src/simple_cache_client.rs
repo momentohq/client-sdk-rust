@@ -58,11 +58,11 @@ pub struct SimpleCacheClientBuilder {
     control_channel: Channel,
     data_channel: Channel,
     auth_token: String,
-    default_ttl_seconds: u32,
+    default_ttl_seconds: u64,
 }
 
 impl SimpleCacheClientBuilder {
-    pub async fn new(auth_token: String, default_ttl_seconds: u32) -> Result<Self, MomentoError> {
+    pub async fn new(auth_token: String, default_ttl_seconds: u64) -> Result<Self, MomentoError> {
         let data_endpoint = utils::get_claims(&auth_token).c;
 
         let momento_endpoints = MomentoEndpointsResolver::resolve(&auth_token, &None);
@@ -123,7 +123,7 @@ pub struct SimpleCacheClient {
     data_endpoint: String,
     control_client: ScsControlClient<InterceptedService<Channel, AuthHeaderInterceptor>>,
     data_client: ScsClient<InterceptedService<Channel, CacheHeaderInterceptor>>,
-    item_default_ttl_seconds: u32,
+    item_default_ttl_seconds: u64,
 }
 
 impl SimpleCacheClient {
@@ -144,7 +144,7 @@ impl SimpleCacheClient {
     ///     let momento = SimpleCacheClient::new(auth_token, default_ttl).await;
     /// # })
     /// ```
-    pub async fn new(auth_token: String, default_ttl_seconds: u32) -> Result<Self, MomentoError> {
+    pub async fn new(auth_token: String, default_ttl_seconds: u64) -> Result<Self, MomentoError> {
         let data_endpoint = utils::get_claims(&auth_token).c;
 
         let momento_endpoints = MomentoEndpointsResolver::resolve(&auth_token, &None);
@@ -367,12 +367,12 @@ impl SimpleCacheClient {
         cache_name: &str,
         key: I,
         body: I,
-        ttl_seconds: Option<u32>,
+        ttl_seconds: Option<u64>,
     ) -> Result<MomentoSetResponse, MomentoError> {
         utils::is_cache_name_valid(&cache_name)?;
         let temp_ttl = ttl_seconds.unwrap_or(self.item_default_ttl_seconds);
         let ttl_to_use = match utils::is_ttl_valid(&temp_ttl) {
-            Ok(_) => temp_ttl * 1000,
+            Ok(_) => temp_ttl * 1000 as u64,
             Err(e) => return Err(e),
         };
         let mut request = tonic::Request::new(SetRequest {
