@@ -35,7 +35,7 @@ message GetResponse {
 message SetRequest {
   bytes cache_key = 1;
   bytes cache_body = 2;
-  uint32 ttl_milliseconds = 3;
+  uint64 ttl_milliseconds = 3;
 }
 
 message SetResponse {

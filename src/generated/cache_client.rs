@@ -18,8 +18,8 @@ pub struct SetRequest {
     pub cache_key: ::prost::alloc::vec::Vec<u8>,
     #[prost(bytes = "vec", tag = "2")]
     pub cache_body: ::prost::alloc::vec::Vec<u8>,
-    #[prost(uint32, tag = "3")]
-    pub ttl_milliseconds: u32,
+    #[prost(uint64, tag = "3")]
+    pub ttl_milliseconds: u64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SetResponse {
