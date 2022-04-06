@@ -7,8 +7,8 @@ impl tonic::service::Interceptor for CacheHeaderInterceptor {
     fn call(&mut self, request: tonic::Request<()>) -> Result<tonic::Request<()>, tonic::Status> {
         let request_metadata = request.metadata().clone();
         let mut result = {
-            request.into_inner();
-            tonic::Request::new(())
+            let message = request.into_inner();
+            tonic::Request::new(message)
         };
         result.metadata_mut().insert(
             "authorization",
