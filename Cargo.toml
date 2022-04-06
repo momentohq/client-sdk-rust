@@ -1,5 +1,5 @@
 [package]
-name = "momento_sdk"
+name = "momento"
 version = "0.1.0"
 authors = ["momento"]
 edition = "2018"
