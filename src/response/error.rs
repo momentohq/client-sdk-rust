@@ -1,17 +1,31 @@
 use tonic::codegen::http;
 
+/// Exception type for resulting from invalid interactions with Momento Services.
 #[derive(Debug)]
 pub enum MomentoError {
+    /// Momento Service encountered an unexpected exception while trying to fulfill the request.
     InternalServerError(String),
+    /// Invalid parameters sent to Momento Services.
     BadRequest(String),
+    /// Insufficient permissions to execute an operation.
     PermissionDenied(String),
+    /// Authentication token is not provided or is invalid.
     Unauthenticated(String),
+    /// Requested resource or the resource on which an operation was requested doesn't exist.
     NotFound(String),
+    /// A resource already exists.
     AlreadyExists(String),
+    /// Operation was cancelled.
     Cancelled(String),
+    /// Requested operation did not complete in allotted time.
     Timeout(String),
+    /// Requested operation couldn't be completed because system limits were hit.
     LimitExceeded(String),
+    /// Represents all client side exceptions thrown by the SDK.
+    /// his exception typically implies that the request wasn't sent to the service successfully or if the service responded, the sdk couldn't interpret the response.
+    /// An example would be SDK client was unable to convert the user provided data into a valid request that was expected by the service.
     ClientSdkError(String),
+    /// SDK client side validation fails.
     InvalidArgument(String),
 }
 
