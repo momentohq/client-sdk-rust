@@ -6,7 +6,10 @@ pub struct CacheHeaderInterceptor {
 impl tonic::service::Interceptor for CacheHeaderInterceptor {
     fn call(&mut self, request: tonic::Request<()>) -> Result<tonic::Request<()>, tonic::Status> {
         let request_metadata = request.metadata().clone();
-        let mut result = tonic::Request::new(request.into_inner());
+        let mut result = {
+            request.into_inner();
+            tonic::Request::new(())
+        };
         result.metadata_mut().insert(
             "authorization",
             tonic::metadata::AsciiMetadataValue::from_str(self.auth_key.as_str()).unwrap(),

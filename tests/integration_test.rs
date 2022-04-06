@@ -54,9 +54,9 @@ mod tests {
         let mut mm = get_momento_instance().await;
         mm.create_cache(&cache_name).await.unwrap();
         let ttl: u64 = 18446744073709551615;
-        let max_ttl = u64::MAX / 1000 as u64;
+        let max_ttl = u64::MAX / 1000_u64;
         let result = mm
-            .set(&cache_name, cache_key, cache_body, Some(ttl.clone())) // 18446744073709551615 > 2^64/1000
+            .set(&cache_name, cache_key, cache_body, Some(ttl)) // 18446744073709551615 > 2^64/1000
             .await
             .unwrap_err();
         let _err_message = format!(
@@ -138,7 +138,7 @@ mod tests {
         assert_eq!(kid.as_str().unwrap(), response.key_id);
 
         let auth_token = env::var("TEST_AUTH_TOKEN").expect("env var TEST_AUTH_TOKEN must be set");
-        let parts: Vec<&str> = auth_token.split(".").collect();
+        let parts: Vec<&str> = auth_token.split('.').collect();
         assert!(
             std::str::from_utf8(base64_url::decode(parts[1]).unwrap().as_slice())
                 .unwrap()

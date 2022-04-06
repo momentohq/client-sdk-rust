@@ -100,7 +100,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
         | tonic::Code::Aborted
         | tonic::Code::Internal
         | tonic::Code::Unavailable
-        | tonic::Code::DataLoss
-        | _ => MomentoError::InternalServerError(status.message().to_string()),
+        | tonic::Code::DataLoss => MomentoError::InternalServerError(status.message().to_string()),
+        _ => MomentoError::InternalServerError(status.message().to_string()),
     }
 }
