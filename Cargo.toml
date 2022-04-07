@@ -1,8 +1,13 @@
 [package]
 name = "momento"
 version = "0.1.0"
-authors = ["Matt Straathof <matt.straat@gmail.com>"]
+authors = ["momento"]
 edition = "2018"
+description = "Client SDK for Momento services"
+readme = "README.md"
+license = "Apache-2.0"
+license-file = "LICENSE"
+repository = "https://github.com/momentohq/client-sdk-rust"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

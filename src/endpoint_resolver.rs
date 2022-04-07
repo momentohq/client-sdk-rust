@@ -16,20 +16,20 @@ impl MomentoEndpointsResolver {
         let claims = utils::get_claims(auth_token);
         let control_endpoint = MomentoEndpointsResolver::get_control_endpoint(&claims, hosted_zone);
         let data_endpoint = MomentoEndpointsResolver::get_data_endpoint(&claims, hosted_zone);
-        return MomentoEndpoints {
+        MomentoEndpoints {
             control_endpoint,
             data_endpoint,
-        };
+        }
     }
 
     fn get_control_endpoint(claims: &Claims, hosted_zone: &Option<String>) -> String {
-        return MomentoEndpointsResolver::get_control_endpoint_from_hosted_zone(hosted_zone)
-            .unwrap_or_else(|| format!("https://{}:443", claims.cp));
+        MomentoEndpointsResolver::get_control_endpoint_from_hosted_zone(hosted_zone)
+            .unwrap_or_else(|| format!("https://{}:443", claims.cp))
     }
 
     fn get_data_endpoint(claims: &Claims, hosted_zone: &Option<String>) -> String {
-        return MomentoEndpointsResolver::get_data_endpoint_from_hosted_zone(hosted_zone)
-            .unwrap_or_else(|| format!("https://{}:443", claims.c));
+        MomentoEndpointsResolver::get_data_endpoint_from_hosted_zone(hosted_zone)
+            .unwrap_or_else(|| format!("https://{}:443", claims.c))
     }
 
     fn get_control_endpoint_from_hosted_zone(hosted_zone: &Option<String>) -> Option<String> {

@@ -165,7 +165,7 @@ impl SimpleCacheClient {
             data_client: data_client.unwrap(),
             item_default_ttl_seconds: default_ttl_seconds,
         };
-        return Ok(simple_cache_client);
+        Ok(simple_cache_client)
     }
 
     async fn build_control_client(
@@ -186,7 +186,7 @@ impl SimpleCacheClient {
             },
         );
         let client = ScsControlClient::new(interceptor);
-        return Ok(client);
+        Ok(client)
     }
 
     async fn build_data_client(
@@ -206,7 +206,7 @@ impl SimpleCacheClient {
             },
         );
         let client = ScsClient::new(interceptor);
-        return Ok(client);
+        Ok(client)
     }
 
     /// Creates a new Momento cache
@@ -215,7 +215,7 @@ impl SimpleCacheClient {
     ///
     /// * `name` - name of cache to create
     pub async fn create_cache(&mut self, name: &str) -> Result<(), MomentoError> {
-        utils::is_cache_name_valid(&name)?;
+        utils::is_cache_name_valid(name)?;
         let request = Request::new(CreateCacheRequest {
             cache_name: name.to_string(),
         });
@@ -245,7 +245,7 @@ impl SimpleCacheClient {
     /// # })
     /// ```
     pub async fn delete_cache(&mut self, name: &str) -> Result<(), MomentoError> {
-        utils::is_cache_name_valid(&name)?;
+        utils::is_cache_name_valid(name)?;
         let request = Request::new(DeleteCacheRequest {
             cache_name: name.to_string(),
         });
@@ -287,7 +287,7 @@ impl SimpleCacheClient {
             .collect();
         let response = MomentoListCacheResult {
             caches,
-            next_token: res.next_token.to_string(),
+            next_token: res.next_token,
         };
         Ok(response)
     }
@@ -301,9 +301,7 @@ impl SimpleCacheClient {
         &mut self,
         ttl_minutes: u32,
     ) -> Result<MomentoCreateSigningKeyResponse, MomentoError> {
-        let request = Request::new(CreateSigningKeyRequest {
-            ttl_minutes: ttl_minutes,
-        });
+        let request = Request::new(CreateSigningKeyRequest { ttl_minutes });
         let res = self
             .control_client
             .create_signing_key(request)
@@ -327,7 +325,7 @@ impl SimpleCacheClient {
     ///
     /// * `key_id` - the ID of the key to revoke
     pub async fn revoke_signing_key(&mut self, key_id: &str) -> Result<(), MomentoError> {
-        utils::is_key_id_valid(&key_id)?;
+        utils::is_key_id_valid(key_id)?;
         let request = Request::new(RevokeSigningKeyRequest {
             key_id: key_id.to_string(),
         });
@@ -369,10 +367,10 @@ impl SimpleCacheClient {
         body: I,
         ttl_seconds: Option<u64>,
     ) -> Result<MomentoSetResponse, MomentoError> {
-        utils::is_cache_name_valid(&cache_name)?;
+        utils::is_cache_name_valid(cache_name)?;
         let temp_ttl = ttl_seconds.unwrap_or(self.item_default_ttl_seconds);
         let ttl_to_use = match utils::is_ttl_valid(&temp_ttl) {
-            Ok(_) => temp_ttl * 1000 as u64,
+            Ok(_) => temp_ttl * 1000_u64,
             Err(e) => return Err(e),
         };
         let mut request = tonic::Request::new(SetRequest {
@@ -382,7 +380,7 @@ impl SimpleCacheClient {
         });
         request.metadata_mut().append(
             "cache",
-            tonic::metadata::AsciiMetadataValue::from_str(&cache_name).unwrap(),
+            tonic::metadata::AsciiMetadataValue::from_str(cache_name).unwrap(),
         );
         let _ = self.data_client.set(request).await?;
         Ok(MomentoSetResponse {
@@ -424,16 +422,16 @@ impl SimpleCacheClient {
         cache_name: &str,
         key: I,
     ) -> Result<MomentoGetResponse, MomentoError> {
-        utils::is_cache_name_valid(&cache_name)?;
+        utils::is_cache_name_valid(cache_name)?;
         let mut request = tonic::Request::new(GetRequest {
             cache_key: key.into_bytes(),
         });
         request.metadata_mut().append(
             "cache",
-            tonic::metadata::AsciiMetadataValue::from_str(&cache_name).unwrap(),
+            tonic::metadata::AsciiMetadataValue::from_str(cache_name).unwrap(),
         );
         let response = self.data_client.get(request).await?.into_inner();
-        return match response.result() {
+        match response.result() {
             ECacheResult::Hit => Ok(MomentoGetResponse {
                 result: MomentoGetStatus::HIT,
                 value: response.cache_body,
@@ -443,6 +441,6 @@ impl SimpleCacheClient {
                 value: response.cache_body,
             }),
             _ => todo!(),
-        };
+        }
     }
 }

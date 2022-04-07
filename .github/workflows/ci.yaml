@@ -8,6 +8,15 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  rustfmt:
+    name: Style & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: rustfmt
+        run: cargo fmt -- --check
+      - name: Rigorous lint via Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
   build_rust:
     runs-on: ubuntu-latest
     env:
@@ -19,8 +28,6 @@ jobs:
         run: cargo build --verbose
       - name: Cargo Check
         run: cargo check
-      - name: Rustfmt
-        run: cargo fmt -- --check
       - name: Unit Tests
         run: cargo test --lib
       - name: Doc Tests
