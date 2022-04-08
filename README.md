@@ -1,6 +1,6 @@
 # Momento client-sdk-rust
 
-:warning: Experimental SDK :warning:
+⚠️ Experimental SDK ⚠️
 
 Rust SDK for Momento is experimental and under active development.
 There could be non-backward compatible changes or removal in the future.
@@ -14,7 +14,7 @@ Rust SDK for Momento, a serverless cache that automatically scales without any o
 
 <br/>
 
-## Getting Started :running:
+## Getting Started 🏃
 
 ### Requirements
 
@@ -53,7 +53,7 @@ cache_client.delete_cache(&cache_name).await.unwrap();
 
 <br/>
 
-## Running Tests :zap:
+## Running Tests ⚡
 
 Doc and integration tests require an auth token for testing. Set the env var `TEST_AUTH_TOKEN` to
 provide it.
