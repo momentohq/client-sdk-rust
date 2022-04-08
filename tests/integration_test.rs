@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+    use std::num::NonZeroU64;
     use std::{env, time::Duration};
 
     use momento::response::error::MomentoError;
@@ -12,7 +13,9 @@ mod tests {
 
     async fn get_momento_instance() -> SimpleCacheClient {
         let auth_token = env::var("TEST_AUTH_TOKEN").expect("env var TEST_AUTH_TOKEN must be set");
-        return SimpleCacheClient::new(auth_token, 5).await.unwrap();
+        return SimpleCacheClient::new(auth_token, NonZeroU64::new(5).unwrap())
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
@@ -56,7 +59,12 @@ mod tests {
         let ttl: u64 = 18446744073709551615;
         let max_ttl = u64::MAX / 1000_u64;
         let result = mm
-            .set(&cache_name, cache_key, cache_body, Some(ttl)) // 18446744073709551615 > 2^64/1000
+            .set(
+                &cache_name,
+                cache_key,
+                cache_body,
+                Some(NonZeroU64::new(ttl).unwrap()),
+            ) // 18446744073709551615 > 2^64/1000
             .await
             .unwrap_err();
         let _err_message = format!(
@@ -161,7 +169,7 @@ mod tests {
             + &jwt_payload_bad_control_plane_base64.clone()
             + "."
             + &jwt_invalid_signature_base_64.clone();
-        let mut client = SimpleCacheClient::new(bad_control_plane_jwt, 5)
+        let mut client = SimpleCacheClient::new(bad_control_plane_jwt, NonZeroU64::new(5).unwrap())
             .await
             .unwrap();
 
@@ -202,7 +210,9 @@ mod tests {
             + &jwt_payload_bad_data_plane_base64.clone()
             + "."
             + &jwt_invalid_signature_base_64.clone();
-        let mut client = SimpleCacheClient::new(bad_data_plane_jwt, 5).await.unwrap();
+        let mut client = SimpleCacheClient::new(bad_data_plane_jwt, NonZeroU64::new(5).unwrap())
+            .await
+            .unwrap();
 
         // Can reach control plane
         let create_cache_result = client.create_cache("cache").await.unwrap_err();
