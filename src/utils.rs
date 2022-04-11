@@ -1,9 +1,10 @@
 use crate::jwt::{decode_jwt, Claims};
 use crate::response::error::MomentoError;
+use std::num::NonZeroU64;
 
-pub fn is_ttl_valid(ttl: &u64) -> Result<(), MomentoError> {
+pub fn is_ttl_valid(ttl: &NonZeroU64) -> Result<(), MomentoError> {
     let max_ttl = u64::MAX / 1000_u64;
-    if *ttl > max_ttl {
+    if ttl.get() > max_ttl {
         return Err(MomentoError::InvalidArgument(format!(
             "TTL provided, {}, needs to be less than the maximum TTL {}",
             ttl, max_ttl

@@ -1,5 +1,6 @@
 use serde_json::Value;
 use std::convert::TryFrom;
+use std::num::NonZeroU64;
 use tonic::{
     codegen::InterceptedService,
     transport::{Channel, ClientTlsConfig, Uri},
@@ -58,11 +59,14 @@ pub struct SimpleCacheClientBuilder {
     control_channel: Channel,
     data_channel: Channel,
     auth_token: String,
-    default_ttl_seconds: u64,
+    default_ttl_seconds: NonZeroU64,
 }
 
 impl SimpleCacheClientBuilder {
-    pub async fn new(auth_token: String, default_ttl_seconds: u64) -> Result<Self, MomentoError> {
+    pub async fn new(
+        auth_token: String,
+        default_ttl_seconds: NonZeroU64,
+    ) -> Result<Self, MomentoError> {
         let data_endpoint = utils::get_claims(&auth_token).c;
 
         let momento_endpoints = MomentoEndpointsResolver::resolve(&auth_token, &None);
@@ -123,7 +127,7 @@ pub struct SimpleCacheClient {
     data_endpoint: String,
     control_client: ScsControlClient<InterceptedService<Channel, AuthHeaderInterceptor>>,
     data_client: ScsClient<InterceptedService<Channel, CacheHeaderInterceptor>>,
-    item_default_ttl_seconds: u64,
+    item_default_ttl_seconds: NonZeroU64,
 }
 
 impl SimpleCacheClient {
@@ -132,19 +136,23 @@ impl SimpleCacheClient {
     /// # Arguments
     ///
     /// * `auth_token` - Momento Token
-    /// * `item_default_ttl_seconds` - Default TTL for items put into a cache
+    /// * `item_default_ttl_seconds` - Default TTL for items put into a cache.
     /// # Examples
     ///
     /// ```
     /// # tokio_test::block_on(async {
     ///     use momento::simple_cache_client::SimpleCacheClient;
     ///     use std::env;
+    ///     use std::num::NonZeroU64;
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let default_ttl = 30;
-    ///     let momento = SimpleCacheClient::new(auth_token, default_ttl).await;
+    ///     let momento = SimpleCacheClient::new(auth_token, NonZeroU64::new(default_ttl).unwrap()).await;
     /// # })
     /// ```
-    pub async fn new(auth_token: String, default_ttl_seconds: u64) -> Result<Self, MomentoError> {
+    pub async fn new(
+        auth_token: String,
+        default_ttl_seconds: NonZeroU64,
+    ) -> Result<Self, MomentoError> {
         let data_endpoint = utils::get_claims(&auth_token).c;
 
         let momento_endpoints = MomentoEndpointsResolver::resolve(&auth_token, &None);
@@ -234,12 +242,13 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// use uuid::Uuid;
+    /// use std::num::NonZeroU64;
     /// # tokio_test::block_on(async {
     ///     use momento::simple_cache_client::SimpleCacheClient;
     ///     use std::env;
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClient::new(auth_token, 5).await.unwrap();
+    ///     let mut momento = SimpleCacheClient::new(auth_token, NonZeroU64::new(5).unwrap()).await.unwrap();
     ///     momento.create_cache(&cache_name).await;
     ///     momento.delete_cache(&cache_name).await;
     /// # })
@@ -259,12 +268,13 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// use uuid::Uuid;
+    /// use std::num::NonZeroU64;
     /// # tokio_test::block_on(async {
     ///     use momento::simple_cache_client::SimpleCacheClient;
     ///     use std::env;
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClient::new(auth_token, 5).await.unwrap();
+    ///     let mut momento = SimpleCacheClient::new(auth_token, NonZeroU64::new(5).unwrap()).await.unwrap();
     ///     momento.create_cache(&cache_name).await;
     ///     let caches = momento.list_caches(None).await;
     ///     momento.delete_cache(&cache_name).await;
@@ -346,17 +356,18 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// use uuid::Uuid;
+    /// use std::num::NonZeroU64;
     /// # tokio_test::block_on(async {
     ///     use momento::simple_cache_client::SimpleCacheClient;
     ///     use std::env;
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClient::new(auth_token, 30).await.unwrap();
+    ///     let mut momento = SimpleCacheClient::new(auth_token, NonZeroU64::new(30).unwrap()).await.unwrap();
     ///     momento.create_cache(&cache_name).await;
     ///     momento.set(&cache_name, "cache_key", "cache_value", None).await;
     ///
     ///     // overriding default ttl
-    ///     momento.set(&cache_name, "cache_key", "cache_value", Some(10)).await;
+    ///     momento.set(&cache_name, "cache_key", "cache_value", Some(NonZeroU64::new(10).unwrap())).await;
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
@@ -365,12 +376,12 @@ impl SimpleCacheClient {
         cache_name: &str,
         key: I,
         body: I,
-        ttl_seconds: Option<u64>,
+        ttl_seconds: Option<NonZeroU64>,
     ) -> Result<MomentoSetResponse, MomentoError> {
         utils::is_cache_name_valid(cache_name)?;
         let temp_ttl = ttl_seconds.unwrap_or(self.item_default_ttl_seconds);
         let ttl_to_use = match utils::is_ttl_valid(&temp_ttl) {
-            Ok(_) => temp_ttl * 1000_u64,
+            Ok(_) => temp_ttl.get() * 1000_u64,
             Err(e) => return Err(e),
         };
         let mut request = tonic::Request::new(SetRequest {
@@ -399,12 +410,13 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// use uuid::Uuid;
+    /// use std::num::NonZeroU64;
     /// # tokio_test::block_on(async {
     ///     use std::env;
     ///     use momento::{response::cache_get_response::MomentoGetStatus, simple_cache_client::SimpleCacheClient};
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClient::new(auth_token, 30).await.unwrap();
+    ///     let mut momento = SimpleCacheClient::new(auth_token, NonZeroU64::new(30).unwrap()).await.unwrap();
     ///     momento.create_cache(&cache_name).await;
     ///     let resp = momento.get(&cache_name, "cache_key").await.unwrap();
     ///     match resp.result {
