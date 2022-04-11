@@ -19,26 +19,12 @@ jobs:
       - name: Rigorous lint via Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
 
-  release_and_publish:
+  release:
     runs-on: ubuntu-latest
-    env:
-      TEST_AUTH_TOKEN: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
-      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
     outputs:
       version: ${{ steps.release.outputs.release }}
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          components: rustfmt
-          override: true
-
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.x"
-
       - name: Set release
         id: semrel
         uses: go-semantic-release/action@v1
@@ -47,22 +33,36 @@ jobs:
           allow-initial-development-versions: true
           force-bump-patch-version: true
 
-      - name: Update Cargo Version
-        run: |
-          chmod +x set_cargo_version.sh
-          ./set_cargo_version.sh ${{ steps.semrel.outputs.version }}
-          cat Cargo.toml
-        shell: bash
-
-      - name: Build
-        run: cargo build --verbose
-
       - name: Output release
         id: release
         run: echo "::set-output name=release::${{ steps.semrel.outputs.version }}"
 
+  publish:
+    runs-on: ubuntu-latest
+    needs: release
+    env:
+      TEST_AUTH_TOKEN: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
+      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt
+          override: true
+
+      - name: Build
+        run: cargo build --verbose
+
       - name: Integration Tests
         run: cargo test --tests
+
+      - name: Update Cargo Version
+        run: |
+          chmod +x set_cargo_version.sh
+          ./set_cargo_version.sh ${{ needs.release.outputs.version }}
+          cat Cargo.toml
+        shell: bash
 
       - name: Login to crates.io
         run: cargo login $CARGO_REGISTRY_TOKEN
