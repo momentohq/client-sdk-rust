@@ -19,8 +19,11 @@ jobs:
       - name: Rigorous lint via Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
 
-  release:
+  release_and_publish:
     runs-on: ubuntu-latest
+    env:
+      TEST_AUTH_TOKEN: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
+      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
     outputs:
       version: ${{ steps.release.outputs.release }}
     steps:
@@ -48,6 +51,7 @@ jobs:
         run: |
           chmod +x set_cargo_version.sh
           ./set_cargo_version.sh ${{ steps.semrel.outputs.version }}
+          cat Cargo.toml
         shell: bash
 
       - name: Build
@@ -56,15 +60,6 @@ jobs:
       - name: Output release
         id: release
         run: echo "::set-output name=release::${{ steps.semrel.outputs.version }}"
-
-  publish:
-    runs-on: ubuntu-latest
-    needs: release
-    env:
-      TEST_AUTH_TOKEN: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
-      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-    steps:
-      - uses: actions/checkout@v2
 
       - name: Integration Tests
         run: cargo test --tests
