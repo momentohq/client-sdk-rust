@@ -72,9 +72,15 @@ impl SimpleCacheClientBuilder {
         auth_token: String,
         default_ttl_seconds: NonZeroU64,
     ) -> Result<Self, MomentoError> {
-        let data_endpoint = utils::get_claims(&auth_token).c;
+        let data_endpoint = match utils::get_claims(&auth_token) {
+            Ok(claims) => claims.c,
+            Err(e) => return Err(e),
+        };
 
-        let momento_endpoints = MomentoEndpointsResolver::resolve(&auth_token, &None);
+        let momento_endpoints = match MomentoEndpointsResolver::resolve(&auth_token, &None) {
+            Ok(endpoints) => endpoints,
+            Err(e) => return Err(e),
+        };
         let control_endpoint_uri = Uri::try_from(&momento_endpoints.control_endpoint)?;
         let data_endpoint_uri = Uri::try_from(&momento_endpoints.data_endpoint)?;
 
@@ -171,9 +177,16 @@ impl SimpleCacheClient {
         auth_token: String,
         default_ttl_seconds: NonZeroU64,
     ) -> Result<Self, MomentoError> {
-        let data_endpoint = utils::get_claims(&auth_token).c;
+        let data_endpoint = match utils::get_claims(&auth_token) {
+            Ok(claims) => claims.c,
+            Err(e) => return Err(e),
+        };
+
         let agent_value = format!("rust:{}", VERSION);
-        let momento_endpoints = MomentoEndpointsResolver::resolve(&auth_token, &None);
+        let momento_endpoints = match MomentoEndpointsResolver::resolve(&auth_token, &None) {
+            Ok(endpoints) => endpoints,
+            Err(e) => return Err(e),
+        };
         let control_client = SimpleCacheClient::build_control_client(
             auth_token.clone(),
             momento_endpoints.control_endpoint,
@@ -219,9 +232,15 @@ impl SimpleCacheClient {
         auth_token: String,
         default_ttl_seconds: NonZeroU64,
     ) -> Result<Self, MomentoError> {
-        let data_endpoint = utils::get_claims(&auth_token).c;
+        let data_endpoint = match utils::get_claims(&auth_token) {
+            Ok(claims) => claims.c,
+            Err(e) => return Err(e),
+        };
         let agent_value = format!("momento-cli:{}", VERSION);
-        let momento_endpoints = MomentoEndpointsResolver::resolve(&auth_token, &None);
+        let momento_endpoints = match MomentoEndpointsResolver::resolve(&auth_token, &None) {
+            Ok(endpoints) => endpoints,
+            Err(e) => return Err(e),
+        };
         let control_client = SimpleCacheClient::build_control_client(
             auth_token.clone(),
             momento_endpoints.control_endpoint,

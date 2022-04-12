@@ -1,4 +1,5 @@
 use crate::jwt::Claims;
+use crate::response::error::MomentoError;
 use crate::utils;
 
 pub struct MomentoEndpoints {
@@ -12,14 +13,20 @@ const CONTROL_ENDPOINT_PREFIX: &str = "control.";
 const DATA_ENDPOINT_PREFIX: &str = "data.";
 
 impl MomentoEndpointsResolver {
-    pub fn resolve(auth_token: &str, hosted_zone: &Option<String>) -> MomentoEndpoints {
-        let claims = utils::get_claims(auth_token);
+    pub fn resolve(
+        auth_token: &str,
+        hosted_zone: &Option<String>,
+    ) -> Result<MomentoEndpoints, MomentoError> {
+        let claims = match utils::get_claims(auth_token) {
+            Ok(c) => c,
+            Err(e) => return Err(e),
+        };
         let control_endpoint = MomentoEndpointsResolver::get_control_endpoint(&claims, hosted_zone);
         let data_endpoint = MomentoEndpointsResolver::get_data_endpoint(&claims, hosted_zone);
-        MomentoEndpoints {
+        Ok(MomentoEndpoints {
             control_endpoint,
             data_endpoint,
-        }
+        })
     }
 
     fn get_control_endpoint(claims: &Claims, hosted_zone: &Option<String>) -> String {
