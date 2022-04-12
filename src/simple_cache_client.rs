@@ -103,7 +103,7 @@ impl SimpleCacheClientBuilder {
     }
 
     pub fn build(self) -> SimpleCacheClient {
-        let agent_value = format!("rust:{}", VERSION).to_owned();
+        let agent_value = format!("rust:{}", VERSION);
         let mut control_interceptor_hashmap = HashMap::new();
         control_interceptor_hashmap.insert(AUTHORIZATION_NAME.to_string(), self.auth_token.clone());
         control_interceptor_hashmap.insert(AGENT_NAME.to_string(), agent_value.clone());

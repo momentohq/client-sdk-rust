@@ -16,18 +16,16 @@ impl tonic::service::Interceptor for HeaderInterceptor {
     ) -> Result<tonic::Request<()>, tonic::Status> {
         static ARE_ONLY_ONCE_HEADER_SENT: AtomicBool = AtomicBool::new(false);
         for (key, value) in self.header.iter() {
-            if key.to_string() == AUTHORIZATION.to_string() {
+            if *key == *AUTHORIZATION {
                 request.metadata_mut().insert(
                     tonic::metadata::AsciiMetadataKey::from_static(AUTHORIZATION),
-                    tonic::metadata::AsciiMetadataValue::from_str(&value).unwrap(),
+                    tonic::metadata::AsciiMetadataValue::from_str(value).unwrap(),
                 );
             }
-            if ARE_ONLY_ONCE_HEADER_SENT.load(Ordering::Relaxed) == false
-                && key.to_string() != AUTHORIZATION.to_string()
-            {
+            if !ARE_ONLY_ONCE_HEADER_SENT.load(Ordering::Relaxed) && *key != *AUTHORIZATION {
                 request.metadata_mut().insert(
                     tonic::metadata::AsciiMetadataKey::from_static(AGENT),
-                    tonic::metadata::AsciiMetadataValue::from_str(&value).unwrap(),
+                    tonic::metadata::AsciiMetadataValue::from_str(value).unwrap(),
                 );
                 ARE_ONLY_ONCE_HEADER_SENT.store(true, Ordering::Relaxed);
             }
