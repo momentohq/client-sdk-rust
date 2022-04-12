@@ -12,9 +12,7 @@ pub struct Claims {
 
 pub fn decode_jwt(jwt: &str) -> Result<Claims, MomentoError> {
     if jwt.is_empty() {
-        return Err(MomentoError::ClientSdkError(
-            "Empty Auth Token".to_string(),
-        ));
+        return Err(MomentoError::ClientSdkError("Empty Auth Token".to_string()));
     }
     let key = DecodingKey::from_secret("".as_ref());
     let mut validation = Validation::new(Algorithm::HS256);
