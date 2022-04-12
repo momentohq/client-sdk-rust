@@ -22,7 +22,7 @@ impl tonic::service::Interceptor for HeaderInterceptor {
                     tonic::metadata::AsciiMetadataValue::from_str(value).unwrap(),
                 );
             }
-            if !ARE_ONLY_ONCE_HEADER_SENT.load(Ordering::Relaxed) && *key != *AUTHORIZATION {
+            if !ARE_ONLY_ONCE_HEADER_SENT.load(Ordering::Relaxed) && *key == *AGENT {
                 request.metadata_mut().insert(
                     tonic::metadata::AsciiMetadataKey::from_static(AGENT),
                     tonic::metadata::AsciiMetadataValue::from_str(value).unwrap(),
