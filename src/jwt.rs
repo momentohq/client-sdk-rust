@@ -21,11 +21,7 @@ pub fn decode_jwt(jwt: &str) -> Result<Claims, MomentoError> {
     validation.required_spec_claims.clear();
     validation.validate_exp = false;
     validation.insecure_disable_signature_validation();
-    let token = decode(
-        jwt,
-        &key,
-        &validation,
-        )?;
+    let token = decode(jwt, &key, &validation)?;
 
     Ok(token.claims)
 }
