@@ -34,8 +34,6 @@ pub fn is_key_id_valid(key_id: &str) -> Result<(), MomentoError> {
 pub fn get_claims(auth_token: &str) -> Result<Claims, MomentoError> {
     match decode_jwt(auth_token) {
         Ok(c) => Ok(c),
-        Err(_) => Err(MomentoError::InvalidArgument(
-            "Cache name cannot be empty".to_string(),
-        )),
+        Err(e) => Err(e),
     }
 }
