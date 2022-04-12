@@ -166,7 +166,7 @@ impl SimpleCacheClient {
         default_ttl_seconds: NonZeroU64,
     ) -> Result<Self, MomentoError> {
         let data_endpoint = utils::get_claims(&auth_token).c;
-        let agent_value = format!("momento-cli:{}", VERSION);
+        let agent_value = format!("rust:{}", VERSION);
         let momento_endpoints = MomentoEndpointsResolver::resolve(&auth_token, &None);
         let control_client = SimpleCacheClient::build_control_client(
             auth_token.clone(),
