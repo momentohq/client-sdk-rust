@@ -1,4 +1,4 @@
-use jsonwebtoken::dangerous_insecure_decode;
+use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
 
 use crate::response::error::MomentoError;
@@ -16,7 +16,16 @@ pub fn decode_jwt(jwt: &str) -> Result<Claims, MomentoError> {
             "Malformed Auth Token".to_string(),
         ));
     }
-    let token = dangerous_insecure_decode::<Claims>(jwt)?;
+    let key = DecodingKey::from_secret("".as_ref());
+    let mut validation = Validation::new(Algorithm::HS256);
+    validation.required_spec_claims.clear();
+    validation.required_spec_claims.insert("sub".to_string());
+    validation.required_spec_claims.insert("c".to_string());
+    validation.required_spec_claims.insert("cp".to_string());
+    validation.validate_exp = false;
+    validation.insecure_disable_signature_validation();
+    let token = decode(jwt, &key, &validation)?;
+
     Ok(token.claims)
 }
 
