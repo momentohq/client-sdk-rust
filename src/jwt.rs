@@ -17,6 +17,9 @@ pub fn decode_jwt(jwt: &str) -> Result<Claims, MomentoError> {
     let key = DecodingKey::from_secret("".as_ref());
     let mut validation = Validation::new(Algorithm::HS256);
     validation.required_spec_claims.clear();
+    validation.required_spec_claims.insert("sub".to_string());
+    validation.required_spec_claims.insert("c".to_string());
+    validation.required_spec_claims.insert("cp".to_string());
     validation.validate_exp = false;
     validation.insecure_disable_signature_validation();
     let token = decode(jwt, &key, &validation)?;
