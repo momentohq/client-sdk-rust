@@ -13,7 +13,7 @@ pub struct Claims {
 pub fn decode_jwt(jwt: &str) -> Result<Claims, MomentoError> {
     if jwt.is_empty() {
         return Err(MomentoError::ClientSdkError(
-            "Malformed Auth Token".to_string(),
+            "Empty Auth Token".to_string(),
         ));
     }
     let key = DecodingKey::from_secret("".as_ref());
