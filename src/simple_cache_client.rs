@@ -97,6 +97,12 @@ impl SimpleCacheClientBuilder {
         }
     }
 
+    pub fn default_ttl_seconds(mut self, seconds: NonZeroU64) -> Result<Self, MomentoError> {
+        utils::is_ttl_valid(&seconds)?;
+        self.default_ttl_seconds = seconds;
+        Ok(self);
+    }
+
     pub fn build(self) -> SimpleCacheClient {
         let control_interceptor = InterceptedService::new(
             self.control_channel,
