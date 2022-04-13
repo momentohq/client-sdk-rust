@@ -22,6 +22,7 @@ use crate::{
     },
 };
 
+use crate::jwt::decode_jwt;
 use crate::response::{
     cache_get_response::MomentoGetStatus,
     cache_set_response::{MomentoSetResponse, MomentoSetStatus},
@@ -72,7 +73,7 @@ impl SimpleCacheClientBuilder {
         auth_token: String,
         default_ttl_seconds: NonZeroU64,
     ) -> Result<Self, MomentoError> {
-        let data_endpoint = match utils::get_claims(&auth_token) {
+        let data_endpoint = match decode_jwt(&auth_token) {
             Ok(claims) => claims.c,
             Err(e) => return Err(e),
         };
@@ -177,7 +178,7 @@ impl SimpleCacheClient {
         auth_token: String,
         default_ttl_seconds: NonZeroU64,
     ) -> Result<Self, MomentoError> {
-        let data_endpoint = match utils::get_claims(&auth_token) {
+        let data_endpoint = match decode_jwt(&auth_token) {
             Ok(claims) => claims.c,
             Err(e) => return Err(e),
         };
@@ -232,7 +233,7 @@ impl SimpleCacheClient {
         auth_token: String,
         default_ttl_seconds: NonZeroU64,
     ) -> Result<Self, MomentoError> {
-        let data_endpoint = match utils::get_claims(&auth_token) {
+        let data_endpoint = match decode_jwt(&auth_token) {
             Ok(claims) => claims.c,
             Err(e) => return Err(e),
         };

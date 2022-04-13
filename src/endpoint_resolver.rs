@@ -1,6 +1,5 @@
-use crate::jwt::Claims;
+use crate::jwt::{decode_jwt, Claims};
 use crate::response::error::MomentoError;
-use crate::utils;
 
 pub struct MomentoEndpoints {
     pub control_endpoint: String,
@@ -17,7 +16,7 @@ impl MomentoEndpointsResolver {
         auth_token: &str,
         hosted_zone: &Option<String>,
     ) -> Result<MomentoEndpoints, MomentoError> {
-        let claims = match utils::get_claims(auth_token) {
+        let claims = match decode_jwt(auth_token) {
             Ok(c) => c,
             Err(e) => return Err(e),
         };
