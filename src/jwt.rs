@@ -24,9 +24,12 @@ pub fn decode_jwt(jwt: &str) -> Result<Claims, MomentoError> {
     validation.required_spec_claims.insert("cp".to_string());
     validation.validate_exp = false;
     validation.insecure_disable_signature_validation();
-    let token = decode(jwt, &key, &validation)?;
-
-    Ok(token.claims)
+    match decode(jwt, &key, &validation) {
+        Ok(token) => Ok(token.claims),
+        Err(_) => Err(MomentoError::ClientSdkError(
+            "Could not parse token. Please ensure a valid token was entered correctly.".to_string(),
+        )),
+    }
 }
 
 #[cfg(test)]
@@ -44,9 +47,17 @@ mod tests {
     }
 
     #[test]
-    fn invalid_jwt() {
+    fn empty_jwt() {
         let e = decode_jwt("").unwrap_err();
-        let _err_msg = "Failed to parse Auth Token".to_owned();
+        let _err_msg = "Malformed Auth Token".to_owned();
+        assert!(matches!(e, MomentoError::ClientSdkError(_err_msg)));
+    }
+
+    #[test]
+    fn invalid_jwt() {
+        let e = decode_jwt("wfheofhriugheifweif").unwrap_err();
+        let _err_msg =
+            "Could not parse token. Please ensure a valid token was entered correctly.".to_owned();
         assert!(matches!(e, MomentoError::ClientSdkError(_err_msg)));
     }
 }

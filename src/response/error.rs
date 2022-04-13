@@ -56,13 +56,6 @@ impl From<http::uri::InvalidUri> for MomentoError {
     }
 }
 
-impl From<jsonwebtoken::errors::Error> for MomentoError {
-    fn from(_: jsonwebtoken::errors::Error) -> Self {
-        let err_msg = "Failed to parse Auth Token".to_string();
-        Self::ClientSdkError(err_msg)
-    }
-}
-
 impl From<String> for MomentoError {
     fn from(s: String) -> Self {
         Self::BadRequest(s)
