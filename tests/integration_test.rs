@@ -136,7 +136,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn create_revoke_signing_key() {
+    async fn create_list_revoke_signing_key() {
         let mut mm = get_momento_instance().await;
         let response = mm.create_signing_key(10).await.unwrap();
 
@@ -152,6 +152,9 @@ mod tests {
                 .unwrap()
                 .contains(&response.endpoint)
         );
+
+        let list_response = mm.list_signing_keys(None).await.unwrap();
+        assert_eq!(list_response.signing_keys[0].key_id, kid.as_str().unwrap());
 
         mm.revoke_signing_key(&response.key_id).await.unwrap();
     }

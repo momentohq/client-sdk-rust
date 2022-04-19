@@ -48,6 +48,27 @@ pub struct RevokeSigningKeyRequest {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RevokeSigningKeyResponse {}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SigningKey {
+    /// The id of the signing key
+    #[prost(string, tag = "1")]
+    pub key_id: ::prost::alloc::string::String,
+    /// Epoch time in seconds when the signing key expires
+    #[prost(uint64, tag = "2")]
+    pub expires_at: u64,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListSigningKeysRequest {
+    #[prost(string, tag = "1")]
+    pub next_token: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListSigningKeysResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub signing_key: ::prost::alloc::vec::Vec<SigningKey>,
+    #[prost(string, tag = "2")]
+    pub next_token: ::prost::alloc::string::String,
+}
 #[doc = r" Generated client implementations."]
 pub mod scs_control_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
@@ -181,6 +202,21 @@ pub mod scs_control_client {
             let codec = tonic::codec::ProstCodec::default();
             let path =
                 http::uri::PathAndQuery::from_static("/control_client.ScsControl/RevokeSigningKey");
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        pub async fn list_signing_keys(
+            &mut self,
+            request: impl tonic::IntoRequest<super::ListSigningKeysRequest>,
+        ) -> Result<tonic::Response<super::ListSigningKeysResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path =
+                http::uri::PathAndQuery::from_static("/control_client.ScsControl/ListSigningKeys");
             self.inner.unary(request.into_request(), path, codec).await
         }
     }

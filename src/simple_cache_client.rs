@@ -22,7 +22,9 @@ use crate::{
     },
 };
 
+use crate::generated::control_client::ListSigningKeysRequest;
 use crate::jwt::decode_jwt;
+use crate::response::list_signing_keys_response::{MomentoListSigningKeyResult, MomentoSigningKey};
 use crate::response::{
     cache_get_response::MomentoGetStatus,
     cache_set_response::{MomentoSetResponse, MomentoSetStatus},
@@ -437,6 +439,51 @@ impl SimpleCacheClient {
         });
         self.control_client.revoke_signing_key(request).await?;
         Ok(())
+    }
+
+    /// Lists all Momento signing keys for a user
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use uuid::Uuid;
+    /// use std::num::NonZeroU64;
+    /// # tokio_test::block_on(async {
+    ///     use momento::simple_cache_client::SimpleCacheClient;
+    ///     use std::env;
+    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    ///     let mut momento = SimpleCacheClient::new(auth_token, NonZeroU64::new(5).unwrap()).await.unwrap();
+    ///     let ttl_minutes = 10;
+    ///     momento.create_signing_key(ttl_minutes).await;
+    ///     let keys = momento.list_signing_keys(None).await;
+    /// # })
+    /// ```
+    pub async fn list_signing_keys(
+        &mut self,
+        next_token: Option<&str>,
+    ) -> Result<MomentoListSigningKeyResult, MomentoError> {
+        let request = Request::new(ListSigningKeysRequest {
+            next_token: next_token.unwrap_or_default().to_string(),
+        });
+        let res = self
+            .control_client
+            .list_signing_keys(request)
+            .await?
+            .into_inner();
+        let signing_keys = res
+            .signing_key
+            .iter()
+            .map(|signing_key| MomentoSigningKey {
+                key_id: signing_key.key_id.to_string(),
+                expires_at: signing_key.expires_at,
+                endpoint: self.data_endpoint.clone(),
+            })
+            .collect();
+        let response = MomentoListSigningKeyResult {
+            signing_keys,
+            next_token: res.next_token,
+        };
+        Ok(response)
     }
 
     /// Sets an item in a Momento Cache
