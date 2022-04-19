@@ -1,8 +1,10 @@
+use chrono::Utc;
+
 /// Response signing key for list of signing keys.
 #[derive(Debug)]
 pub struct MomentoSigningKey {
     pub key_id: String,
-    pub expires_at: u64,
+    pub expires_at: chrono::DateTime<Utc>,
     pub endpoint: String,
 }
 

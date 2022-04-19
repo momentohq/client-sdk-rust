@@ -1,3 +1,4 @@
+use chrono::{DateTime, NaiveDateTime, Utc};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -421,7 +422,10 @@ impl SimpleCacheClient {
         let response = MomentoCreateSigningKeyResponse {
             key_id: kid.as_str().unwrap().to_owned(),
             key: res.key,
-            expires_at: res.expires_at,
+            expires_at: DateTime::<Utc>::from_utc(
+                NaiveDateTime::from_timestamp(res.expires_at as i64, 0),
+                Utc,
+            ),
             endpoint: self.data_endpoint.clone(),
         };
         Ok(response)
@@ -475,7 +479,10 @@ impl SimpleCacheClient {
             .iter()
             .map(|signing_key| MomentoSigningKey {
                 key_id: signing_key.key_id.to_string(),
-                expires_at: signing_key.expires_at,
+                expires_at: DateTime::<Utc>::from_utc(
+                    NaiveDateTime::from_timestamp(signing_key.expires_at as i64, 0),
+                    Utc,
+                ),
                 endpoint: self.data_endpoint.clone(),
             })
             .collect();

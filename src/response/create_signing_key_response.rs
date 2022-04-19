@@ -1,3 +1,4 @@
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
 /// The results of a singing key operation.
@@ -8,7 +9,7 @@ pub struct MomentoCreateSigningKeyResponse {
     /// Key itself
     pub key: String,
     /// When the key expires
-    pub expires_at: u64,
+    pub expires_at: chrono::DateTime<Utc>,
     /// Endpoint for creating a pre-signed url
     pub endpoint: String,
 }
