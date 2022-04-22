@@ -154,8 +154,15 @@ mod tests {
         );
 
         let list_response = mm.list_signing_keys(None).await.unwrap();
-        let key_ids: Vec<&str> = list_response.signing_keys.iter().map(|k| k.key_id.as_str()).collect();
-        assert!(key_ids.contains(&kid.as_str().unwrap()), "newly created signing key was not found in list response");
+        let key_ids: Vec<&str> = list_response
+            .signing_keys
+            .iter()
+            .map(|k| k.key_id.as_str())
+            .collect();
+        assert!(
+            key_ids.contains(&kid.as_str().unwrap()),
+            "newly created signing key was not found in list response"
+        );
 
         mm.revoke_signing_key(&response.key_id).await.unwrap();
     }
