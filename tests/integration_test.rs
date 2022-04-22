@@ -136,7 +136,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn create_revoke_signing_key() {
+    async fn create_list_revoke_signing_key() {
         let mut mm = get_momento_instance().await;
         let response = mm.create_signing_key(10).await.unwrap();
 
@@ -151,6 +151,16 @@ mod tests {
             std::str::from_utf8(base64_url::decode(parts[1]).unwrap().as_slice())
                 .unwrap()
                 .contains(&response.endpoint)
+        );
+
+        let list_response = mm.list_signing_keys(None).await.unwrap();
+        assert!(
+            list_response
+                .signing_keys
+                .iter()
+                .map(|k| k.key_id.as_str())
+                .any(|x| x == kid.as_str().unwrap()),
+            "newly created signing key was not found in list response"
         );
 
         mm.revoke_signing_key(&response.key_id).await.unwrap();
