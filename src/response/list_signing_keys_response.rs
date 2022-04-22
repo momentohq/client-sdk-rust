@@ -1,7 +1,8 @@
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 
 /// Response signing key for list of signing keys.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MomentoSigningKey {
     pub key_id: String,
     pub expires_at: chrono::DateTime<Utc>,
