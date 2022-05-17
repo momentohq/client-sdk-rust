@@ -1,5 +1,7 @@
+use tonic::transport::{Channel, Uri, ClientTlsConfig};
+
 use crate::response::error::MomentoError;
-use std::num::NonZeroU64;
+use std::{num::NonZeroU64, convert::TryFrom};
 
 pub fn is_ttl_valid(ttl: &NonZeroU64) -> Result<(), MomentoError> {
     let max_ttl = u64::MAX / 1000_u64;
@@ -28,4 +30,17 @@ pub fn is_key_id_valid(key_id: &str) -> Result<(), MomentoError> {
         ));
     }
     Ok(())
+}
+
+pub async fn connect_channel(uri_string: &str, lazy: bool) -> Result<Channel, MomentoError> {
+    let uri = Uri::try_from(uri_string)?;
+    let endpoint = Channel::builder(uri)
+        .tls_config(ClientTlsConfig::default())?;
+    Ok(
+        if lazy {
+            endpoint.connect_lazy()
+        } else {
+            endpoint.connect().await?
+        }
+    )
 }
