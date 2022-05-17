@@ -1,20 +1,10 @@
 use chrono::{DateTime, NaiveDateTime, Utc};
 use momento_protos::{
+    cache_client::{scs_client::ScsClient, ECacheResult, GetRequest, SetRequest},
     control_client::{
-        scs_control_client::ScsControlClient,
-        ListSigningKeysRequest,
-        RevokeSigningKeyRequest,
-        CreateSigningKeyRequest,
-        ListCachesRequest,
-        DeleteCacheRequest,
-        CreateCacheRequest
+        scs_control_client::ScsControlClient, CreateCacheRequest, CreateSigningKeyRequest,
+        DeleteCacheRequest, ListCachesRequest, ListSigningKeysRequest, RevokeSigningKeyRequest,
     },
-    cache_client::{
-        scs_client::ScsClient,
-        SetRequest,
-        ECacheResult,
-        GetRequest
-    }
 };
 use serde_json::Value;
 use std::convert::TryFrom;
@@ -25,18 +15,18 @@ use tonic::{
     Request,
 };
 
-use crate::{endpoint_resolver::MomentoEndpointsResolver, utils::connect_channel};
 use crate::grpc::header_interceptor::HeaderInterceptor;
+use crate::{endpoint_resolver::MomentoEndpointsResolver, utils::connect_channel};
 
 use crate::jwt::decode_jwt;
 use crate::response::{
-    create_signing_key_response::MomentoCreateSigningKeyResponse,
     cache_get_response::MomentoGetResponse,
     cache_get_response::MomentoGetStatus,
     cache_set_response::{MomentoSetResponse, MomentoSetStatus},
+    create_signing_key_response::MomentoCreateSigningKeyResponse,
     error::MomentoError,
     list_cache_response::{MomentoCache, MomentoListCacheResult},
-    list_signing_keys_response::{MomentoListSigningKeyResult, MomentoSigningKey}
+    list_signing_keys_response::{MomentoListSigningKeyResult, MomentoSigningKey},
 };
 use crate::utils;
 
@@ -124,13 +114,13 @@ impl SimpleCacheClientBuilder {
         let agent_value = format!("rust:{}", VERSION);
         let control_interceptor = InterceptedService::new(
             self.control_channel,
-            HeaderInterceptor::new(&self.auth_token, &agent_value)
+            HeaderInterceptor::new(&self.auth_token, &agent_value),
         );
         let control_client = ScsControlClient::new(control_interceptor);
 
         let data_interceptor = InterceptedService::new(
             self.data_channel,
-            HeaderInterceptor::new(&self.auth_token, &agent_value)
+            HeaderInterceptor::new(&self.auth_token, &agent_value),
         );
         let data_client = ScsClient::new(data_interceptor);
 
@@ -267,10 +257,8 @@ impl SimpleCacheClient {
     {
         let channel = connect_channel(&endpoint, true).await?;
 
-        let interceptor = InterceptedService::new(
-            channel,
-            HeaderInterceptor::new(&auth_token, &agent_value)
-        );
+        let interceptor =
+            InterceptedService::new(channel, HeaderInterceptor::new(&auth_token, &agent_value));
         let client = ScsControlClient::new(interceptor);
         Ok(client)
     }
@@ -282,10 +270,8 @@ impl SimpleCacheClient {
     ) -> Result<ScsClient<InterceptedService<Channel, HeaderInterceptor>>, MomentoError> {
         let channel = connect_channel(&endpoint, true).await?;
 
-        let interceptor = InterceptedService::new(
-            channel,
-            HeaderInterceptor::new(&auth_token, &agent_value)
-        );
+        let interceptor =
+            InterceptedService::new(channel, HeaderInterceptor::new(&auth_token, &agent_value));
         let client = ScsClient::new(interceptor);
         Ok(client)
     }
