@@ -38,7 +38,7 @@ impl MomentoEndpointsResolver {
     fn wrapped_endpoint(prefix: &str, hostname: String, suffix: &str) -> MomentoEndpoint {
         MomentoEndpoint {
             url: format!("{prefix}{hostname}{suffix}"),
-            hostname: hostname,
+            hostname,
         }
     }
 
@@ -61,10 +61,14 @@ impl MomentoEndpointsResolver {
             return None;
         }
         let hostname = format!("{}{}", prefix, hosted_zone.clone().unwrap());
-        Some(MomentoEndpointsResolver::wrapped_endpoint(prefix, hostname, ""))
+        Some(MomentoEndpointsResolver::wrapped_endpoint(
+            prefix, hostname, "",
+        ))
     }
 
-    fn get_control_endpoint_from_hosted_zone(hosted_zone: &Option<String>) -> Option<MomentoEndpoint> {
+    fn get_control_endpoint_from_hosted_zone(
+        hosted_zone: &Option<String>,
+    ) -> Option<MomentoEndpoint> {
         MomentoEndpointsResolver::hosted_zone_endpoint(hosted_zone, CONTROL_ENDPOINT_PREFIX)
     }
 
