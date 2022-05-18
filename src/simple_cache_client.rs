@@ -1,6 +1,12 @@
 use chrono::{DateTime, NaiveDateTime, Utc};
+use momento_protos::{
+    cache_client::{scs_client::ScsClient, ECacheResult, GetRequest, SetRequest},
+    control_client::{
+        scs_control_client::ScsControlClient, CreateCacheRequest, CreateSigningKeyRequest,
+        DeleteCacheRequest, ListCachesRequest, ListSigningKeysRequest, RevokeSigningKeyRequest,
+    },
+};
 use serde_json::Value;
-use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::num::NonZeroU64;
 use tonic::{
@@ -9,35 +15,21 @@ use tonic::{
     Request,
 };
 
-use crate::endpoint_resolver::MomentoEndpointsResolver;
 use crate::grpc::header_interceptor::HeaderInterceptor;
-use crate::{
-    generated::control_client::{
-        scs_control_client::ScsControlClient, CreateCacheRequest, CreateSigningKeyRequest,
-        DeleteCacheRequest, ListCachesRequest, RevokeSigningKeyRequest,
-    },
-    response::{
-        create_signing_key_response::MomentoCreateSigningKeyResponse,
-        error::MomentoError,
-        list_cache_response::{MomentoCache, MomentoListCacheResult},
-    },
-};
+use crate::{endpoint_resolver::MomentoEndpointsResolver, utils::connect_channel};
 
-use crate::generated::control_client::ListSigningKeysRequest;
 use crate::jwt::decode_jwt;
-use crate::response::list_signing_keys_response::{MomentoListSigningKeyResult, MomentoSigningKey};
 use crate::response::{
+    cache_get_response::MomentoGetResponse,
     cache_get_response::MomentoGetStatus,
     cache_set_response::{MomentoSetResponse, MomentoSetStatus},
+    create_signing_key_response::MomentoCreateSigningKeyResponse,
+    error::MomentoError,
+    list_cache_response::{MomentoCache, MomentoListCacheResult},
+    list_signing_keys_response::{MomentoListSigningKeyResult, MomentoSigningKey},
 };
 use crate::utils;
-use crate::{
-    generated::cache_client::{scs_client::ScsClient, ECacheResult, GetRequest, SetRequest},
-    response::cache_get_response::MomentoGetResponse,
-};
 
-const AUTHORIZATION_NAME: &str = "authorization";
-const AGENT_NAME: &str = "agent";
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub trait MomentoRequest {
@@ -120,25 +112,15 @@ impl SimpleCacheClientBuilder {
 
     pub fn build(self) -> SimpleCacheClient {
         let agent_value = format!("rust:{}", VERSION);
-        let mut control_interceptor_hashmap = HashMap::new();
-        control_interceptor_hashmap.insert(AUTHORIZATION_NAME.to_string(), self.auth_token.clone());
-        control_interceptor_hashmap.insert(AGENT_NAME.to_string(), agent_value.clone());
         let control_interceptor = InterceptedService::new(
             self.control_channel,
-            HeaderInterceptor {
-                header: control_interceptor_hashmap,
-            },
+            HeaderInterceptor::new(&self.auth_token, &agent_value),
         );
         let control_client = ScsControlClient::new(control_interceptor);
 
-        let mut data_interceptor_hashmap = HashMap::new();
-        data_interceptor_hashmap.insert(AUTHORIZATION_NAME.to_string(), self.auth_token.clone());
-        data_interceptor_hashmap.insert(AGENT_NAME.to_string(), agent_value);
         let data_interceptor = InterceptedService::new(
             self.data_channel,
-            HeaderInterceptor {
-                header: data_interceptor_hashmap,
-            },
+            HeaderInterceptor::new(&self.auth_token, &agent_value),
         );
         let data_client = ScsClient::new(data_interceptor);
 
@@ -273,21 +255,10 @@ impl SimpleCacheClient {
         agent_value: String,
     ) -> Result<ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>, MomentoError>
     {
-        let uri = Uri::try_from(endpoint)?;
-        let channel = Channel::builder(uri)
-            .tls_config(ClientTlsConfig::default())
-            .unwrap()
-            .connect_lazy();
+        let channel = connect_channel(&endpoint, true).await?;
 
-        let mut control_interceptor_hashmap = HashMap::new();
-        control_interceptor_hashmap.insert(AUTHORIZATION_NAME.to_string(), auth_token);
-        control_interceptor_hashmap.insert(AGENT_NAME.to_string(), agent_value);
-        let interceptor = InterceptedService::new(
-            channel,
-            HeaderInterceptor {
-                header: control_interceptor_hashmap,
-            },
-        );
+        let interceptor =
+            InterceptedService::new(channel, HeaderInterceptor::new(&auth_token, &agent_value));
         let client = ScsControlClient::new(interceptor);
         Ok(client)
     }
@@ -297,21 +268,10 @@ impl SimpleCacheClient {
         endpoint: String,
         agent_value: String,
     ) -> Result<ScsClient<InterceptedService<Channel, HeaderInterceptor>>, MomentoError> {
-        let uri = Uri::try_from(endpoint)?;
-        let channel = Channel::builder(uri)
-            .tls_config(ClientTlsConfig::default())
-            .unwrap()
-            .connect_lazy();
+        let channel = connect_channel(&endpoint, true).await?;
 
-        let mut data_interceptor_hashmap = HashMap::new();
-        data_interceptor_hashmap.insert(AUTHORIZATION_NAME.to_string(), auth_token);
-        data_interceptor_hashmap.insert(AGENT_NAME.to_string(), agent_value);
-        let interceptor = InterceptedService::new(
-            channel,
-            HeaderInterceptor {
-                header: data_interceptor_hashmap,
-            },
-        );
+        let interceptor =
+            InterceptedService::new(channel, HeaderInterceptor::new(&auth_token, &agent_value));
         let client = ScsClient::new(interceptor);
         Ok(client)
     }
@@ -541,7 +501,7 @@ impl SimpleCacheClient {
         });
         request.metadata_mut().append(
             "cache",
-            tonic::metadata::AsciiMetadataValue::from_str(cache_name).unwrap(),
+            tonic::metadata::AsciiMetadataValue::try_from(cache_name).unwrap(),
         );
         let _ = self.data_client.set(request).await?;
         Ok(MomentoSetResponse {
@@ -590,7 +550,7 @@ impl SimpleCacheClient {
         });
         request.metadata_mut().append(
             "cache",
-            tonic::metadata::AsciiMetadataValue::from_str(cache_name).unwrap(),
+            tonic::metadata::AsciiMetadataValue::try_from(cache_name).unwrap(),
         );
         let response = self.data_client.get(request).await?.into_inner();
         match response.result() {

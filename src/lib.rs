@@ -1,7 +1,7 @@
-mod endpoint_resolver;
-mod generated;
-mod grpc;
-mod jwt;
 pub mod response;
 pub mod simple_cache_client;
+
+mod endpoint_resolver;
+mod grpc;
+mod jwt;
 mod utils;
