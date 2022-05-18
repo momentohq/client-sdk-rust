@@ -9,16 +9,11 @@ use momento_protos::{
 use serde_json::Value;
 use std::convert::TryFrom;
 use std::num::NonZeroU64;
-use tonic::{
-    codegen::InterceptedService,
-    transport::{Channel, ClientTlsConfig, Uri},
-    Request,
-};
+use tonic::{codegen::InterceptedService, transport::Channel, Request};
 
-use crate::grpc::header_interceptor::HeaderInterceptor;
-use crate::{endpoint_resolver::MomentoEndpointsResolver, utils::connect_channel};
+use crate::endpoint_resolver::MomentoEndpointsResolver;
+use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 
-use crate::jwt::decode_jwt;
 use crate::response::{
     cache_get_response::MomentoGetResponse,
     cache_get_response::MomentoGetStatus,
@@ -61,44 +56,61 @@ pub struct SimpleCacheClientBuilder {
     data_channel: Channel,
     auth_token: String,
     default_ttl_seconds: NonZeroU64,
+    user_agent_name: String,
 }
 
 impl SimpleCacheClientBuilder {
-    pub async fn new(
+    /// Returns a builder which can produce an instance of a Momento client
+    ///
+    /// # Arguments
+    ///
+    /// * `auth_token` - Momento Token
+    /// * `item_default_ttl_seconds` - Default TTL for items put into a cache.
+    /// # Examples
+    ///
+    /// ```
+    /// # tokio_test::block_on(async {
+    ///     use momento::simple_cache_client::SimpleCacheClient;
+    ///     use std::env;
+    ///     use std::num::NonZeroU64;
+    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    ///     let default_ttl = 30;
+    ///     let momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(default_ttl).unwrap())
+    ///         .await?
+    ///         .build();
+    /// # })
+    /// ```
+    pub fn new(auth_token: String, default_ttl_seconds: NonZeroU64) -> Result<Self, MomentoError> {
+        SimpleCacheClientBuilder::new_with_explicit_agent_name(
+            auth_token,
+            default_ttl_seconds,
+            "sdk",
+        )
+    }
+
+    /// Like new() above, but used for naming integrations.
+    pub fn new_with_explicit_agent_name(
         auth_token: String,
         default_ttl_seconds: NonZeroU64,
+        user_agent_name: &str,
     ) -> Result<Self, MomentoError> {
-        let data_endpoint = match decode_jwt(&auth_token) {
-            Ok(claims) => claims.c,
-            Err(e) => return Err(e),
-        };
-
         let momento_endpoints = match MomentoEndpointsResolver::resolve(&auth_token, &None) {
             Ok(endpoints) => endpoints,
             Err(e) => return Err(e),
         };
-        let control_endpoint_uri = Uri::try_from(&momento_endpoints.control_endpoint)?;
-        let data_endpoint_uri = Uri::try_from(&momento_endpoints.data_endpoint)?;
+        log::debug!("connecting to endpoints: {:?}", momento_endpoints);
 
-        let control_channel = Channel::builder(control_endpoint_uri)
-            .tls_config(ClientTlsConfig::default())
-            .unwrap()
-            .connect()
-            .await?;
-
-        let data_channel = Channel::builder(data_endpoint_uri)
-            .tls_config(ClientTlsConfig::default())
-            .unwrap()
-            .connect()
-            .await?;
+        let control_channel = connect_channel_lazily(&momento_endpoints.control_endpoint)?;
+        let data_channel = connect_channel_lazily(&momento_endpoints.data_endpoint)?;
 
         match utils::is_ttl_valid(&default_ttl_seconds) {
             Ok(_) => Ok(Self {
-                data_endpoint,
+                data_endpoint: momento_endpoints.data_endpoint,
                 control_channel,
                 data_channel,
                 auth_token,
                 default_ttl_seconds,
+                user_agent_name: user_agent_name.to_string(),
             }),
             Err(e) => Err(e),
         }
@@ -111,7 +123,11 @@ impl SimpleCacheClientBuilder {
     }
 
     pub fn build(self) -> SimpleCacheClient {
-        let agent_value = format!("rust:{}", VERSION);
+        let agent_value = format!(
+            "rust-{agent_name}:{version}",
+            agent_name = self.user_agent_name,
+            version = VERSION
+        );
         let control_interceptor = InterceptedService::new(
             self.control_channel,
             HeaderInterceptor::new(&self.auth_token, &agent_value),
@@ -141,141 +157,6 @@ pub struct SimpleCacheClient {
 }
 
 impl SimpleCacheClient {
-    /// Returns an instance of a Momento client
-    ///
-    /// # Arguments
-    ///
-    /// * `auth_token` - Momento Token
-    /// * `item_default_ttl_seconds` - Default TTL for items put into a cache.
-    /// # Examples
-    ///
-    /// ```
-    /// # tokio_test::block_on(async {
-    ///     use momento::simple_cache_client::SimpleCacheClient;
-    ///     use std::env;
-    ///     use std::num::NonZeroU64;
-    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let default_ttl = 30;
-    ///     let momento = SimpleCacheClient::new(auth_token, NonZeroU64::new(default_ttl).unwrap()).await;
-    /// # })
-    /// ```
-    pub async fn new(
-        auth_token: String,
-        default_ttl_seconds: NonZeroU64,
-    ) -> Result<Self, MomentoError> {
-        let data_endpoint = match decode_jwt(&auth_token) {
-            Ok(claims) => claims.c,
-            Err(e) => return Err(e),
-        };
-
-        let agent_value = format!("rust:{}", VERSION);
-        let momento_endpoints = match MomentoEndpointsResolver::resolve(&auth_token, &None) {
-            Ok(endpoints) => endpoints,
-            Err(e) => return Err(e),
-        };
-        let control_client = SimpleCacheClient::build_control_client(
-            auth_token.clone(),
-            momento_endpoints.control_endpoint,
-            agent_value.clone(),
-        )
-        .await;
-        let data_client = SimpleCacheClient::build_data_client(
-            auth_token.clone(),
-            momento_endpoints.data_endpoint,
-            agent_value,
-        )
-        .await;
-
-        let simple_cache_client = Self {
-            data_endpoint,
-            control_client: control_client.unwrap(),
-            data_client: data_client.unwrap(),
-            item_default_ttl_seconds: default_ttl_seconds,
-        };
-        Ok(simple_cache_client)
-    }
-
-    /// Returns an instance of a Momento client.
-    /// This is specifically used for Momento CLI to initialize a Momento client.
-    ///
-    /// # Arguments
-    ///
-    /// * `auth_token` - Momento Token
-    /// * `item_default_ttl_seconds` - Default TTL for items put into a cache.
-    /// # Examples
-    ///
-    /// ```
-    /// # tokio_test::block_on(async {
-    ///     use momento::simple_cache_client::SimpleCacheClient;
-    ///     use std::env;
-    ///     use std::num::NonZeroU64;
-    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let default_ttl = 30;
-    ///     let momento = SimpleCacheClient::new_momento_cli(auth_token, NonZeroU64::new(default_ttl).unwrap()).await;
-    /// # })
-    /// ```
-    pub async fn new_momento_cli(
-        auth_token: String,
-        default_ttl_seconds: NonZeroU64,
-    ) -> Result<Self, MomentoError> {
-        let data_endpoint = match decode_jwt(&auth_token) {
-            Ok(claims) => claims.c,
-            Err(e) => return Err(e),
-        };
-        let agent_value = format!("momento-cli:{}", VERSION);
-        let momento_endpoints = match MomentoEndpointsResolver::resolve(&auth_token, &None) {
-            Ok(endpoints) => endpoints,
-            Err(e) => return Err(e),
-        };
-        let control_client = SimpleCacheClient::build_control_client(
-            auth_token.clone(),
-            momento_endpoints.control_endpoint,
-            agent_value.clone(),
-        )
-        .await;
-        let data_client = SimpleCacheClient::build_data_client(
-            auth_token.clone(),
-            momento_endpoints.data_endpoint,
-            agent_value,
-        )
-        .await;
-
-        let simple_cache_client = Self {
-            data_endpoint,
-            control_client: control_client.unwrap(),
-            data_client: data_client.unwrap(),
-            item_default_ttl_seconds: default_ttl_seconds,
-        };
-        Ok(simple_cache_client)
-    }
-
-    async fn build_control_client(
-        auth_token: String,
-        endpoint: String,
-        agent_value: String,
-    ) -> Result<ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>, MomentoError>
-    {
-        let channel = connect_channel(&endpoint, true).await?;
-
-        let interceptor =
-            InterceptedService::new(channel, HeaderInterceptor::new(&auth_token, &agent_value));
-        let client = ScsControlClient::new(interceptor);
-        Ok(client)
-    }
-
-    async fn build_data_client(
-        auth_token: String,
-        endpoint: String,
-        agent_value: String,
-    ) -> Result<ScsClient<InterceptedService<Channel, HeaderInterceptor>>, MomentoError> {
-        let channel = connect_channel(&endpoint, true).await?;
-
-        let interceptor =
-            InterceptedService::new(channel, HeaderInterceptor::new(&auth_token, &agent_value));
-        let client = ScsClient::new(interceptor);
-        Ok(client)
-    }
-
     /// Creates a new Momento cache
     ///
     /// # Arguments

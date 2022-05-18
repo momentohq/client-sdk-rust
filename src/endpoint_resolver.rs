@@ -1,6 +1,7 @@
 use crate::jwt::{decode_jwt, Claims};
 use crate::response::error::MomentoError;
 
+#[derive(Debug)]
 pub struct MomentoEndpoints {
     pub control_endpoint: String,
     pub data_endpoint: String,
