@@ -4,6 +4,7 @@ mod tests {
     use std::{env, time::Duration};
 
     use momento::response::error::MomentoError;
+    use momento::simple_cache_client::SimpleCacheClientBuilder;
     use momento::{
         response::cache_get_response::MomentoGetStatus, simple_cache_client::SimpleCacheClient,
     };
@@ -11,18 +12,28 @@ mod tests {
     use tokio::time::sleep;
     use uuid::Uuid;
 
-    async fn get_momento_instance() -> SimpleCacheClient {
+    fn get_momento_instance_with_token(
+        auth_token: String,
+    ) -> Result<SimpleCacheClientBuilder, MomentoError> {
+        SimpleCacheClientBuilder::new_with_explicit_agent_name(
+            auth_token,
+            NonZeroU64::new(5).unwrap(),
+            "integration_test",
+        )
+    }
+
+    fn get_momento_instance() -> SimpleCacheClient {
         let auth_token = env::var("TEST_AUTH_TOKEN").expect("env var TEST_AUTH_TOKEN must be set");
-        return SimpleCacheClient::new(auth_token, NonZeroU64::new(5).unwrap())
-            .await
-            .unwrap();
+        get_momento_instance_with_token(auth_token)
+            .expect("failed to build an integration test client builder")
+            .build()
     }
 
     #[tokio::test]
     async fn cache_miss() {
         let cache_name = Uuid::new_v4().to_string();
         let cache_key = Uuid::new_v4().to_string();
-        let mut mm = get_momento_instance().await;
+        let mut mm = get_momento_instance();
         mm.create_cache(&cache_name).await.unwrap();
         let result = mm.get(&cache_name, cache_key).await.unwrap();
         assert!(matches!(result.result, MomentoGetStatus::MISS));
@@ -32,7 +43,7 @@ mod tests {
     #[tokio::test]
     async fn cache_validation() {
         let cache_name = "";
-        let mut mm = get_momento_instance().await;
+        let mut mm = get_momento_instance();
         let result = mm.create_cache(cache_name).await.unwrap_err();
         let _err_msg = "Cache name cannot be empty".to_string();
         assert!(matches!(
@@ -44,7 +55,7 @@ mod tests {
     #[tokio::test]
     async fn key_id_validation() {
         let key_id = "";
-        let mut mm = get_momento_instance().await;
+        let mut mm = get_momento_instance();
         let result = mm.revoke_signing_key(key_id).await.unwrap_err();
         assert!(matches!(result, MomentoError::InvalidArgument(_)))
     }
@@ -54,7 +65,7 @@ mod tests {
         let cache_name = Uuid::new_v4().to_string();
         let cache_key = Uuid::new_v4().to_string();
         let cache_body = Uuid::new_v4().to_string();
-        let mut mm = get_momento_instance().await;
+        let mut mm = get_momento_instance();
         mm.create_cache(&cache_name).await.unwrap();
         let ttl: u64 = 18446744073709551615;
         let max_ttl = u64::MAX / 1000_u64;
@@ -83,7 +94,7 @@ mod tests {
         let cache_name = Uuid::new_v4().to_string();
         let cache_key = Uuid::new_v4().to_string();
         let cache_body = Uuid::new_v4().to_string();
-        let mut mm = get_momento_instance().await;
+        let mut mm = get_momento_instance();
         mm.create_cache(&cache_name).await.unwrap();
         mm.set(&cache_name, cache_key.clone(), cache_body.clone(), None)
             .await
@@ -99,7 +110,7 @@ mod tests {
         let cache_name = Uuid::new_v4().to_string();
         let cache_key = Uuid::new_v4().to_string();
         let cache_body = Uuid::new_v4().to_string();
-        let mut mm = get_momento_instance().await;
+        let mut mm = get_momento_instance();
         mm.create_cache(&cache_name).await.unwrap();
         mm.set(&cache_name, cache_key.clone(), cache_body.clone(), None)
             .await
@@ -115,7 +126,7 @@ mod tests {
         let cache_name = Uuid::new_v4().to_string();
         let cache_key = Uuid::new_v4().to_string();
         let cache_body = Uuid::new_v4().to_string();
-        let mut mm = get_momento_instance().await;
+        let mut mm = get_momento_instance();
         mm.create_cache(&cache_name).await.unwrap();
         mm.set(&cache_name, cache_key.clone(), cache_body.clone(), None)
             .await
@@ -129,7 +140,7 @@ mod tests {
     #[tokio::test]
     async fn list_caches() {
         let cache_name = Uuid::new_v4().to_string();
-        let mut mm = get_momento_instance().await;
+        let mut mm = get_momento_instance();
         mm.create_cache(&cache_name).await.unwrap();
         mm.list_caches(None).await.unwrap();
         mm.delete_cache(&cache_name).await.unwrap();
@@ -137,7 +148,7 @@ mod tests {
 
     #[tokio::test]
     async fn create_list_revoke_signing_key() {
-        let mut mm = get_momento_instance().await;
+        let mut mm = get_momento_instance();
         let response = mm.create_signing_key(10).await.unwrap();
 
         let key: Value = serde_json::from_str(&response.key).unwrap();
@@ -168,6 +179,7 @@ mod tests {
 
     #[tokio::test]
     async fn invalid_control_token_can_still_initialize_sdk() {
+        env_logger::init();
         let jwt_header_base64: String = String::from("eyJhbGciOiJIUzUxMiJ9");
         let jwt_invalid_signature_base_64: String =
             String::from("gdghdjjfjyehhdkkkskskmmls76573jnajhjjjhjdhnndy");
@@ -179,9 +191,9 @@ mod tests {
             + &jwt_payload_bad_control_plane_base64.clone()
             + "."
             + &jwt_invalid_signature_base_64.clone();
-        let mut client = SimpleCacheClient::new(bad_control_plane_jwt, NonZeroU64::new(5).unwrap())
-            .await
-            .unwrap();
+        let mut client = get_momento_instance_with_token(bad_control_plane_jwt)
+            .expect("even with a bad control endpoint we should get a client")
+            .build();
 
         // Unable to reach control plane
         let create_cache_result = client.create_cache("cache").await.unwrap_err();
@@ -220,9 +232,9 @@ mod tests {
             + &jwt_payload_bad_data_plane_base64.clone()
             + "."
             + &jwt_invalid_signature_base_64.clone();
-        let mut client = SimpleCacheClient::new(bad_data_plane_jwt, NonZeroU64::new(5).unwrap())
-            .await
-            .unwrap();
+        let mut client = get_momento_instance_with_token(bad_data_plane_jwt)
+            .expect("even with a bad data endpoint we should get a client")
+            .build();
 
         // Can reach control plane
         let create_cache_result = client.create_cache("cache").await.unwrap_err();
