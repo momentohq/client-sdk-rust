@@ -100,12 +100,12 @@ impl SimpleCacheClientBuilder {
         };
         log::debug!("connecting to endpoints: {:?}", momento_endpoints);
 
-        let control_channel = connect_channel_lazily(&momento_endpoints.control_endpoint)?;
-        let data_channel = connect_channel_lazily(&momento_endpoints.data_endpoint)?;
+        let control_channel = connect_channel_lazily(&momento_endpoints.control_endpoint.url)?;
+        let data_channel = connect_channel_lazily(&momento_endpoints.data_endpoint.url)?;
 
         match utils::is_ttl_valid(&default_ttl_seconds) {
             Ok(_) => Ok(Self {
-                data_endpoint: momento_endpoints.data_endpoint,
+                data_endpoint: momento_endpoints.data_endpoint.hostname,
                 control_channel,
                 data_channel,
                 auth_token,

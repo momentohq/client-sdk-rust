@@ -2,9 +2,15 @@ use crate::jwt::{decode_jwt, Claims};
 use crate::response::error::MomentoError;
 
 #[derive(Debug)]
+pub struct MomentoEndpoint {
+    pub url: String,
+    pub hostname: String,
+}
+
+#[derive(Debug)]
 pub struct MomentoEndpoints {
-    pub control_endpoint: String,
-    pub data_endpoint: String,
+    pub control_endpoint: MomentoEndpoint,
+    pub data_endpoint: MomentoEndpoint,
 }
 
 pub struct MomentoEndpointsResolver {}
@@ -29,35 +35,40 @@ impl MomentoEndpointsResolver {
         })
     }
 
-    fn get_control_endpoint(claims: &Claims, hosted_zone: &Option<String>) -> String {
+    fn wrapped_endpoint(prefix: &str, hostname: String, suffix: &str) -> MomentoEndpoint {
+        MomentoEndpoint {
+            url: format!("{prefix}{hostname}{suffix}"),
+            hostname: hostname,
+        }
+    }
+
+    fn https_endpoint(hostname: String) -> MomentoEndpoint {
+        MomentoEndpointsResolver::wrapped_endpoint("https://", hostname, ":443")
+    }
+
+    fn get_control_endpoint(claims: &Claims, hosted_zone: &Option<String>) -> MomentoEndpoint {
         MomentoEndpointsResolver::get_control_endpoint_from_hosted_zone(hosted_zone)
-            .unwrap_or_else(|| format!("https://{}:443", claims.cp))
+            .unwrap_or_else(|| MomentoEndpointsResolver::https_endpoint(claims.cp.to_owned()))
     }
 
-    fn get_data_endpoint(claims: &Claims, hosted_zone: &Option<String>) -> String {
+    fn get_data_endpoint(claims: &Claims, hosted_zone: &Option<String>) -> MomentoEndpoint {
         MomentoEndpointsResolver::get_data_endpoint_from_hosted_zone(hosted_zone)
-            .unwrap_or_else(|| format!("https://{}:443", claims.c))
+            .unwrap_or_else(|| MomentoEndpointsResolver::https_endpoint(claims.c.to_owned()))
     }
 
-    fn get_control_endpoint_from_hosted_zone(hosted_zone: &Option<String>) -> Option<String> {
+    fn hosted_zone_endpoint(hosted_zone: &Option<String>, prefix: &str) -> Option<MomentoEndpoint> {
         if hosted_zone.is_none() {
             return None;
         }
-        return Some(format!(
-            "{}{}",
-            CONTROL_ENDPOINT_PREFIX,
-            hosted_zone.clone().unwrap()
-        ));
+        let hostname = format!("{}{}", prefix, hosted_zone.clone().unwrap());
+        Some(MomentoEndpointsResolver::wrapped_endpoint(prefix, hostname, ""))
     }
 
-    fn get_data_endpoint_from_hosted_zone(hosted_zone: &Option<String>) -> Option<String> {
-        if hosted_zone.is_none() {
-            return None;
-        }
-        return Some(format!(
-            "{}{}",
-            DATA_ENDPOINT_PREFIX,
-            hosted_zone.clone().unwrap()
-        ));
+    fn get_control_endpoint_from_hosted_zone(hosted_zone: &Option<String>) -> Option<MomentoEndpoint> {
+        MomentoEndpointsResolver::hosted_zone_endpoint(hosted_zone, CONTROL_ENDPOINT_PREFIX)
+    }
+
+    fn get_data_endpoint_from_hosted_zone(hosted_zone: &Option<String>) -> Option<MomentoEndpoint> {
+        MomentoEndpointsResolver::hosted_zone_endpoint(hosted_zone, DATA_ENDPOINT_PREFIX)
     }
 }
