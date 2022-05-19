@@ -17,6 +17,7 @@ pub struct MomentoEndpointsResolver {}
 
 const CONTROL_ENDPOINT_PREFIX: &str = "control.";
 const DATA_ENDPOINT_PREFIX: &str = "data.";
+const LOGIN_HOSTNAMES: &[&str] = &["control.cell-us-east-1-1.prod.a.momentohq.com"];
 
 impl MomentoEndpointsResolver {
     pub fn resolve(
@@ -33,6 +34,16 @@ impl MomentoEndpointsResolver {
             control_endpoint,
             data_endpoint,
         })
+    }
+
+    pub fn get_login_hostname() -> String {
+        match std::env::var("LOGIN_HOSTNAME") {
+            Ok(override_hostname) => override_hostname,
+            Err(_) => {
+                let random = rand::random::<usize>();
+                LOGIN_HOSTNAMES[random % LOGIN_HOSTNAMES.len()].to_string()
+            }
+        }
     }
 
     fn wrapped_endpoint(prefix: &str, hostname: String, suffix: &str) -> MomentoEndpoint {
