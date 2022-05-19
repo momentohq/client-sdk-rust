@@ -1,3 +1,4 @@
+pub mod momento;
 pub mod response;
 pub mod simple_cache_client;
 
