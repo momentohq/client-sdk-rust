@@ -119,7 +119,7 @@ where
 }
 
 fn auth_client() -> Result<AuthClient<Channel>, MomentoError> {
-    let hostname = MomentoEndpointsResolver::get_login_hostname();
+    let hostname = MomentoEndpointsResolver::get_login_endpoint();
     let channel = connect_channel_lazily(&hostname)?;
     Ok(AuthClient::new(channel))
 }

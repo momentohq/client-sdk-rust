@@ -36,12 +36,13 @@ impl MomentoEndpointsResolver {
         })
     }
 
-    pub fn get_login_hostname() -> String {
-        match std::env::var("LOGIN_HOSTNAME") {
+    pub fn get_login_endpoint() -> String {
+        match std::env::var("LOGIN_ENDPOINT") {
             Ok(override_hostname) => override_hostname,
             Err(_) => {
                 let random = rand::random::<usize>();
-                LOGIN_HOSTNAMES[random % LOGIN_HOSTNAMES.len()].to_string()
+                let hostname = LOGIN_HOSTNAMES[random % LOGIN_HOSTNAMES.len()].to_string();
+                format!("https://{hostname}:443")
             }
         }
     }
