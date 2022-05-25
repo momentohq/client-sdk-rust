@@ -241,7 +241,10 @@ impl SimpleCacheClient {
             .collect();
         let response = MomentoListCacheResult {
             caches,
-            next_token: res.next_token,
+            next_token: match res.next_token.is_empty() {
+                true => None,
+                false => Some(res.next_token),
+            },
         };
         Ok(response)
     }
