@@ -226,10 +226,10 @@ impl SimpleCacheClient {
     /// ```
     pub async fn list_caches(
         &mut self,
-        next_token: Option<&str>,
+        next_token: Option<String>,
     ) -> Result<MomentoListCacheResult, MomentoError> {
         let request = Request::new(ListCachesRequest {
-            next_token: next_token.unwrap_or_default().to_string(),
+            next_token: next_token.unwrap_or("".to_string())
         });
         let res = self.control_client.list_caches(request).await?.into_inner();
         let caches = res
