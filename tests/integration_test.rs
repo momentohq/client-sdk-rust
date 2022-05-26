@@ -154,10 +154,7 @@ mod tests {
             }
         }
 
-        assert_eq!(
-            1, num_pages,
-            "we expect a single page of caches to list"
-        );
+        assert_eq!(1, num_pages, "we expect a single page of caches to list");
         mm.delete_cache(&cache_name).await.unwrap();
     }
 
