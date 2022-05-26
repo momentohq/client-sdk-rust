@@ -142,7 +142,19 @@ mod tests {
         let cache_name = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance();
         mm.create_cache(&cache_name).await.unwrap();
-        mm.list_caches(None).await.unwrap();
+
+        let mut next_token: Option<String> = None;
+        let mut num_pages = 0;
+        loop {
+            let list_cache_result = mm.list_caches(next_token).await.unwrap();
+            num_pages += 1;
+            next_token = list_cache_result.next_token;
+            if next_token == None {
+                break;
+            }
+        }
+
+        assert_eq!(1, num_pages, "we expect a single page of caches to list");
         mm.delete_cache(&cache_name).await.unwrap();
     }
 
