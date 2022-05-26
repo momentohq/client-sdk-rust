@@ -25,30 +25,45 @@ Rust SDK for Momento, a serverless cache that automatically scales without any o
 ### Using Momento
 
 ```rust
+use momento::simple_cache_client::SimpleCacheClientBuilder;
 use std::env;
-use momento::simple_cache_client::SimpleCacheClient;
+use std::num::NonZeroU64;
 
-// Initializing Momento
-let auth_token = env::var("TEST_AUTH_TOKEN").expect("env var TEST_AUTH_TOKEN must be set");
-let item_default_ttl_seconds = 60
-let mut cache_client = SimpleCacheClient::new(auth_token, item_default_ttl_seconds).await.unwrap();
+async fn demo_cache_usage() {
+    // Initialize Momento
+    let auth_token = env::var("MOMENTO_AUTH_TOKEN")
+        .expect("env var MOMENTO_AUTH_TOKEN must be set to your auth token");
+    let item_default_ttl_seconds = 60;
+    let mut cache_client = SimpleCacheClientBuilder::new(
+        auth_token,
+        NonZeroU64::new(item_default_ttl_seconds).unwrap(),
+    )
+    .unwrap()
+    .build();
 
-// Creating a cache named "cache"
-let cache_name = String::from("cache");
-cache_client.create_cache(&cache_name).await.unwrap()
+    // Create a cache named "cache"
+    let cache_name = String::from("cache");
+    cache_client.create_cache(&cache_name).await.unwrap();
 
-// Sets key with default TTL and get value with that key
-let key = String::from("my_key");
-let value = String::from("my_value");
-cache_client.set(&cache_name, key.clone(), value.clone(), None).await.unwrap();
-let result = cache_client.get(&cache_name, key.clone()).await.unwrap();
-println!("Looked up value: {}", result.value);
+    // Set key with default TTL and get value with that key
+    let key = String::from("my_key");
+    let value = String::from("my_value");
+    cache_client
+        .set(&cache_name, key.clone(), value.clone(), None)
+        .await
+        .unwrap();
+    let result = cache_client.get(&cache_name, key.clone()).await.unwrap();
+    println!("Looked up value: {:?}", result.as_string());
 
-// Sets key with TTL of 5 seconds
-cache_client.set(&cache_name, key.clone(), value.clone(), 5).await.unwrap();
+    // Set key with TTL of 5 seconds
+    cache_client
+        .set(&cache_name, key.clone(), value.clone(), NonZeroU64::new(5))
+        .await
+        .unwrap();
 
-// Permanently deletes cache
-cache_client.delete_cache(&cache_name).await.unwrap();
+    // Permanently delete cache
+    cache_client.delete_cache(&cache_name).await.unwrap();
+}
 ```
 
 <br/>
