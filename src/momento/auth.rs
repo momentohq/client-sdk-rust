@@ -6,6 +6,9 @@ use crate::{
     utils::connect_channel_lazily,
 };
 
+pub type EarlyOutActionResult = Option<Result<LoginResult, MomentoError>>;
+pub type LoginActionConsumer = fn(LoginAction) -> EarlyOutActionResult;
+
 /// Initiate a login workflow
 /// You need to provide an implementation for the LoginActions.
 /// ```rust
@@ -15,7 +18,9 @@ use crate::{
 ///       match action {
 ///         LoginAction::OpenBrowser(directive) => println!("opening browser to: {}", directive.url),
 ///         LoginAction::ShowMessage(message) => println!("showing message: {}", message.text),
-///       }
+///       };
+///       None // Could instead return an error or an early logged-in or whatever.
+///       // Some()
 ///     });
 ///     match result.await {
 ///       LoginResult::LoggedIn(logged_in) => println!("logged in. session token: {}", logged_in.session_token),
@@ -23,9 +28,7 @@ use crate::{
 ///     };
 /// # };
 /// ```
-pub async fn login<F>(action_sink: F) -> LoginResult
-where
-    F: Fn(LoginAction),
+pub async fn login(action_sink: LoginActionConsumer) -> LoginResult
 {
     let mut client = match auth_client() {
         Ok(client) => client,
@@ -39,12 +42,13 @@ where
 
     let stream = stream_response.get_mut();
 
-    match consume_login_messages(stream, &action_sink).await {
+    match consume_login_messages(stream, action_sink).await {
         Ok(result) => result,
         Err(error) => not_logged_in(format!("Failed to log in: {:?}", error)),
     }
 }
 
+#[derive(Debug)]
 pub enum LoginResult {
     LoggedIn(LoggedIn),
     NotLoggedIn(NotLoggedIn),
@@ -58,10 +62,13 @@ pub enum LoginAction {
     ShowMessage(ShowMessage),
 }
 
+#[derive(Debug)]
 pub struct LoggedIn {
     pub session_token: String,
+    pub valid_for_seconds: u32,
 }
 
+#[derive(Debug)]
 pub struct NotLoggedIn {
     pub error_message: String,
 }
@@ -80,15 +87,12 @@ fn not_logged_in(message: String) -> LoginResult {
     })
 }
 
-async fn consume_login_messages<F>(
+async fn consume_login_messages(
     stream: &mut Streaming<LoginResponse>,
-    action_sink: &F,
-) -> Result<LoginResult, MomentoError>
-where
-    F: Fn(LoginAction),
-{
+    action_sink: LoginActionConsumer,
+) -> Result<LoginResult, MomentoError> {
     while let Some(message) = stream.message().await? {
-        match message.state {
+        let early_out_action_result = match message.state {
             Some(state) => match state {
                 momento_protos::auth::login_response::State::DirectBrowser(direct) => {
                     action_sink(LoginAction::OpenBrowser(OpenBrowser { url: direct.url }))
@@ -99,6 +103,7 @@ where
                 momento_protos::auth::login_response::State::LoggedIn(success) => {
                     return Ok(LoginResult::LoggedIn(LoggedIn {
                         session_token: success.session_token,
+                        valid_for_seconds: success.valid_for_seconds,
                     }))
                 }
                 momento_protos::auth::login_response::State::Error(failure) => {
@@ -110,6 +115,10 @@ where
             None => action_sink(LoginAction::ShowMessage(ShowMessage {
                 text: "Invalid login state received: no state".to_string(),
             })),
+        };
+        if let Some(result) = early_out_action_result {
+            log::debug!("Early-out of login with result: {:?}", result);
+            return result;
         }
     }
 
