@@ -28,8 +28,7 @@ pub type LoginActionConsumer = fn(LoginAction) -> EarlyOutActionResult;
 ///     };
 /// # };
 /// ```
-pub async fn login(action_sink: LoginActionConsumer) -> LoginResult
-{
+pub async fn login(action_sink: LoginActionConsumer) -> LoginResult {
     let mut client = match auth_client() {
         Ok(client) => client,
         Err(error) => return not_logged_in(format!("Failed to create a channel: {:?}", error)),
