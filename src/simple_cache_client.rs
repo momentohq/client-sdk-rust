@@ -472,24 +472,18 @@ impl SimpleCacheClient {
     /// ```
     /// use uuid::Uuid;
     /// use std::num::NonZeroU64;
-    /// #[tokio::test]
-    /// async fn delete_item() {
+    /// # tokio_test::block_on(async {
+    ///     use std::env;
+    ///     use momento::{response::cache_get_response::MomentoGetStatus, simple_cache_client::SimpleCacheClientBuilder};
+    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let cache_key = Uuid::new_v4().to_string();
-    ///     let cache_body = Uuid::new_v4().to_string();
-    ///     let mut mm = get_momento_instance();
-    ///     mm.create_cache(&cache_name).await.unwrap();
-    ///     mm.set(&cache_name, cache_key.clone(), cache_body.clone(), NonZeroU64::new(10000))
-    ///         .await
-    ///         .unwrap();
-    ///     let result = mm.get(&cache_name, cache_key.clone()).await.unwrap();
-    ///     assert!(matches!(result.result, MomentoGetStatus::HIT));
-    ///     assert_eq!(result.value, cache_body.as_bytes());
-    ///    mm.delete(&cache_name, cache_key.clone()).await.unwrap();
-    ///    let result = mm.get(&cache_name, cache_key.clone()).await.unwrap();
-    ///    assert!(matches!(result.result, MomentoGetStatus::MISS));
-    ///    mm.delete_cache(&cache_name).await.unwrap();
-    ///}
+    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
+    ///         .expect("could not create a client")
+    ///         .build();
+    ///     momento.create_cache(&cache_name).await;
+    ///     let result = momento.set(&cache_name, "cache_key", "cache_value", None).await;
+    ///     momento.delete(&cache_name, "cache_key").await.unwrap();
+    ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
     pub async fn delete<I: MomentoRequest>(
