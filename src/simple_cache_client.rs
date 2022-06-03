@@ -1,6 +1,6 @@
 use chrono::{DateTime, NaiveDateTime, Utc};
 use momento_protos::{
-    cache_client::{scs_client::ScsClient, ECacheResult, GetRequest, SetRequest},
+    cache_client::{scs_client::ScsClient, ECacheResult, GetRequest, SetRequest, DeleteRequest},
     control_client::{
         scs_control_client::ScsControlClient, CreateCacheRequest, CreateSigningKeyRequest,
         DeleteCacheRequest, ListCachesRequest, ListSigningKeysRequest, RevokeSigningKeyRequest,
@@ -459,4 +459,54 @@ impl SimpleCacheClient {
             _ => todo!(),
         }
     }
+
+    /// Deletes an item from a Momento Cache
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache
+    /// * `key` - cache key
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use uuid::Uuid;
+    /// use std::num::NonZeroU64;
+    /// #[tokio::test]
+    /// async fn delete_item() {
+    ///     let cache_name = Uuid::new_v4().to_string();
+    ///     let cache_key = Uuid::new_v4().to_string();
+    ///     let cache_body = Uuid::new_v4().to_string();
+    ///     let mut mm = get_momento_instance();
+    ///     mm.create_cache(&cache_name).await.unwrap();
+    ///     mm.set(&cache_name, cache_key.clone(), cache_body.clone(), NonZeroU64::new(10000))
+    ///         .await
+    ///         .unwrap();
+    ///     let result = mm.get(&cache_name, cache_key.clone()).await.unwrap();
+    ///     assert!(matches!(result.result, MomentoGetStatus::HIT));
+    ///     assert_eq!(result.value, cache_body.as_bytes());
+    ///    mm.delete(&cache_name, cache_key.clone()).await.unwrap();
+    ///    let result = mm.get(&cache_name, cache_key.clone()).await.unwrap();
+    ///    assert!(matches!(result.result, MomentoGetStatus::MISS));
+    ///    mm.delete_cache(&cache_name).await.unwrap();
+    ///}
+    /// # })
+    /// ```
+    pub async fn delete<I: MomentoRequest>(
+        &mut self,
+        cache_name: &str,
+        key: I,
+    ) -> Result<(), MomentoError> {
+        utils::is_cache_name_valid(cache_name)?;
+        let mut request = tonic::Request::new(DeleteRequest {
+            cache_key: key.into_bytes(),
+        });
+        request.metadata_mut().append(
+            "cache",
+            tonic::metadata::AsciiMetadataValue::try_from(cache_name).unwrap(),
+        );
+        self.data_client.delete(request).await?.into_inner();
+        Ok(())
+    }
+
 }

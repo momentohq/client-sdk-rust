@@ -271,4 +271,23 @@ mod tests {
             MomentoError::InternalServerError(_err_msg_internal)
         ));
     }
+
+    #[tokio::test]
+    async fn delete_item() {
+        let cache_name = Uuid::new_v4().to_string();
+        let cache_key = Uuid::new_v4().to_string();
+        let cache_body = Uuid::new_v4().to_string();
+        let mut mm = get_momento_instance();
+        mm.create_cache(&cache_name).await.unwrap();
+        mm.set(&cache_name, cache_key.clone(), cache_body.clone(), NonZeroU64::new(10000))
+            .await
+            .unwrap();
+        let result = mm.get(&cache_name, cache_key.clone()).await.unwrap();
+        assert!(matches!(result.result, MomentoGetStatus::HIT));
+        assert_eq!(result.value, cache_body.as_bytes());
+        mm.delete(&cache_name, cache_key.clone()).await.unwrap();
+        let result = mm.get(&cache_name, cache_key.clone()).await.unwrap();
+        assert!(matches!(result.result, MomentoGetStatus::MISS));
+        mm.delete_cache(&cache_name).await.unwrap();
+    }
 }
