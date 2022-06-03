@@ -1,6 +1,6 @@
 use chrono::{DateTime, NaiveDateTime, Utc};
 use momento_protos::{
-    cache_client::{scs_client::ScsClient, ECacheResult, GetRequest, SetRequest, DeleteRequest},
+    cache_client::{scs_client::ScsClient, DeleteRequest, ECacheResult, GetRequest, SetRequest},
     control_client::{
         scs_control_client::ScsControlClient, CreateCacheRequest, CreateSigningKeyRequest,
         DeleteCacheRequest, ListCachesRequest, ListSigningKeysRequest, RevokeSigningKeyRequest,
@@ -508,5 +508,4 @@ impl SimpleCacheClient {
         self.data_client.delete(request).await?.into_inner();
         Ok(())
     }
-
 }
