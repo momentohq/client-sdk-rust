@@ -59,11 +59,21 @@ pub struct SimpleCacheClientBuilder {
     user_agent_name: String,
 }
 
-pub fn request_meta_data<T>(request: &mut tonic::Request<T>, cache_name: &str) {
-    request.metadata_mut().append(
-        "cache",
-        tonic::metadata::AsciiMetadataValue::try_from(cache_name).unwrap(),
-    );
+pub fn request_meta_data<T>(
+    request: &mut tonic::Request<T>,
+    cache_name: &str,
+) -> Result<(), MomentoError> {
+    Ok(tonic::metadata::AsciiMetadataValue::try_from(cache_name)
+        .map(|value| {
+            request.metadata_mut().append("cache", value);
+            ()
+        })
+        .map_err(|e| {
+            MomentoError::InvalidArgument(format!(
+                "Could not treat cache name as a header value: {}",
+                e.to_string()
+            ))
+        })?)
 }
 
 impl SimpleCacheClientBuilder {
@@ -398,7 +408,7 @@ impl SimpleCacheClient {
             cache_body: body.into_bytes(),
             ttl_milliseconds: ttl_to_use,
         });
-        request_meta_data(&mut request, cache_name);
+        request_meta_data(&mut request, cache_name)?;
         let _ = self.data_client.set(request).await?;
         Ok(MomentoSetResponse {
             result: MomentoSetStatus::OK,
@@ -446,7 +456,7 @@ impl SimpleCacheClient {
         let mut request = tonic::Request::new(GetRequest {
             cache_key: key.into_bytes(),
         });
-        request_meta_data(&mut request, cache_name);
+        request_meta_data(&mut request, cache_name)?;
         let response = self.data_client.get(request).await?.into_inner();
         match response.result() {
             ECacheResult::Hit => Ok(MomentoGetResponse {
@@ -496,7 +506,7 @@ impl SimpleCacheClient {
         let mut request = tonic::Request::new(DeleteRequest {
             cache_key: key.into_bytes(),
         });
-        request_meta_data(&mut request, cache_name);
+        request_meta_data(&mut request, cache_name)?;
         self.data_client.delete(request).await?.into_inner();
         Ok(())
     }
