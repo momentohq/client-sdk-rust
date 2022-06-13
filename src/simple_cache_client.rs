@@ -61,8 +61,8 @@ pub struct SimpleCacheClientBuilder {
 
 pub fn request_meta_data<T>(request: &mut tonic::Request<T>, cache_name: &str) {
     request.metadata_mut().append(
-            "cache",
-            tonic::metadata::AsciiMetadataValue::try_from(cache_name).unwrap(),
+        "cache",
+        tonic::metadata::AsciiMetadataValue::try_from(cache_name).unwrap(),
     );
 }
 
