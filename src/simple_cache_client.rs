@@ -63,17 +63,16 @@ pub fn request_meta_data<T>(
     request: &mut tonic::Request<T>,
     cache_name: &str,
 ) -> Result<(), MomentoError> {
-    Ok(tonic::metadata::AsciiMetadataValue::try_from(cache_name)
+    tonic::metadata::AsciiMetadataValue::try_from(cache_name)
         .map(|value| {
             request.metadata_mut().append("cache", value);
-            ()
         })
         .map_err(|e| {
             MomentoError::InvalidArgument(format!(
                 "Could not treat cache name as a header value: {}",
-                e.to_string()
+                e
             ))
-        })?)
+        })
 }
 
 impl SimpleCacheClientBuilder {
