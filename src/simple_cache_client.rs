@@ -1,6 +1,6 @@
 use chrono::{DateTime, NaiveDateTime, Utc};
 use momento_protos::{
-    cache_client::{scs_client::ScsClient, ECacheResult, GetRequest, SetRequest},
+    cache_client::{scs_client::ScsClient, DeleteRequest, ECacheResult, GetRequest, SetRequest},
     control_client::{
         scs_control_client::ScsControlClient, CreateCacheRequest, CreateSigningKeyRequest,
         DeleteCacheRequest, ListCachesRequest, ListSigningKeysRequest, RevokeSigningKeyRequest,
@@ -57,6 +57,22 @@ pub struct SimpleCacheClientBuilder {
     auth_token: String,
     default_ttl_seconds: NonZeroU64,
     user_agent_name: String,
+}
+
+pub fn request_meta_data<T>(
+    request: &mut tonic::Request<T>,
+    cache_name: &str,
+) -> Result<(), MomentoError> {
+    tonic::metadata::AsciiMetadataValue::try_from(cache_name)
+        .map(|value| {
+            request.metadata_mut().append("cache", value);
+        })
+        .map_err(|e| {
+            MomentoError::InvalidArgument(format!(
+                "Could not treat cache name as a header value: {}",
+                e
+            ))
+        })
 }
 
 impl SimpleCacheClientBuilder {
@@ -391,10 +407,7 @@ impl SimpleCacheClient {
             cache_body: body.into_bytes(),
             ttl_milliseconds: ttl_to_use,
         });
-        request.metadata_mut().append(
-            "cache",
-            tonic::metadata::AsciiMetadataValue::try_from(cache_name).unwrap(),
-        );
+        request_meta_data(&mut request, cache_name)?;
         let _ = self.data_client.set(request).await?;
         Ok(MomentoSetResponse {
             result: MomentoSetStatus::OK,
@@ -442,10 +455,7 @@ impl SimpleCacheClient {
         let mut request = tonic::Request::new(GetRequest {
             cache_key: key.into_bytes(),
         });
-        request.metadata_mut().append(
-            "cache",
-            tonic::metadata::AsciiMetadataValue::try_from(cache_name).unwrap(),
-        );
+        request_meta_data(&mut request, cache_name)?;
         let response = self.data_client.get(request).await?.into_inner();
         match response.result() {
             ECacheResult::Hit => Ok(MomentoGetResponse {
@@ -458,5 +468,45 @@ impl SimpleCacheClient {
             }),
             _ => todo!(),
         }
+    }
+
+    /// Deletes an item from a Momento Cache
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache
+    /// * `key` - cache key
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use uuid::Uuid;
+    /// use std::num::NonZeroU64;
+    /// # tokio_test::block_on(async {
+    ///     use std::env;
+    ///     use momento::{response::cache_get_response::MomentoGetStatus, simple_cache_client::SimpleCacheClientBuilder};
+    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    ///     let cache_name = Uuid::new_v4().to_string();
+    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
+    ///         .expect("could not create a client")
+    ///         .build();
+    ///     momento.create_cache(&cache_name).await;
+    ///     let result = momento.set(&cache_name, "cache_key", "cache_value", None).await;
+    ///     momento.delete(&cache_name, "cache_key").await.unwrap();
+    ///     momento.delete_cache(&cache_name).await;
+    /// # })
+    /// ```
+    pub async fn delete<I: MomentoRequest>(
+        &mut self,
+        cache_name: &str,
+        key: I,
+    ) -> Result<(), MomentoError> {
+        utils::is_cache_name_valid(cache_name)?;
+        let mut request = tonic::Request::new(DeleteRequest {
+            cache_key: key.into_bytes(),
+        });
+        request_meta_data(&mut request, cache_name)?;
+        self.data_client.delete(request).await?.into_inner();
+        Ok(())
     }
 }
