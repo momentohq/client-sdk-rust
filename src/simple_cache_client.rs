@@ -107,7 +107,7 @@ impl SimpleCacheClientBuilder {
     }
 
     /// Like new() above, but requires a momento_endpoint.
-    // TODO: Update the documentation
+    // TODO: Update the documentation and deprecate the existing new method.
     pub fn new_with_endpoint(
         auth_token: String,
         default_ttl_seconds: NonZeroU64,
@@ -129,7 +129,7 @@ impl SimpleCacheClientBuilder {
         momento_endpoint: Option<String>,
     ) -> Result<Self, MomentoError> {
         let momento_endpoints =
-            match MomentoEndpointsResolver::resolve(&auth_token, &momento_endpoint) {
+            match MomentoEndpointsResolver::resolve(&auth_token, momento_endpoint.to_owned()) {
                 Ok(endpoints) => endpoints,
                 Err(e) => return Err(e),
             };

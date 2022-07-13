@@ -22,17 +22,19 @@ const LOGIN_HOSTNAMES: &[&str] = &["control.cell-us-east-1-1.prod.a.momentohq.co
 impl MomentoEndpointsResolver {
     pub fn resolve(
         auth_token: &str,
-        momento_endpoint: &Option<String>,
+        momento_endpoint: Option<String>,
     ) -> Result<MomentoEndpoints, MomentoError> {
-        let claims = match decode_jwt(auth_token, momento_endpoint) {
+        let claims = match decode_jwt(auth_token, momento_endpoint.to_owned()) {
             Ok(c) => c,
             Err(e) => return Err(e),
         };
 
-        let hosted_zone = MomentoEndpointsResolver::get_hosted_zone(momento_endpoint);
+        let hosted_zone = MomentoEndpointsResolver::get_hosted_zone(momento_endpoint.to_owned());
 
-        let control_endpoint = MomentoEndpointsResolver::get_control_endpoint(&claims, hosted_zone);
-        let data_endpoint = MomentoEndpointsResolver::get_data_endpoint(&claims, hosted_zone);
+        let control_endpoint =
+            MomentoEndpointsResolver::get_control_endpoint(&claims, hosted_zone.to_owned());
+        let data_endpoint =
+            MomentoEndpointsResolver::get_data_endpoint(&claims, hosted_zone.to_owned());
 
         Ok(MomentoEndpoints {
             control_endpoint,
@@ -51,7 +53,7 @@ impl MomentoEndpointsResolver {
         }
     }
 
-    fn get_hosted_zone(momento_endpoint: &Option<String>) -> &Option<String> {
+    fn get_hosted_zone(momento_endpoint: Option<String>) -> Option<String> {
         // TODO: If not a full url, lookup in the endpoint maps.
         // For now, assuming that momento_endpoint is same as the hosted zone.
         momento_endpoint
@@ -68,19 +70,19 @@ impl MomentoEndpointsResolver {
         MomentoEndpointsResolver::wrapped_endpoint("https://", hostname, ":443")
     }
 
-    fn get_control_endpoint(claims: &Claims, hosted_zone: &Option<String>) -> MomentoEndpoint {
+    fn get_control_endpoint(claims: &Claims, hosted_zone: Option<String>) -> MomentoEndpoint {
         MomentoEndpointsResolver::get_control_endpoint_from_hosted_zone(hosted_zone).unwrap_or_else(
             || MomentoEndpointsResolver::https_endpoint(claims.cp.as_ref().unwrap().to_owned()),
         )
     }
 
-    fn get_data_endpoint(claims: &Claims, hosted_zone: &Option<String>) -> MomentoEndpoint {
+    fn get_data_endpoint(claims: &Claims, hosted_zone: Option<String>) -> MomentoEndpoint {
         MomentoEndpointsResolver::get_data_endpoint_from_hosted_zone(hosted_zone).unwrap_or_else(
             || MomentoEndpointsResolver::https_endpoint(claims.c.as_ref().unwrap().to_owned()),
         )
     }
 
-    fn hosted_zone_endpoint(hosted_zone: &Option<String>, prefix: &str) -> Option<MomentoEndpoint> {
+    fn hosted_zone_endpoint(hosted_zone: Option<String>, prefix: &str) -> Option<MomentoEndpoint> {
         if hosted_zone.is_none() {
             return None;
         }
@@ -91,12 +93,12 @@ impl MomentoEndpointsResolver {
     }
 
     fn get_control_endpoint_from_hosted_zone(
-        hosted_zone: &Option<String>,
+        hosted_zone: Option<String>,
     ) -> Option<MomentoEndpoint> {
         MomentoEndpointsResolver::hosted_zone_endpoint(hosted_zone, CONTROL_ENDPOINT_PREFIX)
     }
 
-    fn get_data_endpoint_from_hosted_zone(hosted_zone: &Option<String>) -> Option<MomentoEndpoint> {
+    fn get_data_endpoint_from_hosted_zone(hosted_zone: Option<String>) -> Option<MomentoEndpoint> {
         MomentoEndpointsResolver::hosted_zone_endpoint(hosted_zone, DATA_ENDPOINT_PREFIX)
     }
 }
