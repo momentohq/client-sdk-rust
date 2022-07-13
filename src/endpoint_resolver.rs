@@ -29,12 +29,11 @@ impl MomentoEndpointsResolver {
             Err(e) => return Err(e),
         };
 
-        let hosted_zone = MomentoEndpointsResolver::get_hosted_zone(momento_endpoint.to_owned());
+        let hosted_zone = MomentoEndpointsResolver::get_hosted_zone(momento_endpoint);
 
         let control_endpoint =
             MomentoEndpointsResolver::get_control_endpoint(&claims, hosted_zone.to_owned());
-        let data_endpoint =
-            MomentoEndpointsResolver::get_data_endpoint(&claims, hosted_zone.to_owned());
+        let data_endpoint = MomentoEndpointsResolver::get_data_endpoint(&claims, hosted_zone);
 
         Ok(MomentoEndpoints {
             control_endpoint,
@@ -83,10 +82,8 @@ impl MomentoEndpointsResolver {
     }
 
     fn hosted_zone_endpoint(hosted_zone: Option<String>, prefix: &str) -> Option<MomentoEndpoint> {
-        if hosted_zone.is_none() {
-            return None;
-        }
-        let hostname = format!("{}{}", prefix, hosted_zone.clone().unwrap());
+        hosted_zone.as_ref()?;
+        let hostname = format!("{}{}", prefix, hosted_zone.unwrap());
         Some(MomentoEndpointsResolver::wrapped_endpoint(
             prefix, hostname, "",
         ))
