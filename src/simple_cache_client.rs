@@ -96,11 +96,28 @@ impl SimpleCacheClientBuilder {
     ///         .build();
     /// # })
     /// ```
+    // TODO: Add test with token and endpoint
     pub fn new(auth_token: String, default_ttl_seconds: NonZeroU64) -> Result<Self, MomentoError> {
         SimpleCacheClientBuilder::new_with_explicit_agent_name(
             auth_token,
             default_ttl_seconds,
             "sdk",
+            None,
+        )
+    }
+
+    /// Like new() above, but requires a momento_endpoint.
+    // TODO: Update the documentation
+    pub fn new_with_endpoint(
+        auth_token: String,
+        default_ttl_seconds: NonZeroU64,
+        momento_endpoint: String,
+    ) -> Result<Self, MomentoError> {
+        SimpleCacheClientBuilder::new_with_explicit_agent_name(
+            auth_token,
+            default_ttl_seconds,
+            "sdk",
+            Some(momento_endpoint),
         )
     }
 
@@ -109,11 +126,13 @@ impl SimpleCacheClientBuilder {
         auth_token: String,
         default_ttl_seconds: NonZeroU64,
         user_agent_name: &str,
+        momento_endpoint: Option<String>,
     ) -> Result<Self, MomentoError> {
-        let momento_endpoints = match MomentoEndpointsResolver::resolve(&auth_token, &None) {
-            Ok(endpoints) => endpoints,
-            Err(e) => return Err(e),
-        };
+        let momento_endpoints =
+            match MomentoEndpointsResolver::resolve(&auth_token, &momento_endpoint) {
+                Ok(endpoints) => endpoints,
+                Err(e) => return Err(e),
+            };
         log::debug!("connecting to endpoints: {:?}", momento_endpoints);
 
         let control_channel = connect_channel_lazily(&momento_endpoints.control_endpoint.url)?;
