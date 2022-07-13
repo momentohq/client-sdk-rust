@@ -129,7 +129,7 @@ impl SimpleCacheClientBuilder {
         momento_endpoint: Option<String>,
     ) -> Result<Self, MomentoError> {
         let momento_endpoints =
-            match MomentoEndpointsResolver::resolve(&auth_token, momento_endpoint.to_owned()) {
+            match MomentoEndpointsResolver::resolve(&auth_token, momento_endpoint) {
                 Ok(endpoints) => endpoints,
                 Err(e) => return Err(e),
             };
