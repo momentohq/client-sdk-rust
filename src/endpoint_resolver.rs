@@ -77,7 +77,7 @@ impl MomentoEndpointsResolver {
 
     fn get_data_endpoint(claims: &Claims, hosted_zone: Option<String>) -> MomentoEndpoint {
         MomentoEndpointsResolver::get_data_endpoint_from_hosted_zone(hosted_zone).unwrap_or_else(
-            || MomentoEndpointsResolver::https_endpoint(claims.cp.as_ref().unwrap().to_owned()),
+            || MomentoEndpointsResolver::https_endpoint(claims.c.as_ref().unwrap().to_owned()),
         )
     }
 
