@@ -96,7 +96,6 @@ impl SimpleCacheClientBuilder {
     ///         .build();
     /// # })
     /// ```
-    // TODO: Add test with token and endpoint
     pub fn new(auth_token: String, default_ttl_seconds: NonZeroU64) -> Result<Self, MomentoError> {
         SimpleCacheClientBuilder::new_with_explicit_agent_name(
             auth_token,
@@ -107,7 +106,9 @@ impl SimpleCacheClientBuilder {
     }
 
     /// Like new() above, but requires a momento_endpoint.
-    // TODO: Update the documentation and deprecate the existing new method.
+    // TODO: Update the documentation and tests and deprecate the existing new method. This will be
+    // done once we start vending out tokens with no endpoints and have published the new momento
+    // endpoints.
     pub fn new_with_endpoint(
         auth_token: String,
         default_ttl_seconds: NonZeroU64,
