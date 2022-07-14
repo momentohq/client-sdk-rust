@@ -19,6 +19,7 @@ mod tests {
             auth_token,
             NonZeroU64::new(5).unwrap(),
             "integration_test",
+            None,
         )
     }
 

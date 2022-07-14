@@ -6,11 +6,11 @@ use crate::response::error::MomentoError;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub sub: String,
-    pub c: String,
-    pub cp: String,
+    pub c: Option<String>,
+    pub cp: Option<String>,
 }
 
-pub fn decode_jwt(jwt: &str) -> Result<Claims, MomentoError> {
+pub fn decode_jwt(jwt: &str, momento_endpoint: Option<String>) -> Result<Claims, MomentoError> {
     if jwt.is_empty() {
         return Err(MomentoError::ClientSdkError(
             "Malformed Auth Token".to_string(),
@@ -20,8 +20,13 @@ pub fn decode_jwt(jwt: &str) -> Result<Claims, MomentoError> {
     let mut validation = Validation::new(Algorithm::HS256);
     validation.required_spec_claims.clear();
     validation.required_spec_claims.insert("sub".to_string());
-    validation.required_spec_claims.insert("c".to_string());
-    validation.required_spec_claims.insert("cp".to_string());
+
+    // Global session tokens and new auth tokens will not contain these claims.
+    if momento_endpoint.is_none() {
+        validation.required_spec_claims.insert("c".to_string());
+        validation.required_spec_claims.insert("cp".to_string());
+    }
+
     validation.validate_exp = false;
     validation.insecure_disable_signature_validation();
     match decode(jwt, &key, &validation) {
@@ -41,23 +46,31 @@ mod tests {
     #[test]
     fn valid_jwt() {
         let valid_jwt = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzcXVpcnJlbCIsImNwIjoiY29udHJvbCBwbGFuZSBlbmRwb2ludCIsImMiOiJkYXRhIHBsYW5lIGVuZHBvaW50In0.zsTsEXFawetTCZI";
-        let claims = decode_jwt(valid_jwt).unwrap();
-        assert_eq!(claims.c, "data plane endpoint");
-        assert_eq!(claims.cp, "control plane endpoint");
+        let claims = decode_jwt(valid_jwt, None).unwrap();
+        assert_eq!(claims.c.unwrap(), "data plane endpoint");
+        assert_eq!(claims.cp.unwrap(), "control plane endpoint");
     }
 
     #[test]
     fn empty_jwt() {
-        let e = decode_jwt("").unwrap_err();
+        let e = decode_jwt("", None).unwrap_err();
         let _err_msg = "Malformed Auth Token".to_owned();
         assert!(matches!(e, MomentoError::ClientSdkError(_err_msg)));
     }
 
     #[test]
     fn invalid_jwt() {
-        let e = decode_jwt("wfheofhriugheifweif").unwrap_err();
+        let e = decode_jwt("wfheofhriugheifweif", None).unwrap_err();
         let _err_msg =
             "Could not parse token. Please ensure a valid token was entered correctly.".to_owned();
         assert!(matches!(e, MomentoError::ClientSdkError(_err_msg)));
+    }
+
+    #[test]
+    fn validate_no_c_cp_claims_jwt_with_momento_endpoint() {
+        let claims = decode_jwt("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba", Some("help.com".to_string())).unwrap();
+        assert_eq!(claims.sub, "abcd");
+        assert!(claims.c.is_none());
+        assert!(claims.cp.is_none());
     }
 }
