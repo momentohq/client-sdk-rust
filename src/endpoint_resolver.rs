@@ -77,7 +77,11 @@ impl MomentoEndpointsResolver {
 
     fn get_data_endpoint(claims: &Claims, hosted_zone: Option<String>) -> MomentoEndpoint {
         MomentoEndpointsResolver::get_data_endpoint_from_hosted_zone(hosted_zone).unwrap_or_else(
-fn hosted_zone_endpoint(hosted_zone: Option<String>, prefix: &str) -> Option<MomentoEndpoint> {
+            || MomentoEndpointsResolver::https_endpoint(claims.cp.as_ref().unwrap().to_owned()),
+        )
+    }
+
+    fn hosted_zone_endpoint(hosted_zone: Option<String>, prefix: &str) -> Option<MomentoEndpoint> {
         hosted_zone.map(|hosted_zone| {
             let hostname = format!("{}{}", prefix, hosted_zone);
             MomentoEndpointsResolver::wrapped_endpoint(prefix, hostname, "")
