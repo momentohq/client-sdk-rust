@@ -33,6 +33,7 @@ pub fn decode_jwt(jwt: &str, momento_endpoint: Option<String>) -> Result<Claims,
             // If Momento Endpoint is not provided, then `c` and `cp` claims must be present
             if momento_endpoint.is_none() && (token_claims.c.is_none() || token_claims.cp.is_none())
             {
+                log::debug!("Momento Endpoint is none and auth token is missing endpoints");
                 Err(token_parsing_error())
             } else {
                 Ok(token_claims)
