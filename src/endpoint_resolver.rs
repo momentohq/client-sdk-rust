@@ -84,7 +84,7 @@ impl MomentoEndpointsResolver {
     fn hosted_zone_endpoint(hosted_zone: Option<String>, prefix: &str) -> Option<MomentoEndpoint> {
         hosted_zone.map(|hosted_zone| {
             let hostname = format!("{}{}", prefix, hosted_zone);
-            MomentoEndpointsResolver::wrapped_endpoint(prefix, hostname, "")
+            MomentoEndpointsResolver::wrapped_endpoint("https://", hostname, ":443")
         })
     }
 
@@ -96,5 +96,67 @@ impl MomentoEndpointsResolver {
 
     fn get_data_endpoint_from_hosted_zone(hosted_zone: Option<String>) -> Option<MomentoEndpoint> {
         MomentoEndpointsResolver::hosted_zone_endpoint(hosted_zone, DATA_ENDPOINT_PREFIX)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::endpoint_resolver::MomentoEndpointsResolver;
+    use crate::response::error::MomentoError;
+
+    #[test]
+    fn urls_from_auth_token() {
+        let valid_auth_token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzcXVpcnJlbCIsImNwIjoiY29udHJvbCBwbGFuZSBlbmRwb2ludCIsImMiOiJkYXRhIHBsYW5lIGVuZHBvaW50In0.zsTsEXFawetTCZI";
+        let endpoints = MomentoEndpointsResolver::resolve(valid_auth_token, None);
+        assert_eq!(
+            endpoints.as_ref().unwrap().data_endpoint.hostname,
+            "data plane endpoint"
+        );
+        assert_eq!(
+            endpoints.as_ref().unwrap().data_endpoint.url,
+            "https://data plane endpoint:443"
+        );
+        assert_eq!(
+            endpoints.as_ref().unwrap().control_endpoint.hostname,
+            "control plane endpoint"
+        );
+        assert_eq!(
+            endpoints.as_ref().unwrap().control_endpoint.url,
+            "https://control plane endpoint:443"
+        );
+    }
+
+    #[test]
+    fn urls_from_hosted_zone() {
+        let valid_auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
+        let endpoints = MomentoEndpointsResolver::resolve(
+            valid_auth_token,
+            Some("hello.gomomento.com".to_string()),
+        );
+        assert_eq!(
+            endpoints.as_ref().unwrap().data_endpoint.hostname,
+            "data.hello.gomomento.com"
+        );
+        assert_eq!(
+            endpoints.as_ref().unwrap().data_endpoint.url,
+            "https://data.hello.gomomento.com:443"
+        );
+        assert_eq!(
+            endpoints.as_ref().unwrap().control_endpoint.hostname,
+            "control.hello.gomomento.com"
+        );
+        assert_eq!(
+            endpoints.as_ref().unwrap().control_endpoint.url,
+            "https://control.hello.gomomento.com:443"
+        );
+    }
+
+    #[test]
+    fn error_when_no_cp_c_claims_and_no_hosted_zone() {
+        let valid_auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
+        let e = MomentoEndpointsResolver::resolve(valid_auth_token, None).unwrap_err();
+        let _err_msg =
+            "Could not parse token. Please ensure a valid token was entered correctly.".to_owned();
+        assert!(matches!(e, MomentoError::ClientSdkError(_err_msg)));
     }
 }
