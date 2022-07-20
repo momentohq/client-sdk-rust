@@ -16,7 +16,7 @@ pub struct MomentoEndpoints {
 pub struct MomentoEndpointsResolver {}
 
 const CONTROL_ENDPOINT_PREFIX: &str = "control.";
-const DATA_ENDPOINT_PREFIX: &str = "data.";
+const DATA_ENDPOINT_PREFIX: &str = "cache.";
 const LOGIN_HOSTNAMES: &[&str] = &["control.cell-us-east-1-1.prod.a.momentohq.com"];
 
 impl MomentoEndpointsResolver {
@@ -135,11 +135,11 @@ mod tests {
         );
         assert_eq!(
             endpoints.as_ref().unwrap().data_endpoint.hostname,
-            "data.hello.gomomento.com"
+            "cache.hello.gomomento.com"
         );
         assert_eq!(
             endpoints.as_ref().unwrap().data_endpoint.url,
-            "https://data.hello.gomomento.com:443"
+            "https://cache.hello.gomomento.com:443"
         );
         assert_eq!(
             endpoints.as_ref().unwrap().control_endpoint.hostname,
