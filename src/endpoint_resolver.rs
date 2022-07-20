@@ -153,7 +153,7 @@ mod tests {
 
     #[test]
     fn error_when_no_cp_c_claims_and_no_hosted_zone() {
-        let valid_auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
+        let invalid_auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
         let e = MomentoEndpointsResolver::resolve(valid_auth_token, None).unwrap_err();
         let _err_msg =
             "Could not parse token. Please ensure a valid token was entered correctly.".to_owned();
