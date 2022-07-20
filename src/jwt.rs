@@ -21,16 +21,16 @@ pub fn decode_jwt(jwt: &str, momento_endpoint: Option<String>) -> Result<Claims,
     validation.required_spec_claims.clear();
     validation.required_spec_claims.insert("sub".to_string());
 
-    validation.required_spec_claims.insert("c".to_string());
-    validation.required_spec_claims.insert("cp".to_string());
-
     validation.validate_exp = false;
     validation.insecure_disable_signature_validation();
+
     match decode(jwt, &key, &validation) {
         Ok(token) => {
             let token_claims: Claims = token.claims;
 
-            // If Momento Endpoint is not provided, then `c` and `cp` claims must be present
+            // If Momento Endpoint is not provided, then `c` and `cp` claims must be present.
+            // If Momento Endpoint is present then that always takes precedence over the c and cp
+            // claims in the JWT, hence, there is no need to look for all possibilities.
             if momento_endpoint.is_none() && (token_claims.c.is_none() || token_claims.cp.is_none())
             {
                 log::debug!("Momento Endpoint is none and auth token is missing endpoints");
