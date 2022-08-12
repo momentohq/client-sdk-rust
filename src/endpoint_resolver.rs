@@ -32,8 +32,23 @@ impl MomentoEndpointsResolver {
         let hosted_zone = MomentoEndpointsResolver::get_hosted_zone(momento_endpoint);
 
         let control_endpoint =
-            MomentoEndpointsResolver::get_control_endpoint(&claims, hosted_zone.to_owned());
-        let data_endpoint = MomentoEndpointsResolver::get_data_endpoint(&claims, hosted_zone);
+            match MomentoEndpointsResolver::get_control_endpoint(&claims, hosted_zone.to_owned()) {
+                Some(cp) => cp,
+                None => {
+                    return Err(MomentoError::ClientSdkError(
+                        "Unable to determine endpoints".to_string(),
+                    ))
+                }
+            };
+        let data_endpoint = match MomentoEndpointsResolver::get_data_endpoint(&claims, hosted_zone)
+        {
+            Some(data) => data,
+            None => {
+                return Err(MomentoError::ClientSdkError(
+                    "Unable to determine endpoints".to_string(),
+                ))
+            }
+        };
 
         Ok(MomentoEndpoints {
             control_endpoint,
@@ -65,20 +80,24 @@ impl MomentoEndpointsResolver {
         }
     }
 
-    fn https_endpoint(hostname: String) -> MomentoEndpoint {
-        MomentoEndpointsResolver::wrapped_endpoint("https://", hostname, ":443")
+    fn https_endpoint(hostname: Option<String>) -> Option<MomentoEndpoint> {
+        hostname.map(|hostname| {
+            MomentoEndpointsResolver::wrapped_endpoint("https://", hostname, ":443")
+        })
     }
 
-    fn get_control_endpoint(claims: &Claims, hosted_zone: Option<String>) -> MomentoEndpoint {
-        MomentoEndpointsResolver::get_control_endpoint_from_hosted_zone(hosted_zone).unwrap_or_else(
-            || MomentoEndpointsResolver::https_endpoint(claims.cp.as_ref().unwrap().to_owned()),
-        )
+    fn get_control_endpoint(
+        claims: &Claims,
+        hosted_zone: Option<String>,
+    ) -> Option<MomentoEndpoint> {
+        MomentoEndpointsResolver::https_endpoint(claims.cp.to_owned()).or_else(|| {
+            MomentoEndpointsResolver::get_control_endpoint_from_hosted_zone(hosted_zone)
+        })
     }
 
-    fn get_data_endpoint(claims: &Claims, hosted_zone: Option<String>) -> MomentoEndpoint {
-        MomentoEndpointsResolver::get_data_endpoint_from_hosted_zone(hosted_zone).unwrap_or_else(
-            || MomentoEndpointsResolver::https_endpoint(claims.c.as_ref().unwrap().to_owned()),
-        )
+    fn get_data_endpoint(claims: &Claims, hosted_zone: Option<String>) -> Option<MomentoEndpoint> {
+        MomentoEndpointsResolver::https_endpoint(claims.c.to_owned())
+            .or_else(|| MomentoEndpointsResolver::get_data_endpoint_from_hosted_zone(hosted_zone))
     }
 
     fn hosted_zone_endpoint(hosted_zone: Option<String>, prefix: &str) -> Option<MomentoEndpoint> {
@@ -128,9 +147,9 @@ mod tests {
 
     #[test]
     fn urls_from_hosted_zone() {
-        let valid_auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
+        let valid_auth_token_no_urls = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
         let endpoints = MomentoEndpointsResolver::resolve(
-            valid_auth_token,
+            valid_auth_token_no_urls,
             Some("hello.gomomento.com".to_string()),
         );
         assert_eq!(
@@ -158,5 +177,30 @@ mod tests {
         let _err_msg =
             "Could not parse token. Please ensure a valid token was entered correctly.".to_owned();
         assert!(matches!(e, MomentoError::ClientSdkError(_err_msg)));
+    }
+
+    #[test]
+    fn choose_auth_token_url_over_hosted_zone() {
+        let valid_auth_token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzcXVpcnJlbCIsImNwIjoiY29udHJvbCBwbGFuZSBlbmRwb2ludCIsImMiOiJkYXRhIHBsYW5lIGVuZHBvaW50In0.zsTsEXFawetTCZI";
+        let endpoints = MomentoEndpointsResolver::resolve(
+            valid_auth_token,
+            Some("hello.gomomento.com".to_string()),
+        );
+        assert_eq!(
+            endpoints.as_ref().unwrap().data_endpoint.hostname,
+            "data plane endpoint"
+        );
+        assert_eq!(
+            endpoints.as_ref().unwrap().data_endpoint.url,
+            "https://data plane endpoint:443"
+        );
+        assert_eq!(
+            endpoints.as_ref().unwrap().control_endpoint.hostname,
+            "control plane endpoint"
+        );
+        assert_eq!(
+            endpoints.as_ref().unwrap().control_endpoint.url,
+            "https://control plane endpoint:443"
+        );
     }
 }

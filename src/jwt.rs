@@ -1,5 +1,6 @@
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
+use std::borrow::Borrow;
 
 use crate::response::error::MomentoError;
 
@@ -28,11 +29,7 @@ pub fn decode_jwt(jwt: &str, momento_endpoint: Option<String>) -> Result<Claims,
         Ok(token) => {
             let token_claims: Claims = token.claims;
 
-            // If Momento Endpoint is not provided, then `c` and `cp` claims must be present.
-            // If Momento Endpoint is present then that always takes precedence over the c and cp
-            // claims in the JWT, hence, there is no need to look for all possibilities.
-            if momento_endpoint.is_none() && (token_claims.c.is_none() || token_claims.cp.is_none())
-            {
+            if !is_valid_endpoint_claims(token_claims.borrow()) && momento_endpoint.is_none() {
                 log::debug!("Momento Endpoint is none and auth token is missing endpoints");
                 Err(token_parsing_error())
             } else {
@@ -41,6 +38,11 @@ pub fn decode_jwt(jwt: &str, momento_endpoint: Option<String>) -> Result<Claims,
         }
         Err(_) => Err(token_parsing_error()),
     }
+}
+
+fn is_valid_endpoint_claims(claims: &Claims) -> bool {
+    // Endpoints in a token are valid only if both are present
+    claims.c.is_some() && claims.cp.is_some()
 }
 
 fn token_parsing_error() -> MomentoError {
@@ -92,5 +94,25 @@ mod tests {
         let _err_msg =
             "Could not parse token. Please ensure a valid token was entered correctly.".to_owned();
         assert!(matches!(e, MomentoError::ClientSdkError(_err_msg)));
+    }
+
+    #[test]
+    fn invalid_when_only_one_endpoint_claim_present() {
+        let token_only_cp_claim = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiY3AiOiJjb250cm9sLmNvbSIsImlhdCI6MTUxNjIzOTAyMn0.IqldLffaca24NwjjNckNWS6PBTEUbsyeGGVd7ciASb0".to_string();
+        let _err_msg =
+            "Could not parse token. Please ensure a valid token was entered correctly.".to_owned();
+
+        let e_no_c_claim = decode_jwt(token_only_cp_claim.as_str(), None).unwrap_err();
+        assert!(matches!(
+            e_no_c_claim,
+            MomentoError::ClientSdkError(_err_msg)
+        ));
+
+        let token_only_c_claim: String = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiYyI6ImNhY2hlLmNvbSIsImlhdCI6MTUxNjIzOTAyMn0.bKycvlL5OdixDyPvGJumBip0g4O83pbJxBujkG1Ju44".to_string();
+        let e_no_cp_claim = decode_jwt(token_only_c_claim.as_str(), None).unwrap_err();
+        assert!(matches!(
+            e_no_cp_claim,
+            MomentoError::ClientSdkError(_err_msg)
+        ));
     }
 }
