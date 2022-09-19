@@ -6,6 +6,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   rustfmt:
@@ -16,13 +17,13 @@ jobs:
 
       - name: Commitlint and Other Shared Build Steps
         uses: momentohq/standards-and-practices/github-actions/shared-build@gh-actions-v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: rustfmt
         run: cargo fmt -- --check
+
       - name: Rigorous lint via Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
+
   build_rust:
     runs-on: ubuntu-latest
     env:
@@ -40,3 +41,31 @@ jobs:
         run: cargo test --doc
       - name: Integration Tests
         run: cargo test --tests
+
+  rustfmt-build-examples:
+    name: Style & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Commitlint and Other Shared Build Steps
+        uses: momentohq/standards-and-practices/github-actions/shared-build@gh-actions-v1
+
+      - name: rustfmt -> rigorous lint via Clippy -> build
+        id: validation
+        continue-on-error: true
+        run: |
+          pushd examples
+            cargo fmt -- --check
+            cargo clippy --all-targets --all-features -- -D warnings
+            cargo build --verbose
+          popd
+      - name: Send CI failure mail
+        if: ${{ steps.validation.outcome == 'failure' }}
+        uses: ./.github/actions/error-email-action
+        with:
+          username: ${{secrets.MOMENTO_ROBOT_GMAIL_USERNAME}}
+          password: ${{secrets.MOMENTO_ROBOT_GMAIL_PASSWORD}}
+      - name: Flag Job Failure
+        if: ${{ steps.validation.outcome == 'failure' }}
+        run: exit 1
