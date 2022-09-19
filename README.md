@@ -22,6 +22,12 @@ Rust SDK for Momento, a serverless cache that automatically scales without any o
 
 <br/>
 
+### Installing Momento and Running the Example
+
+Check out [examples](./examples/) directory!
+
+<br/>
+
 ### Using Momento
 
 ```rust
