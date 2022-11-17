@@ -12,7 +12,7 @@ async fn main() {
     let item_default_ttl_seconds = 60;
     let mut cache_client = match SimpleCacheClientBuilder::new(
         auth_token,
-        NonZeroU64::new(item_default_ttl_seconds).unwrap(),
+        NonZeroU64::new(item_default_ttl_seconds).expect("expected a non-zero number"),
     ) {
         Ok(client) => client,
         Err(err) => {
