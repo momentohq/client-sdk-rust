@@ -307,7 +307,7 @@ impl SimpleCacheClient {
             key_id: kid.as_str().unwrap().to_owned(),
             key: res.key,
             expires_at: DateTime::<Utc>::from_utc(
-                NaiveDateTime::from_timestamp(res.expires_at as i64, 0),
+                NaiveDateTime::from_timestamp_opt(res.expires_at as i64, 0).unwrap(),
                 Utc,
             ),
             endpoint: self.data_endpoint.clone(),
@@ -366,7 +366,7 @@ impl SimpleCacheClient {
             .map(|signing_key| MomentoSigningKey {
                 key_id: signing_key.key_id.to_string(),
                 expires_at: DateTime::<Utc>::from_utc(
-                    NaiveDateTime::from_timestamp(signing_key.expires_at as i64, 0),
+                    NaiveDateTime::from_timestamp_opt(signing_key.expires_at as i64, 0).unwrap(),
                     Utc,
                 ),
                 endpoint: self.data_endpoint.clone(),
