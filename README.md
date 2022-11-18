@@ -96,3 +96,23 @@ Running integration tests:
 ```
 TEST_AUTH_TOKEN=<auth token> cargo test --tests
 ```
+
+## Development 🔨
+
+At Momento, we believe [exceptions are bugs](https://www.gomomento.com/blog/exceptions-are-bugs). In Rust, this means the
+unchecked use of `.unwrap()` calls inherently fills your code with bugs and makes debugging `panic` calls a lot more difficult.
+
+We rigorously check for proper formatting and use `clippy` to check for good code practices as well as avoiding `.unwrap()` calls. Instead, try to use
+an alternative, including but not limited to:
+
+- `.expect("descriptive error message")`
+- `.unwrap_or_default("default string goes here")`
+- Use `?` to have the caller handle the error
+
+### Building
+
+Run this command to verify everything passes so that you can save yourself some time when our GitHub actions are ran against the commit:
+
+```bash
+cargo build && cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used
+```

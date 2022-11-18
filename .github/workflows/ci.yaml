@@ -22,7 +22,7 @@ jobs:
         run: cargo fmt -- --check
 
       - name: Rigorous lint via Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used
 
   build_rust:
     runs-on: ubuntu-latest
@@ -57,7 +57,7 @@ jobs:
         run: |
           pushd examples
             cargo fmt -- --check
-            cargo clippy --all-targets --all-features -- -D warnings
+            cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used 
             cargo build --verbose
           popd
       - name: Send CI failure mail
