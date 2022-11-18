@@ -35,10 +35,17 @@ mod tests {
         let cache_name = Uuid::new_v4().to_string();
         let cache_key = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance();
-        mm.create_cache(&cache_name).await.expect("failed to create cache");
-        let result = mm.get(&cache_name, cache_key).await.expect("failure when trying get");
+        mm.create_cache(&cache_name)
+            .await
+            .expect("failed to create cache");
+        let result = mm
+            .get(&cache_name, cache_key)
+            .await
+            .expect("failure when trying get");
         assert!(matches!(result.result, MomentoGetStatus::MISS));
-        mm.delete_cache(&cache_name).await.expect("failed to delete cache");
+        mm.delete_cache(&cache_name)
+            .await
+            .expect("failed to delete cache");
     }
 
     #[tokio::test]
@@ -67,7 +74,9 @@ mod tests {
         let cache_key = Uuid::new_v4().to_string();
         let cache_body = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance();
-        mm.create_cache(&cache_name).await.expect("failed to create cache");
+        mm.create_cache(&cache_name)
+            .await
+            .expect("failed to create cache");
         let ttl: u64 = 18446744073709551615;
         let max_ttl = u64::MAX / 1000_u64;
         let result = mm
@@ -87,7 +96,9 @@ mod tests {
             result,
             MomentoError::InvalidArgument(_err_message)
         ));
-        mm.delete_cache(&cache_name).await.expect("failed to delete cache");
+        mm.delete_cache(&cache_name)
+            .await
+            .expect("failed to delete cache");
     }
 
     #[tokio::test]
@@ -96,14 +107,21 @@ mod tests {
         let cache_key = Uuid::new_v4().to_string();
         let cache_body = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance();
-        mm.create_cache(&cache_name).await.expect("failed to create cache");
+        mm.create_cache(&cache_name)
+            .await
+            .expect("failed to create cache");
         mm.set(&cache_name, cache_key.clone(), cache_body.clone(), None)
             .await
             .expect("failed to perform set");
-        let result = mm.get(&cache_name, cache_key.clone()).await.expect("failed to perform get");
+        let result = mm
+            .get(&cache_name, cache_key.clone())
+            .await
+            .expect("failed to perform get");
         assert!(matches!(result.result, MomentoGetStatus::HIT));
         assert_eq!(result.value, cache_body.as_bytes());
-        mm.delete_cache(&cache_name).await.expect("failed to delete cache");
+        mm.delete_cache(&cache_name)
+            .await
+            .expect("failed to delete cache");
     }
 
     #[tokio::test]
@@ -112,14 +130,21 @@ mod tests {
         let cache_key = Uuid::new_v4().to_string();
         let cache_body = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance();
-        mm.create_cache(&cache_name).await.expect("failed to create cache");
+        mm.create_cache(&cache_name)
+            .await
+            .expect("failed to create cache");
         mm.set(&cache_name, cache_key.clone(), cache_body.clone(), None)
             .await
             .expect("failed to perform set");
         sleep(Duration::new(1, 0)).await;
-        let result = mm.get(&cache_name, cache_key.clone()).await.expect("failed to perform get");
+        let result = mm
+            .get(&cache_name, cache_key.clone())
+            .await
+            .expect("failed to perform get");
         assert!(matches!(result.result, MomentoGetStatus::HIT));
-        mm.delete_cache(&cache_name).await.expect("failed to delete cache");
+        mm.delete_cache(&cache_name)
+            .await
+            .expect("failed to delete cache");
     }
 
     #[tokio::test]
@@ -128,26 +153,38 @@ mod tests {
         let cache_key = Uuid::new_v4().to_string();
         let cache_body = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance();
-        mm.create_cache(&cache_name).await.expect("failed to create cache");
+        mm.create_cache(&cache_name)
+            .await
+            .expect("failed to create cache");
         mm.set(&cache_name, cache_key.clone(), cache_body.clone(), None)
             .await
             .expect("failed to perform set");
-        let result = mm.get(&cache_name, cache_key.clone()).await.expect("failed to perform get");
+        let result = mm
+            .get(&cache_name, cache_key.clone())
+            .await
+            .expect("failed to perform get");
         assert!(matches!(result.result, MomentoGetStatus::HIT));
         assert_eq!(result.value, cache_body.as_bytes());
-        mm.delete_cache(&cache_name).await.expect("failed to delete cache");
+        mm.delete_cache(&cache_name)
+            .await
+            .expect("failed to delete cache");
     }
 
     #[tokio::test]
     async fn list_caches() {
         let cache_name = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance();
-        mm.create_cache(&cache_name).await.expect("failed to create cache");
+        mm.create_cache(&cache_name)
+            .await
+            .expect("failed to create cache");
 
         let mut next_token: Option<String> = None;
         let mut num_pages = 0;
         loop {
-            let list_cache_result = mm.list_caches(next_token).await.expect("failed to list caches");
+            let list_cache_result = mm
+                .list_caches(next_token)
+                .await
+                .expect("failed to list caches");
             num_pages += 1;
             next_token = list_cache_result.next_token;
             if next_token == None {
@@ -156,28 +193,42 @@ mod tests {
         }
 
         assert_eq!(1, num_pages, "we expect a single page of caches to list");
-        mm.delete_cache(&cache_name).await.expect("failed to delete cache");
+        mm.delete_cache(&cache_name)
+            .await
+            .expect("failed to delete cache");
     }
 
     #[tokio::test]
     async fn create_list_revoke_signing_key() {
         let mut mm = get_momento_instance();
-        let response = mm.create_signing_key(10).await.expect("failed to create signing key");
+        let response = mm
+            .create_signing_key(10)
+            .await
+            .expect("failed to create signing key");
 
-        let key: Value = serde_json::from_str(&response.key).expect("failed to parse key from json");
+        let key: Value =
+            serde_json::from_str(&response.key).expect("failed to parse key from json");
         let obj = key.as_object().expect("failed to map key to object");
         let kid = obj.get("kid").expect("'kid' was not present");
-        assert_eq!(kid.as_str().expect("failed to cast kid to str"), response.key_id);
+        assert_eq!(
+            kid.as_str().expect("failed to cast kid to str"),
+            response.key_id
+        );
 
         let auth_token = env::var("TEST_AUTH_TOKEN").expect("env var TEST_AUTH_TOKEN must be set");
         let parts: Vec<&str> = auth_token.split('.').collect();
-        assert!(
-            std::str::from_utf8(base64_url::decode(parts[1]).expect("expected base64 part not present in position 1").as_slice())
-                .expect("couldn't parse base64")
-                .contains(&response.endpoint)
-        );
+        assert!(std::str::from_utf8(
+            base64_url::decode(parts[1])
+                .expect("expected base64 part not present in position 1")
+                .as_slice()
+        )
+        .expect("couldn't parse base64")
+        .contains(&response.endpoint));
 
-        let list_response = mm.list_signing_keys(None).await.expect("couldn't list signing keys");
+        let list_response = mm
+            .list_signing_keys(None)
+            .await
+            .expect("couldn't list signing keys");
         assert!(
             list_response
                 .signing_keys
@@ -187,7 +238,9 @@ mod tests {
             "newly created signing key was not found in list response"
         );
 
-        mm.revoke_signing_key(&response.key_id).await.expect("couldn't revoke signing key");
+        mm.revoke_signing_key(&response.key_id)
+            .await
+            .expect("couldn't revoke signing key");
     }
 
     #[tokio::test]
@@ -279,7 +332,9 @@ mod tests {
         let cache_key = Uuid::new_v4().to_string();
         let cache_body = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance();
-        mm.create_cache(&cache_name).await.expect("failed to create cache");
+        mm.create_cache(&cache_name)
+            .await
+            .expect("failed to create cache");
         mm.set(
             &cache_name,
             cache_key.clone(),
@@ -288,12 +343,22 @@ mod tests {
         )
         .await
         .expect("failed to perform set");
-        let result = mm.get(&cache_name, cache_key.clone()).await.expect("failed to exercise get");
+        let result = mm
+            .get(&cache_name, cache_key.clone())
+            .await
+            .expect("failed to exercise get");
         assert!(matches!(result.result, MomentoGetStatus::HIT));
         assert_eq!(result.value, cache_body.as_bytes());
-        mm.delete(&cache_name, cache_key.clone()).await.expect("failed to delete cache");
-        let result = mm.get(&cache_name, cache_key.clone()).await.expect("failed to exercise get");
+        mm.delete(&cache_name, cache_key.clone())
+            .await
+            .expect("failed to delete cache");
+        let result = mm
+            .get(&cache_name, cache_key.clone())
+            .await
+            .expect("failed to exercise get");
         assert!(matches!(result.result, MomentoGetStatus::MISS));
-        mm.delete_cache(&cache_name).await.expect("failed to delete cache");
+        mm.delete_cache(&cache_name)
+            .await
+            .expect("failed to delete cache");
     }
 }

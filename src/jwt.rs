@@ -60,7 +60,10 @@ mod tests {
         let valid_jwt = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzcXVpcnJlbCIsImNwIjoiY29udHJvbCBwbGFuZSBlbmRwb2ludCIsImMiOiJkYXRhIHBsYW5lIGVuZHBvaW50In0.zsTsEXFawetTCZI";
         let claims = decode_jwt(valid_jwt, None).expect("couldn't decode jwt");
         assert_eq!(claims.c.expect("c wasn't present"), "data plane endpoint");
-        assert_eq!(claims.cp.expect("cp wasn't present"), "control plane endpoint");
+        assert_eq!(
+            claims.cp.expect("cp wasn't present"),
+            "control plane endpoint"
+        );
     }
 
     #[test]
