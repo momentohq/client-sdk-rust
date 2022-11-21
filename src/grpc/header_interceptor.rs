@@ -25,13 +25,15 @@ impl tonic::service::Interceptor for HeaderInterceptor {
 
         request.metadata_mut().insert(
             tonic::metadata::AsciiMetadataKey::from_static("authorization"),
-            tonic::metadata::AsciiMetadataValue::try_from(&self.auth_token).unwrap(),
+            tonic::metadata::AsciiMetadataValue::try_from(&self.auth_token)
+                .expect("couldn't parse val from auth token"),
         );
 
         if !ARE_ONLY_ONCE_HEADER_SENT.load(Ordering::Relaxed) {
             request.metadata_mut().insert(
                 tonic::metadata::AsciiMetadataKey::from_static("agent"),
-                tonic::metadata::AsciiMetadataValue::try_from(&self.sdk_agent).unwrap(),
+                tonic::metadata::AsciiMetadataValue::try_from(&self.sdk_agent)
+                    .expect("couldn't parse val from auth token"),
             );
             ARE_ONLY_ONCE_HEADER_SENT.store(true, Ordering::Relaxed);
         }

@@ -300,14 +300,20 @@ impl SimpleCacheClient {
             .create_signing_key(request)
             .await?
             .into_inner();
-        let key: Value = serde_json::from_str(&res.key).unwrap();
-        let obj = key.as_object().unwrap();
-        let kid = obj.get("kid").unwrap();
+        let key: Value =
+            serde_json::from_str(&res.key).expect("failed to parse key from json string");
+        let obj = key
+            .as_object()
+            .expect("couldn't cast json value to a Map<String, Value>");
+        let kid = obj
+            .get("kid")
+            .expect("object didn't contain key 'kid', this is required");
         let response = MomentoCreateSigningKeyResponse {
-            key_id: kid.as_str().unwrap().to_owned(),
+            key_id: kid.as_str().expect("'kid' not a valid str").to_owned(),
             key: res.key,
             expires_at: DateTime::<Utc>::from_utc(
-                NaiveDateTime::from_timestamp(res.expires_at as i64, 0),
+                NaiveDateTime::from_timestamp_opt(res.expires_at as i64, 0)
+                    .expect("couldn't parse from timestamp"),
                 Utc,
             ),
             endpoint: self.data_endpoint.clone(),
@@ -366,7 +372,8 @@ impl SimpleCacheClient {
             .map(|signing_key| MomentoSigningKey {
                 key_id: signing_key.key_id.to_string(),
                 expires_at: DateTime::<Utc>::from_utc(
-                    NaiveDateTime::from_timestamp(signing_key.expires_at as i64, 0),
+                    NaiveDateTime::from_timestamp_opt(signing_key.expires_at as i64, 0)
+                        .expect("couldn't parse timestamp from signing key"),
                     Utc,
                 ),
                 endpoint: self.data_endpoint.clone(),

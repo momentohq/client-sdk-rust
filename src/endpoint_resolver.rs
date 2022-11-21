@@ -71,13 +71,29 @@ impl MomentoEndpointsResolver {
 
     fn get_control_endpoint(claims: &Claims, hosted_zone: Option<String>) -> MomentoEndpoint {
         MomentoEndpointsResolver::get_control_endpoint_from_hosted_zone(hosted_zone).unwrap_or_else(
-            || MomentoEndpointsResolver::https_endpoint(claims.cp.as_ref().unwrap().to_owned()),
+            || {
+                MomentoEndpointsResolver::https_endpoint(
+                    claims
+                        .cp
+                        .as_ref()
+                        .expect("expected cp to be provided")
+                        .to_owned(),
+                )
+            },
         )
     }
 
     fn get_data_endpoint(claims: &Claims, hosted_zone: Option<String>) -> MomentoEndpoint {
         MomentoEndpointsResolver::get_data_endpoint_from_hosted_zone(hosted_zone).unwrap_or_else(
-            || MomentoEndpointsResolver::https_endpoint(claims.c.as_ref().unwrap().to_owned()),
+            || {
+                MomentoEndpointsResolver::https_endpoint(
+                    claims
+                        .c
+                        .as_ref()
+                        .expect("expected c to be provided")
+                        .to_owned(),
+                )
+            },
         )
     }
 
@@ -109,19 +125,35 @@ mod tests {
         let valid_auth_token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzcXVpcnJlbCIsImNwIjoiY29udHJvbCBwbGFuZSBlbmRwb2ludCIsImMiOiJkYXRhIHBsYW5lIGVuZHBvaW50In0.zsTsEXFawetTCZI";
         let endpoints = MomentoEndpointsResolver::resolve(valid_auth_token, None);
         assert_eq!(
-            endpoints.as_ref().unwrap().data_endpoint.hostname,
+            endpoints
+                .as_ref()
+                .expect("expected valid endpoints result")
+                .data_endpoint
+                .hostname,
             "data plane endpoint"
         );
         assert_eq!(
-            endpoints.as_ref().unwrap().data_endpoint.url,
+            endpoints
+                .as_ref()
+                .expect("expected valid endpoints result")
+                .data_endpoint
+                .url,
             "https://data plane endpoint:443"
         );
         assert_eq!(
-            endpoints.as_ref().unwrap().control_endpoint.hostname,
+            endpoints
+                .as_ref()
+                .expect("expected valid endpoints result")
+                .control_endpoint
+                .hostname,
             "control plane endpoint"
         );
         assert_eq!(
-            endpoints.as_ref().unwrap().control_endpoint.url,
+            endpoints
+                .as_ref()
+                .expect("expected valid endpoints result")
+                .control_endpoint
+                .url,
             "https://control plane endpoint:443"
         );
     }
@@ -134,19 +166,35 @@ mod tests {
             Some("hello.gomomento.com".to_string()),
         );
         assert_eq!(
-            endpoints.as_ref().unwrap().data_endpoint.hostname,
+            endpoints
+                .as_ref()
+                .expect("expected valid endpoints result")
+                .data_endpoint
+                .hostname,
             "cache.hello.gomomento.com"
         );
         assert_eq!(
-            endpoints.as_ref().unwrap().data_endpoint.url,
+            endpoints
+                .as_ref()
+                .expect("expected valid endpoints result")
+                .data_endpoint
+                .url,
             "https://cache.hello.gomomento.com:443"
         );
         assert_eq!(
-            endpoints.as_ref().unwrap().control_endpoint.hostname,
+            endpoints
+                .as_ref()
+                .expect("expected valid endpoints result")
+                .control_endpoint
+                .hostname,
             "control.hello.gomomento.com"
         );
         assert_eq!(
-            endpoints.as_ref().unwrap().control_endpoint.url,
+            endpoints
+                .as_ref()
+                .expect("expected valid endpoints result")
+                .control_endpoint
+                .url,
             "https://control.hello.gomomento.com:443"
         );
     }

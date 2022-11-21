@@ -58,9 +58,12 @@ mod tests {
     #[test]
     fn valid_jwt() {
         let valid_jwt = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzcXVpcnJlbCIsImNwIjoiY29udHJvbCBwbGFuZSBlbmRwb2ludCIsImMiOiJkYXRhIHBsYW5lIGVuZHBvaW50In0.zsTsEXFawetTCZI";
-        let claims = decode_jwt(valid_jwt, None).unwrap();
-        assert_eq!(claims.c.unwrap(), "data plane endpoint");
-        assert_eq!(claims.cp.unwrap(), "control plane endpoint");
+        let claims = decode_jwt(valid_jwt, None).expect("couldn't decode jwt");
+        assert_eq!(claims.c.expect("c wasn't present"), "data plane endpoint");
+        assert_eq!(
+            claims.cp.expect("cp wasn't present"),
+            "control plane endpoint"
+        );
     }
 
     #[test]
@@ -80,7 +83,7 @@ mod tests {
 
     #[test]
     fn validate_no_c_cp_claims_jwt_with_momento_endpoint() {
-        let claims = decode_jwt("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba", Some("help.com".to_string())).unwrap();
+        let claims = decode_jwt("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba", Some("help.com".to_string())).expect("result not returned from jwt");
         assert_eq!(claims.sub, "abcd");
         assert!(claims.c.is_none());
         assert!(claims.cp.is_none());
