@@ -512,7 +512,7 @@ impl SimpleCacheClient {
     /// * `dictionary_name` - name of the dictionary
     /// * `dictionary` - hashmap of dictionary key-value pairs
     /// * `ttl_seconds` - If None is passed, uses the client's default ttl
-    /// * `refresh_ttl`
+    /// * `refresh_ttl` - If true, the dictionary's TTL will be refreshed to prolong the life of the dictionary on every update.
     ///
     /// # Examples
     ///
