@@ -653,12 +653,8 @@ impl SimpleCacheClient {
 
                 // map the dictionary response parts to get responses
                 for (field, item) in fields.drain(..).zip(response.items.drain(..)) {
-                    match item.result() {
-                        ECacheResult::Hit => {
-                            dictionary.insert(field, item.cache_body);
-                        }
-                        ECacheResult::Miss => {}
-                        _ => todo!(),
+                    if item.result() == ECacheResult::Hit {
+                        dictionary.insert(field, item.cache_body);
                     }
                 }
 
@@ -667,13 +663,10 @@ impl SimpleCacheClient {
                     dictionary: Some(dictionary),
                 })
             }
-            Some(Dictionary::Missing(_)) | None => {
-                // unclear if `None` variant here should be treated same as missing
-                Ok(MomentoDictionaryGetResponse {
-                    result: MomentoDictionaryGetStatus::MISSING,
-                    dictionary: None,
-                })
-            }
+            Some(Dictionary::Missing(_)) | None => Ok(MomentoDictionaryGetResponse {
+                result: MomentoDictionaryGetStatus::MISSING,
+                dictionary: None,
+            }),
         }
     }
 
