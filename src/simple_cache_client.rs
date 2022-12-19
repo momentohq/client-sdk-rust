@@ -619,10 +619,10 @@ impl SimpleCacheClient {
     ///     };
     ///
     ///
-    ///     if let Some(dictionary) = response.dictionary {
+    ///     if let Some(dictionary) = resp.dictionary {
     ///         println!("dictionary entries:");
     ///         for (key, value) in dictionary.iter() {
-    ///             println!("{} => {}", key.as_string(), value.as_string());
+    ///             println!("{:?} => {:?}", key, value);
     ///         }
     ///     }
     ///
