@@ -47,7 +47,7 @@ async fn main() {
                 break;
             }
         };
-        if next_token == None {
+        if next_token.is_none() {
             break;
         }
     }

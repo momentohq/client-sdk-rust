@@ -187,7 +187,7 @@ mod tests {
                 .expect("failed to list caches");
             num_pages += 1;
             next_token = list_cache_result.next_token;
-            if next_token == None {
+            if next_token.is_none() {
                 break;
             }
         }
