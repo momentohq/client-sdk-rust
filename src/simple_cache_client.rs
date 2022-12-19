@@ -269,7 +269,7 @@ impl SimpleCacheClient {
         next_token: Option<String>,
     ) -> Result<MomentoListCacheResult, MomentoError> {
         let request = Request::new(ListCachesRequest {
-            next_token: next_token.unwrap_or_else(|| "".to_string()),
+            next_token: next_token.unwrap_or_default(),
         });
         let res = self.control_client.list_caches(request).await?.into_inner();
         let caches = res
@@ -503,6 +503,9 @@ impl SimpleCacheClient {
 
     /// Sets dictionary items in a Momento Cache
     ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
     /// # Arguments
     ///
     /// * `cache_name` - name of cache
@@ -574,6 +577,9 @@ impl SimpleCacheClient {
     }
 
     /// Gets dictionary fields from a Momento Cache
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
     ///
     /// # Arguments
     ///

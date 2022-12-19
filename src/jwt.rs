@@ -50,6 +50,7 @@ fn token_parsing_error() -> MomentoError {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use crate::response::error::MomentoError;
 
