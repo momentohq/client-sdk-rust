@@ -116,6 +116,7 @@ impl MomentoEndpointsResolver {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use crate::endpoint_resolver::MomentoEndpointsResolver;
     use crate::response::error::MomentoError;
