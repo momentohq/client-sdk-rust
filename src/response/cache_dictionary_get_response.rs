@@ -13,7 +13,7 @@ pub enum MomentoDictionaryGetStatus {
 /// Response for a cache get operation.
 #[derive(Debug)]
 pub struct MomentoDictionaryGetResponse {
-    /// The result of a cache get operation.
+    /// The result of a cache dictionary get operation.
     pub result: MomentoDictionaryGetStatus,
     /// The dictionary contents if it was found.
     pub dictionary: Option<HashMap<Vec<u8>, Vec<u8>>>,
