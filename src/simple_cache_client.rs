@@ -613,9 +613,11 @@ impl SimpleCacheClient {
     ///     };
     ///
     ///
-    ///     println!("dictionary entries:");
-    ///     for (key, value) in dictionary.iter() {
-    ///         println!("{} => {}", key.as_string(), value.as_string());
+    ///     if let Some(dictionary) = response.dictionary {
+    ///         println!("dictionary entries:");
+    ///         for (key, value) in dictionary.iter() {
+    ///             println!("{} => {}", key.as_string(), value.as_string());
+    ///         }
     ///     }
     ///
     ///     momento.delete_cache(&cache_name).await;
