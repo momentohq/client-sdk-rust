@@ -537,6 +537,7 @@ impl SimpleCacheClient {
     ///     let dictionary_name = Uuid::new_v4().to_string();
     ///
     ///     momento.dictionary_set(&cache_name, &dictionary_name, dictionary, None, true).await;
+    ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
     pub async fn dictionary_set<K: MomentoRequest, V: MomentoRequest>(
