@@ -10,10 +10,8 @@ _Read this in other languages_: [日本語](README.ja.md)
 - A Momento Auth Token is required, you can generate one using the [Momento CLI](https://github.com/momentohq/momento-cli)
 
 ```bash
-cargo build
-
 # Run example code
-MOMENTO_AUTH_TOKEN=<YOUR AUTH TOKEN> ./target/debug/rust
+MOMENTO_AUTH_TOKEN=<YOUR AUTH TOKEN> cargo run
 ```
 
 Example Code: [main.rs](src/main.rs)
