@@ -708,8 +708,8 @@ impl SimpleCacheClient {
     ///     let resp = momento.dictionary_fetch(&cache_name, &dictionary_name).await.unwrap();
     ///
     ///     match resp.result {
-    ///         MomentoDictionaryGetStatus::FOUND => println!("dictionary found!"),
-    ///         MomentoDictionaryGetStatus::MISSING => println!("dictionary missing!"),
+    ///         MomentoDictionaryFetchStatus::FOUND => println!("dictionary found!"),
+    ///         MomentoDictionaryFetchStatus::MISSING => println!("dictionary missing!"),
     ///         _ => println!("error occurred")
     ///     };
     ///
