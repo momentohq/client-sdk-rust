@@ -17,7 +17,9 @@ use crate::endpoint_resolver::MomentoEndpointsResolver;
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 
 use crate::response::{
-    cache_dictionary_fetch_response::{MomentoDictionaryFetchResponse, MomentoDictionaryFetchStatus},
+    cache_dictionary_fetch_response::{
+        MomentoDictionaryFetchResponse, MomentoDictionaryFetchStatus,
+    },
     cache_dictionary_get_response::{MomentoDictionaryGetResponse, MomentoDictionaryGetStatus},
     cache_dictionary_set_response::{MomentoDictionarySetResponse, MomentoDictionarySetStatus},
     cache_get_response::{MomentoGetResponse, MomentoGetStatus},
@@ -664,10 +666,12 @@ impl SimpleCacheClient {
                     dictionary: Some(dictionary),
                 })
             }
-            Some(dictionary_get_response::Dictionary::Missing(_)) | None => Ok(MomentoDictionaryGetResponse {
-                result: MomentoDictionaryGetStatus::MISSING,
-                dictionary: None,
-            }),
+            Some(dictionary_get_response::Dictionary::Missing(_)) | None => {
+                Ok(MomentoDictionaryGetResponse {
+                    result: MomentoDictionaryGetStatus::MISSING,
+                    dictionary: None,
+                })
+            }
         }
     }
 
@@ -731,12 +735,20 @@ impl SimpleCacheClient {
             dictionary_name: dictionary.into_bytes(),
         });
         request_meta_data(&mut request, cache_name)?;
-        let response = self.data_client.dictionary_fetch(request).await?.into_inner();
+        let response = self
+            .data_client
+            .dictionary_fetch(request)
+            .await?
+            .into_inner();
         match response.dictionary {
             Some(dictionary_fetch_response::Dictionary::Found(response)) => {
                 let mut dictionary = HashMap::new();
 
-                for (field, value) in response.items.iter().map(|pair| (pair.field.clone(), pair.value.clone())) {
+                for (field, value) in response
+                    .items
+                    .iter()
+                    .map(|pair| (pair.field.clone(), pair.value.clone()))
+                {
                     dictionary.insert(field, value);
                 }
 
@@ -745,10 +757,12 @@ impl SimpleCacheClient {
                     dictionary: Some(dictionary),
                 })
             }
-            Some(dictionary_fetch_response::Dictionary::Missing(_)) | None => Ok(MomentoDictionaryFetchResponse {
-                result: MomentoDictionaryFetchStatus::MISSING,
-                dictionary: None,
-            }),
+            Some(dictionary_fetch_response::Dictionary::Missing(_)) | None => {
+                Ok(MomentoDictionaryFetchResponse {
+                    result: MomentoDictionaryFetchStatus::MISSING,
+                    dictionary: None,
+                })
+            }
         }
     }
 
