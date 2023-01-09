@@ -742,19 +742,16 @@ impl SimpleCacheClient {
             .into_inner();
         match response.dictionary {
             Some(dictionary_fetch_response::Dictionary::Found(response)) => {
-                let mut dictionary = HashMap::new();
-
-                for (field, value) in response
-                    .items
-                    .iter()
-                    .map(|pair| (pair.field.clone(), pair.value.clone()))
-                {
-                    dictionary.insert(field, value);
-                }
-
                 Ok(MomentoDictionaryFetchResponse {
                     result: MomentoDictionaryFetchStatus::FOUND,
-                    dictionary: Some(dictionary),
+                    dictionary: Some(
+                        response
+                            .items
+                            // Consume the payload vectors by value to avoid extra copies
+                            .into_iter()
+                            .map(|pair| (pair.field, pair.value))
+                            .collect(),
+                    ),
                 })
             }
             Some(dictionary_fetch_response::Dictionary::Missing(_)) | None => {
