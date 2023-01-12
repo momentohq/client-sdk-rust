@@ -1,3 +1,4 @@
+pub mod cache_dictionary_fetch_response;
 pub mod cache_dictionary_get_response;
 pub mod cache_dictionary_set_response;
 pub mod cache_get_response;

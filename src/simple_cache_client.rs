@@ -1,6 +1,5 @@
 use chrono::{DateTime, NaiveDateTime, Utc};
 use momento_protos::{
-    cache_client::dictionary_get_response::*,
     cache_client::scs_client::*,
     cache_client::*,
     control_client::{
@@ -18,6 +17,9 @@ use crate::endpoint_resolver::MomentoEndpointsResolver;
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 
 use crate::response::{
+    cache_dictionary_fetch_response::{
+        MomentoDictionaryFetchResponse, MomentoDictionaryFetchStatus,
+    },
     cache_dictionary_get_response::{MomentoDictionaryGetResponse, MomentoDictionaryGetStatus},
     cache_dictionary_set_response::{MomentoDictionarySetResponse, MomentoDictionarySetStatus},
     cache_get_response::{MomentoGetResponse, MomentoGetStatus},
@@ -189,6 +191,7 @@ impl SimpleCacheClientBuilder {
     }
 }
 
+#[derive(Clone)]
 pub struct SimpleCacheClient {
     data_endpoint: String,
     control_client: ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>,
@@ -648,7 +651,7 @@ impl SimpleCacheClient {
         request_meta_data(&mut request, cache_name)?;
         let response = self.data_client.dictionary_get(request).await?.into_inner();
         match response.dictionary {
-            Some(Dictionary::Found(mut response)) => {
+            Some(dictionary_get_response::Dictionary::Found(mut response)) => {
                 let mut dictionary = HashMap::new();
 
                 // map the dictionary response parts to get responses
@@ -663,10 +666,100 @@ impl SimpleCacheClient {
                     dictionary: Some(dictionary),
                 })
             }
-            Some(Dictionary::Missing(_)) | None => Ok(MomentoDictionaryGetResponse {
-                result: MomentoDictionaryGetStatus::MISSING,
-                dictionary: None,
-            }),
+            Some(dictionary_get_response::Dictionary::Missing(_)) | None => {
+                Ok(MomentoDictionaryGetResponse {
+                    result: MomentoDictionaryGetStatus::MISSING,
+                    dictionary: None,
+                })
+            }
+        }
+    }
+
+    /// Fetches a dictionary from a Momento Cache
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache
+    /// * `dictionary_name` - name of dictionary
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use uuid::Uuid;
+    /// use std::num::NonZeroU64;
+    /// # tokio_test::block_on(async {
+    ///     use std::env;
+    ///     use momento::{
+    ///         response::cache_dictionary_fetch_response::MomentoDictionaryFetchStatus,
+    ///         simple_cache_client::SimpleCacheClientBuilder,
+    ///     };
+    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    ///     let cache_name = Uuid::new_v4().to_string();
+    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
+    ///         .expect("could not create a client")
+    ///         .build();
+    ///     momento.create_cache(&cache_name).await;
+    ///
+    ///     let dictionary_name = Uuid::new_v4().to_string();
+    ///
+    ///     let resp = momento.dictionary_fetch(&cache_name, &dictionary_name).await.unwrap();
+    ///
+    ///     match resp.result {
+    ///         MomentoDictionaryFetchStatus::FOUND => println!("dictionary found!"),
+    ///         MomentoDictionaryFetchStatus::MISSING => println!("dictionary missing!"),
+    ///         _ => println!("error occurred")
+    ///     };
+    ///
+    ///
+    ///     if let Some(dictionary) = resp.dictionary {
+    ///         println!("dictionary entries:");
+    ///         for (key, value) in dictionary.iter() {
+    ///             println!("{:?} => {:?}", key, value);
+    ///         }
+    ///     }
+    ///
+    ///     momento.delete_cache(&cache_name).await;
+    /// # })
+    /// ```
+    pub async fn dictionary_fetch(
+        &mut self,
+        cache_name: &str,
+        dictionary: &str,
+    ) -> Result<MomentoDictionaryFetchResponse, MomentoError> {
+        utils::is_cache_name_valid(cache_name)?;
+
+        let mut request = tonic::Request::new(DictionaryFetchRequest {
+            dictionary_name: dictionary.into_bytes(),
+        });
+        request_meta_data(&mut request, cache_name)?;
+        let response = self
+            .data_client
+            .dictionary_fetch(request)
+            .await?
+            .into_inner();
+        match response.dictionary {
+            Some(dictionary_fetch_response::Dictionary::Found(response)) => {
+                Ok(MomentoDictionaryFetchResponse {
+                    result: MomentoDictionaryFetchStatus::FOUND,
+                    dictionary: Some(
+                        response
+                            .items
+                            // Consume the payload vectors by value to avoid extra copies
+                            .into_iter()
+                            .map(|pair| (pair.field, pair.value))
+                            .collect(),
+                    ),
+                })
+            }
+            Some(dictionary_fetch_response::Dictionary::Missing(_)) | None => {
+                Ok(MomentoDictionaryFetchResponse {
+                    result: MomentoDictionaryFetchStatus::MISSING,
+                    dictionary: None,
+                })
+            }
         }
     }
 
