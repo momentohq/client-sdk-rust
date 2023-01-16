@@ -838,10 +838,7 @@ impl SimpleCacheClient {
             }),
         };
         request_meta_data(&mut request, cache_name)?;
-        self
-            .data_client
-            .dictionary_delete(request)
-            .await?;
+        self.data_client.dictionary_delete(request).await?;
         Ok(())
     }
 
