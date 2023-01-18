@@ -763,6 +763,85 @@ impl SimpleCacheClient {
         }
     }
 
+    /// Delete entire dictionary or some dictionary fields from a Momento Cache
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache
+    /// * `dictionary_name` - name of dictionary
+    /// * `fields` - dictionary keys to delete
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use uuid::Uuid;
+    /// use std::num::NonZeroU64;
+    /// # tokio_test::block_on(async {
+    ///     use std::env;
+    ///     use momento::{
+    ///         response::cache_dictionary_delete_response::MomentoDictionaryDeleteStatus,
+    ///         simple_cache_client::Fields,
+    ///         simple_cache_client::SimpleCacheClientBuilder,
+    ///     };
+    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    ///     let cache_name = Uuid::new_v4().to_string();
+    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
+    ///         .expect("could not create a client")
+    ///         .build();
+    ///     momento.create_cache(&cache_name).await;
+    ///
+    ///     let dictionary_name = Uuid::new_v4().to_string();
+    ///
+    ///     // remove some fields
+    ///     let resp = momento.dictionary_delete(
+    ///         &cache_name,
+    ///         &dictionary_name,
+    ///         Fields::Some(vec!["field_1"]),
+    ///     ).await.unwrap();
+    ///
+    ///     // remove entire dictionary
+    ///     let resp = momento.dictionary_delete(
+    ///         &cache_name,
+    ///         &dictionary_name,
+    ///         Fields::All,
+    ///     ).await.unwrap();
+    ///
+    ///     momento.delete_cache(&cache_name).await;
+    /// # })
+    /// ```
+    pub async fn dictionary_delete<K: MomentoRequest>(
+        &mut self,
+        cache_name: &str,
+        dictionary: &str,
+        fields: Fields<K>,
+    ) -> Result<(), MomentoError> {
+        utils::is_cache_name_valid(cache_name)?;
+
+        let mut request = match fields {
+            Fields::Some(mut fields) => {
+                let fields: Vec<Vec<u8>> = fields.drain(..).map(|f| f.into_bytes()).collect();
+                tonic::Request::new(DictionaryDeleteRequest {
+                    dictionary_name: dictionary.into_bytes(),
+                    delete: Some(dictionary_delete_request::Delete::Some(
+                        dictionary_delete_request::Some { fields },
+                    )),
+                })
+            }
+            Fields::All => tonic::Request::new(DictionaryDeleteRequest {
+                dictionary_name: dictionary.into_bytes(),
+                delete: Some(dictionary_delete_request::Delete::All(
+                    dictionary_delete_request::All {},
+                )),
+            }),
+        };
+        request_meta_data(&mut request, cache_name)?;
+        self.data_client.dictionary_delete(request).await?;
+        Ok(())
+    }
+
     /// Deletes an item from a Momento Cache
     ///
     /// # Arguments
@@ -802,4 +881,11 @@ impl SimpleCacheClient {
         self.data_client.delete(request).await?.into_inner();
         Ok(())
     }
+}
+
+/// An enum that is used to indicate if an operation should apply to all fields
+/// or just some fields of a dictionary.
+pub enum Fields<K> {
+    All,
+    Some(Vec<K>),
 }
