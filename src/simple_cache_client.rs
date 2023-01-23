@@ -782,7 +782,6 @@ impl SimpleCacheClient {
     /// # tokio_test::block_on(async {
     ///     use std::env;
     ///     use momento::{
-    ///         response::cache_dictionary_delete_response::MomentoDictionaryDeleteStatus,
     ///         simple_cache_client::Fields,
     ///         simple_cache_client::SimpleCacheClientBuilder,
     ///     };
@@ -806,7 +805,7 @@ impl SimpleCacheClient {
     ///     let resp = momento.dictionary_delete(
     ///         &cache_name,
     ///         &dictionary_name,
-    ///         Fields::All,
+    ///         Fields::<Vec<u8>>::All,
     ///     ).await.unwrap();
     ///
     ///     momento.delete_cache(&cache_name).await;
