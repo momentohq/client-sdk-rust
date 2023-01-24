@@ -33,25 +33,16 @@ use crate::utils;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub trait MomentoRequest {
+pub trait IntoBytes {
     fn into_bytes(self) -> Vec<u8>;
 }
 
-impl MomentoRequest for String {
+impl<T> IntoBytes for T
+where
+    T: Into<Vec<u8>>,
+{
     fn into_bytes(self) -> Vec<u8> {
-        self.into_bytes()
-    }
-}
-
-impl MomentoRequest for Vec<u8> {
-    fn into_bytes(self) -> Vec<u8> {
-        self
-    }
-}
-
-impl MomentoRequest for &str {
-    fn into_bytes(self) -> Vec<u8> {
-        self.to_string().into_bytes()
+        self.into()
     }
 }
 
@@ -423,7 +414,7 @@ impl SimpleCacheClient {
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
-    pub async fn set<I: MomentoRequest>(
+    pub async fn set<I: IntoBytes>(
         &mut self,
         cache_name: &str,
         key: I,
@@ -480,7 +471,7 @@ impl SimpleCacheClient {
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
-    pub async fn get<I: MomentoRequest>(
+    pub async fn get<I: IntoBytes>(
         &mut self,
         cache_name: &str,
         key: I,
@@ -539,14 +530,14 @@ impl SimpleCacheClient {
     ///
     ///     let dictionary_name = Uuid::new_v4().to_string();
     ///
-    ///     momento.dictionary_set(&cache_name, &dictionary_name, dictionary, None, true).await;
+    ///     momento.dictionary_set(&cache_name, &*dictionary_name, dictionary, None, true).await;
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
-    pub async fn dictionary_set<K: MomentoRequest, V: MomentoRequest>(
+    pub async fn dictionary_set<K: IntoBytes, V: IntoBytes>(
         &mut self,
         cache_name: &str,
-        dictionary_name: &str,
+        dictionary_name: impl IntoBytes,
         dictionary: HashMap<K, V>,
         ttl_seconds: Option<NonZeroU64>,
         refresh_ttl: bool,
@@ -611,7 +602,7 @@ impl SimpleCacheClient {
     ///
     ///     let dictionary_name = Uuid::new_v4().to_string();
     ///
-    ///     let resp = momento.dictionary_get(&cache_name, &dictionary_name, vec![
+    ///     let resp = momento.dictionary_get(&cache_name, &*dictionary_name, vec![
     ///         "key1".to_string(),
     ///         "key2".to_string(),
     ///     ]).await.unwrap();
@@ -633,10 +624,10 @@ impl SimpleCacheClient {
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
-    pub async fn dictionary_get<K: MomentoRequest>(
+    pub async fn dictionary_get<K: IntoBytes>(
         &mut self,
         cache_name: &str,
-        dictionary: &str,
+        dictionary: impl IntoBytes,
         fields: Vec<K>,
     ) -> Result<MomentoDictionaryGetResponse, MomentoError> {
         utils::is_cache_name_valid(cache_name)?;
@@ -705,7 +696,7 @@ impl SimpleCacheClient {
     ///
     ///     let dictionary_name = Uuid::new_v4().to_string();
     ///
-    ///     let resp = momento.dictionary_fetch(&cache_name, &dictionary_name).await.unwrap();
+    ///     let resp = momento.dictionary_fetch(&cache_name, &*dictionary_name).await.unwrap();
     ///
     ///     match resp.result {
     ///         MomentoDictionaryFetchStatus::FOUND => println!("dictionary found!"),
@@ -727,7 +718,7 @@ impl SimpleCacheClient {
     pub async fn dictionary_fetch(
         &mut self,
         cache_name: &str,
-        dictionary: &str,
+        dictionary: impl IntoBytes,
     ) -> Result<MomentoDictionaryFetchResponse, MomentoError> {
         utils::is_cache_name_valid(cache_name)?;
 
@@ -797,24 +788,24 @@ impl SimpleCacheClient {
     ///     // remove some fields
     ///     let resp = momento.dictionary_delete(
     ///         &cache_name,
-    ///         &dictionary_name,
+    ///         &*dictionary_name,
     ///         Fields::Some(vec!["field_1"]),
     ///     ).await.unwrap();
     ///
     ///     // remove entire dictionary
     ///     let resp = momento.dictionary_delete(
     ///         &cache_name,
-    ///         &dictionary_name,
+    ///         &*dictionary_name,
     ///         Fields::<Vec<u8>>::All,
     ///     ).await.unwrap();
     ///
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
-    pub async fn dictionary_delete<K: MomentoRequest>(
+    pub async fn dictionary_delete<K: IntoBytes>(
         &mut self,
         cache_name: &str,
-        dictionary: &str,
+        dictionary: impl IntoBytes,
         fields: Fields<K>,
     ) -> Result<(), MomentoError> {
         utils::is_cache_name_valid(cache_name)?;
@@ -867,7 +858,7 @@ impl SimpleCacheClient {
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
-    pub async fn delete<I: MomentoRequest>(
+    pub async fn delete<I: IntoBytes>(
         &mut self,
         cache_name: &str,
         key: I,
