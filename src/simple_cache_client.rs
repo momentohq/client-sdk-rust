@@ -414,11 +414,11 @@ impl SimpleCacheClient {
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
-    pub async fn set<I: IntoBytes>(
+    pub async fn set(
         &mut self,
         cache_name: &str,
-        key: I,
-        body: I,
+        key: impl IntoBytes,
+        body: impl IntoBytes,
         ttl_seconds: Option<NonZeroU64>,
     ) -> Result<MomentoSetResponse, MomentoError> {
         utils::is_cache_name_valid(cache_name)?;
@@ -471,10 +471,10 @@ impl SimpleCacheClient {
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
-    pub async fn get<I: IntoBytes>(
+    pub async fn get(
         &mut self,
         cache_name: &str,
-        key: I,
+        key: impl IntoBytes,
     ) -> Result<MomentoGetResponse, MomentoError> {
         utils::is_cache_name_valid(cache_name)?;
         let mut request = tonic::Request::new(GetRequest {
@@ -858,10 +858,10 @@ impl SimpleCacheClient {
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
-    pub async fn delete<I: IntoBytes>(
+    pub async fn delete(
         &mut self,
         cache_name: &str,
-        key: I,
+        key: impl IntoBytes,
     ) -> Result<(), MomentoError> {
         utils::is_cache_name_valid(cache_name)?;
         let mut request = tonic::Request::new(DeleteRequest {
