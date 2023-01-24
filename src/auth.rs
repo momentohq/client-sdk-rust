@@ -2,7 +2,7 @@ use momento_protos::auth::{auth_client::AuthClient, LoginRequest, LoginResponse}
 use tonic::{transport::Channel, Streaming};
 
 use crate::{
-    endpoint_resolver::MomentoEndpointsResolver, response::error::MomentoError,
+    endpoint_resolver::MomentoEndpointsResolver, response::MomentoError,
     utils::connect_channel_lazily,
 };
 

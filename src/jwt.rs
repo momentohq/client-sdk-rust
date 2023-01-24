@@ -1,7 +1,7 @@
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
 
-use crate::response::error::MomentoError;
+use crate::response::MomentoError;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -51,7 +51,7 @@ fn token_parsing_error() -> MomentoError {
 
 #[cfg(test)]
 mod tests {
-    use crate::response::error::MomentoError;
+    use crate::response::MomentoError;
 
     use super::decode_jwt;
 
