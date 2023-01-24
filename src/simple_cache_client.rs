@@ -55,6 +55,24 @@ impl MomentoRequest for &str {
     }
 }
 
+impl MomentoRequest for &[u8] {
+    fn into_bytes(self) -> Vec<u8> {
+        self.to_owned()
+    }
+}
+
+impl MomentoRequest for &Vec<u8> {
+    fn into_bytes(self) -> Vec<u8> {
+        self.clone().into_bytes()
+    }
+}
+
+impl MomentoRequest for &String {
+    fn into_bytes(self) -> Vec<u8> {
+        self.clone().into_bytes()
+    }
+}
+
 #[derive(Clone)]
 pub struct SimpleCacheClientBuilder {
     data_endpoint: String,
@@ -543,10 +561,10 @@ impl SimpleCacheClient {
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
-    pub async fn dictionary_set<K: MomentoRequest, V: MomentoRequest>(
+    pub async fn dictionary_set<K: MomentoRequest, V: MomentoRequest, D: MomentoRequest>(
         &mut self,
         cache_name: &str,
-        dictionary_name: &str,
+        dictionary_name: D,
         dictionary: HashMap<K, V>,
         ttl_seconds: Option<NonZeroU64>,
         refresh_ttl: bool,
@@ -633,10 +651,10 @@ impl SimpleCacheClient {
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
-    pub async fn dictionary_get<K: MomentoRequest>(
+    pub async fn dictionary_get<K: MomentoRequest, D: MomentoRequest>(
         &mut self,
         cache_name: &str,
-        dictionary: &str,
+        dictionary: D,
         fields: Vec<K>,
     ) -> Result<MomentoDictionaryGetResponse, MomentoError> {
         utils::is_cache_name_valid(cache_name)?;
@@ -724,10 +742,10 @@ impl SimpleCacheClient {
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
-    pub async fn dictionary_fetch(
+    pub async fn dictionary_fetch<D: MomentoRequest>(
         &mut self,
         cache_name: &str,
-        dictionary: &str,
+        dictionary: D,
     ) -> Result<MomentoDictionaryFetchResponse, MomentoError> {
         utils::is_cache_name_valid(cache_name)?;
 
@@ -811,10 +829,10 @@ impl SimpleCacheClient {
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
-    pub async fn dictionary_delete<K: MomentoRequest>(
+    pub async fn dictionary_delete<K: MomentoRequest, D: MomentoRequest>(
         &mut self,
         cache_name: &str,
-        dictionary: &str,
+        dictionary: D,
         fields: Fields<K>,
     ) -> Result<(), MomentoError> {
         utils::is_cache_name_valid(cache_name)?;
