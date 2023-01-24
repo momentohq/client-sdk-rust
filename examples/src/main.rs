@@ -1,4 +1,4 @@
-use momento::response::MomentoGetStatus;
+use momento::response::cache_get_response::MomentoGetStatus;
 use momento::simple_cache_client::SimpleCacheClientBuilder;
 use std::env;
 use std::num::NonZeroU64;
