@@ -926,7 +926,7 @@ impl SimpleCacheClient {
     /// # tokio_test::block_on(async {
     /// use uuid::Uuid;
     /// use std::num::NonZeroU64;
-    /// use momento::simple_cache_client::SimpleCacheClientBuilder;
+    /// use momento::SimpleCacheClientBuilder;
     ///
     /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be defined");
     /// let cache_name = Uuid::new_v4().to_string();
