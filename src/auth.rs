@@ -12,7 +12,7 @@ pub type LoginActionConsumer = fn(LoginAction) -> EarlyOutActionResult;
 /// Initiate a login workflow
 /// You need to provide an implementation for the LoginActions.
 /// ```rust
-/// # use momento::momento::auth::{login, LoginAction, LoginResult};
+/// # use momento::auth::{login, LoginAction, LoginResult};
 /// # async {
 ///     let result = login(|action| {
 ///       match action {
