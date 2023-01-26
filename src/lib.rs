@@ -9,7 +9,7 @@ mod utils;
 
 pub use crate::response::MomentoError;
 pub use crate::simple_cache_client::{
-    Fields, IntoBytes, SimpleCacheClient, SimpleCacheClientBuilder, TtlPolicy,
+    Fields, IntoBytes, SimpleCacheClient, SimpleCacheClientBuilder, CollectionTtl,
 };
 
 pub type MomentoResult<T> = Result<T, MomentoError>;

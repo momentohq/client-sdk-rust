@@ -3,7 +3,7 @@ mod tests {
     use std::{env, time::Duration};
 
     use momento::{response::MomentoGetStatus, SimpleCacheClient};
-    use momento::{MomentoError, SimpleCacheClientBuilder, TtlPolicy};
+    use momento::{MomentoError, SimpleCacheClientBuilder};
     use serde_json::Value;
     use tokio::time::sleep;
     use uuid::Uuid;
@@ -76,12 +76,7 @@ mod tests {
         let ttl: u64 = 18446744073709551615;
         let max_ttl = u64::MAX / 1000_u64;
         let result = mm
-            .set(
-                &cache_name,
-                cache_key,
-                cache_body,
-                TtlPolicy::initialize(Duration::from_secs(ttl)),
-            ) // 18446744073709551615 > 2^64/1000
+            .set(&cache_name, cache_key, cache_body, Duration::from_secs(ttl)) // 18446744073709551615 > 2^64/1000
             .await
             .unwrap_err();
         let _err_message = format!(
@@ -106,14 +101,9 @@ mod tests {
         mm.create_cache(&cache_name)
             .await
             .expect("failed to create cache");
-        mm.set(
-            &cache_name,
-            cache_key.clone(),
-            cache_body.clone(),
-            TtlPolicy::default(),
-        )
-        .await
-        .expect("failed to perform set");
+        mm.set(&cache_name, cache_key.clone(), cache_body.clone(), None)
+            .await
+            .expect("failed to perform set");
         let result = mm
             .get(&cache_name, cache_key.clone())
             .await
@@ -134,14 +124,9 @@ mod tests {
         mm.create_cache(&cache_name)
             .await
             .expect("failed to create cache");
-        mm.set(
-            &cache_name,
-            cache_key.clone(),
-            cache_body.clone(),
-            TtlPolicy::default(),
-        )
-        .await
-        .expect("failed to perform set");
+        mm.set(&cache_name, cache_key.clone(), cache_body.clone(), None)
+            .await
+            .expect("failed to perform set");
         sleep(Duration::new(1, 0)).await;
         let result = mm
             .get(&cache_name, cache_key.clone())
@@ -162,14 +147,9 @@ mod tests {
         mm.create_cache(&cache_name)
             .await
             .expect("failed to create cache");
-        mm.set(
-            &cache_name,
-            cache_key.clone(),
-            cache_body.clone(),
-            TtlPolicy::default(),
-        )
-        .await
-        .expect("failed to perform set");
+        mm.set(&cache_name, cache_key.clone(), cache_body.clone(), None)
+            .await
+            .expect("failed to perform set");
         let result = mm
             .get(&cache_name, cache_key.clone())
             .await
@@ -281,7 +261,7 @@ mod tests {
         ));
         // Can reach data plane
         let set_result = client
-            .set("cache", "hello", "world", TtlPolicy::default())
+            .set("cache", "hello", "world", None)
             .await
             .unwrap_err();
         let _err_msg_unauthenticated = "Invalid signature".to_string();
@@ -322,7 +302,7 @@ mod tests {
         ));
         // Unable to reach data plane
         let set_result = client
-            .set("cache", "hello", "world", TtlPolicy::default())
+            .set("cache", "hello", "world", None)
             .await
             .unwrap_err();
         let _err_msg_internal = "error trying to connect: dns error: failed to lookup address information: nodename nor servname provided, or not known".to_string();
@@ -350,7 +330,7 @@ mod tests {
             &cache_name,
             cache_key.clone(),
             cache_body.clone(),
-            TtlPolicy::initialize(Duration::from_millis(10000)),
+            Duration::from_millis(10000),
         )
         .await
         .expect("failed to perform set");

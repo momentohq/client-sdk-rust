@@ -41,48 +41,67 @@ where
     }
 }
 
-/// Policy controlling how the item TTL is updated when it is updated.
+/// Represents the desired behavior for managing the TTL on collection objects.
+/// 
+/// For cache operations that modify a collection (dictionaries, lists, or sets), there
+/// are a few things to consider. The first time the collection is created, we need to
+/// set a TTL on it. For subsequent operations that modify the collection you may choose
+/// to update the TTL in order to prolong the life of the cached collection object, or
+/// you may choose to leave the TTL unmodified in order to ensure that the collection
+/// expires at the original TTL.
+/// 
+/// The default behaviour is to refresh the TTL (to prolong the life of the collection)
+/// each time it is written using the client's default item TTL.
 #[derive(Copy, Clone, Debug)]
-pub struct TtlPolicy {
+pub struct CollectionTtl {
     ttl: Option<Duration>,
     refresh: bool,
 }
 
-impl TtlPolicy {
+impl CollectionTtl {
     pub const fn new(ttl: Option<Duration>, refresh: bool) -> Self {
         Self { ttl, refresh }
     }
 
-    /// Create a TTL policy that updates the entry TTL when the item is modified.
-    ///
-    /// If no `ttl` is provided here then the default client TTL will be used.
-    pub fn refresh(ttl: impl Into<Option<Duration>>) -> Self {
+    /// Create a collection TTL that updates the TTL for the collection any time it is
+    /// modified.
+    /// 
+    /// If `ttl` is `None` then the default item TTL for the client will be used.
+    pub fn refresh_on_update(ttl: impl Into<Option<Duration>>) -> Self {
         Self::new(ttl.into(), true)
     }
 
-    /// Create a TTL policy that only sets the entry TTL when a new entry is created.
-    ///
-    /// If no `ttl` is provided here then the default client TTL will be used.
-    pub fn initialize(ttl: impl Into<Option<Duration>>) -> Self {
+    /// Create a collection TTL that will not refresh the TTL for the collection when
+    /// it is updated.
+    /// 
+    /// Use this if you want to be sure that the collection expires at the originally
+    /// specified time, even if you make modifications to the value of the collection.
+    /// 
+    /// The TTL will still be used when a new collection is created. If `ttl` is `None`
+    /// then the default item TTL for the client will be used.
+    pub fn initialize_only(ttl: impl Into<Option<Duration>>) -> Self {
         Self::new(ttl.into(), false)
     }
 
-    /// The TTL that will be used, if present.
-    ///
-    /// If this is `None`, then the default client TTL will be used.
+    /// The [`Duration`] after which the cached collection should be expired from the
+    /// cache.
+    /// 
+    /// If `None`, the default item TTL for the client will be used.
     pub fn ttl(&self) -> Option<Duration> {
         self.ttl
     }
 
-    /// Whether the TTL of a cache entry will be updated on modification.
-    ///
-    /// If false, this TTL policy will only affect the TTL when items are created.
-    pub fn will_refresh(&self) -> bool {
+    /// Whether the collection's TTL will be refreshed on every update.
+    /// 
+    /// If true, this will extend the time at which the collection would expire when
+    /// an update operation happens. Otherwise, the collection's TTL will only be set
+    /// when it is initially created.
+    pub fn refresh(&self) -> bool {
         self.refresh
     }
 }
 
-impl Default for TtlPolicy {
+impl Default for CollectionTtl {
     fn default() -> Self {
         Self::new(None, true)
     }
@@ -426,7 +445,7 @@ impl SimpleCacheClient {
     /// * `cache_name` - name of cache
     /// * `cache_key` - key of entry within the cache.
     /// * `cache_body` - data stored within the cache entry.
-    /// * `policy` - TTL policy to use. Note that set always sets the item TTL so refresh is ignored.
+    /// * `ttl` - The TTL to use for the 
     ///
     /// # Examples
     ///
@@ -434,7 +453,7 @@ impl SimpleCacheClient {
     /// use uuid::Uuid;
     /// use std::time::Duration;
     /// # tokio_test::block_on(async {
-    ///     use momento::{SimpleCacheClientBuilder, TtlPolicy};
+    ///     use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///     use std::env;
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
@@ -442,10 +461,10 @@ impl SimpleCacheClient {
     ///         .expect("could not create a client")
     ///         .build();
     ///     momento.create_cache(&cache_name).await;
-    ///     momento.set(&cache_name, "cache_key", "cache_value", TtlPolicy::default()).await;
+    ///     momento.set(&cache_name, "cache_key", "cache_value", None).await;
     ///
     ///     // overriding default ttl
-    ///     momento.set(&cache_name, "cache_key", "cache_value", TtlPolicy::initialize(Duration::from_secs(10))).await;
+    ///     momento.set(&cache_name, "cache_key", "cache_value", Duration::from_secs(10)).await;
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
@@ -454,14 +473,14 @@ impl SimpleCacheClient {
         cache_name: &str,
         key: impl IntoBytes,
         body: impl IntoBytes,
-        policy: TtlPolicy,
+        ttl: impl Into<Option<Duration>>,
     ) -> Result<MomentoSetResponse, MomentoError> {
         utils::is_cache_name_valid(cache_name)?;
 
         let mut request = tonic::Request::new(SetRequest {
             cache_key: key.into_bytes(),
             cache_body: body.into_bytes(),
-            ttl_milliseconds: self.expand_ttl_ms(policy)?,
+            ttl_milliseconds: self.expand_ttl_ms(ttl.into())?,
         });
         request_meta_data(&mut request, cache_name)?;
         let _ = self.data_client.set(request).await?;
@@ -544,7 +563,7 @@ impl SimpleCacheClient {
     /// use uuid::Uuid;
     /// use std::time::Duration;
     /// # tokio_test::block_on(async {
-    ///     use momento::{SimpleCacheClientBuilder, TtlPolicy};
+    ///     use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///     use std::collections::HashMap;
     ///     use std::env;
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
@@ -560,7 +579,7 @@ impl SimpleCacheClient {
     ///
     ///     let dictionary_name = Uuid::new_v4().to_string();
     ///
-    ///     momento.dictionary_set(&cache_name, &*dictionary_name, dictionary, TtlPolicy::default()).await;
+    ///     momento.dictionary_set(&cache_name, &*dictionary_name, dictionary, CollectionTtl::default()).await;
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
@@ -569,7 +588,7 @@ impl SimpleCacheClient {
         cache_name: &str,
         dictionary_name: impl IntoBytes,
         dictionary: HashMap<K, V>,
-        policy: TtlPolicy,
+        policy: CollectionTtl,
     ) -> Result<MomentoDictionarySetResponse, MomentoError> {
         utils::is_cache_name_valid(cache_name)?;
 
@@ -585,8 +604,8 @@ impl SimpleCacheClient {
         let mut request = tonic::Request::new(DictionarySetRequest {
             dictionary_name: dictionary_name.into_bytes(),
             items,
-            ttl_milliseconds: self.expand_ttl_ms(policy)?,
-            refresh_ttl: policy.will_refresh(),
+            ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
+            refresh_ttl: policy.refresh(),
         });
         request_meta_data(&mut request, cache_name)?;
         let _ = self.data_client.dictionary_set(request).await?;
@@ -877,7 +896,7 @@ impl SimpleCacheClient {
     /// # tokio_test::block_on(async {
     /// use uuid::Uuid;
     /// use std::time::Duration;
-    /// use momento::{SimpleCacheClientBuilder, TtlPolicy};
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     /// let cache_name = Uuid::new_v4().to_string();
@@ -892,7 +911,7 @@ impl SimpleCacheClient {
     /// let field = Uuid::new_v4().to_string();
     ///
     /// let value = momento
-    ///     .dictionary_increment(&cache_name, dictionary, field, 10, TtlPolicy::default())
+    ///     .dictionary_increment(&cache_name, dictionary, field, 10, CollectionTtl::default())
     ///     .await
     ///     .expect("Failed to increment dictionary key")
     ///     .value;
@@ -910,7 +929,7 @@ impl SimpleCacheClient {
         dictionary: impl IntoBytes,
         field: impl IntoBytes,
         amount: i64,
-        policy: TtlPolicy,
+        policy: CollectionTtl,
     ) -> Result<MomentoDictionaryIncrementResponse, MomentoError> {
         utils::is_cache_name_valid(cache_name)?;
 
@@ -918,8 +937,8 @@ impl SimpleCacheClient {
             dictionary_name: dictionary.into_bytes(),
             field: field.into_bytes(),
             amount,
-            ttl_milliseconds: self.expand_ttl_ms(policy)?,
-            refresh_ttl: policy.will_refresh(),
+            ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
+            refresh_ttl: policy.refresh(),
         });
         request_meta_data(&mut request, cache_name)?;
 
@@ -1020,7 +1039,7 @@ impl SimpleCacheClient {
     /// # tokio_test::block_on(async {
     /// use uuid::Uuid;
     /// use std::time::Duration;
-    /// use momento::{SimpleCacheClientBuilder, TtlPolicy};
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be defined");
     /// let cache_name = Uuid::new_v4().to_string();
@@ -1036,7 +1055,7 @@ impl SimpleCacheClient {
     ///     .expect("unable to create the cache");
     ///
     /// momento
-    ///     .set_union(&cache_name, set_name, vec!["a", "b", "c"], TtlPolicy::default())
+    ///     .set_union(&cache_name, set_name, vec!["a", "b", "c"], CollectionTtl::default())
     ///     .await
     ///     .expect("Failed to run a set union");
     ///
@@ -1051,15 +1070,15 @@ impl SimpleCacheClient {
         cache_name: &str,
         set_name: impl IntoBytes,
         elements: Vec<E>,
-        policy: TtlPolicy,
+        policy: CollectionTtl,
     ) -> Result<(), MomentoError> {
         utils::is_cache_name_valid(cache_name)?;
 
         let mut request = tonic::Request::new(SetUnionRequest {
             set_name: set_name.into_bytes(),
             elements: elements.into_iter().map(|e| e.into_bytes()).collect(),
-            ttl_milliseconds: self.expand_ttl_ms(policy)?,
-            refresh_ttl: policy.will_refresh(),
+            ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
+            refresh_ttl: policy.refresh(),
         });
         request_meta_data(&mut request, cache_name)?;
 
@@ -1081,14 +1100,14 @@ impl SimpleCacheClient {
     /// use std::time::Duration;
     /// # tokio_test::block_on(async {
     ///     use std::env;
-    ///     use momento::{response::MomentoGetStatus, SimpleCacheClientBuilder, TtlPolicy};
+    ///     use momento::{response::MomentoGetStatus, CollectionTtl, SimpleCacheClientBuilder};
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
     ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
     ///         .expect("could not create a client")
     ///         .build();
     ///     momento.create_cache(&cache_name).await;
-    ///     let result = momento.set(&cache_name, "cache_key", "cache_value", TtlPolicy::default()).await;
+    ///     let result = momento.set(&cache_name, "cache_key", "cache_value", None).await;
     ///     momento.delete(&cache_name, "cache_key").await.unwrap();
     ///     momento.delete_cache(&cache_name).await;
     /// # })
