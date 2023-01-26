@@ -55,7 +55,7 @@ jobs:
         id: validation
         continue-on-error: true
         run: |
-          pushd examples
+          pushd example
             cargo fmt -- --check
             cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used 
             cargo build --verbose

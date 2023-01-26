@@ -1,6 +1,6 @@
 use tonic::transport::{Channel, ClientTlsConfig, Uri};
 
-use crate::response::error::MomentoError;
+use crate::response::MomentoError;
 use std::{convert::TryFrom, num::NonZeroU64, time};
 
 pub fn is_ttl_valid(ttl: &NonZeroU64) -> Result<(), MomentoError> {

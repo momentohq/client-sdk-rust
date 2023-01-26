@@ -3,11 +3,9 @@ mod tests {
     use std::num::NonZeroU64;
     use std::{env, time::Duration};
 
-    use momento::response::error::MomentoError;
+    use momento::response::MomentoError;
     use momento::simple_cache_client::SimpleCacheClientBuilder;
-    use momento::{
-        response::cache_get_response::MomentoGetStatus, simple_cache_client::SimpleCacheClient,
-    };
+    use momento::{response::MomentoGetStatus, simple_cache_client::SimpleCacheClient};
     use serde_json::Value;
     use tokio::time::sleep;
     use uuid::Uuid;

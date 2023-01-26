@@ -1,5 +1,5 @@
 use crate::jwt::{decode_jwt, Claims};
-use crate::response::error::MomentoError;
+use crate::response::MomentoError;
 
 #[derive(Debug)]
 pub struct MomentoEndpoint {
@@ -118,7 +118,7 @@ impl MomentoEndpointsResolver {
 #[cfg(test)]
 mod tests {
     use crate::endpoint_resolver::MomentoEndpointsResolver;
-    use crate::response::error::MomentoError;
+    use crate::response::MomentoError;
 
     #[test]
     fn urls_from_auth_token() {

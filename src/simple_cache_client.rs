@@ -17,17 +17,11 @@ use crate::endpoint_resolver::MomentoEndpointsResolver;
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 
 use crate::response::{
-    cache_dictionary_fetch_response::{
-        MomentoDictionaryFetchResponse, MomentoDictionaryFetchStatus,
-    },
-    cache_dictionary_get_response::{MomentoDictionaryGetResponse, MomentoDictionaryGetStatus},
-    cache_dictionary_set_response::{MomentoDictionarySetResponse, MomentoDictionarySetStatus},
-    cache_get_response::{MomentoGetResponse, MomentoGetStatus},
-    cache_set_response::{MomentoSetResponse, MomentoSetStatus},
-    create_signing_key_response::MomentoCreateSigningKeyResponse,
-    error::MomentoError,
-    list_cache_response::{MomentoCache, MomentoListCacheResult},
-    list_signing_keys_response::{MomentoListSigningKeyResult, MomentoSigningKey},
+    MomentoCache, MomentoCreateSigningKeyResponse, MomentoDictionaryFetchResponse,
+    MomentoDictionaryFetchStatus, MomentoDictionaryGetResponse, MomentoDictionaryGetStatus,
+    MomentoDictionarySetResponse, MomentoDictionarySetStatus, MomentoError, MomentoGetResponse,
+    MomentoGetStatus, MomentoListCacheResult, MomentoListSigningKeyResult, MomentoSetResponse,
+    MomentoSetStatus, MomentoSigningKey,
 };
 use crate::utils;
 
@@ -453,7 +447,7 @@ impl SimpleCacheClient {
     /// use std::num::NonZeroU64;
     /// # tokio_test::block_on(async {
     ///     use std::env;
-    ///     use momento::{response::cache_get_response::MomentoGetStatus, simple_cache_client::SimpleCacheClientBuilder};
+    ///     use momento::{response::MomentoGetStatus, simple_cache_client::SimpleCacheClientBuilder};
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
     ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
@@ -590,7 +584,7 @@ impl SimpleCacheClient {
     /// # tokio_test::block_on(async {
     ///     use std::env;
     ///     use momento::{
-    ///         response::cache_dictionary_get_response::MomentoDictionaryGetStatus,
+    ///         response::MomentoDictionaryGetStatus,
     ///         simple_cache_client::SimpleCacheClientBuilder,
     ///     };
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
@@ -684,7 +678,7 @@ impl SimpleCacheClient {
     /// # tokio_test::block_on(async {
     ///     use std::env;
     ///     use momento::{
-    ///         response::cache_dictionary_fetch_response::MomentoDictionaryFetchStatus,
+    ///         response::MomentoDictionaryFetchStatus,
     ///         simple_cache_client::SimpleCacheClientBuilder,
     ///     };
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
@@ -846,7 +840,7 @@ impl SimpleCacheClient {
     /// use std::num::NonZeroU64;
     /// # tokio_test::block_on(async {
     ///     use std::env;
-    ///     use momento::{response::cache_get_response::MomentoGetStatus, simple_cache_client::SimpleCacheClientBuilder};
+    ///     use momento::{response::MomentoGetStatus, simple_cache_client::SimpleCacheClientBuilder};
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
     ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
