@@ -1107,19 +1107,11 @@ impl SimpleCacheClient {
         Ok(())
     }
 
-    fn validate_ttl(&self, policy: &TtlPolicy) -> MomentoResult<Duration> {
-        let ttl = policy.ttl().unwrap_or(self.item_default_ttl);
+    fn expand_ttl_ms(&self, ttl: Option<Duration>) -> MomentoResult<u64> {
+        let ttl = ttl.unwrap_or(self.item_default_ttl);
         utils::is_ttl_valid(ttl)?;
-        Ok(ttl)
-    }
 
-    fn expand_ttl_ms(&self, policy: TtlPolicy) -> MomentoResult<u64> {
-        let ttl_ms = self
-            .validate_ttl(&policy)?
-            .as_millis()
-            .try_into()
-            .unwrap_or(u64::MAX);
-        Ok(ttl_ms)
+        Ok(ttl.as_millis().try_into().unwrap_or(i64::MAX as u64))
     }
 }
 
