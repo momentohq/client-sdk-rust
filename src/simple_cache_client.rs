@@ -836,7 +836,7 @@ impl SimpleCacheClient {
     /// * `cache_name` - name of cache.
     /// * `set_name` - name of the set.
     ///
-    /// # Examples
+    /// # Example
     /// ```
     /// # tokio_test::block_on(async {
     /// use uuid::Uuid;
@@ -893,6 +893,80 @@ impl SimpleCacheClient {
                 Set::Missing(_) => None,
             }),
         })
+    }
+
+    /// Unions a set with one present within a Momento cache.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache.
+    /// * `set_name` - name of the set.
+    /// * `elements` - elements to be unioned with the existing set within the cache.
+    /// * `ttl_milliseconds` - ttl to use for the element. If `None`, uses the client default ttl.
+    /// * `refresh_ttl` - whether to refresh the TTL when unioning with an existing set.
+    ///
+    /// # Example
+    /// ```
+    /// # tokio_test::block_on(async {
+    /// use uuid::Uuid;
+    /// use std::num::NonZeroU64;
+    /// use momento::simple_cache_client::SimpleCacheClientBuilder;
+    ///
+    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be defined");
+    /// let cache_name = Uuid::new_v4().to_string();
+    /// let set_name = Uuid::new_v4().to_string();
+    ///
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
+    ///     .expect("could not create a client")
+    ///     .build();
+    ///
+    /// momento
+    ///     .create_cache(&cache_name)
+    ///     .await
+    ///     .expect("unable to create the cache");
+    ///
+    /// momento
+    ///     .set_union(
+    ///         &cache_name,
+    ///         set_name,
+    ///         vec!["a", "b", "c"],
+    ///         None,
+    ///         false
+    ///     )
+    ///     .await
+    ///     .expect("Failed to run a set union");
+    ///
+    /// momento
+    ///     .delete_cache(&cache_name)
+    ///     .await
+    ///     .expect("Failed to delete the cache");
+    /// # });
+    /// ```
+    pub async fn set_union<E: IntoBytes>(
+        &mut self,
+        cache_name: &str,
+        set_name: impl IntoBytes,
+        elements: Vec<E>,
+        ttl_milliseconds: Option<NonZeroU64>,
+        refresh_ttl: bool,
+    ) -> Result<(), MomentoError> {
+        utils::is_cache_name_valid(cache_name)?;
+
+        let mut request = tonic::Request::new(SetUnionRequest {
+            set_name: set_name.into_bytes(),
+            elements: elements.into_iter().map(|e| e.into_bytes()).collect(),
+            ttl_milliseconds: ttl_milliseconds
+                .map(|x| x.get())
+                .unwrap_or(self.item_default_ttl_seconds.get() * 1000),
+            refresh_ttl,
+        });
+        request_meta_data(&mut request, cache_name)?;
+
+        let _ = self.data_client.set_union(request).await?.into_inner();
+        Ok(())
     }
 
     /// Deletes an item from a Momento Cache
