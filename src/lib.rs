@@ -1,8 +1,15 @@
 pub mod auth;
 pub mod response;
-pub mod simple_cache_client;
 
 mod endpoint_resolver;
 mod grpc;
 mod jwt;
+mod simple_cache_client;
 mod utils;
+
+pub use crate::response::MomentoError;
+pub use crate::simple_cache_client::{
+    Fields, IntoBytes, SimpleCacheClient, SimpleCacheClientBuilder,
+};
+
+pub type MomentoResult<T> = Result<T, MomentoError>;
