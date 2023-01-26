@@ -19,9 +19,10 @@ use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_
 use crate::response::{
     MomentoCache, MomentoCreateSigningKeyResponse, MomentoDictionaryFetchResponse,
     MomentoDictionaryFetchStatus, MomentoDictionaryGetResponse, MomentoDictionaryGetStatus,
-    MomentoDictionarySetResponse, MomentoDictionarySetStatus, MomentoError, MomentoGetResponse,
-    MomentoGetStatus, MomentoListCacheResult, MomentoListSigningKeyResult, MomentoSetFetchResponse,
-    MomentoSetResponse, MomentoSetStatus, MomentoSigningKey,
+    MomentoDictionaryIncrementResponse, MomentoDictionarySetResponse, MomentoDictionarySetStatus,
+    MomentoError, MomentoGetResponse, MomentoGetStatus, MomentoListCacheResult,
+    MomentoListSigningKeyResult, MomentoSetFetchResponse, MomentoSetResponse, MomentoSetStatus,
+    MomentoSigningKey,
 };
 use crate::utils;
 
@@ -824,6 +825,93 @@ impl SimpleCacheClient {
         request_meta_data(&mut request, cache_name)?;
         self.data_client.dictionary_delete(request).await?;
         Ok(())
+    }
+
+    /// Increment a value within a dictionary.
+    ///
+    /// If the dictionary already exists, then the value will be incremented. If either
+    /// of the dictionary or field do not exist, then they will be created and initialized
+    /// to 0, before being incremented by `amount`.
+    ///
+    /// Returns the current value of the field within the dictionary after being incremented.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache.
+    /// * `dictionary` - name of dictionary.
+    /// * `field` - name of the field to increment from the dictionary.
+    /// * `amount` - quantity to add to the value.
+    /// * `ttl_milliseconds` - TTL for the dictionary in the cache. If not specified,
+    ///   then the client TTL will be used.
+    /// * `refresh_ttl` - whether to refresh the TTL of the collection.
+    ///
+    /// # Example
+    /// ```
+    /// # tokio_test::block_on(async {
+    /// use uuid::Uuid;
+    /// use std::num::NonZeroU64;
+    /// use std::env;
+    /// use momento::simple_cache_client::SimpleCacheClientBuilder;
+    ///
+    /// let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    /// let cache_name = Uuid::new_v4().to_string();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
+    ///     .expect("unable to create momento client")
+    ///     .build();
+    /// momento.create_cache(&cache_name)
+    ///     .await
+    ///     .expect("Failed to create cache");
+    ///
+    /// let dictionary = Uuid::new_v4().to_string();
+    /// let field = Uuid::new_v4().to_string();
+    ///
+    /// let value = momento
+    ///     .dictionary_increment(&cache_name, dictionary, field, 10, None, false)
+    ///     .await
+    ///     .expect("Failed to increment dictionary key")
+    ///     .value;
+    ///
+    /// println!("Dicationary key has been incremented to {}", value);
+    ///
+    /// momento.delete_cache(&cache_name)
+    ///     .await
+    ///     .expect("Failed to delete cache");
+    /// # })
+    /// ```
+    pub async fn dictionary_increment(
+        &mut self,
+        cache_name: &str,
+        dictionary: impl IntoBytes,
+        field: impl IntoBytes,
+        amount: i64,
+        ttl_milliseconds: Option<NonZeroU64>,
+        refresh_ttl: bool,
+    ) -> Result<MomentoDictionaryIncrementResponse, MomentoError> {
+        utils::is_cache_name_valid(cache_name)?;
+
+        let mut request = tonic::Request::new(DictionaryIncrementRequest {
+            dictionary_name: dictionary.into_bytes(),
+            field: field.into_bytes(),
+            amount,
+            ttl_milliseconds: ttl_milliseconds
+                .map(|ttl| ttl.into())
+                .unwrap_or(self.item_default_ttl_seconds.get() * 1000),
+            refresh_ttl,
+        });
+        request_meta_data(&mut request, cache_name)?;
+
+        let response = self
+            .data_client
+            .dictionary_increment(request)
+            .await?
+            .into_inner();
+
+        Ok(MomentoDictionaryIncrementResponse {
+            value: response.value,
+        })
     }
 
     /// Fetches a set from a Momento Cache.
