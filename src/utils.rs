@@ -1,14 +1,16 @@
 use tonic::transport::{Channel, ClientTlsConfig, Uri};
 
 use crate::response::MomentoError;
-use std::{convert::TryFrom, num::NonZeroU64, time};
+use std::convert::TryFrom;
+use std::time::{self, Duration};
 
-pub fn is_ttl_valid(ttl: &NonZeroU64) -> Result<(), MomentoError> {
-    let max_ttl = u64::MAX / 1000_u64;
-    if ttl.get() > max_ttl {
+pub fn is_ttl_valid(ttl: Duration) -> Result<(), MomentoError> {
+    let max_ttl = Duration::from_millis(u64::MAX);
+    if ttl > max_ttl {
         return Err(MomentoError::InvalidArgument(format!(
             "TTL provided, {}, needs to be less than the maximum TTL {}",
-            ttl, max_ttl
+            ttl.as_secs(),
+            max_ttl.as_secs()
         )));
     }
     Ok(())
