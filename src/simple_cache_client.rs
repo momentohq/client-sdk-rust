@@ -209,7 +209,6 @@ impl SimpleCacheClientBuilder {
         );
         let data_client = ScsClient::new(data_interceptor);
 
-        #[allow(deprecated)]
         SimpleCacheClient {
             data_endpoint: self.data_endpoint,
             control_client,
