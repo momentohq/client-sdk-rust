@@ -20,8 +20,8 @@ use crate::response::{
     MomentoCache, MomentoCreateSigningKeyResponse, MomentoDictionaryFetchResponse,
     MomentoDictionaryFetchStatus, MomentoDictionaryGetResponse, MomentoDictionaryGetStatus,
     MomentoDictionarySetResponse, MomentoDictionarySetStatus, MomentoError, MomentoGetResponse,
-    MomentoGetStatus, MomentoListCacheResult, MomentoListSigningKeyResult, MomentoSetResponse,
-    MomentoSetStatus, MomentoSigningKey,
+    MomentoGetStatus, MomentoListCacheResult, MomentoListSigningKeyResult, MomentoSetFetchResponse,
+    MomentoSetResponse, MomentoSetStatus, MomentoSigningKey,
 };
 use crate::utils;
 
@@ -824,6 +824,75 @@ impl SimpleCacheClient {
         request_meta_data(&mut request, cache_name)?;
         self.data_client.dictionary_delete(request).await?;
         Ok(())
+    }
+
+    /// Fetches a set from a Momento Cache.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache.
+    /// * `set_name` - name of the set.
+    ///
+    /// # Examples
+    /// ```
+    /// # tokio_test::block_on(async {
+    /// use uuid::Uuid;
+    /// use std::num::NonZeroU64;
+    /// use momento::simple_cache_client::SimpleCacheClientBuilder;
+    ///
+    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be defined");
+    /// let cache_name = Uuid::new_v4().to_string();
+    /// let set_name = Uuid::new_v4().to_string();
+    ///
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
+    ///     .expect("could not create a client")
+    ///     .build();
+    ///
+    /// momento.create_cache(&cache_name).await;
+    ///
+    /// let response = momento
+    ///     .set_fetch(&cache_name, set_name)
+    ///     .await
+    ///     .expect("Failed to fetch the set");
+    /// if let Some(set) = response.value {
+    ///     println!("set entries:");
+    ///     for entry in &set {
+    ///         println!("{:?}", entry);
+    ///     }
+    /// } else {
+    ///     println!("set not found!");
+    /// }
+    ///
+    /// momento
+    ///     .delete_cache(&cache_name)
+    ///     .await
+    ///     .expect("Failed to delete the cache");
+    /// # })
+    /// ```
+    pub async fn set_fetch(
+        &mut self,
+        cache_name: &str,
+        set_name: impl IntoBytes,
+    ) -> Result<MomentoSetFetchResponse, MomentoError> {
+        use set_fetch_response::Set;
+
+        utils::is_cache_name_valid(cache_name)?;
+
+        let mut request = tonic::Request::new(SetFetchRequest {
+            set_name: set_name.into_bytes(),
+        });
+        request_meta_data(&mut request, cache_name)?;
+
+        let response = self.data_client.set_fetch(request).await?.into_inner();
+        Ok(MomentoSetFetchResponse {
+            value: response.set.and_then(|set| match set {
+                Set::Found(found) => Some(found.elements.into_iter().collect()),
+                Set::Missing(_) => None,
+            }),
+        })
     }
 
     /// Deletes an item from a Momento Cache
