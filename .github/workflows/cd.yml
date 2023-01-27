@@ -14,6 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
+      - name: Install protoc
+        run: ./install_protoc.sh
+
       - name: rustfmt
         run: cargo fmt -- --check
       - name: Rigorous lint via Clippy
@@ -45,6 +49,9 @@ jobs:
       CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
     steps:
       - uses: actions/checkout@v2
+      - name: Install protoc
+        run: ./install_protoc.sh
+
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
