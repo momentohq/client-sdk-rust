@@ -44,10 +44,5 @@ pub fn connect_channel_lazily(uri_string: &str) -> Result<Channel, MomentoError>
 }
 
 pub fn user_agent(user_agent_name: &str) -> String {
-    let agent_value = format!(
-        "rust-{agent_name}:{version}",
-        agent_name = user_agent_name,
-        version = VERSION
-    );
-    agent_value
+    format!("rust-{user_agent_name}:{VERSION}")
 }
