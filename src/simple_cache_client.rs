@@ -8,12 +8,13 @@ use momento_protos::{
     },
 };
 use serde_json::Value;
-use std::collections::HashMap;
-use std::convert::{TryFrom, TryInto};
+use std::{collections::{HashMap, HashSet}, convert::TryInto};
+use std::convert::TryFrom;
+use std::iter::FromIterator;
 use std::time::Duration;
 use tonic::{codegen::InterceptedService, transport::Channel, Request};
 
-use crate::{endpoint_resolver::MomentoEndpointsResolver, MomentoResult};
+use crate::{endpoint_resolver::MomentoEndpointsResolver, utils::user_agent, MomentoResult};
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 
 use crate::response::{
@@ -25,8 +26,6 @@ use crate::response::{
     MomentoSigningKey,
 };
 use crate::utils;
-
-const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub trait IntoBytes {
     fn into_bytes(self) -> Vec<u8>;
@@ -142,10 +141,7 @@ pub struct SimpleCacheClientBuilder {
     user_agent_name: String,
 }
 
-fn request_meta_data<T>(
-    request: &mut tonic::Request<T>,
-    cache_name: &str,
-) -> Result<(), MomentoError> {
+fn request_meta_data<T>(request: &mut tonic::Request<T>, cache_name: &str) -> MomentoResult<()> {
     tonic::metadata::AsciiMetadataValue::try_from(cache_name)
         .map(|value| {
             request.metadata_mut().append("cache", value);
@@ -178,7 +174,7 @@ impl SimpleCacheClientBuilder {
     ///         .build();
     /// # })
     /// ```
-    pub fn new(auth_token: String, default_ttl: Duration) -> Result<Self, MomentoError> {
+    pub fn new(auth_token: String, default_ttl: Duration) -> MomentoResult<Self> {
         SimpleCacheClientBuilder::new_with_explicit_agent_name(auth_token, default_ttl, "sdk", None)
     }
 
@@ -190,7 +186,7 @@ impl SimpleCacheClientBuilder {
         auth_token: String,
         default_ttl: Duration,
         momento_endpoint: String,
-    ) -> Result<Self, MomentoError> {
+    ) -> MomentoResult<Self> {
         SimpleCacheClientBuilder::new_with_explicit_agent_name(
             auth_token,
             default_ttl,
@@ -205,7 +201,7 @@ impl SimpleCacheClientBuilder {
         default_ttl: Duration,
         user_agent_name: &str,
         momento_endpoint: Option<String>,
-    ) -> Result<Self, MomentoError> {
+    ) -> MomentoResult<Self> {
         let momento_endpoints =
             match MomentoEndpointsResolver::resolve(&auth_token, momento_endpoint) {
                 Ok(endpoints) => endpoints,
@@ -229,18 +225,14 @@ impl SimpleCacheClientBuilder {
         }
     }
 
-    pub fn default_ttl(mut self, ttl: Duration) -> Result<Self, MomentoError> {
+    pub fn default_ttl(mut self, ttl: Duration) -> MomentoResult<Self> {
         utils::is_ttl_valid(ttl)?;
         self.default_ttl = ttl;
         Ok(self)
     }
 
     pub fn build(self) -> SimpleCacheClient {
-        let agent_value = format!(
-            "rust-{agent_name}:{version}",
-            agent_name = self.user_agent_name,
-            version = VERSION
-        );
+        let agent_value = user_agent(&self.user_agent_name);
         let control_interceptor = InterceptedService::new(
             self.control_channel,
             HeaderInterceptor::new(&self.auth_token, &agent_value),
@@ -276,7 +268,7 @@ impl SimpleCacheClient {
     /// # Arguments
     ///
     /// * `name` - name of cache to create
-    pub async fn create_cache(&mut self, name: &str) -> Result<(), MomentoError> {
+    pub async fn create_cache(&mut self, name: &str) -> MomentoResult<()> {
         utils::is_cache_name_valid(name)?;
         let request = Request::new(CreateCacheRequest {
             cache_name: name.to_string(),
@@ -309,7 +301,7 @@ impl SimpleCacheClient {
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
-    pub async fn delete_cache(&mut self, name: &str) -> Result<(), MomentoError> {
+    pub async fn delete_cache(&mut self, name: &str) -> MomentoResult<()> {
         utils::is_cache_name_valid(name)?;
         let request = Request::new(DeleteCacheRequest {
             cache_name: name.to_string(),
@@ -340,7 +332,7 @@ impl SimpleCacheClient {
     pub async fn list_caches(
         &mut self,
         next_token: Option<String>,
-    ) -> Result<MomentoListCacheResult, MomentoError> {
+    ) -> MomentoResult<MomentoListCacheResult> {
         let request = Request::new(ListCachesRequest {
             next_token: next_token.unwrap_or_default(),
         });
@@ -370,7 +362,7 @@ impl SimpleCacheClient {
     pub async fn create_signing_key(
         &mut self,
         ttl_minutes: u32,
-    ) -> Result<MomentoCreateSigningKeyResponse, MomentoError> {
+    ) -> MomentoResult<MomentoCreateSigningKeyResponse> {
         let request = Request::new(CreateSigningKeyRequest { ttl_minutes });
         let res = self
             .control_client
@@ -403,7 +395,7 @@ impl SimpleCacheClient {
     /// # Arguments
     ///
     /// * `key_id` - the ID of the key to revoke
-    pub async fn revoke_signing_key(&mut self, key_id: &str) -> Result<(), MomentoError> {
+    pub async fn revoke_signing_key(&mut self, key_id: &str) -> MomentoResult<()> {
         utils::is_key_id_valid(key_id)?;
         let request = Request::new(RevokeSigningKeyRequest {
             key_id: key_id.to_string(),
@@ -434,7 +426,7 @@ impl SimpleCacheClient {
     pub async fn list_signing_keys(
         &mut self,
         next_token: Option<&str>,
-    ) -> Result<MomentoListSigningKeyResult, MomentoError> {
+    ) -> MomentoResult<MomentoListSigningKeyResult> {
         let request = Request::new(ListSigningKeysRequest {
             next_token: next_token.unwrap_or_default().to_string(),
         });
@@ -499,15 +491,15 @@ impl SimpleCacheClient {
         key: impl IntoBytes,
         body: impl IntoBytes,
         ttl: impl Into<Option<Duration>>,
-    ) -> Result<MomentoSetResponse, MomentoError> {
-        utils::is_cache_name_valid(cache_name)?;
-
-        let mut request = tonic::Request::new(SetRequest {
-            cache_key: key.into_bytes(),
-            cache_body: body.into_bytes(),
-            ttl_milliseconds: self.expand_ttl_ms(ttl.into())?,
-        });
-        request_meta_data(&mut request, cache_name)?;
+    ) -> MomentoResult<MomentoSetResponse> {
+        let request = self.prep_request(
+            cache_name,
+            SetRequest {
+                cache_key: key.into_bytes(),
+                cache_body: body.into_bytes(),
+                ttl_milliseconds: self.expand_ttl_ms(ttl.into())?,
+            },
+        )?;
         let _ = self.data_client.set(request).await?;
         Ok(MomentoSetResponse {
             result: MomentoSetStatus::OK,
@@ -550,12 +542,14 @@ impl SimpleCacheClient {
         &mut self,
         cache_name: &str,
         key: impl IntoBytes,
-    ) -> Result<MomentoGetResponse, MomentoError> {
-        utils::is_cache_name_valid(cache_name)?;
-        let mut request = tonic::Request::new(GetRequest {
-            cache_key: key.into_bytes(),
-        });
-        request_meta_data(&mut request, cache_name)?;
+    ) -> MomentoResult<MomentoGetResponse> {
+        let request = self.prep_request(
+            cache_name,
+            GetRequest {
+                cache_key: key.into_bytes(),
+            },
+        )?;
+
         let response = self.data_client.get(request).await?.into_inner();
         match response.result() {
             ECacheResult::Hit => Ok(MomentoGetResponse {
@@ -566,7 +560,7 @@ impl SimpleCacheClient {
                 result: MomentoGetStatus::MISS,
                 value: response.cache_body,
             }),
-            _ => todo!(),
+            _ => unreachable!(),
         }
     }
 
@@ -614,25 +608,27 @@ impl SimpleCacheClient {
         dictionary_name: impl IntoBytes,
         dictionary: HashMap<K, V>,
         policy: CollectionTtl,
-    ) -> Result<MomentoDictionarySetResponse, MomentoError> {
+    ) -> MomentoResult<MomentoDictionarySetResponse> {
         utils::is_cache_name_valid(cache_name)?;
 
-        let mut dictionary = dictionary;
         let items = dictionary
-            .drain()
+            .into_iter()
             .map(|(k, v)| DictionaryFieldValuePair {
                 field: k.into_bytes(),
                 value: v.into_bytes(),
             })
             .collect();
 
-        let mut request = tonic::Request::new(DictionarySetRequest {
-            dictionary_name: dictionary_name.into_bytes(),
-            items,
-            ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
-            refresh_ttl: policy.refresh(),
-        });
-        request_meta_data(&mut request, cache_name)?;
+        let request = self.prep_request(
+            cache_name,
+            DictionarySetRequest {
+                dictionary_name: dictionary_name.into_bytes(),
+                items,
+                ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
+                refresh_ttl: policy.refresh()
+            },
+        )?;
+
         let _ = self.data_client.dictionary_set(request).await?;
 
         Ok(MomentoDictionarySetResponse {
@@ -698,40 +694,39 @@ impl SimpleCacheClient {
         cache_name: &str,
         dictionary: impl IntoBytes,
         fields: Vec<K>,
-    ) -> Result<MomentoDictionaryGetResponse, MomentoError> {
-        utils::is_cache_name_valid(cache_name)?;
-        let mut fields = fields;
+    ) -> MomentoResult<MomentoDictionaryGetResponse> {
+        use dictionary_get_response::Dictionary;
 
-        let mut fields: Vec<Vec<u8>> = fields.drain(..).map(|f| f.into_bytes()).collect();
+        let fields = convert_vec(fields);
+        let request = self.prep_request(
+            cache_name,
+            DictionaryGetRequest {
+                dictionary_name: dictionary.into_bytes(),
+                fields: fields.clone(),
+            },
+        )?;
 
-        let mut request = tonic::Request::new(DictionaryGetRequest {
-            dictionary_name: dictionary.into_bytes(),
-            fields: fields.clone(),
-        });
-        request_meta_data(&mut request, cache_name)?;
         let response = self.data_client.dictionary_get(request).await?.into_inner();
         match response.dictionary {
-            Some(dictionary_get_response::Dictionary::Found(mut response)) => {
-                let mut dictionary = HashMap::new();
-
+            Some(Dictionary::Found(response)) => {
                 // map the dictionary response parts to get responses
-                for (field, item) in fields.drain(..).zip(response.items.drain(..)) {
-                    if item.result() == ECacheResult::Hit {
-                        dictionary.insert(field, item.cache_body);
-                    }
-                }
+                let dictionary = HashMap::from_iter(
+                    fields
+                        .into_iter()
+                        .zip(response.items.into_iter())
+                        .filter(|(_, item)| item.result() == ECacheResult::Hit)
+                        .map(|(field, item)| (field, item.cache_body)),
+                );
 
                 Ok(MomentoDictionaryGetResponse {
                     result: MomentoDictionaryGetStatus::FOUND,
                     dictionary: Some(dictionary),
                 })
             }
-            Some(dictionary_get_response::Dictionary::Missing(_)) | None => {
-                Ok(MomentoDictionaryGetResponse {
-                    result: MomentoDictionaryGetStatus::MISSING,
-                    dictionary: None,
-                })
-            }
+            Some(Dictionary::Missing(_)) | None => Ok(MomentoDictionaryGetResponse {
+                result: MomentoDictionaryGetStatus::MISSING,
+                dictionary: None,
+            }),
         }
     }
 
@@ -787,20 +782,23 @@ impl SimpleCacheClient {
         &mut self,
         cache_name: &str,
         dictionary: impl IntoBytes,
-    ) -> Result<MomentoDictionaryFetchResponse, MomentoError> {
-        utils::is_cache_name_valid(cache_name)?;
+    ) -> MomentoResult<MomentoDictionaryFetchResponse> {
+        use dictionary_fetch_response::Dictionary;
 
-        let mut request = tonic::Request::new(DictionaryFetchRequest {
-            dictionary_name: dictionary.into_bytes(),
-        });
-        request_meta_data(&mut request, cache_name)?;
+        let request = self.prep_request(
+            cache_name,
+            DictionaryFetchRequest {
+                dictionary_name: dictionary.into_bytes(),
+            },
+        )?;
+
         let response = self
             .data_client
             .dictionary_fetch(request)
             .await?
             .into_inner();
         match response.dictionary {
-            Some(dictionary_fetch_response::Dictionary::Found(response)) => {
+            Some(Dictionary::Found(response)) => {
                 Ok(MomentoDictionaryFetchResponse {
                     result: MomentoDictionaryFetchStatus::FOUND,
                     dictionary: Some(
@@ -813,12 +811,10 @@ impl SimpleCacheClient {
                     ),
                 })
             }
-            Some(dictionary_fetch_response::Dictionary::Missing(_)) | None => {
-                Ok(MomentoDictionaryFetchResponse {
-                    result: MomentoDictionaryFetchStatus::MISSING,
-                    dictionary: None,
-                })
-            }
+            Some(Dictionary::Missing(_)) | None => Ok(MomentoDictionaryFetchResponse {
+                result: MomentoDictionaryFetchStatus::MISSING,
+                dictionary: None,
+            }),
         }
     }
 
@@ -872,28 +868,25 @@ impl SimpleCacheClient {
         cache_name: &str,
         dictionary: impl IntoBytes,
         fields: Fields<K>,
-    ) -> Result<(), MomentoError> {
-        utils::is_cache_name_valid(cache_name)?;
+    ) -> MomentoResult<()> {
+        use dictionary_delete_request::{All, Delete};
 
-        let mut request = match fields {
-            Fields::Some(mut fields) => {
-                let fields: Vec<Vec<u8>> = fields.drain(..).map(|f| f.into_bytes()).collect();
-                tonic::Request::new(DictionaryDeleteRequest {
-                    dictionary_name: dictionary.into_bytes(),
-                    delete: Some(dictionary_delete_request::Delete::Some(
-                        dictionary_delete_request::Some { fields },
-                    )),
-                })
-            }
-            Fields::All => tonic::Request::new(DictionaryDeleteRequest {
+        let request = match fields {
+            Fields::Some(fields) => DictionaryDeleteRequest {
                 dictionary_name: dictionary.into_bytes(),
-                delete: Some(dictionary_delete_request::Delete::All(
-                    dictionary_delete_request::All {},
-                )),
-            }),
+                delete: Some(Delete::Some(dictionary_delete_request::Some {
+                    fields: convert_vec(fields),
+                })),
+            },
+            Fields::All => DictionaryDeleteRequest {
+                dictionary_name: dictionary.into_bytes(),
+                delete: Some(Delete::All(All::default())),
+            },
         };
-        request_meta_data(&mut request, cache_name)?;
-        self.data_client.dictionary_delete(request).await?;
+
+        self.data_client
+            .dictionary_delete(self.prep_request(cache_name, request)?)
+            .await?;
         Ok(())
     }
 
@@ -955,17 +948,17 @@ impl SimpleCacheClient {
         field: impl IntoBytes,
         amount: i64,
         policy: CollectionTtl,
-    ) -> Result<MomentoDictionaryIncrementResponse, MomentoError> {
-        utils::is_cache_name_valid(cache_name)?;
-
-        let mut request = tonic::Request::new(DictionaryIncrementRequest {
-            dictionary_name: dictionary.into_bytes(),
-            field: field.into_bytes(),
-            amount,
-            ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
-            refresh_ttl: policy.refresh(),
-        });
-        request_meta_data(&mut request, cache_name)?;
+    ) -> MomentoResult<MomentoDictionaryIncrementResponse> {
+        let request = self.prep_request(
+            cache_name,
+            DictionaryIncrementRequest {
+                dictionary_name: dictionary.into_bytes(),
+                field: field.into_bytes(),
+                amount,
+                ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
+                refresh_ttl: policy.refresh(),
+            },
+        )?;
 
         let response = self
             .data_client
@@ -1028,20 +1021,20 @@ impl SimpleCacheClient {
         &mut self,
         cache_name: &str,
         set_name: impl IntoBytes,
-    ) -> Result<MomentoSetFetchResponse, MomentoError> {
+    ) -> MomentoResult<MomentoSetFetchResponse> {
         use set_fetch_response::Set;
 
-        utils::is_cache_name_valid(cache_name)?;
-
-        let mut request = tonic::Request::new(SetFetchRequest {
-            set_name: set_name.into_bytes(),
-        });
-        request_meta_data(&mut request, cache_name)?;
+        let request = self.prep_request(
+            cache_name,
+            SetFetchRequest {
+                set_name: set_name.into_bytes(),
+            },
+        )?;
 
         let response = self.data_client.set_fetch(request).await?.into_inner();
         Ok(MomentoSetFetchResponse {
             value: response.set.and_then(|set| match set {
-                Set::Found(found) => Some(found.elements.into_iter().collect()),
+                Set::Found(found) => Some(HashSet::from_iter(found.elements)),
                 Set::Missing(_) => None,
             }),
         })
@@ -1096,16 +1089,16 @@ impl SimpleCacheClient {
         set_name: impl IntoBytes,
         elements: Vec<E>,
         policy: CollectionTtl,
-    ) -> Result<(), MomentoError> {
-        utils::is_cache_name_valid(cache_name)?;
-
-        let mut request = tonic::Request::new(SetUnionRequest {
-            set_name: set_name.into_bytes(),
-            elements: elements.into_iter().map(|e| e.into_bytes()).collect(),
-            ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
-            refresh_ttl: policy.refresh(),
-        });
-        request_meta_data(&mut request, cache_name)?;
+    ) -> MomentoResult<()> {
+        let request = self.prep_request(
+            cache_name,
+            SetUnionRequest {
+                set_name: set_name.into_bytes(),
+                elements: convert_vec(elements),
+                ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
+                refresh_ttl: policy.refresh(),
+            },
+        )?;
 
         let _ = self.data_client.set_union(request).await?.into_inner();
         Ok(())
@@ -1137,16 +1130,13 @@ impl SimpleCacheClient {
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
-    pub async fn delete(
-        &mut self,
-        cache_name: &str,
-        key: impl IntoBytes,
-    ) -> Result<(), MomentoError> {
-        utils::is_cache_name_valid(cache_name)?;
-        let mut request = tonic::Request::new(DeleteRequest {
-            cache_key: key.into_bytes(),
-        });
-        request_meta_data(&mut request, cache_name)?;
+    pub async fn delete(&mut self, cache_name: &str, key: impl IntoBytes) -> MomentoResult<()> {
+        let request = self.prep_request(
+            cache_name,
+            DeleteRequest {
+                cache_key: key.into_bytes(),
+            },
+        )?;
         self.data_client.delete(request).await?.into_inner();
         Ok(())
     }
@@ -1157,6 +1147,14 @@ impl SimpleCacheClient {
 
         Ok(ttl.as_millis().try_into().unwrap_or(i64::MAX as u64))
     }
+    
+    fn prep_request<R>(&self, cache_name: &str, request: R) -> MomentoResult<tonic::Request<R>> {
+        utils::is_cache_name_valid(cache_name)?;
+
+        let mut request = tonic::Request::new(request);
+        request_meta_data(&mut request, cache_name)?;
+        Ok(request)
+    }
 }
 
 /// An enum that is used to indicate if an operation should apply to all fields
@@ -1164,4 +1162,8 @@ impl SimpleCacheClient {
 pub enum Fields<K> {
     All,
     Some(Vec<K>),
+}
+
+fn convert_vec<E: IntoBytes>(vec: Vec<E>) -> Vec<Vec<u8>> {
+    vec.into_iter().map(|e| e.into_bytes()).collect()
 }
