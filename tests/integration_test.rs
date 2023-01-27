@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use std::num::NonZeroU64;
     use std::{env, time::Duration};
 
     use momento::{response::MomentoGetStatus, SimpleCacheClient};
@@ -14,7 +13,7 @@ mod tests {
     ) -> Result<SimpleCacheClientBuilder, MomentoError> {
         SimpleCacheClientBuilder::new_with_explicit_agent_name(
             auth_token,
-            NonZeroU64::new(5).expect("expected a non-zero number"),
+            Duration::from_secs(5),
             "integration_test",
             None,
         )
@@ -77,12 +76,7 @@ mod tests {
         let ttl: u64 = 18446744073709551615;
         let max_ttl = u64::MAX / 1000_u64;
         let result = mm
-            .set(
-                &cache_name,
-                cache_key,
-                cache_body,
-                Some(NonZeroU64::new(ttl).expect("failed to get non zero u64")),
-            ) // 18446744073709551615 > 2^64/1000
+            .set(&cache_name, cache_key, cache_body, Duration::from_secs(ttl)) // 18446744073709551615 > 2^64/1000
             .await
             .unwrap_err();
         let _err_message = format!(
@@ -336,7 +330,7 @@ mod tests {
             &cache_name,
             cache_key.clone(),
             cache_body.clone(),
-            NonZeroU64::new(10000),
+            Duration::from_millis(10000),
         )
         .await
         .expect("failed to perform set");

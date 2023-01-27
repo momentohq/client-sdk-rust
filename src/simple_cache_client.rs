@@ -8,10 +8,13 @@ use momento_protos::{
     },
 };
 use serde_json::Value;
-use std::collections::{HashMap, HashSet};
 use std::convert::TryFrom;
 use std::iter::FromIterator;
-use std::num::NonZeroU64;
+use std::time::Duration;
+use std::{
+    collections::{HashMap, HashSet},
+    convert::TryInto,
+};
 use tonic::{codegen::InterceptedService, transport::Channel, Request};
 
 use crate::{endpoint_resolver::MomentoEndpointsResolver, utils::user_agent, MomentoResult};
@@ -40,13 +43,104 @@ where
     }
 }
 
+/// Represents the desired behavior for managing the TTL on collection objects.
+///
+/// For cache operations that modify a collection (dictionaries, lists, or sets), there
+/// are a few things to consider. The first time the collection is created, we need to
+/// set a TTL on it. For subsequent operations that modify the collection you may choose
+/// to update the TTL in order to prolong the life of the cached collection object, or
+/// you may choose to leave the TTL unmodified in order to ensure that the collection
+/// expires at the original TTL.
+///
+/// The default behaviour is to refresh the TTL (to prolong the life of the collection)
+/// each time it is written using the client's default item TTL.
+#[derive(Copy, Clone, Debug)]
+pub struct CollectionTtl {
+    ttl: Option<Duration>,
+    refresh: bool,
+}
+
+impl CollectionTtl {
+    /// Create a collection TTL with the provided `ttl` and `refresh` settings.
+    pub const fn new(ttl: Option<Duration>, refresh: bool) -> Self {
+        Self { ttl, refresh }
+    }
+
+    /// Create a collection TTL that updates the TTL for the collection any time it is
+    /// modified.
+    ///
+    /// If `ttl` is `None` then the default item TTL for the client will be used.
+    pub fn refresh_on_update(ttl: impl Into<Option<Duration>>) -> Self {
+        Self::new(ttl.into(), true)
+    }
+
+    /// Create a collection TTL that will not refresh the TTL for the collection when
+    /// it is updated.
+    ///
+    /// Use this if you want to be sure that the collection expires at the originally
+    /// specified time, even if you make modifications to the value of the collection.
+    ///
+    /// The TTL will still be used when a new collection is created. If `ttl` is `None`
+    /// then the default item TTL for the client will be used.
+    pub fn initialize_only(ttl: impl Into<Option<Duration>>) -> Self {
+        Self::new(ttl.into(), false)
+    }
+
+    /// Create a collection TTL that updates the TTL for the collection only if an
+    /// explicit `ttl` is provided here.
+    pub fn refresh_if_provided(ttl: impl Into<Option<Duration>>) -> Self {
+        let ttl = ttl.into();
+        Self::new(ttl, ttl.is_some())
+    }
+
+    /// Return a new collection TTL which uses the same TTL but refreshes on updates.
+    pub fn with_refresh_on_update(self) -> Self {
+        Self::new(self.ttl(), true)
+    }
+
+    /// Return a new collection TTL which uses the same TTL but does not refresh on
+    /// updates.
+    pub fn with_no_refresh_on_update(self) -> Self {
+        Self::new(self.ttl(), false)
+    }
+
+    /// Return a new collecton TTL which has the same refresh behaviour but uses the
+    /// provided TTL.
+    pub fn with_ttl(self, ttl: impl Into<Option<Duration>>) -> Self {
+        Self::new(ttl.into(), self.refresh())
+    }
+
+    /// The [`Duration`] after which the cached collection should be expired from the
+    /// cache.
+    ///
+    /// If `None`, the default item TTL for the client will be used.
+    pub fn ttl(&self) -> Option<Duration> {
+        self.ttl
+    }
+
+    /// Whether the collection's TTL will be refreshed on every update.
+    ///
+    /// If true, this will extend the time at which the collection would expire when
+    /// an update operation happens. Otherwise, the collection's TTL will only be set
+    /// when it is initially created.
+    pub fn refresh(&self) -> bool {
+        self.refresh
+    }
+}
+
+impl Default for CollectionTtl {
+    fn default() -> Self {
+        Self::new(None, true)
+    }
+}
+
 #[derive(Clone)]
 pub struct SimpleCacheClientBuilder {
     data_endpoint: String,
     control_channel: Channel,
     data_channel: Channel,
     auth_token: String,
-    default_ttl_seconds: NonZeroU64,
+    default_ttl: Duration,
     user_agent_name: String,
 }
 
@@ -69,28 +163,22 @@ impl SimpleCacheClientBuilder {
     /// # Arguments
     ///
     /// * `auth_token` - Momento Token
-    /// * `item_default_ttl_seconds` - Default TTL for items put into a cache.
+    /// * `default_ttl` - Default TTL for items put into a cache.
     /// # Examples
     ///
     /// ```
     /// # tokio_test::block_on(async {
     ///     use momento::SimpleCacheClientBuilder;
     ///     use std::env;
-    ///     use std::num::NonZeroU64;
+    ///     use std::time::Duration;
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let default_ttl = 30;
-    ///     let momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(default_ttl).unwrap())
+    ///     let momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
     ///         .expect("could not create a client")
     ///         .build();
     /// # })
     /// ```
-    pub fn new(auth_token: String, default_ttl_seconds: NonZeroU64) -> MomentoResult<Self> {
-        SimpleCacheClientBuilder::new_with_explicit_agent_name(
-            auth_token,
-            default_ttl_seconds,
-            "sdk",
-            None,
-        )
+    pub fn new(auth_token: String, default_ttl: Duration) -> MomentoResult<Self> {
+        SimpleCacheClientBuilder::new_with_explicit_agent_name(auth_token, default_ttl, "sdk", None)
     }
 
     /// Like new() above, but requires a momento_endpoint.
@@ -99,12 +187,12 @@ impl SimpleCacheClientBuilder {
     // endpoints.
     pub fn new_with_endpoint(
         auth_token: String,
-        default_ttl_seconds: NonZeroU64,
+        default_ttl: Duration,
         momento_endpoint: String,
     ) -> MomentoResult<Self> {
         SimpleCacheClientBuilder::new_with_explicit_agent_name(
             auth_token,
-            default_ttl_seconds,
+            default_ttl,
             "sdk",
             Some(momento_endpoint),
         )
@@ -113,7 +201,7 @@ impl SimpleCacheClientBuilder {
     /// Like new() above, but used for naming integrations.
     pub fn new_with_explicit_agent_name(
         auth_token: String,
-        default_ttl_seconds: NonZeroU64,
+        default_ttl: Duration,
         user_agent_name: &str,
         momento_endpoint: Option<String>,
     ) -> MomentoResult<Self> {
@@ -127,22 +215,22 @@ impl SimpleCacheClientBuilder {
         let control_channel = connect_channel_lazily(&momento_endpoints.control_endpoint.url)?;
         let data_channel = connect_channel_lazily(&momento_endpoints.data_endpoint.url)?;
 
-        match utils::is_ttl_valid(&default_ttl_seconds) {
+        match utils::is_ttl_valid(default_ttl) {
             Ok(_) => Ok(Self {
                 data_endpoint: momento_endpoints.data_endpoint.hostname,
                 control_channel,
                 data_channel,
                 auth_token,
-                default_ttl_seconds,
+                default_ttl,
                 user_agent_name: user_agent_name.to_string(),
             }),
             Err(e) => Err(e),
         }
     }
 
-    pub fn default_ttl_seconds(mut self, seconds: NonZeroU64) -> MomentoResult<Self> {
-        utils::is_ttl_valid(&seconds)?;
-        self.default_ttl_seconds = seconds;
+    pub fn default_ttl(mut self, ttl: Duration) -> MomentoResult<Self> {
+        utils::is_ttl_valid(ttl)?;
+        self.default_ttl = ttl;
         Ok(self)
     }
 
@@ -164,7 +252,7 @@ impl SimpleCacheClientBuilder {
             data_endpoint: self.data_endpoint,
             control_client,
             data_client,
-            item_default_ttl_seconds: self.default_ttl_seconds,
+            item_default_ttl: self.default_ttl,
         }
     }
 }
@@ -174,7 +262,7 @@ pub struct SimpleCacheClient {
     data_endpoint: String,
     control_client: ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>,
     data_client: ScsClient<InterceptedService<Channel, HeaderInterceptor>>,
-    item_default_ttl_seconds: NonZeroU64,
+    item_default_ttl: Duration,
 }
 
 impl SimpleCacheClient {
@@ -203,13 +291,13 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// use uuid::Uuid;
-    /// use std::num::NonZeroU64;
+    /// use std::time::Duration;
     /// # tokio_test::block_on(async {
     ///     use momento::SimpleCacheClientBuilder;
     ///     use std::env;
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(5).unwrap())
+    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))
     ///         .expect("could not create a client")
     ///         .build();
     ///     momento.create_cache(&cache_name).await;
@@ -231,13 +319,12 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// use uuid::Uuid;
-    /// use std::num::NonZeroU64;
+    /// use std::time::Duration;
     /// # tokio_test::block_on(async {
     ///     use momento::SimpleCacheClientBuilder;
-    ///     use std::env;
-    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    ///     let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(5).unwrap())
+    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))
     ///         .expect("could not create a client")
     ///         .build();
     ///     momento.create_cache(&cache_name).await;
@@ -274,7 +361,7 @@ impl SimpleCacheClient {
     ///
     /// # Arguments
     ///
-    /// * `ttl_minutes` - key's time-to-live in minutes
+    /// * `ttl_minutes` - key's time-to-live.
     pub async fn create_signing_key(
         &mut self,
         ttl_minutes: u32,
@@ -326,12 +413,12 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// use uuid::Uuid;
-    /// use std::num::NonZeroU64;
+    /// use std::time::Duration;
     /// # tokio_test::block_on(async {
     ///     use momento::SimpleCacheClientBuilder;
     ///     use std::env;
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(5).unwrap())
+    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))
     ///         .expect("could not create a client")
     ///         .build();
     ///     let ttl_minutes = 10;
@@ -376,28 +463,28 @@ impl SimpleCacheClient {
     /// # Arguments
     ///
     /// * `cache_name` - name of cache
-    /// * `cache_key`
-    /// * `cache_body`
-    /// * `ttl_seconds` - If None is passed, uses the client's default ttl
+    /// * `cache_key` - key of entry within the cache.
+    /// * `cache_body` - data stored within the cache entry.
+    /// * `ttl` - The TTL to use for the
     ///
     /// # Examples
     ///
     /// ```
     /// use uuid::Uuid;
-    /// use std::num::NonZeroU64;
+    /// use std::time::Duration;
     /// # tokio_test::block_on(async {
-    ///     use momento::SimpleCacheClientBuilder;
+    ///     use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///     use std::env;
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
+    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
     ///         .expect("could not create a client")
     ///         .build();
     ///     momento.create_cache(&cache_name).await;
     ///     momento.set(&cache_name, "cache_key", "cache_value", None).await;
     ///
     ///     // overriding default ttl
-    ///     momento.set(&cache_name, "cache_key", "cache_value", Some(NonZeroU64::new(10).unwrap())).await;
+    ///     momento.set(&cache_name, "cache_key", "cache_value", Duration::from_secs(10)).await;
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
@@ -406,19 +493,14 @@ impl SimpleCacheClient {
         cache_name: &str,
         key: impl IntoBytes,
         body: impl IntoBytes,
-        ttl_seconds: Option<NonZeroU64>,
+        ttl: impl Into<Option<Duration>>,
     ) -> MomentoResult<MomentoSetResponse> {
-        let temp_ttl = ttl_seconds.unwrap_or(self.item_default_ttl_seconds);
-        let ttl_to_use = match utils::is_ttl_valid(&temp_ttl) {
-            Ok(_) => temp_ttl.get() * 1000_u64,
-            Err(e) => return Err(e),
-        };
         let request = self.prep_request(
             cache_name,
             SetRequest {
                 cache_key: key.into_bytes(),
                 cache_body: body.into_bytes(),
-                ttl_milliseconds: ttl_to_use,
+                ttl_milliseconds: self.expand_ttl_ms(ttl.into())?,
             },
         )?;
         let _ = self.data_client.set(request).await?;
@@ -438,13 +520,13 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// use uuid::Uuid;
-    /// use std::num::NonZeroU64;
+    /// use std::time::Duration;
     /// # tokio_test::block_on(async {
     ///     use std::env;
     ///     use momento::{response::MomentoGetStatus, SimpleCacheClientBuilder};
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
+    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
     ///         .expect("could not create a client")
     ///         .build();
     ///     momento.create_cache(&cache_name).await;
@@ -495,21 +577,20 @@ impl SimpleCacheClient {
     /// * `cache_name` - name of cache
     /// * `dictionary_name` - name of the dictionary
     /// * `dictionary` - hashmap of dictionary key-value pairs
-    /// * `ttl_seconds` - If None is passed, uses the client's default ttl
-    /// * `refresh_ttl` - If true, the dictionary's TTL will be refreshed to prolong the life of the dictionary on every update.
+    /// * `policy` - TTL policy to use.
     ///
     /// # Examples
     ///
     /// ```
     /// use uuid::Uuid;
-    /// use std::num::NonZeroU64;
+    /// use std::time::Duration;
     /// # tokio_test::block_on(async {
-    ///     use momento::SimpleCacheClientBuilder;
+    ///     use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///     use std::collections::HashMap;
     ///     use std::env;
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
+    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
     ///         .expect("could not create a client")
     ///         .build();
     ///     momento.create_cache(&cache_name).await;
@@ -520,7 +601,7 @@ impl SimpleCacheClient {
     ///
     ///     let dictionary_name = Uuid::new_v4().to_string();
     ///
-    ///     momento.dictionary_set(&cache_name, &*dictionary_name, dictionary, None, true).await;
+    ///     momento.dictionary_set(&cache_name, &*dictionary_name, dictionary, CollectionTtl::default()).await;
     ///     momento.delete_cache(&cache_name).await;
     /// # })
     /// ```
@@ -529,14 +610,10 @@ impl SimpleCacheClient {
         cache_name: &str,
         dictionary_name: impl IntoBytes,
         dictionary: HashMap<K, V>,
-        ttl_seconds: Option<NonZeroU64>,
-        refresh_ttl: bool,
+        policy: CollectionTtl,
     ) -> MomentoResult<MomentoDictionarySetResponse> {
-        let temp_ttl = ttl_seconds.unwrap_or(self.item_default_ttl_seconds);
-        let ttl_to_use = match utils::is_ttl_valid(&temp_ttl) {
-            Ok(_) => temp_ttl.get() * 1000_u64,
-            Err(e) => return Err(e),
-        };
+        utils::is_cache_name_valid(cache_name)?;
+
         let items = dictionary
             .into_iter()
             .map(|(k, v)| DictionaryFieldValuePair {
@@ -550,8 +627,8 @@ impl SimpleCacheClient {
             DictionarySetRequest {
                 dictionary_name: dictionary_name.into_bytes(),
                 items,
-                ttl_milliseconds: ttl_to_use,
-                refresh_ttl,
+                ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
+                refresh_ttl: policy.refresh(),
             },
         )?;
 
@@ -577,7 +654,7 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// use uuid::Uuid;
-    /// use std::num::NonZeroU64;
+    /// use std::time::Duration;
     /// # tokio_test::block_on(async {
     ///     use std::env;
     ///     use momento::{
@@ -586,17 +663,17 @@ impl SimpleCacheClient {
     ///     };
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
+    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
     ///         .expect("could not create a client")
     ///         .build();
     ///     momento.create_cache(&cache_name).await;
     ///
     ///     let dictionary_name = Uuid::new_v4().to_string();
     ///
-    ///     let resp = momento.dictionary_get(&cache_name, &*dictionary_name, vec![
-    ///         "key1".to_string(),
-    ///         "key2".to_string(),
-    ///     ]).await.unwrap();
+    ///     let resp = momento
+    ///         .dictionary_get(&cache_name, &*dictionary_name, vec!["key1", "key2"])
+    ///         .await
+    ///         .unwrap();
     ///
     ///     match resp.result {
     ///         MomentoDictionaryGetStatus::FOUND => println!("dictionary found!"),
@@ -670,16 +747,15 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// use uuid::Uuid;
-    /// use std::num::NonZeroU64;
+    /// use std::time::Duration;
     /// # tokio_test::block_on(async {
-    ///     use std::env;
     ///     use momento::{
     ///         response::MomentoDictionaryFetchStatus,
     ///         SimpleCacheClientBuilder,
     ///     };
-    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    ///     let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
+    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
     ///         .expect("could not create a client")
     ///         .build();
     ///     momento.create_cache(&cache_name).await;
@@ -760,13 +836,13 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// use uuid::Uuid;
-    /// use std::num::NonZeroU64;
+    /// use std::time::Duration;
     /// # tokio_test::block_on(async {
     ///     use std::env;
     ///     use momento::{Fields, SimpleCacheClientBuilder};
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
+    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
     ///         .expect("could not create a client")
     ///         .build();
     ///     momento.create_cache(&cache_name).await;
@@ -796,12 +872,12 @@ impl SimpleCacheClient {
         dictionary: impl IntoBytes,
         fields: Fields<K>,
     ) -> MomentoResult<()> {
-        use dictionary_delete_request::{All, Delete, Some};
+        use dictionary_delete_request::{All, Delete};
 
         let request = match fields {
             Fields::Some(fields) => DictionaryDeleteRequest {
                 dictionary_name: dictionary.into_bytes(),
-                delete: Some(Delete::Some(Some {
+                delete: Some(Delete::Some(dictionary_delete_request::Some {
                     fields: convert_vec(fields),
                 })),
             },
@@ -834,21 +910,18 @@ impl SimpleCacheClient {
     /// * `dictionary` - name of dictionary.
     /// * `field` - name of the field to increment from the dictionary.
     /// * `amount` - quantity to add to the value.
-    /// * `ttl_milliseconds` - TTL for the dictionary in the cache. If not specified,
-    ///   then the client TTL will be used.
-    /// * `refresh_ttl` - whether to refresh the TTL of the collection.
+    /// * `policy` - the TTL policy to use.
     ///
     /// # Example
     /// ```
     /// # tokio_test::block_on(async {
     /// use uuid::Uuid;
-    /// use std::num::NonZeroU64;
-    /// use std::env;
-    /// use momento::SimpleCacheClientBuilder;
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
-    /// let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     /// let cache_name = Uuid::new_v4().to_string();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
     ///     .expect("unable to create momento client")
     ///     .build();
     /// momento.create_cache(&cache_name)
@@ -859,7 +932,7 @@ impl SimpleCacheClient {
     /// let field = Uuid::new_v4().to_string();
     ///
     /// let value = momento
-    ///     .dictionary_increment(&cache_name, dictionary, field, 10, None, false)
+    ///     .dictionary_increment(&cache_name, dictionary, field, 10, CollectionTtl::default())
     ///     .await
     ///     .expect("Failed to increment dictionary key")
     ///     .value;
@@ -877,8 +950,7 @@ impl SimpleCacheClient {
         dictionary: impl IntoBytes,
         field: impl IntoBytes,
         amount: i64,
-        ttl_milliseconds: Option<NonZeroU64>,
-        refresh_ttl: bool,
+        policy: CollectionTtl,
     ) -> MomentoResult<MomentoDictionaryIncrementResponse> {
         let request = self.prep_request(
             cache_name,
@@ -886,10 +958,8 @@ impl SimpleCacheClient {
                 dictionary_name: dictionary.into_bytes(),
                 field: field.into_bytes(),
                 amount,
-                ttl_milliseconds: ttl_milliseconds
-                    .map(|ttl| ttl.into())
-                    .unwrap_or(self.item_default_ttl_seconds.get() * 1000),
-                refresh_ttl,
+                ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
+                refresh_ttl: policy.refresh(),
             },
         )?;
 
@@ -918,14 +988,14 @@ impl SimpleCacheClient {
     /// ```
     /// # tokio_test::block_on(async {
     /// use uuid::Uuid;
-    /// use std::num::NonZeroU64;
+    /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
     ///
     /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be defined");
     /// let cache_name = Uuid::new_v4().to_string();
     /// let set_name = Uuid::new_v4().to_string();
     ///
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
     ///     .expect("could not create a client")
     ///     .build();
     ///
@@ -983,21 +1053,20 @@ impl SimpleCacheClient {
     /// * `cache_name` - name of cache.
     /// * `set_name` - name of the set.
     /// * `elements` - elements to be unioned with the existing set within the cache.
-    /// * `ttl_milliseconds` - ttl to use for the element. If `None`, uses the client default ttl.
-    /// * `refresh_ttl` - whether to refresh the TTL when unioning with an existing set.
+    /// * `policy` - the TTL policy to use.
     ///
     /// # Example
     /// ```
     /// # tokio_test::block_on(async {
     /// use uuid::Uuid;
-    /// use std::num::NonZeroU64;
-    /// use momento::SimpleCacheClientBuilder;
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be defined");
     /// let cache_name = Uuid::new_v4().to_string();
     /// let set_name = Uuid::new_v4().to_string();
     ///
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
     ///     .expect("could not create a client")
     ///     .build();
     ///
@@ -1007,13 +1076,7 @@ impl SimpleCacheClient {
     ///     .expect("unable to create the cache");
     ///
     /// momento
-    ///     .set_union(
-    ///         &cache_name,
-    ///         set_name,
-    ///         vec!["a", "b", "c"],
-    ///         None,
-    ///         false
-    ///     )
+    ///     .set_union(&cache_name, set_name, vec!["a", "b", "c"], CollectionTtl::default())
     ///     .await
     ///     .expect("Failed to run a set union");
     ///
@@ -1028,18 +1091,15 @@ impl SimpleCacheClient {
         cache_name: &str,
         set_name: impl IntoBytes,
         elements: Vec<E>,
-        ttl_milliseconds: Option<NonZeroU64>,
-        refresh_ttl: bool,
+        policy: CollectionTtl,
     ) -> MomentoResult<()> {
         let request = self.prep_request(
             cache_name,
             SetUnionRequest {
                 set_name: set_name.into_bytes(),
                 elements: convert_vec(elements),
-                ttl_milliseconds: ttl_milliseconds
-                    .map(|x| x.get())
-                    .unwrap_or(self.item_default_ttl_seconds.get() * 1000),
-                refresh_ttl,
+                ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
+                refresh_ttl: policy.refresh(),
             },
         )?;
 
@@ -1058,13 +1118,13 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// use uuid::Uuid;
-    /// use std::num::NonZeroU64;
+    /// use std::time::Duration;
     /// # tokio_test::block_on(async {
     ///     use std::env;
-    ///     use momento::{response::MomentoGetStatus, SimpleCacheClientBuilder};
+    ///     use momento::{response::MomentoGetStatus, CollectionTtl, SimpleCacheClientBuilder};
     ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, NonZeroU64::new(30).unwrap())
+    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
     ///         .expect("could not create a client")
     ///         .build();
     ///     momento.create_cache(&cache_name).await;
@@ -1082,6 +1142,13 @@ impl SimpleCacheClient {
         )?;
         self.data_client.delete(request).await?.into_inner();
         Ok(())
+    }
+
+    fn expand_ttl_ms(&self, ttl: Option<Duration>) -> MomentoResult<u64> {
+        let ttl = ttl.unwrap_or(self.item_default_ttl);
+        utils::is_ttl_valid(ttl)?;
+
+        Ok(ttl.as_millis().try_into().unwrap_or(i64::MAX as u64))
     }
 
     fn prep_request<R>(&self, cache_name: &str, request: R) -> MomentoResult<tonic::Request<R>> {
