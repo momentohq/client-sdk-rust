@@ -20,7 +20,7 @@ pub struct TopicClient {
 /// Work with topics, publishing and subscribing.
 /// ```rust
 /// use momento::preview::topics::TopicClient;
-/// 
+///
 /// async {
 ///     // Get a topic client
 ///     let client = TopicClient::connect(
@@ -28,13 +28,13 @@ pub struct TopicClient {
 ///         Some("some.momento.endpoint".to_string()),
 ///         Some("github-demo")
 ///     ).expect("could not connect");
-/// 
+///
 ///     // Make a subscription
 ///     let mut subscription = client
 ///         .subscribe("some_cache".to_string(), "some topic".to_string(), None)
 ///         .await
 ///         .expect("subscribe rpc failed");
-/// 
+///
 ///     // Consume the subscription
 ///     while let Some(item) = subscription.item().await.expect("subscription stream interrupted") {
 ///         println!("{item:?}")
