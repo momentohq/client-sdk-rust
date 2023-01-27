@@ -42,3 +42,8 @@ impl ListCacheEntry {
 }
 
 pub type MomentoListFetchResponse = Option<ListCacheEntry>;
+
+pub enum MomentoSetDifferenceResponse {
+    Found,
+    Missing,
+}

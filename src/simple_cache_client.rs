@@ -26,8 +26,8 @@ use crate::response::{
     MomentoDictionaryFetchStatus, MomentoDictionaryGetResponse, MomentoDictionaryGetStatus,
     MomentoDictionaryIncrementResponse, MomentoDictionarySetResponse, MomentoDictionarySetStatus,
     MomentoError, MomentoGetResponse, MomentoGetStatus, MomentoListCacheResult,
-    MomentoListFetchResponse, MomentoListSigningKeyResult, MomentoSetFetchResponse,
-    MomentoSetResponse, MomentoSetStatus, MomentoSigningKey,
+    MomentoListFetchResponse, MomentoListSigningKeyResult, MomentoSetDifferenceResponse,
+    MomentoSetFetchResponse, MomentoSetResponse, MomentoSetStatus, MomentoSigningKey,
 };
 use crate::utils;
 
@@ -1672,6 +1672,99 @@ impl SimpleCacheClient {
 
         let _ = self.data_client.set_union(request).await?.into_inner();
         Ok(())
+    }
+
+    /// Remove items from an existing set in the cache.
+    ///
+    /// After this operation the set will contain any elements in the original set that
+    /// were not contained in this request. Note that this is a no-op there is no such
+    /// set in the cache already.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - the name of the cache.
+    /// * `set_name` - the name of the set.
+    /// * `elements` - elements to remove from the set in the cache.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    /// use momento::response::MomentoSetDifferenceResponse;
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.set_union(&cache_name, "test set", vec!["a", "b", "c", "d"], ttl).await?;
+    /// momento.set_difference(&cache_name, "test set", vec!["b", "d"]).await?;
+    ///
+    /// let set = momento.set_fetch(&cache_name, "test set").await?.value.unwrap();
+    ///
+    /// assert!(set.contains("a".as_bytes()));
+    /// assert!(set.contains("c".as_bytes()));
+    /// assert!(!set.contains("b".as_bytes()));
+    /// assert!(!set.contains("d".as_bytes()));
+    /// assert_eq!(set.len(), 2);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn set_difference<E: IntoBytes>(
+        &mut self,
+        cache_name: &str,
+        set_name: impl IntoBytes,
+        elements: Vec<E>,
+    ) -> MomentoResult<MomentoSetDifferenceResponse> {
+        use set_difference_request::subtrahend::{Set as SubtrahendSetSet, SubtrahendSet};
+        use set_difference_request::{Difference, Subtrahend};
+        use set_difference_response::Set;
+
+        let request = self.prep_request(
+            cache_name,
+            SetDifferenceRequest {
+                set_name: set_name.into_bytes(),
+                difference: Some(Difference::Subtrahend(Subtrahend {
+                    subtrahend_set: Some(SubtrahendSet::Set(SubtrahendSetSet {
+                        elements: elements.into_iter().map(|e| e.into_bytes()).collect(),
+                    })),
+                })),
+            },
+        )?;
+
+        let response = self.data_client.set_difference(request).await?.into_inner();
+
+        Ok(match response.set {
+            Some(Set::Found(_)) => MomentoSetDifferenceResponse::Found,
+            _ => MomentoSetDifferenceResponse::Missing,
+        })
+    }
+
+    /// This is an alias for [`set_union`].
+    ///
+    /// [`set_union`]: SimpleCacheClient::set_union
+    pub async fn set_add_elements<E: IntoBytes>(
+        &mut self,
+        cache_name: &str,
+        set_name: impl IntoBytes,
+        elements: Vec<E>,
+        policy: CollectionTtl,
+    ) -> MomentoResult<()> {
+        self.set_union(cache_name, set_name, elements, policy).await
+    }
+
+    /// This is an alias for [`set_difference`].
+    ///
+    /// [`set_difference`]: SimpleCacheClient::set_difference
+    pub async fn set_remove_elements<E: IntoBytes>(
+        &mut self,
+        cache_name: &str,
+        set_name: impl IntoBytes,
+        elements: Vec<E>,
+    ) -> MomentoResult<MomentoSetDifferenceResponse> {
+        self.set_difference(cache_name, set_name, elements).await
     }
 
     /// Deletes an item from a Momento Cache
