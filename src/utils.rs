@@ -1,4 +1,8 @@
-use tonic::transport::{Channel, ClientTlsConfig, Uri};
+use thiserror::Error;
+use tonic::{
+    codegen::http::uri::InvalidUri,
+    transport::{Channel, ClientTlsConfig, Uri},
+};
 
 use crate::response::MomentoError;
 use crate::MomentoResult;
@@ -37,7 +41,25 @@ pub fn is_key_id_valid(key_id: &str) -> Result<(), MomentoError> {
     Ok(())
 }
 
-pub fn connect_channel_lazily(uri_string: &str) -> Result<Channel, MomentoError> {
+#[derive(Debug, Error)]
+pub(crate) enum ChannelConnectError {
+    #[error("URI was invalid: {}", .0)]
+    BadUri(#[from] InvalidUri),
+
+    #[error("unable to connect to server: {}", .0)]
+    Connection(#[from] tonic::transport::Error),
+}
+
+impl From<ChannelConnectError> for MomentoError {
+    fn from(value: ChannelConnectError) -> Self {
+        match value {
+            ChannelConnectError::BadUri(err) => err.into(),
+            ChannelConnectError::Connection(err) => err.into(),
+        }
+    }
+}
+
+pub(crate) fn connect_channel_lazily(uri_string: &str) -> Result<Channel, ChannelConnectError> {
     let uri = Uri::try_from(uri_string)?;
     let endpoint = Channel::builder(uri)
         .keep_alive_while_idle(true)
