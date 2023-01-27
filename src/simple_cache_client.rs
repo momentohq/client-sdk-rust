@@ -8,10 +8,13 @@ use momento_protos::{
     },
 };
 use serde_json::Value;
-use std::{collections::{HashMap, HashSet}, convert::TryInto};
 use std::convert::TryFrom;
 use std::iter::FromIterator;
 use std::time::Duration;
+use std::{
+    collections::{HashMap, HashSet},
+    convert::TryInto,
+};
 use tonic::{codegen::InterceptedService, transport::Channel, Request};
 
 use crate::{endpoint_resolver::MomentoEndpointsResolver, utils::user_agent, MomentoResult};
@@ -625,7 +628,7 @@ impl SimpleCacheClient {
                 dictionary_name: dictionary_name.into_bytes(),
                 items,
                 ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
-                refresh_ttl: policy.refresh()
+                refresh_ttl: policy.refresh(),
             },
         )?;
 
@@ -1147,7 +1150,7 @@ impl SimpleCacheClient {
 
         Ok(ttl.as_millis().try_into().unwrap_or(i64::MAX as u64))
     }
-    
+
     fn prep_request<R>(&self, cache_name: &str, request: R) -> MomentoResult<tonic::Request<R>> {
         utils::is_cache_name_valid(cache_name)?;
 

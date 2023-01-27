@@ -1,7 +1,7 @@
 use tonic::transport::{Channel, ClientTlsConfig, Uri};
 
-use crate::MomentoResult;
 use crate::response::MomentoError;
+use crate::MomentoResult;
 use std::convert::TryFrom;
 use std::time::{self, Duration};
 
