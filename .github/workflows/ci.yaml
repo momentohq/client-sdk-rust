@@ -15,8 +15,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Install protoc
+        run: ./install_protoc.sh
+
       - name: Commitlint and Other Shared Build Steps
         uses: momentohq/standards-and-practices/github-actions/shared-build@gh-actions-v1
+
+      - uses: Swatinem/rust-cache@v2
 
       - name: rustfmt
         run: cargo fmt -- --check
@@ -31,6 +36,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: Install protoc
+        run: ./install_protoc.sh
+
+      - uses: Swatinem/rust-cache@v2
+
       - name: Build
         run: cargo build --verbose
       - name: Cargo Check
@@ -48,8 +59,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Install protoc
+        run: ./install_protoc.sh
+
       - name: Commitlint and Other Shared Build Steps
         uses: momentohq/standards-and-practices/github-actions/shared-build@gh-actions-v1
+
+      - uses: Swatinem/rust-cache@v2
 
       - name: rustfmt -> rigorous lint via Clippy -> build
         id: validation

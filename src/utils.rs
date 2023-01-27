@@ -3,6 +3,8 @@ use tonic::transport::{Channel, ClientTlsConfig, Uri};
 use crate::response::MomentoError;
 use std::{convert::TryFrom, num::NonZeroU64, time};
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 pub fn is_ttl_valid(ttl: &NonZeroU64) -> Result<(), MomentoError> {
     let max_ttl = u64::MAX / 1000_u64;
     if ttl.get() > max_ttl {
@@ -39,4 +41,8 @@ pub fn connect_channel_lazily(uri_string: &str) -> Result<Channel, MomentoError>
         .http2_keep_alive_interval(time::Duration::from_secs(2 * 60))
         .tls_config(ClientTlsConfig::default())?;
     Ok(endpoint.connect_lazy())
+}
+
+pub fn user_agent(user_agent_name: &str) -> String {
+    format!("rust-{user_agent_name}:{VERSION}")
 }

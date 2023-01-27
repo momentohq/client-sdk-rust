@@ -14,7 +14,7 @@ use std::iter::FromIterator;
 use std::num::NonZeroU64;
 use tonic::{codegen::InterceptedService, transport::Channel, Request};
 
-use crate::{endpoint_resolver::MomentoEndpointsResolver, MomentoResult};
+use crate::{endpoint_resolver::MomentoEndpointsResolver, utils::user_agent, MomentoResult};
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 
 use crate::response::{
@@ -26,8 +26,6 @@ use crate::response::{
     MomentoSigningKey,
 };
 use crate::utils;
-
-const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub trait IntoBytes {
     fn into_bytes(self) -> Vec<u8>;
@@ -149,11 +147,7 @@ impl SimpleCacheClientBuilder {
     }
 
     pub fn build(self) -> SimpleCacheClient {
-        let agent_value = format!(
-            "rust-{agent_name}:{version}",
-            agent_name = self.user_agent_name,
-            version = VERSION
-        );
+        let agent_value = user_agent(&self.user_agent_name);
         let control_interceptor = InterceptedService::new(
             self.control_channel,
             HeaderInterceptor::new(&self.auth_token, &agent_value),
