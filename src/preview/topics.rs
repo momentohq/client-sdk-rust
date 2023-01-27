@@ -13,12 +13,35 @@ use crate::{
 
 type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 
-pub struct Pubsub {
+pub struct TopicClient {
     client: pubsub::pubsub_client::PubsubClient<ChannelType>,
 }
 
 /// Work with topics, publishing and subscribing.
-impl Pubsub {
+/// ```rust
+/// use momento::preview::topics::TopicClient;
+/// 
+/// async {
+///     // Get a topic client
+///     let client = TopicClient::connect(
+///         "token".to_string(),
+///         Some("some.momento.endpoint".to_string()),
+///         Some("github-demo")
+///     ).expect("could not connect");
+/// 
+///     // Make a subscription
+///     let mut subscription = client
+///         .subscribe("some_cache".to_string(), "some topic".to_string(), None)
+///         .await
+///         .expect("subscribe rpc failed");
+/// 
+///     // Consume the subscription
+///     while let Some(item) = subscription.item().await.expect("subscription stream interrupted") {
+///         println!("{item:?}")
+///     }
+/// };
+/// ```
+impl TopicClient {
     pub fn connect(
         auth_token: String,
         momento_endpoint: Option<String>,
@@ -47,7 +70,7 @@ impl Pubsub {
         topic: String,
         value: impl IntoTopicValue,
     ) -> Result<(), MomentoError> {
-        Pubsub::actually_publish(&mut self.client.clone(), cache_name, topic, value).await
+        TopicClient::actually_publish(&mut self.client.clone(), cache_name, topic, value).await
     }
 
     /// Publish a value to a topic.
@@ -61,7 +84,7 @@ impl Pubsub {
         topic: String,
         value: impl IntoTopicValue,
     ) -> Result<(), MomentoError> {
-        Pubsub::actually_publish(&mut self.client, cache_name, topic, value).await
+        TopicClient::actually_publish(&mut self.client, cache_name, topic, value).await
     }
 
     async fn actually_publish(
@@ -91,7 +114,7 @@ impl Pubsub {
         topic: String,
         resume_at_topic_sequence_number: Option<u64>,
     ) -> Result<Subscription, MomentoError> {
-        Pubsub::actually_subscribe(
+        TopicClient::actually_subscribe(
             &mut self.client.clone(),
             cache_name,
             topic,
@@ -111,7 +134,7 @@ impl Pubsub {
         topic: String,
         resume_at_topic_sequence_number: Option<u64>,
     ) -> Result<Subscription, MomentoError> {
-        Pubsub::actually_subscribe(
+        TopicClient::actually_subscribe(
             &mut self.client,
             cache_name,
             topic,
