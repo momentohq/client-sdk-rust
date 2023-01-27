@@ -219,7 +219,12 @@ impl Subscription {
                         }
                         None => None, // Broken protocol
                     },
-                    pubsub::subscription_item::Kind::Discontinuity(_) => todo!(),
+                    pubsub::subscription_item::Kind::Discontinuity(discontinuity) => {
+                        Some(SubscriptionItem::Discontinuity(Discontinuity {
+                            last_sequence_number: Some(discontinuity.last_topic_sequence),
+                            new_sequence_number: discontinuity.new_topic_sequence,
+                        }))
+                    }
                 },
                 None => None, // Broken protocol,
             },
