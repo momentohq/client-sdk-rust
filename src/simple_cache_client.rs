@@ -290,19 +290,22 @@ impl SimpleCacheClient {
     /// # Examples
     ///
     /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # tokio_test::block_on(async {
     /// use uuid::Uuid;
     /// use std::time::Duration;
-    /// # tokio_test::block_on(async {
-    ///     use momento::SimpleCacheClientBuilder;
-    ///     use std::env;
-    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))
-    ///         .expect("could not create a client")
-    ///         .build();
-    ///     momento.create_cache(&cache_name).await;
-    ///     momento.delete_cache(&cache_name).await;
+    /// use momento::SimpleCacheClientBuilder;
+    ///
+    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    /// let cache_name = Uuid::new_v4().to_string();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))?
+    ///     .build();
+    ///
+    /// momento.create_cache(&cache_name).await?;
+    /// momento.delete_cache(&cache_name).await?;
+    /// # Ok(())
     /// # })
+    /// # }
     /// ```
     pub async fn delete_cache(&mut self, name: &str) -> MomentoResult<()> {
         utils::is_cache_name_valid(name)?;
