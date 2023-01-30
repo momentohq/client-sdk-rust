@@ -425,19 +425,29 @@ impl SimpleCacheClient {
     /// # Examples
     ///
     /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # tokio_test::block_on(async {
+    /// # use futures::FutureExt;
     /// use uuid::Uuid;
     /// use std::time::Duration;
-    /// # tokio_test::block_on(async {
-    ///     use momento::SimpleCacheClientBuilder;
-    ///     use std::env;
-    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))
-    ///         .expect("could not create a client")
-    ///         .build();
-    ///     let ttl_minutes = 10;
-    ///     momento.create_signing_key(ttl_minutes).await;
-    ///     let keys = momento.list_signing_keys(None).await;
+    /// use momento::SimpleCacheClientBuilder;
+    ///
+    /// let ttl_minutes = 10;
+    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))?
+    ///     .build();
+    ///
+    /// let key = momento.create_signing_key(ttl_minutes).await?;
+    /// # let result = std::panic::AssertUnwindSafe(async {
+    /// let list = momento.list_signing_keys(None).await?.signing_keys;
+    /// assert!(list.iter().any(|sk| sk.key_id == key.key_id));
+    /// # Ok(())
+    /// # }).catch_unwind().await;
+    ///
+    /// momento.revoke_signing_key(&key.key_id).await?;
+    /// # result.unwrap_or_else(|e| std::panic::resume_unwind(e))
     /// # })
+    /// # }
     /// ```
     pub async fn list_signing_keys(
         &mut self,
