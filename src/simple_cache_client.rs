@@ -550,27 +550,35 @@ impl SimpleCacheClient {
     /// # Examples
     ///
     /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # tokio_test::block_on(async {
+    /// # use futures::FutureExt;
     /// use uuid::Uuid;
     /// use std::time::Duration;
-    /// # tokio_test::block_on(async {
-    ///     use std::env;
-    ///     use momento::{response::MomentoGetStatus, SimpleCacheClientBuilder};
-    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
-    ///         .expect("could not create a client")
-    ///         .build();
-    ///     momento.create_cache(&cache_name).await;
-    ///     let resp = momento.get(&cache_name, "cache_key").await.unwrap();
-    ///     match resp.result {
-    ///         MomentoGetStatus::HIT => println!("cache hit!"),
-    ///         MomentoGetStatus::MISS => println!("cache miss"),
-    ///         _ => println!("error occurred")
-    ///     };
+    /// use momento::SimpleCacheClientBuilder;
+    /// use momento::response::MomentoGetStatus;
     ///
-    ///     println!("cache value: {}", resp.as_string());
-    ///     momento.delete_cache(&cache_name).await;
+    /// let cache_name = Uuid::new_v4().to_string();
+    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.create_cache(&cache_name).await?;
+    /// # let result = std::panic::AssertUnwindSafe(async {
+    /// let resp = momento.get(&cache_name, "cache_key").await?;
+    /// match resp.result {
+    ///     MomentoGetStatus::HIT => println!("cache hit!"),
+    ///     MomentoGetStatus::MISS => println!("cache miss"),
+    ///     _ => println!("error occurred")
+    /// }
+    ///
+    /// println!("cache value: {}", resp.as_string());
+    /// # Ok(())
+    /// # }).catch_unwind().await;
+    /// # momento.delete_cache(&cache_name).await?;
+    /// # result.unwrap_or_else(|e| std::panic::resume_unwind(e))
     /// # })
+    /// # }
     /// ```
     pub async fn get(
         &mut self,
