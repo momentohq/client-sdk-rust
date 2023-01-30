@@ -493,23 +493,31 @@ impl SimpleCacheClient {
     /// # Examples
     ///
     /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # tokio_test::block_on(async {
+    /// # use futures::FutureExt;
     /// use uuid::Uuid;
     /// use std::time::Duration;
-    /// # tokio_test::block_on(async {
-    ///     use momento::{CollectionTtl, SimpleCacheClientBuilder};
-    ///     use std::env;
-    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
-    ///         .expect("could not create a client")
-    ///         .build();
-    ///     momento.create_cache(&cache_name).await;
-    ///     momento.set(&cache_name, "cache_key", "cache_value", None).await;
+    /// use momento::SimpleCacheClientBuilder;
     ///
-    ///     // overriding default ttl
-    ///     momento.set(&cache_name, "cache_key", "cache_value", Duration::from_secs(10)).await;
-    ///     momento.delete_cache(&cache_name).await;
+    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    /// let cache_name = Uuid::new_v4().to_string();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.create_cache(&cache_name).await?;
+    /// # let result = std::panic::AssertUnwindSafe(async {
+    /// // use the default client TTL (30 seconds in this case)
+    /// momento.set(&cache_name, "key", "value", None).await?;
+    ///
+    /// // override the default TTL
+    /// momento.set(&cache_name, "key", "value", Duration::from_secs(10)).await?;
+    /// # Ok(())
+    /// # }).catch_unwind().await;
+    /// # momento.delete_cache(&cache_name).await?;
+    /// # result.unwrap_or_else(|e| std::panic::resume_unwind(e))
     /// # })
+    /// # }
     /// ```
     pub async fn set(
         &mut self,
