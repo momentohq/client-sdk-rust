@@ -1032,39 +1032,26 @@ impl SimpleCacheClient {
     ///
     /// # Example
     /// ```
-    /// # tokio_test::block_on(async {
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
     ///
-    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be defined");
-    /// let cache_name = Uuid::new_v4().to_string();
-    /// let set_name = Uuid::new_v4().to_string();
-    ///
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
-    ///     .expect("could not create a client")
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
     ///
-    /// momento.create_cache(&cache_name).await;
-    ///
-    /// let response = momento
-    ///     .set_fetch(&cache_name, set_name)
-    ///     .await
-    ///     .expect("Failed to fetch the set");
-    /// if let Some(set) = response.value {
-    ///     println!("set entries:");
-    ///     for entry in &set {
-    ///         println!("{:?}", entry);
-    ///     }
-    /// } else {
-    ///     println!("set not found!");
+    /// match momento.set_fetch(&cache_name, "test set").await?.value {
+    ///     Some(set) => {
+    ///         println!("set entries:");
+    ///         for entry in &set {
+    ///             println!("{:?}", entry);
+    ///         }
+    ///     },
+    ///     None => println!("set not found!"),
     /// }
-    ///
-    /// momento
-    ///     .delete_cache(&cache_name)
-    ///     .await
-    ///     .expect("Failed to delete the cache");
+    /// # Ok(())
     /// # })
+    /// # }
     /// ```
     pub async fn set_fetch(
         &mut self,
