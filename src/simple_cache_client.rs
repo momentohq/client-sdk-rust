@@ -549,33 +549,24 @@ impl SimpleCacheClient {
     /// # Examples
     ///
     /// ```
-    /// # fn main() -> anyhow::Result<()> {
-    /// # tokio_test::block_on(async {
-    /// # use futures::FutureExt;
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
     /// use momento::response::MomentoGetStatus;
     ///
-    /// let cache_name = Uuid::new_v4().to_string();
-    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
     ///
-    /// momento.create_cache(&cache_name).await?;
-    /// # let result = std::panic::AssertUnwindSafe(async {
-    /// let resp = momento.get(&cache_name, "cache_key").await?;
-    /// match resp.result {
-    ///     MomentoGetStatus::HIT => println!("cache hit!"),
-    ///     MomentoGetStatus::MISS => println!("cache miss"),
-    ///     _ => println!("error occurred")
-    /// }
+    /// momento.set(&cache_name, "present", "value", None).await?;
     ///
-    /// println!("cache value: {}", resp.as_string());
+    /// let present = momento.get(&cache_name, "present").await?;
+    /// let missing = momento.get(&cache_name, "missing").await?;
+    ///
+    /// assert!(matches!(present.result, MomentoGetStatus::HIT));
+    /// assert!(matches!(missing.result, MomentoGetStatus::MISS));
+    /// assert_eq!(present.value, b"value");
     /// # Ok(())
-    /// # }).catch_unwind().await;
-    /// # momento.delete_cache(&cache_name).await?;
-    /// # result.unwrap_or_else(|e| std::panic::resume_unwind(e))
     /// # })
     /// # }
     /// ```
@@ -620,34 +611,20 @@ impl SimpleCacheClient {
     /// # Examples
     ///
     /// ```
-    /// # fn main() -> anyhow::Result<()> {
-    /// # tokio_test::block_on(async {
-    /// # use futures::FutureExt;
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
+    /// use std::iter::FromIterator;
     /// use std::collections::HashMap;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
-    /// let cache_name = Uuid::new_v4().to_string();
-    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    /// let ttl = CollectionTtl::default();
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
     ///
-    /// momento.create_cache(&cache_name).await?;
-    /// # let result = std::panic::AssertUnwindSafe(async {
-    /// let mut dictionary = HashMap::new();
-    /// dictionary.insert("key1", "value1");
-    /// dictionary.insert("key2", "value2");
-    ///
-    /// let dictionary_name = Uuid::new_v4().to_string();
-    ///
-    /// momento
-    ///     .dictionary_set(&cache_name, dictionary_name, dictionary, CollectionTtl::default())
-    ///     .await?;
+    /// let dict = HashMap::from_iter([("k1", "v1"), ("k2", "v2")]);
+    /// momento.dictionary_set(&cache_name, "dict", dict, ttl).await?;
     /// # Ok(())
-    /// # }).catch_unwind().await;
-    /// # momento.delete_cache(&cache_name).await?;
-    /// # result.unwrap_or_else(|e| std::panic::resume_unwind(e))
     /// # })
     /// # }
     /// ```
