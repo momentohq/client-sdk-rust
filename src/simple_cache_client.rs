@@ -960,35 +960,22 @@ impl SimpleCacheClient {
     ///
     /// # Example
     /// ```
-    /// # tokio_test::block_on(async {
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
-    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    /// let cache_name = Uuid::new_v4().to_string();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
-    ///     .expect("unable to create momento client")
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
-    /// momento.create_cache(&cache_name)
-    ///     .await
-    ///     .expect("Failed to create cache");
     ///
-    /// let dictionary = Uuid::new_v4().to_string();
-    /// let field = Uuid::new_v4().to_string();
+    /// let resp = momento.dictionary_increment(&cache_name, "dict", "key", 10, ttl).await?;
     ///
-    /// let value = momento
-    ///     .dictionary_increment(&cache_name, dictionary, field, 10, CollectionTtl::default())
-    ///     .await
-    ///     .expect("Failed to increment dictionary key")
-    ///     .value;
-    ///
-    /// println!("Dicationary key has been incremented to {}", value);
-    ///
-    /// momento.delete_cache(&cache_name)
-    ///     .await
-    ///     .expect("Failed to delete cache");
+    /// // key was empty before, now it is 10
+    /// assert_eq!(resp.value, 10);
+    /// # Ok(())
     /// # })
+    /// # }
     /// ```
     pub async fn dictionary_increment(
         &mut self,
