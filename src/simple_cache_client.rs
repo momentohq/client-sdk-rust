@@ -685,7 +685,7 @@ impl SimpleCacheClient {
         })
     }
 
-    /// Gets dictionary fields from a Momento Cache
+    /// Get a subset of the fields in a dictionary from the Momento cache.
     ///
     /// *NOTE*: This is preview functionality and requires that you contact
     /// Momento Support to enable these APIs for your cache.
@@ -699,44 +699,32 @@ impl SimpleCacheClient {
     /// # Examples
     ///
     /// ```
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
-    /// # tokio_test::block_on(async {
-    ///     use std::env;
-    ///     use momento::{
-    ///         response::MomentoDictionaryGetStatus,
-    ///         SimpleCacheClientBuilder,
-    ///     };
-    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
-    ///         .expect("could not create a client")
-    ///         .build();
-    ///     momento.create_cache(&cache_name).await;
+    /// use std::iter::FromIterator;
+    /// use std::collections::HashMap;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
-    ///     let dictionary_name = Uuid::new_v4().to_string();
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
     ///
-    ///     let resp = momento
-    ///         .dictionary_get(&cache_name, &*dictionary_name, vec!["key1", "key2"])
-    ///         .await
-    ///         .unwrap();
+    /// let dict = HashMap::from_iter([("k1", "v1"), ("k2", "v2")]);
+    /// momento.dictionary_set(&cache_name, "dict", dict, ttl).await?;
     ///
-    ///     match resp.result {
-    ///         MomentoDictionaryGetStatus::FOUND => println!("dictionary found!"),
-    ///         MomentoDictionaryGetStatus::MISSING => println!("dictionary missing!"),
-    ///         _ => println!("error occurred")
-    ///     };
+    /// let dict = momento
+    ///     .dictionary_get(&cache_name, "dict", vec!["k1"])
+    ///     .await?
+    ///     .dictionary
+    ///     .expect("dictionary does not exist");
     ///
-    ///
-    ///     if let Some(dictionary) = resp.dictionary {
-    ///         println!("dictionary entries:");
-    ///         for (key, value) in dictionary.iter() {
-    ///             println!("{:?} => {:?}", key, value);
-    ///         }
-    ///     }
-    ///
-    ///     momento.delete_cache(&cache_name).await;
+    /// assert!(matches!(dict.get("k1".as_bytes()), Some(v) if v == b"v1"));
+    /// assert!(matches!(dict.get("k2".as_bytes()), None));
+    /// assert_eq!(dict.len(), 1);
+    /// # Ok(())
     /// # })
+    /// # }
     /// ```
     pub async fn dictionary_get<K: IntoBytes>(
         &mut self,
