@@ -881,36 +881,30 @@ impl SimpleCacheClient {
     /// # Examples
     ///
     /// ```
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
-    /// # tokio_test::block_on(async {
-    ///     use std::env;
-    ///     use momento::{Fields, SimpleCacheClientBuilder};
-    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
-    ///         .expect("could not create a client")
-    ///         .build();
-    ///     momento.create_cache(&cache_name).await;
+    /// use std::iter::FromIterator;
+    /// use std::collections::HashMap;
+    /// use momento::{CollectionTtl, Fields, SimpleCacheClientBuilder};
     ///
-    ///     let dictionary_name = Uuid::new_v4().to_string();
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
     ///
-    ///     // remove some fields
-    ///     let resp = momento.dictionary_delete(
-    ///         &cache_name,
-    ///         &*dictionary_name,
-    ///         Fields::Some(vec!["field_1"]),
-    ///     ).await.unwrap();
+    /// let dict = HashMap::from_iter([("a", "b"), ("c", "d"), ("e", "f")]);
+    /// momento.dictionary_set(&cache_name, "dict", dict, ttl).await?;
     ///
-    ///     // remove entire dictionary
-    ///     let resp = momento.dictionary_delete(
-    ///         &cache_name,
-    ///         &*dictionary_name,
-    ///         Fields::<Vec<u8>>::All,
-    ///     ).await.unwrap();
+    /// momento.dictionary_delete(&cache_name, "dict", Fields::Some(vec!["a"]));
+    /// let dict1 = momento.dictionary_fetch(&cache_name, "dict").await?.dictionary.unwrap();
+    /// momento.dictionary_delete::<Vec<u8>>(&cache_name, "dict", Fields::All).await?;
     ///
-    ///     momento.delete_cache(&cache_name).await;
+    /// assert!(dict1.contains_key("c".as_bytes()));
+    /// assert!(dict1.contains_key("e".as_bytes()));
+    /// assert!(momento.dictionary_fetch(&cache_name, "dict").await?.dictionary.is_none());
+    /// # Ok(())
     /// # })
+    /// # }
     /// ```
     pub async fn dictionary_delete<K: IntoBytes>(
         &mut self,
