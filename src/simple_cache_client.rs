@@ -620,28 +620,36 @@ impl SimpleCacheClient {
     /// # Examples
     ///
     /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # tokio_test::block_on(async {
+    /// # use futures::FutureExt;
     /// use uuid::Uuid;
     /// use std::time::Duration;
-    /// # tokio_test::block_on(async {
-    ///     use momento::{CollectionTtl, SimpleCacheClientBuilder};
-    ///     use std::collections::HashMap;
-    ///     use std::env;
-    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
-    ///         .expect("could not create a client")
-    ///         .build();
-    ///     momento.create_cache(&cache_name).await;
+    /// use std::collections::HashMap;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
-    ///     let mut dictionary = HashMap::new();
-    ///     dictionary.insert("key1".to_string(), "value1".to_string());
-    ///     dictionary.insert("key2".to_string(), "value2".to_string());
+    /// let cache_name = Uuid::new_v4().to_string();
+    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
     ///
-    ///     let dictionary_name = Uuid::new_v4().to_string();
+    /// momento.create_cache(&cache_name).await?;
+    /// # let result = std::panic::AssertUnwindSafe(async {
+    /// let mut dictionary = HashMap::new();
+    /// dictionary.insert("key1", "value1");
+    /// dictionary.insert("key2", "value2");
     ///
-    ///     momento.dictionary_set(&cache_name, &*dictionary_name, dictionary, CollectionTtl::default()).await;
-    ///     momento.delete_cache(&cache_name).await;
+    /// let dictionary_name = Uuid::new_v4().to_string();
+    ///
+    /// momento
+    ///     .dictionary_set(&cache_name, dictionary_name, dictionary, CollectionTtl::default())
+    ///     .await?;
+    /// # Ok(())
+    /// # }).catch_unwind().await;
+    /// # momento.delete_cache(&cache_name).await?;
+    /// # result.unwrap_or_else(|e| std::panic::resume_unwind(e))
     /// # })
+    /// # }
     /// ```
     pub async fn dictionary_set<K: IntoBytes, V: IntoBytes>(
         &mut self,
