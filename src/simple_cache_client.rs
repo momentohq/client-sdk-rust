@@ -792,40 +792,31 @@ impl SimpleCacheClient {
     /// # Examples
     ///
     /// ```
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
-    /// # tokio_test::block_on(async {
-    ///     use momento::{
-    ///         response::MomentoDictionaryFetchStatus,
-    ///         SimpleCacheClientBuilder,
-    ///     };
-    ///     let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
-    ///         .expect("could not create a client")
-    ///         .build();
-    ///     momento.create_cache(&cache_name).await;
+    /// use std::iter::FromIterator;
+    /// use std::collections::HashMap;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
-    ///     let dictionary_name = Uuid::new_v4().to_string();
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
     ///
-    ///     let resp = momento.dictionary_fetch(&cache_name, &*dictionary_name).await.unwrap();
+    /// let dict = HashMap::from_iter([("key", "value")]);
+    /// momento.dictionary_set(&cache_name, "dict", dict, ttl).await?;
     ///
-    ///     match resp.result {
-    ///         MomentoDictionaryFetchStatus::FOUND => println!("dictionary found!"),
-    ///         MomentoDictionaryFetchStatus::MISSING => println!("dictionary missing!"),
-    ///         _ => println!("error occurred")
-    ///     };
+    /// let dict = momento
+    ///     .dictionary_fetch(&cache_name, "dict")
+    ///     .await?
+    ///     .dictionary
+    ///     .expect("dictionary does not exist");
     ///
-    ///
-    ///     if let Some(dictionary) = resp.dictionary {
-    ///         println!("dictionary entries:");
-    ///         for (key, value) in dictionary.iter() {
-    ///             println!("{:?} => {:?}", key, value);
-    ///         }
-    ///     }
-    ///
-    ///     momento.delete_cache(&cache_name).await;
+    /// assert!(matches!(dict.get("key".as_bytes()), Some(v) if v == b"value"));
+    /// assert_eq!(dict.len(), 1);
+    /// # Ok(())
     /// # })
+    /// # }
     /// ```
     pub async fn dictionary_fetch(
         &mut self,
