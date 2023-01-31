@@ -1103,34 +1103,27 @@ impl SimpleCacheClient {
     ///
     /// # Example
     /// ```
-    /// # tokio_test::block_on(async {
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
-    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be defined");
-    /// let cache_name = Uuid::new_v4().to_string();
-    /// let set_name = Uuid::new_v4().to_string();
-    ///
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
-    ///     .expect("could not create a client")
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
     ///
-    /// momento
-    ///     .create_cache(&cache_name)
-    ///     .await
-    ///     .expect("unable to create the cache");
+    /// momento.set_union(&cache_name, "myset", vec!["c", "d"], ttl).await?;
+    /// momento.set_union(&cache_name, "myset", vec!["a", "b", "c"], ttl).await?;
     ///
-    /// momento
-    ///     .set_union(&cache_name, set_name, vec!["a", "b", "c"], CollectionTtl::default())
-    ///     .await
-    ///     .expect("Failed to run a set union");
+    /// let set = momento.set_fetch(&cache_name, "myset").await?.value.unwrap();
     ///
-    /// momento
-    ///     .delete_cache(&cache_name)
-    ///     .await
-    ///     .expect("Failed to delete the cache");
-    /// # });
+    /// assert!(set.contains("a".as_bytes()));
+    /// assert!(set.contains("b".as_bytes()));
+    /// assert!(set.contains("c".as_bytes()));
+    /// assert!(set.contains("d".as_bytes()));
+    /// # Ok(())
+    /// # })
+    /// # }
     /// ```
     pub async fn set_union<E: IntoBytes>(
         &mut self,
