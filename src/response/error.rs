@@ -42,7 +42,7 @@ impl std::fmt::Display for MomentoError {
             | MomentoError::Timeout(e)
             | MomentoError::LimitExceeded(e)
             | MomentoError::ClientSdkError(e)
-            | MomentoError::InvalidArgument(e) => write!(f, "{}", e),
+            | MomentoError::InvalidArgument(e) => write!(f, "{e}"),
         }
     }
 }
