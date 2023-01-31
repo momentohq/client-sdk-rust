@@ -99,7 +99,7 @@ impl MomentoEndpointsResolver {
 
     fn hosted_zone_endpoint(hosted_zone: Option<String>, prefix: &str) -> Option<MomentoEndpoint> {
         hosted_zone.map(|hosted_zone| {
-            let hostname = format!("{}{}", prefix, hosted_zone);
+            let hostname = format!("{prefix}{hosted_zone}");
             MomentoEndpointsResolver::wrapped_endpoint("https://", hostname, ":443")
         })
     }

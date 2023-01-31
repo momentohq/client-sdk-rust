@@ -79,10 +79,8 @@ mod tests {
             .set(&cache_name, cache_key, cache_body, Duration::from_secs(ttl)) // 18446744073709551615 > 2^64/1000
             .await
             .unwrap_err();
-        let _err_message = format!(
-            "TTL provided, {}, needs to be less than the maximum TTL {}",
-            ttl, max_ttl
-        );
+        let _err_message =
+            format!("TTL provided, {ttl}, needs to be less than the maximum TTL {max_ttl}");
         assert!(matches!(
             result,
             MomentoError::InvalidArgument(_err_message)
