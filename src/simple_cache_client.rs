@@ -22,12 +22,12 @@ use crate::{endpoint_resolver::MomentoEndpointsResolver, utils::user_agent, Mome
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 
 use crate::response::{
-    ListCacheEntry, MomentoCache, MomentoCreateSigningKeyResponse, MomentoDictionaryFetchResponse,
-    MomentoDictionaryFetchStatus, MomentoDictionaryGetResponse, MomentoDictionaryGetStatus,
-    MomentoDictionaryIncrementResponse, MomentoDictionarySetResponse, MomentoDictionarySetStatus,
-    MomentoError, MomentoGetResponse, MomentoGetStatus, MomentoListCacheResult,
-    MomentoListFetchResponse, MomentoListSigningKeyResult, MomentoSetDifferenceResponse,
-    MomentoSetFetchResponse, MomentoSetResponse, MomentoSetStatus, MomentoSigningKey,
+    ListCacheEntry, MomentoCache, MomentoCreateSigningKeyResponse, MomentoDeleteResponse,
+    MomentoDictionaryDeleteResponse, MomentoDictionaryFetchResponse, MomentoDictionaryFetchStatus,
+    MomentoDictionaryGetResponse, MomentoDictionaryGetStatus, MomentoDictionaryIncrementResponse,
+    MomentoDictionarySetResponse, MomentoError, MomentoGetResponse, MomentoGetStatus,
+    MomentoListCacheResult, MomentoListFetchResponse, MomentoListSigningKeyResult,
+    MomentoSetDifferenceResponse, MomentoSetFetchResponse, MomentoSetResponse, MomentoSigningKey,
 };
 use crate::utils;
 
@@ -527,9 +527,7 @@ impl SimpleCacheClient {
             },
         )?;
         let _ = self.data_client.set(request).await?;
-        Ok(MomentoSetResponse {
-            result: MomentoSetStatus::OK,
-        })
+        Ok(MomentoSetResponse::new())
     }
 
     /// Gets an item from a Momento Cache
@@ -649,10 +647,7 @@ impl SimpleCacheClient {
         )?;
 
         let _ = self.data_client.dictionary_set(request).await?;
-
-        Ok(MomentoDictionarySetResponse {
-            result: MomentoDictionarySetStatus::OK,
-        })
+        Ok(MomentoDictionarySetResponse::new())
     }
 
     /// Get a subset of the fields in a dictionary from the Momento cache.
@@ -860,7 +855,7 @@ impl SimpleCacheClient {
         cache_name: &str,
         dictionary: impl IntoBytes,
         fields: Fields<K>,
-    ) -> MomentoResult<()> {
+    ) -> MomentoResult<MomentoDictionaryDeleteResponse> {
         use dictionary_delete_request::{All, Delete};
 
         let request = match fields {
@@ -879,7 +874,7 @@ impl SimpleCacheClient {
         self.data_client
             .dictionary_delete(self.prep_request(cache_name, request)?)
             .await?;
-        Ok(())
+        Ok(MomentoDictionaryDeleteResponse::new())
     }
 
     /// Increment a value within a dictionary.
@@ -1580,7 +1575,9 @@ impl SimpleCacheClient {
                 Bound::Excluded(&start) => start + 1,
             };
             let count = match range.end_bound() {
-                Bound::Unbounded if start == 0 => return self.delete(cache_name, list_name).await,
+                Bound::Unbounded if start == 0 => {
+                    return self.delete(cache_name, list_name).await.map(|_| ())
+                }
                 Bound::Unbounded => u32::MAX - start,
                 Bound::Included(&end) if end < start => return Ok(()),
                 Bound::Included(&end) => end - start + 1,
@@ -1887,7 +1884,11 @@ impl SimpleCacheClient {
     /// # })
     /// # }
     /// ```
-    pub async fn delete(&mut self, cache_name: &str, key: impl IntoBytes) -> MomentoResult<()> {
+    pub async fn delete(
+        &mut self,
+        cache_name: &str,
+        key: impl IntoBytes,
+    ) -> MomentoResult<MomentoDeleteResponse> {
         let request = self.prep_request(
             cache_name,
             DeleteRequest {
@@ -1895,7 +1896,7 @@ impl SimpleCacheClient {
             },
         )?;
         self.data_client.delete(request).await?.into_inner();
-        Ok(())
+        Ok(MomentoDeleteResponse::new())
     }
 
     fn expand_ttl_ms(&self, ttl: Option<Duration>) -> MomentoResult<u64> {
