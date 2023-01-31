@@ -492,29 +492,21 @@ impl SimpleCacheClient {
     /// # Examples
     ///
     /// ```
-    /// # fn main() -> anyhow::Result<()> {
-    /// # tokio_test::block_on(async {
-    /// # use futures::FutureExt;
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
+    /// use momento::response::MomentoGetStatus;
     ///
-    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    /// let cache_name = Uuid::new_v4().to_string();
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
     ///
-    /// momento.create_cache(&cache_name).await?;
-    /// # let result = std::panic::AssertUnwindSafe(async {
-    /// // use the default client TTL (30 seconds in this case)
-    /// momento.set(&cache_name, "key", "value", None).await?;
+    /// // Use client default TTL: 30 seconds, as specified above.
+    /// momento.set(&cache_name, "k1", "v1", None).await?;
     ///
-    /// // override the default TTL
-    /// momento.set(&cache_name, "key", "value", Duration::from_secs(10)).await?;
+    /// // Use a custom TTL of 10 minutes for this entry.
+    /// momento.set(&cache_name, "k2", "v2", Some(Duration::from_secs(600))).await?;
     /// # Ok(())
-    /// # }).catch_unwind().await;
-    /// # momento.delete_cache(&cache_name).await?;
-    /// # result.unwrap_or_else(|e| std::panic::resume_unwind(e))
     /// # })
     /// # }
     /// ```
