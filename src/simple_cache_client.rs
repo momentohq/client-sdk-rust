@@ -810,10 +810,15 @@ impl SimpleCacheClient {
         }
     }
 
-    /// Delete entire dictionary or some dictionary fields from a Momento Cache
+    /// Delete fields from within a dictionary in cache.
+    ///
+    /// If you would like to delete the entire dictionary, use [`delete`]
+    /// instead.
     ///
     /// *NOTE*: This is preview functionality and requires that you contact
     /// Momento Support to enable these APIs for your cache.
+    ///
+    /// [`delete`]: SimpleCacheClient::delete
     ///
     /// # Arguments
     ///
@@ -838,13 +843,12 @@ impl SimpleCacheClient {
     /// let dict = HashMap::from_iter([("a", "b"), ("c", "d"), ("e", "f")]);
     /// momento.dictionary_set(&cache_name, "dict", dict, ttl).await?;
     ///
-    /// momento.dictionary_delete(&cache_name, "dict", Fields::Some(vec!["a"]));
-    /// let dict1 = momento.dictionary_fetch(&cache_name, "dict").await?.dictionary.unwrap();
-    /// momento.dictionary_delete::<Vec<u8>>(&cache_name, "dict", Fields::All).await?;
+    /// momento.dictionary_delete(&cache_name, "dict", vec!["a"]).await?;
+    /// let dict = momento.dictionary_fetch(&cache_name, "dict").await?.dictionary.unwrap();
     ///
-    /// assert!(dict1.contains_key("c".as_bytes()));
-    /// assert!(dict1.contains_key("e".as_bytes()));
-    /// assert!(momento.dictionary_fetch(&cache_name, "dict").await?.dictionary.is_none());
+    /// assert!(dict.contains_key("c".as_bytes()));
+    /// assert!(dict.contains_key("e".as_bytes()));
+    /// assert_eq!(dict.len(), 2);
     /// # Ok(())
     /// # })
     /// # }
@@ -853,21 +857,15 @@ impl SimpleCacheClient {
         &mut self,
         cache_name: &str,
         dictionary: impl IntoBytes,
-        fields: Fields<K>,
+        fields: Vec<K>,
     ) -> MomentoResult<MomentoDictionaryDeleteResponse> {
-        use dictionary_delete_request::{All, Delete};
+        use dictionary_delete_request::Delete;
 
-        let request = match fields {
-            Fields::Some(fields) => DictionaryDeleteRequest {
-                dictionary_name: dictionary.into_bytes(),
-                delete: Some(Delete::Some(dictionary_delete_request::Some {
-                    fields: convert_vec(fields),
-                })),
-            },
-            Fields::All => DictionaryDeleteRequest {
-                dictionary_name: dictionary.into_bytes(),
-                delete: Some(Delete::All(All::default())),
-            },
+        let request = DictionaryDeleteRequest {
+            dictionary_name: dictionary.into_bytes(),
+            delete: Some(Delete::Some(dictionary_delete_request::Some {
+                fields: convert_vec(fields),
+            })),
         };
 
         self.data_client
@@ -1912,13 +1910,6 @@ impl SimpleCacheClient {
         request_meta_data(&mut request, cache_name)?;
         Ok(request)
     }
-}
-
-/// An enum that is used to indicate if an operation should apply to all fields
-/// or just some fields of a dictionary.
-pub enum Fields<K> {
-    All,
-    Some(Vec<K>),
 }
 
 fn convert_vec<E: IntoBytes>(vec: impl IntoIterator<Item = E>) -> Vec<Vec<u8>> {
