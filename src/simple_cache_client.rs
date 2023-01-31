@@ -492,29 +492,21 @@ impl SimpleCacheClient {
     /// # Examples
     ///
     /// ```
-    /// # fn main() -> anyhow::Result<()> {
-    /// # tokio_test::block_on(async {
-    /// # use futures::FutureExt;
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
+    /// use momento::response::MomentoGetStatus;
     ///
-    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    /// let cache_name = Uuid::new_v4().to_string();
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
     ///
-    /// momento.create_cache(&cache_name).await?;
-    /// # let result = std::panic::AssertUnwindSafe(async {
-    /// // use the default client TTL (30 seconds in this case)
-    /// momento.set(&cache_name, "key", "value", None).await?;
+    /// // Use client default TTL: 30 seconds, as specified above.
+    /// momento.set(&cache_name, "k1", "v1", None).await?;
     ///
-    /// // override the default TTL
-    /// momento.set(&cache_name, "key", "value", Duration::from_secs(10)).await?;
+    /// // Use a custom TTL of 10 minutes for this entry.
+    /// momento.set(&cache_name, "k2", "v2", Some(Duration::from_secs(600))).await?;
     /// # Ok(())
-    /// # }).catch_unwind().await;
-    /// # momento.delete_cache(&cache_name).await?;
-    /// # result.unwrap_or_else(|e| std::panic::resume_unwind(e))
     /// # })
     /// # }
     /// ```
@@ -549,33 +541,24 @@ impl SimpleCacheClient {
     /// # Examples
     ///
     /// ```
-    /// # fn main() -> anyhow::Result<()> {
-    /// # tokio_test::block_on(async {
-    /// # use futures::FutureExt;
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
     /// use momento::response::MomentoGetStatus;
     ///
-    /// let cache_name = Uuid::new_v4().to_string();
-    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
     ///
-    /// momento.create_cache(&cache_name).await?;
-    /// # let result = std::panic::AssertUnwindSafe(async {
-    /// let resp = momento.get(&cache_name, "cache_key").await?;
-    /// match resp.result {
-    ///     MomentoGetStatus::HIT => println!("cache hit!"),
-    ///     MomentoGetStatus::MISS => println!("cache miss"),
-    ///     _ => println!("error occurred")
-    /// }
+    /// momento.set(&cache_name, "present", "value", None).await?;
     ///
-    /// println!("cache value: {}", resp.as_string());
+    /// let present = momento.get(&cache_name, "present").await?;
+    /// let missing = momento.get(&cache_name, "missing").await?;
+    ///
+    /// assert!(matches!(present.result, MomentoGetStatus::HIT));
+    /// assert!(matches!(missing.result, MomentoGetStatus::MISS));
+    /// assert_eq!(present.value, b"value");
     /// # Ok(())
-    /// # }).catch_unwind().await;
-    /// # momento.delete_cache(&cache_name).await?;
-    /// # result.unwrap_or_else(|e| std::panic::resume_unwind(e))
     /// # })
     /// # }
     /// ```
@@ -620,28 +603,22 @@ impl SimpleCacheClient {
     /// # Examples
     ///
     /// ```
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
-    /// # tokio_test::block_on(async {
-    ///     use momento::{CollectionTtl, SimpleCacheClientBuilder};
-    ///     use std::collections::HashMap;
-    ///     use std::env;
-    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
-    ///         .expect("could not create a client")
-    ///         .build();
-    ///     momento.create_cache(&cache_name).await;
+    /// use std::iter::FromIterator;
+    /// use std::collections::HashMap;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
-    ///     let mut dictionary = HashMap::new();
-    ///     dictionary.insert("key1".to_string(), "value1".to_string());
-    ///     dictionary.insert("key2".to_string(), "value2".to_string());
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
     ///
-    ///     let dictionary_name = Uuid::new_v4().to_string();
-    ///
-    ///     momento.dictionary_set(&cache_name, &*dictionary_name, dictionary, CollectionTtl::default()).await;
-    ///     momento.delete_cache(&cache_name).await;
+    /// let dict = HashMap::from_iter([("k1", "v1"), ("k2", "v2")]);
+    /// momento.dictionary_set(&cache_name, "dict", dict, ttl).await?;
+    /// # Ok(())
     /// # })
+    /// # }
     /// ```
     pub async fn dictionary_set<K: IntoBytes, V: IntoBytes>(
         &mut self,
@@ -677,7 +654,7 @@ impl SimpleCacheClient {
         })
     }
 
-    /// Gets dictionary fields from a Momento Cache
+    /// Get a subset of the fields in a dictionary from the Momento cache.
     ///
     /// *NOTE*: This is preview functionality and requires that you contact
     /// Momento Support to enable these APIs for your cache.
@@ -691,44 +668,32 @@ impl SimpleCacheClient {
     /// # Examples
     ///
     /// ```
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
-    /// # tokio_test::block_on(async {
-    ///     use std::env;
-    ///     use momento::{
-    ///         response::MomentoDictionaryGetStatus,
-    ///         SimpleCacheClientBuilder,
-    ///     };
-    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
-    ///         .expect("could not create a client")
-    ///         .build();
-    ///     momento.create_cache(&cache_name).await;
+    /// use std::iter::FromIterator;
+    /// use std::collections::HashMap;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
-    ///     let dictionary_name = Uuid::new_v4().to_string();
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
     ///
-    ///     let resp = momento
-    ///         .dictionary_get(&cache_name, &*dictionary_name, vec!["key1", "key2"])
-    ///         .await
-    ///         .unwrap();
+    /// let dict = HashMap::from_iter([("k1", "v1"), ("k2", "v2")]);
+    /// momento.dictionary_set(&cache_name, "dict", dict, ttl).await?;
     ///
-    ///     match resp.result {
-    ///         MomentoDictionaryGetStatus::FOUND => println!("dictionary found!"),
-    ///         MomentoDictionaryGetStatus::MISSING => println!("dictionary missing!"),
-    ///         _ => println!("error occurred")
-    ///     };
+    /// let dict = momento
+    ///     .dictionary_get(&cache_name, "dict", vec!["k1"])
+    ///     .await?
+    ///     .dictionary
+    ///     .expect("dictionary does not exist");
     ///
-    ///
-    ///     if let Some(dictionary) = resp.dictionary {
-    ///         println!("dictionary entries:");
-    ///         for (key, value) in dictionary.iter() {
-    ///             println!("{:?} => {:?}", key, value);
-    ///         }
-    ///     }
-    ///
-    ///     momento.delete_cache(&cache_name).await;
+    /// assert!(matches!(dict.get("k1".as_bytes()), Some(v) if v == b"v1"));
+    /// assert!(matches!(dict.get("k2".as_bytes()), None));
+    /// assert_eq!(dict.len(), 1);
+    /// # Ok(())
     /// # })
+    /// # }
     /// ```
     pub async fn dictionary_get<K: IntoBytes>(
         &mut self,
@@ -784,40 +749,31 @@ impl SimpleCacheClient {
     /// # Examples
     ///
     /// ```
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
-    /// # tokio_test::block_on(async {
-    ///     use momento::{
-    ///         response::MomentoDictionaryFetchStatus,
-    ///         SimpleCacheClientBuilder,
-    ///     };
-    ///     let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
-    ///         .expect("could not create a client")
-    ///         .build();
-    ///     momento.create_cache(&cache_name).await;
+    /// use std::iter::FromIterator;
+    /// use std::collections::HashMap;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
-    ///     let dictionary_name = Uuid::new_v4().to_string();
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
     ///
-    ///     let resp = momento.dictionary_fetch(&cache_name, &*dictionary_name).await.unwrap();
+    /// let dict = HashMap::from_iter([("key", "value")]);
+    /// momento.dictionary_set(&cache_name, "dict", dict, ttl).await?;
     ///
-    ///     match resp.result {
-    ///         MomentoDictionaryFetchStatus::FOUND => println!("dictionary found!"),
-    ///         MomentoDictionaryFetchStatus::MISSING => println!("dictionary missing!"),
-    ///         _ => println!("error occurred")
-    ///     };
+    /// let dict = momento
+    ///     .dictionary_fetch(&cache_name, "dict")
+    ///     .await?
+    ///     .dictionary
+    ///     .expect("dictionary does not exist");
     ///
-    ///
-    ///     if let Some(dictionary) = resp.dictionary {
-    ///         println!("dictionary entries:");
-    ///         for (key, value) in dictionary.iter() {
-    ///             println!("{:?} => {:?}", key, value);
-    ///         }
-    ///     }
-    ///
-    ///     momento.delete_cache(&cache_name).await;
+    /// assert!(matches!(dict.get("key".as_bytes()), Some(v) if v == b"value"));
+    /// assert_eq!(dict.len(), 1);
+    /// # Ok(())
     /// # })
+    /// # }
     /// ```
     pub async fn dictionary_fetch(
         &mut self,
@@ -873,36 +829,30 @@ impl SimpleCacheClient {
     /// # Examples
     ///
     /// ```
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
-    /// # tokio_test::block_on(async {
-    ///     use std::env;
-    ///     use momento::{Fields, SimpleCacheClientBuilder};
-    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let cache_name = Uuid::new_v4().to_string();
-    ///     let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
-    ///         .expect("could not create a client")
-    ///         .build();
-    ///     momento.create_cache(&cache_name).await;
+    /// use std::iter::FromIterator;
+    /// use std::collections::HashMap;
+    /// use momento::{CollectionTtl, Fields, SimpleCacheClientBuilder};
     ///
-    ///     let dictionary_name = Uuid::new_v4().to_string();
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
     ///
-    ///     // remove some fields
-    ///     let resp = momento.dictionary_delete(
-    ///         &cache_name,
-    ///         &*dictionary_name,
-    ///         Fields::Some(vec!["field_1"]),
-    ///     ).await.unwrap();
+    /// let dict = HashMap::from_iter([("a", "b"), ("c", "d"), ("e", "f")]);
+    /// momento.dictionary_set(&cache_name, "dict", dict, ttl).await?;
     ///
-    ///     // remove entire dictionary
-    ///     let resp = momento.dictionary_delete(
-    ///         &cache_name,
-    ///         &*dictionary_name,
-    ///         Fields::<Vec<u8>>::All,
-    ///     ).await.unwrap();
+    /// momento.dictionary_delete(&cache_name, "dict", Fields::Some(vec!["a"]));
+    /// let dict1 = momento.dictionary_fetch(&cache_name, "dict").await?.dictionary.unwrap();
+    /// momento.dictionary_delete::<Vec<u8>>(&cache_name, "dict", Fields::All).await?;
     ///
-    ///     momento.delete_cache(&cache_name).await;
+    /// assert!(dict1.contains_key("c".as_bytes()));
+    /// assert!(dict1.contains_key("e".as_bytes()));
+    /// assert!(momento.dictionary_fetch(&cache_name, "dict").await?.dictionary.is_none());
+    /// # Ok(())
     /// # })
+    /// # }
     /// ```
     pub async fn dictionary_delete<K: IntoBytes>(
         &mut self,
@@ -952,35 +902,22 @@ impl SimpleCacheClient {
     ///
     /// # Example
     /// ```
-    /// # tokio_test::block_on(async {
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
-    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    /// let cache_name = Uuid::new_v4().to_string();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
-    ///     .expect("unable to create momento client")
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
-    /// momento.create_cache(&cache_name)
-    ///     .await
-    ///     .expect("Failed to create cache");
     ///
-    /// let dictionary = Uuid::new_v4().to_string();
-    /// let field = Uuid::new_v4().to_string();
+    /// let resp = momento.dictionary_increment(&cache_name, "dict", "key", 10, ttl).await?;
     ///
-    /// let value = momento
-    ///     .dictionary_increment(&cache_name, dictionary, field, 10, CollectionTtl::default())
-    ///     .await
-    ///     .expect("Failed to increment dictionary key")
-    ///     .value;
-    ///
-    /// println!("Dicationary key has been incremented to {}", value);
-    ///
-    /// momento.delete_cache(&cache_name)
-    ///     .await
-    ///     .expect("Failed to delete cache");
+    /// // key was empty before, now it is 10
+    /// assert_eq!(resp.value, 10);
+    /// # Ok(())
     /// # })
+    /// # }
     /// ```
     pub async fn dictionary_increment(
         &mut self,
@@ -1024,39 +961,26 @@ impl SimpleCacheClient {
     ///
     /// # Example
     /// ```
-    /// # tokio_test::block_on(async {
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
     ///
-    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be defined");
-    /// let cache_name = Uuid::new_v4().to_string();
-    /// let set_name = Uuid::new_v4().to_string();
-    ///
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
-    ///     .expect("could not create a client")
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
     ///
-    /// momento.create_cache(&cache_name).await;
-    ///
-    /// let response = momento
-    ///     .set_fetch(&cache_name, set_name)
-    ///     .await
-    ///     .expect("Failed to fetch the set");
-    /// if let Some(set) = response.value {
-    ///     println!("set entries:");
-    ///     for entry in &set {
-    ///         println!("{:?}", entry);
-    ///     }
-    /// } else {
-    ///     println!("set not found!");
+    /// match momento.set_fetch(&cache_name, "test set").await?.value {
+    ///     Some(set) => {
+    ///         println!("set entries:");
+    ///         for entry in &set {
+    ///             println!("{:?}", entry);
+    ///         }
+    ///     },
+    ///     None => println!("set not found!"),
     /// }
-    ///
-    /// momento
-    ///     .delete_cache(&cache_name)
-    ///     .await
-    ///     .expect("Failed to delete the cache");
+    /// # Ok(())
     /// # })
+    /// # }
     /// ```
     pub async fn set_fetch(
         &mut self,
@@ -1095,34 +1019,27 @@ impl SimpleCacheClient {
     ///
     /// # Example
     /// ```
-    /// # tokio_test::block_on(async {
-    /// use uuid::Uuid;
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
-    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be defined");
-    /// let cache_name = Uuid::new_v4().to_string();
-    /// let set_name = Uuid::new_v4().to_string();
-    ///
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
-    ///     .expect("could not create a client")
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
     ///
-    /// momento
-    ///     .create_cache(&cache_name)
-    ///     .await
-    ///     .expect("unable to create the cache");
+    /// momento.set_union(&cache_name, "myset", vec!["c", "d"], ttl).await?;
+    /// momento.set_union(&cache_name, "myset", vec!["a", "b", "c"], ttl).await?;
     ///
-    /// momento
-    ///     .set_union(&cache_name, set_name, vec!["a", "b", "c"], CollectionTtl::default())
-    ///     .await
-    ///     .expect("Failed to run a set union");
+    /// let set = momento.set_fetch(&cache_name, "myset").await?.value.unwrap();
     ///
-    /// momento
-    ///     .delete_cache(&cache_name)
-    ///     .await
-    ///     .expect("Failed to delete the cache");
-    /// # });
+    /// assert!(set.contains("a".as_bytes()));
+    /// assert!(set.contains("b".as_bytes()));
+    /// assert!(set.contains("c".as_bytes()));
+    /// assert!(set.contains("d".as_bytes()));
+    /// # Ok(())
+    /// # })
+    /// # }
     /// ```
     pub async fn set_union<E: IntoBytes>(
         &mut self,
