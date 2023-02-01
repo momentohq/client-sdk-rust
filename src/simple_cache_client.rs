@@ -1525,7 +1525,7 @@ impl SimpleCacheClient {
         list_name: impl IntoBytes,
         range: impl RangeBounds<u32>,
     ) -> MomentoResult<()> {
-        self.list_erase_many(cache_name, list_name, vec![range])
+        self.list_erase_many(cache_name, list_name, [range])
             .await
     }
 
@@ -1566,13 +1566,13 @@ impl SimpleCacheClient {
         &mut self,
         cache_name: &str,
         list_name: impl IntoBytes,
-        ranges: Vec<R>,
+        ranges: impl IntoIterator<Item = R>,
     ) -> MomentoResult<()> {
         use list_erase_request::{Erase, ListRanges};
         use std::ops::Bound;
 
         let list_name = list_name.into_bytes();
-        let mut req_ranges = Vec::with_capacity(ranges.len());
+        let mut req_ranges = Vec::new();
         for range in ranges {
             let start = match range.start_bound() {
                 Bound::Unbounded => 0,
