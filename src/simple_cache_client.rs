@@ -1027,6 +1027,32 @@ impl SimpleCacheClient {
     /// * `truncate_to` - if set, indicates the maximum number of elements the
     ///   list may contain before truncating elements from the front.
     /// * `policy` - TTL policy to use.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// assert_eq!(momento.list_concat_back(&cache_name, "list", ["a", "b"], 3, ttl).await?, 2);
+    /// assert_eq!(momento.list_concat_back(&cache_name, "list", ["c", "d"], 3, ttl).await?, 3);
+    ///
+    /// let entry = momento
+    ///     .list_fetch(&cache_name, "list")
+    ///     .await?
+    ///     .expect("list was missing within the cache");
+    /// let values: Vec<_> = entry.value().iter().map(|v| &v[..]).collect();
+    /// let expected: Vec<&[u8]> = vec![b"b", b"c", b"d"];
+    /// assert_eq!(values, expected);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
     pub async fn list_concat_back<V: IntoBytes>(
         &mut self,
         cache_name: &str,
