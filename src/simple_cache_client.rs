@@ -1561,6 +1561,57 @@ impl SimpleCacheClient {
         Ok(())
     }
 
+    /// Fetch the length of a list from the cache.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - the name of the cache in which to look for the list.
+    /// * `list_name` - name of the list.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.list_set(&cache_name, "present", ["a", "b"], ttl).await?;
+    ///
+    /// assert_eq!(momento.list_len(&cache_name, "present").await?, Some(2));
+    /// assert_eq!(momento.list_len(&cache_name, "missing").await?, None);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn list_length(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+    ) -> MomentoResult<Option<u32>> {
+        use list_length_response::List;
+
+        let request = self.prep_request(
+            cache_name,
+            ListLengthRequest {
+                list_name: list_name.into_bytes(),
+            },
+        )?;
+
+        let response = self.data_client.list_length(request).await?.into_inner();
+
+        Ok(match response.list {
+            Some(List::Found(found)) => Some(found.length),
+            _ => None,
+        })
+    }
+
     /// Fetches a set from a Momento Cache.
     ///
     /// *NOTE*: This is preview functionality and requires that you contact
