@@ -10,6 +10,7 @@ use momento_protos::{
 use serde_json::Value;
 use std::convert::TryFrom;
 use std::iter::FromIterator;
+use std::ops::RangeBounds;
 use std::time::Duration;
 use std::{
     collections::{HashMap, HashSet},
@@ -21,12 +22,12 @@ use crate::{endpoint_resolver::MomentoEndpointsResolver, utils::user_agent, Mome
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 
 use crate::response::{
-    MomentoCache, MomentoCreateSigningKeyResponse, MomentoDictionaryFetchResponse,
+    ListCacheEntry, MomentoCache, MomentoCreateSigningKeyResponse, MomentoDictionaryFetchResponse,
     MomentoDictionaryFetchStatus, MomentoDictionaryGetResponse, MomentoDictionaryGetStatus,
     MomentoDictionaryIncrementResponse, MomentoDictionarySetResponse, MomentoDictionarySetStatus,
     MomentoError, MomentoGetResponse, MomentoGetStatus, MomentoListCacheResult,
-    MomentoListSigningKeyResult, MomentoSetFetchResponse, MomentoSetResponse, MomentoSetStatus,
-    MomentoSigningKey,
+    MomentoListFetchResponse, MomentoListSigningKeyResult, MomentoSetFetchResponse,
+    MomentoSetResponse, MomentoSetStatus, MomentoSigningKey,
 };
 use crate::utils;
 
@@ -949,6 +950,617 @@ impl SimpleCacheClient {
         })
     }
 
+    /// Push multiple values to the beginning of a list.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of the cache to store the list in.
+    /// * `list_name` - list to modify.
+    /// * `values` - values to push to the front of the list.
+    /// * `truncate_to` - if set, indicates the maximum number of elements the
+    ///   list may contain before truncating elements from the back.
+    /// * `policy` - TTL policy to use.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// assert_eq!(momento.list_concat_front(&cache_name, "list", ["a", "b"], 3, ttl).await?, 2);
+    /// assert_eq!(momento.list_concat_front(&cache_name, "list", ["c", "d"], 3, ttl).await?, 3);
+    ///
+    /// let entry = momento
+    ///     .list_fetch(&cache_name, "list")
+    ///     .await?
+    ///     .expect("list was missing within the cache");
+    /// let values: Vec<_> = entry.value().iter().map(|v| &v[..]).collect();
+    /// let expected: Vec<&[u8]> = vec![b"c", b"d", b"a"];
+    /// assert_eq!(values, expected);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn list_concat_front<V: IntoBytes>(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+        values: impl IntoIterator<Item = V>,
+        truncate_to: impl Into<Option<u32>>,
+        policy: CollectionTtl,
+    ) -> MomentoResult<u32> {
+        let request = self.prep_request(
+            cache_name,
+            ListConcatenateFrontRequest {
+                list_name: list_name.into_bytes(),
+                values: convert_vec(values),
+                ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
+                refresh_ttl: policy.refresh(),
+                truncate_back_to_size: truncate_to.into().unwrap_or(u32::MAX),
+            },
+        )?;
+
+        self.data_client
+            .list_concatenate_front(request)
+            .await
+            .map(|resp| resp.into_inner().list_length)
+            .map_err(From::from)
+    }
+
+    /// Push multiple values to the end of a list.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of the cache to store the list in.
+    /// * `list_name` - list to modify.
+    /// * `values` - values to push to the front of the list.
+    /// * `truncate_to` - if set, indicates the maximum number of elements the
+    ///   list may contain before truncating elements from the front.
+    /// * `policy` - TTL policy to use.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// assert_eq!(momento.list_concat_back(&cache_name, "list", ["a", "b"], 3, ttl).await?, 2);
+    /// assert_eq!(momento.list_concat_back(&cache_name, "list", ["c", "d"], 3, ttl).await?, 3);
+    ///
+    /// let entry = momento
+    ///     .list_fetch(&cache_name, "list")
+    ///     .await?
+    ///     .expect("list was missing within the cache");
+    /// let values: Vec<_> = entry.value().iter().map(|v| &v[..]).collect();
+    /// let expected: Vec<&[u8]> = vec![b"b", b"c", b"d"];
+    /// assert_eq!(values, expected);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn list_concat_back<V: IntoBytes>(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+        values: impl IntoIterator<Item = V>,
+        truncate_to: impl Into<Option<u32>>,
+        policy: CollectionTtl,
+    ) -> MomentoResult<u32> {
+        let request = self.prep_request(
+            cache_name,
+            ListConcatenateBackRequest {
+                list_name: list_name.into_bytes(),
+                values: convert_vec(values),
+                ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
+                refresh_ttl: policy.refresh(),
+                truncate_front_to_size: truncate_to.into().unwrap_or(u32::MAX),
+            },
+        )?;
+
+        self.data_client
+            .list_concatenate_back(request)
+            .await
+            .map(|resp| resp.into_inner().list_length)
+            .map_err(From::from)
+    }
+
+    /// Inserts a value at the start of a list.
+    ///
+    /// A missing entry is treated as a list of length 0.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of the cache to store the list in.
+    /// * `list_name` - the list to insert the value in to.
+    /// * `value` - value to insert at the front of the list.
+    /// * `policy` - the TTL policy to use for this operation.
+    /// * `truncate_to` - should the list exceed this length, it will be truncated.
+    ///   If `None`, no truncation will be done. Truncation occurs from the front.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.list_set(&cache_name, "list", ["a", "b"], ttl).await?;
+    /// momento.list_push_front(&cache_name, "list", "!", None, ttl).await?;
+    ///
+    /// let entry = momento.list_fetch(&cache_name, "list").await?.unwrap();
+    /// let values: Vec<_> = entry.value().iter().map(|v| &v[..]).collect();
+    /// let expected: Vec<&[u8]> = vec![b"!", b"a", b"b"];
+    /// assert_eq!(values, expected);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn list_push_front(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+        value: impl IntoBytes,
+        truncate_to: impl Into<Option<u32>>,
+        policy: CollectionTtl,
+    ) -> MomentoResult<u32> {
+        let request = self.prep_request(
+            cache_name,
+            ListPushFrontRequest {
+                list_name: list_name.into_bytes(),
+                value: value.into_bytes(),
+                ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
+                refresh_ttl: policy.refresh(),
+                truncate_back_to_size: truncate_to.into().unwrap_or(u32::MAX),
+            },
+        )?;
+
+        Ok(self
+            .data_client
+            .list_push_front(request)
+            .await?
+            .into_inner()
+            .list_length)
+    }
+
+    /// Inserts a value at the end of a list.
+    ///
+    /// A missing entry is treated as a list of length 0.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of the cache to store the list in.
+    /// * `list_name` - the list to insert the value in to.
+    /// * `value` - value to insert at the end of the list.
+    /// * `policy` - the TTL policy to use for this operation.
+    /// * `truncate_to` - should the list exceed this length, it will be truncated.
+    ///   If `None`, no truncation will be done. Truncation occurs from the front.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.list_set(&cache_name, "list", ["a", "b"], ttl).await?;
+    /// momento.list_push_back(&cache_name, "list", "!", None, ttl).await?;
+    ///
+    /// let entry = momento.list_fetch(&cache_name, "list").await?.unwrap();
+    /// let values: Vec<_> = entry.value().iter().map(|v| &v[..]).collect();
+    /// let expected: Vec<&[u8]> = vec![b"a", b"b", b"!"];
+    /// assert_eq!(values, expected);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn list_push_back(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+        value: impl IntoBytes,
+        truncate_to: impl Into<Option<u32>>,
+        policy: CollectionTtl,
+    ) -> MomentoResult<u32> {
+        let request = self.prep_request(
+            cache_name,
+            ListPushBackRequest {
+                list_name: list_name.into_bytes(),
+                value: value.into_bytes(),
+                ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
+                refresh_ttl: policy.refresh(),
+                truncate_front_to_size: truncate_to.into().unwrap_or(u32::MAX),
+            },
+        )?;
+
+        Ok(self
+            .data_client
+            .list_push_back(request)
+            .await?
+            .into_inner()
+            .list_length)
+    }
+
+    /// Set a list within the cache.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of the cache to store the list in.
+    /// * `list_name` - list to be set in the cache.
+    /// * `values` - the values that make up the list.
+    /// * `policy` - TTL policy to use for this operation.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.list_set(&cache_name, "list", ["a", "b"], ttl).await?;
+    /// momento.list_set(&cache_name, "list", ["c", "d"], ttl).await?;
+    ///
+    /// let entry = momento.list_fetch(&cache_name, "list").await?.unwrap();
+    /// let values: Vec<_> = entry.value().iter().map(|v| &v[..]).collect();
+    /// let expected: Vec<&[u8]> = vec![b"c", b"d"];
+    /// assert_eq!(values, expected);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn list_set<V: IntoBytes>(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+        values: impl IntoIterator<Item = V>,
+        policy: CollectionTtl,
+    ) -> MomentoResult<()> {
+        // We're exposing this as a set so updating an existing entry should count as if
+        // we are creating a new entry.
+        let policy = policy.with_refresh_on_update();
+        let values: Vec<_> = values.into_iter().map(|v| v.into_bytes()).collect();
+        let count = values.len();
+
+        self.list_concat_front(cache_name, list_name, values, count as u32, policy)
+            .await?;
+
+        Ok(())
+    }
+
+    /// Fetch the entire list from the cache.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of the cache to fetch list from.
+    /// * `list_name` - the list to fetch.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.list_set(&cache_name, "list", ["a", "b"], ttl).await?;
+    ///
+    /// let entry = momento.list_fetch(&cache_name, "list").await?.unwrap();
+    /// let values: Vec<_> = entry.value().iter().map(|v| &v[..]).collect();
+    /// let expected: Vec<&[u8]> = vec![b"a", b"b"];
+    /// assert_eq!(values, expected);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn list_fetch(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+    ) -> MomentoResult<MomentoListFetchResponse> {
+        use list_fetch_response::List;
+
+        let request = self.prep_request(
+            cache_name,
+            ListFetchRequest {
+                list_name: list_name.into_bytes(),
+            },
+        )?;
+
+        let response = self.data_client.list_fetch(request).await?.into_inner();
+        Ok(match response.list {
+            Some(List::Found(found)) => Some(ListCacheEntry::new(found.values)),
+            _ => None,
+        })
+    }
+
+    /// Retrieve and remove the first item from a list.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of the cache in which the list is stored.
+    /// * `list_name` - name of the list to pop from.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.list_set(&cache_name, "list", ["a", "b"], ttl).await?;
+    ///
+    /// assert!(matches!(
+    ///     momento.list_pop_front(&cache_name, "list").await?,
+    ///     Some(v) if v == b"a"
+    /// ));
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn list_pop_front(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+    ) -> MomentoResult<Option<Vec<u8>>> {
+        use momento_protos::cache_client::list_pop_front_response::List;
+
+        let request = self.prep_request(
+            cache_name,
+            ListPopFrontRequest {
+                list_name: list_name.into_bytes(),
+            },
+        )?;
+
+        Ok(
+            match self
+                .data_client
+                .list_pop_front(request)
+                .await?
+                .into_inner()
+                .list
+            {
+                Some(List::Found(list)) => Some(list.front),
+                _ => None,
+            },
+        )
+    }
+
+    /// Retrieve and remove the last item from a list.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of the cache in which the list is stored.
+    /// * `list_name` - name of the list to pop from.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.list_set(&cache_name, "list", ["a", "b"], ttl).await?;
+    ///
+    /// assert!(matches!(
+    ///     momento.list_pop_back(&cache_name, "list").await?,
+    ///     Some(v) if v == b"b"
+    /// ));
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn list_pop_back(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+    ) -> MomentoResult<Option<Vec<u8>>> {
+        use momento_protos::cache_client::list_pop_back_response::List;
+
+        let request = self.prep_request(
+            cache_name,
+            ListPopBackRequest {
+                list_name: list_name.into_bytes(),
+            },
+        )?;
+
+        Ok(
+            match self
+                .data_client
+                .list_pop_back(request)
+                .await?
+                .into_inner()
+                .list
+            {
+                Some(List::Found(list)) => Some(list.back),
+                _ => None,
+            },
+        )
+    }
+
+    /// Remove all elements in a list matching a particular value.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of the cache in which to look for the list.
+    /// * `list_name` - name of the list from which to remove elements.
+    /// * `value` - the value to remove from the list.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.list_set(&cache_name, "list", ["a", "b", "c", "a"], ttl).await?;
+    /// momento.list_remove_value(&cache_name, "list", "a").await?;
+    ///
+    /// let entry = momento.list_fetch(&cache_name, "list").await?.unwrap();
+    /// let values: Vec<_> = entry.value().iter().map(|v| &v[..]).collect();
+    /// let expected: Vec<&[u8]> = vec![b"b", b"c"];
+    /// assert_eq!(values, expected);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn list_remove_value(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+        value: impl IntoBytes,
+    ) -> MomentoResult<()> {
+        use list_remove_request::Remove;
+
+        let request = self.prep_request(
+            cache_name,
+            ListRemoveRequest {
+                list_name: list_name.into_bytes(),
+                remove: Some(Remove::AllElementsWithValue(value.into_bytes())),
+            },
+        )?;
+
+        self.data_client.list_remove(request).await?;
+        Ok(())
+    }
+
+    /// Erase a range of elements from a list.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - the name of the cache in which to look for the list.
+    /// * `list_name` - name of the list from which to remove elements.
+    /// * `range` - range of indices to erase from the list.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.list_set(&cache_name, "list", ["a", "b", "c", "d"], ttl).await?;
+    /// momento.list_erase(&cache_name, "list", 1..=2).await?;
+    ///
+    /// let entry = momento.list_fetch(&cache_name, "list").await?.unwrap();
+    /// let values: Vec<_> = entry.value().iter().map(|v| &v[..]).collect();
+    /// let expected: Vec<&[u8]> = vec![b"a", b"d"];
+    /// assert_eq!(values, expected);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn list_erase(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+        range: impl RangeBounds<u32>,
+    ) -> MomentoResult<()> {
+        use list_erase_request::{Erase, ListRanges};
+        use std::ops::Bound;
+        let list_name = list_name.into_bytes();
+
+        let start = match range.start_bound() {
+            Bound::Unbounded => 0,
+            Bound::Included(&start) => start,
+            Bound::Excluded(&u32::MAX) => return Ok(()),
+            Bound::Excluded(&start) => start + 1,
+        };
+        let count = match range.end_bound() {
+            Bound::Unbounded if start == 0 => return self.delete(cache_name, list_name).await,
+            Bound::Unbounded => u32::MAX - start,
+            Bound::Included(&end) if end < start => return Ok(()),
+            Bound::Included(&end) => end - start + 1,
+            Bound::Excluded(&end) if end <= start => return Ok(()),
+            Bound::Excluded(&end) => end - start,
+        };
+
+        let request = self.prep_request(
+            cache_name,
+            ListEraseRequest {
+                list_name: list_name.into_bytes(),
+                erase: Some(Erase::Some(ListRanges {
+                    ranges: vec![ListRange {
+                        begin_index: start,
+                        count,
+                    }],
+                })),
+            },
+        )?;
+
+        let _ = self.data_client.list_erase(request).await?;
+        Ok(())
+    }
+
     /// Fetches a set from a Momento Cache.
     ///
     /// *NOTE*: This is preview functionality and requires that you contact
@@ -1120,6 +1732,6 @@ pub enum Fields<K> {
     Some(Vec<K>),
 }
 
-fn convert_vec<E: IntoBytes>(vec: Vec<E>) -> Vec<Vec<u8>> {
+fn convert_vec<E: IntoBytes>(vec: impl IntoIterator<Item = E>) -> Vec<Vec<u8>> {
     vec.into_iter().map(|e| e.into_bytes()).collect()
 }
