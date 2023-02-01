@@ -21,3 +21,24 @@ pub use self::create_signing_key_response::*;
 pub use self::error::*;
 pub use self::list_cache_response::*;
 pub use self::list_signing_keys_response::*;
+
+#[derive(Debug, Clone)]
+pub struct ListCacheEntry {
+    value: Vec<Vec<u8>>,
+}
+
+impl ListCacheEntry {
+    pub(crate) fn new(value: Vec<Vec<u8>>) -> Self {
+        Self { value }
+    }
+
+    pub fn into_value(self) -> Vec<Vec<u8>> {
+        self.value
+    }
+
+    pub fn value(&self) -> &[Vec<u8>] {
+        &self.value
+    }
+}
+
+pub type MomentoListFetchResponse = Option<ListCacheEntry>;

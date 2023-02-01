@@ -21,12 +21,12 @@ use crate::{endpoint_resolver::MomentoEndpointsResolver, utils::user_agent, Mome
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 
 use crate::response::{
-    MomentoCache, MomentoCreateSigningKeyResponse, MomentoDictionaryFetchResponse,
+    ListCacheEntry, MomentoCache, MomentoCreateSigningKeyResponse, MomentoDictionaryFetchResponse,
     MomentoDictionaryFetchStatus, MomentoDictionaryGetResponse, MomentoDictionaryGetStatus,
     MomentoDictionaryIncrementResponse, MomentoDictionarySetResponse, MomentoDictionarySetStatus,
     MomentoError, MomentoGetResponse, MomentoGetStatus, MomentoListCacheResult,
-    MomentoListSigningKeyResult, MomentoSetFetchResponse, MomentoSetResponse, MomentoSetStatus,
-    MomentoSigningKey,
+    MomentoListFetchResponse, MomentoListSigningKeyResult, MomentoSetFetchResponse,
+    MomentoSetResponse, MomentoSetStatus, MomentoSigningKey,
 };
 use crate::utils;
 
@@ -1031,6 +1031,36 @@ impl SimpleCacheClient {
             .await?
             .into_inner()
             .list_length)
+    }
+
+    /// Fetch the entire list from the cache.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of the cache to fetch list from.
+    /// * `list_name` - the list to fetch.
+    pub async fn list_fetch(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+    ) -> MomentoResult<MomentoListFetchResponse> {
+        use list_fetch_response::List;
+
+        let request = self.prep_request(
+            cache_name,
+            ListFetchRequest {
+                list_name: list_name.into_bytes(),
+            },
+        )?;
+
+        let response = self.data_client.list_fetch(request).await?.into_inner();
+        Ok(match response.list {
+            Some(List::Found(found)) => Some(ListCacheEntry::new(found.values)),
+            _ => None,
+        })
     }
 
     /// Retrieve and remove the first item from a list.
