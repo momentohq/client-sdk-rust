@@ -1338,6 +1338,6 @@ pub enum Fields<K> {
     Some(Vec<K>),
 }
 
-fn convert_vec<E: IntoBytes>(vec: Vec<E>) -> Vec<Vec<u8>> {
+fn convert_vec<E: IntoBytes>(vec: impl IntoIterator<Item = E>) -> Vec<Vec<u8>> {
     vec.into_iter().map(|e| e.into_bytes()).collect()
 }
