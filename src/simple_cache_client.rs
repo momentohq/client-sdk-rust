@@ -1070,6 +1070,43 @@ impl SimpleCacheClient {
         )
     }
 
+    /// Retrieve and remove the last item from a list.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of the cache in which the list is stored.
+    /// * `list_name` - name of the list to pop from.
+    pub async fn list_pop_back(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+    ) -> MomentoResult<Option<Vec<u8>>> {
+        use momento_protos::cache_client::list_pop_back_response::List;
+
+        let request = self.prep_request(
+            cache_name,
+            ListPopBackRequest {
+                list_name: list_name.into_bytes(),
+            },
+        )?;
+
+        Ok(
+            match self
+                .data_client
+                .list_pop_back(request)
+                .await?
+                .into_inner()
+                .list
+            {
+                Some(List::Found(list)) => Some(list.back),
+                _ => None,
+            },
+        )
+    }
+
     /// Fetches a set from a Momento Cache.
     ///
     /// *NOTE*: This is preview functionality and requires that you contact
