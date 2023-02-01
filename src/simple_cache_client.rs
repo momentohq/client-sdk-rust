@@ -949,6 +949,45 @@ impl SimpleCacheClient {
         })
     }
 
+    /// Push multiple values to the beginning of a list.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of the cache to store the list in.
+    /// * `list_name` - list to modify.
+    /// * `values` - values to push to the front of the list.
+    /// * `truncate_to` - if set, indicates the maximum number of elements the
+    ///   list may contain before truncating elements from the back.
+    /// * `policy` - TTL policy to use.
+    pub async fn list_concat_front<V: IntoBytes>(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+        values: impl IntoIterator<Item = V>,
+        truncate_to: impl Into<Option<u32>>,
+        policy: CollectionTtl,
+    ) -> MomentoResult<u32> {
+        let request = self.prep_request(
+            cache_name,
+            ListConcatenateFrontRequest {
+                list_name: list_name.into_bytes(),
+                values: convert_vec(values),
+                ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
+                refresh_ttl: policy.refresh(),
+                truncate_back_to_size: truncate_to.into().unwrap_or(u32::MAX),
+            },
+        )?;
+
+        self.data_client
+            .list_concatenate_front(request)
+            .await
+            .map(|resp| resp.into_inner().list_length)
+            .map_err(From::from)
+    }
+
     /// Inserts a value at the start of a list.
     ///
     /// A missing entry is treated as a list of length 0.
