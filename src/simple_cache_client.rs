@@ -1382,6 +1382,28 @@ impl SimpleCacheClient {
     ///
     /// * `cache_name` - name of the cache in which the list is stored.
     /// * `list_name` - name of the list to pop from.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.list_set(&cache_name, "list", ["a", "b"], ttl).await?;
+    ///
+    /// assert!(matches!(
+    ///     momento.list_pop_back(&cache_name, "list").await?,
+    ///     Some(v) if v == b"b"
+    /// ));
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
     pub async fn list_pop_back(
         &mut self,
         cache_name: &str,
@@ -1420,6 +1442,29 @@ impl SimpleCacheClient {
     /// * `cache_name` - name of the cache in which to look for the list.
     /// * `list_name` - name of the list from which to remove elements.
     /// * `value` - the value to remove from the list.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.list_set(&cache_name, "list", ["a", "b", "c", "a"], ttl).await?;
+    /// momento.list_remove_value(&cache_name, "list", "a").await?;
+    ///
+    /// let entry = momento.list_fetch(&cache_name, "list").await?.unwrap();
+    /// let values: Vec<_> = entry.value().iter().map(|v| &v[..]).collect();
+    /// let expected: Vec<&[u8]> = vec![b"b", b"c"];
+    /// assert_eq!(values, expected);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
     pub async fn list_remove_value(
         &mut self,
         cache_name: &str,
