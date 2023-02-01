@@ -1107,6 +1107,36 @@ impl SimpleCacheClient {
         )
     }
 
+    /// Remove all elements in a list matching a particular value.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of the cache in which to look for the list.
+    /// * `list_name` - name of the list from which to remove elements.
+    /// * `value` - the value to remove from the list.
+    pub async fn list_remove_value(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+        value: impl IntoBytes,
+    ) -> MomentoResult<()> {
+        use list_remove_request::Remove;
+
+        let request = self.prep_request(
+            cache_name,
+            ListRemoveRequest {
+                list_name: list_name.into_bytes(),
+                remove: Some(Remove::AllElementsWithValue(value.into_bytes())),
+            },
+        )?;
+
+        self.data_client.list_remove(request).await?;
+        Ok(())
+    }
+
     /// Fetches a set from a Momento Cache.
     ///
     /// *NOTE*: This is preview functionality and requires that you contact
