@@ -1525,8 +1525,7 @@ impl SimpleCacheClient {
         list_name: impl IntoBytes,
         range: impl RangeBounds<u32>,
     ) -> MomentoResult<()> {
-        self.list_erase_many(cache_name, list_name, [range])
-            .await
+        self.list_erase_many(cache_name, list_name, [range]).await
     }
 
     /// Erase multiple ranges of elements from a list.
