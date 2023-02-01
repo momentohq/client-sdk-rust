@@ -991,6 +991,48 @@ impl SimpleCacheClient {
             .list_length)
     }
 
+    /// Inserts a value at the end of a list.
+    ///
+    /// A missing entry is treated as a list of length 0.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of the cache to store the list in.
+    /// * `list_name` - the list to insert the value in to.
+    /// * `value` - value to insert at the end of the list.
+    /// * `policy` - the TTL policy to use for this operation.
+    /// * `truncate_to` - should the list exceed this length, it will be truncated.
+    ///   If `None`, no truncation will be done. Truncation occurs from the front.
+    pub async fn list_push_back(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+        value: impl IntoBytes,
+        truncate_to: impl Into<Option<u32>>,
+        policy: CollectionTtl,
+    ) -> MomentoResult<u32> {
+        let request = self.prep_request(
+            cache_name,
+            ListPushBackRequest {
+                list_name: list_name.into_bytes(),
+                value: value.into_bytes(),
+                ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
+                refresh_ttl: policy.refresh(),
+                truncate_front_to_size: truncate_to.into().unwrap_or(u32::MAX),
+            },
+        )?;
+
+        Ok(self
+            .data_client
+            .list_push_back(request)
+            .await?
+            .into_inner()
+            .list_length)
+    }
+
     /// Fetches a set from a Momento Cache.
     ///
     /// *NOTE*: This is preview functionality and requires that you contact
