@@ -16,7 +16,7 @@ async fn main() {
     ) {
         Ok(client) => client,
         Err(err) => {
-            eprintln!("{}", err);
+            eprintln!("{err}");
             process::exit(1);
         }
     }
@@ -27,7 +27,7 @@ async fn main() {
     match cache_client.create_cache(&cache_name).await {
         Ok(_) => {}
         Err(err) => {
-            eprintln!("{}", err);
+            eprintln!("{err}");
         }
     }
 
@@ -43,7 +43,7 @@ async fn main() {
                 list_cache_result.next_token
             }
             Err(err) => {
-                eprintln!("{}", err);
+                eprintln!("{err}");
                 break;
             }
         };
@@ -56,14 +56,14 @@ async fn main() {
     // Sets key with default TTL and get value with that key
     let key = String::from("my_key");
     let value = String::from("my_value");
-    println!("Setting key: {}, value: {}", key, value);
+    println!("Setting key: {key}, value: {value}");
     match cache_client
         .set(&cache_name, key.clone(), value.clone(), None)
         .await
     {
         Ok(_) => {}
         Err(err) => {
-            eprintln!("{}", err);
+            eprintln!("{err}");
         }
     };
     match cache_client.get(&cache_name, key.clone()).await {
@@ -73,16 +73,16 @@ async fn main() {
             _ => println!("error occurred"),
         },
         Err(err) => {
-            eprintln!("{}", err);
+            eprintln!("{err}");
         }
     };
     // Permanently deletes cache
     match cache_client.delete_cache(&cache_name).await {
         Ok(_) => {
-            println!("Permanently deleted cache named, {}", cache_name);
+            println!("Permanently deleted cache named, {cache_name}");
         }
         Err(err) => {
-            eprintln!("{}", err);
+            eprintln!("{err}");
         }
     };
 }
