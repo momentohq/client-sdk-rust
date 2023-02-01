@@ -1271,6 +1271,28 @@ impl SimpleCacheClient {
     ///
     /// * `cache_name` - name of the cache to fetch list from.
     /// * `list_name` - the list to fetch.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.list_set(&cache_name, "list", ["a", "b"], ttl).await?;
+    ///
+    /// let entry = momento.list_fetch(&cache_name, "list").await?.unwrap();
+    /// let values: Vec<_> = entry.value().iter().map(|v| &v[..]).collect();
+    /// let expected: Vec<&[u8]> = vec![b"a", b"b"];
+    /// assert_eq!(values, expected);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
     pub async fn list_fetch(
         &mut self,
         cache_name: &str,
