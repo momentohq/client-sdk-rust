@@ -1159,6 +1159,29 @@ impl SimpleCacheClient {
     /// * `policy` - the TTL policy to use for this operation.
     /// * `truncate_to` - should the list exceed this length, it will be truncated.
     ///   If `None`, no truncation will be done. Truncation occurs from the front.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.list_set(&cache_name, "list", ["a", "b"], ttl).await?;
+    /// momento.list_push_back(&cache_name, "list", "!", None, ttl).await?;
+    ///
+    /// let entry = momento.list_fetch(&cache_name, "list").await?.unwrap();
+    /// let values: Vec<_> = entry.value().iter().map(|v| &v[..]).collect();
+    /// let expected: Vec<&[u8]> = vec![b"a", b"b", b"!"];
+    /// assert_eq!(values, expected);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
     pub async fn list_push_back(
         &mut self,
         cache_name: &str,
