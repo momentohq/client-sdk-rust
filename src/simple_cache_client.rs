@@ -1220,6 +1220,29 @@ impl SimpleCacheClient {
     /// * `list_name` - list to be set in the cache.
     /// * `values` - the values that make up the list.
     /// * `policy` - TTL policy to use for this operation.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.list_set(&cache_name, "list", ["a", "b"], ttl).await?;
+    /// momento.list_set(&cache_name, "list", ["c", "d"], ttl).await?;
+    ///
+    /// let entry = momento.list_fetch(&cache_name, "list").await?.unwrap();
+    /// let values: Vec<_> = entry.value().iter().map(|v| &v[..]).collect();
+    /// let expected: Vec<&[u8]> = vec![b"c", b"d"];
+    /// assert_eq!(values, expected);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
     pub async fn list_set<V: IntoBytes>(
         &mut self,
         cache_name: &str,
