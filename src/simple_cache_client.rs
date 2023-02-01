@@ -1525,35 +1525,80 @@ impl SimpleCacheClient {
         list_name: impl IntoBytes,
         range: impl RangeBounds<u32>,
     ) -> MomentoResult<()> {
+        self.list_erase_many(cache_name, list_name, [range]).await
+    }
+
+    /// Erase multiple ranges of elements from a list.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - the name of the cache in which to look for the list.
+    /// * `list_name` - the name of the list from which to remove elements.
+    /// * `ranges` - ranges of indices to erase from the list.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.list_set(&cache_name, "list", ["a", "b", "c", "d", "e", "f"], ttl).await?;
+    /// momento.list_erase_many(&cache_name, "list", vec![1..=2, 4..=4]).await?;
+    ///
+    /// let entry = momento.list_fetch(&cache_name, "list").await?.unwrap();
+    /// let values: Vec<_> = entry.value().iter().map(|v| &v[..]).collect();
+    /// let expected: Vec<&[u8]> = vec![b"a", b"d", b"f"];
+    /// assert_eq!(values, expected);
+    /// # Ok(())
+    /// # })
+    /// # }
+    ///
+    pub async fn list_erase_many<R: RangeBounds<u32>>(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+        ranges: impl IntoIterator<Item = R>,
+    ) -> MomentoResult<()> {
         use list_erase_request::{Erase, ListRanges};
         use std::ops::Bound;
-        let list_name = list_name.into_bytes();
 
-        let start = match range.start_bound() {
-            Bound::Unbounded => 0,
-            Bound::Included(&start) => start,
-            Bound::Excluded(&u32::MAX) => return Ok(()),
-            Bound::Excluded(&start) => start + 1,
-        };
-        let count = match range.end_bound() {
-            Bound::Unbounded if start == 0 => return self.delete(cache_name, list_name).await,
-            Bound::Unbounded => u32::MAX - start,
-            Bound::Included(&end) if end < start => return Ok(()),
-            Bound::Included(&end) => end - start + 1,
-            Bound::Excluded(&end) if end <= start => return Ok(()),
-            Bound::Excluded(&end) => end - start,
-        };
+        let list_name = list_name.into_bytes();
+        let mut req_ranges = Vec::new();
+        for range in ranges {
+            let start = match range.start_bound() {
+                Bound::Unbounded => 0,
+                Bound::Included(&start) => start,
+                Bound::Excluded(&u32::MAX) => return Ok(()),
+                Bound::Excluded(&start) => start + 1,
+            };
+            let count = match range.end_bound() {
+                Bound::Unbounded if start == 0 => return self.delete(cache_name, list_name).await,
+                Bound::Unbounded => u32::MAX - start,
+                Bound::Included(&end) if end < start => return Ok(()),
+                Bound::Included(&end) => end - start + 1,
+                Bound::Excluded(&end) if end <= start => return Ok(()),
+                Bound::Excluded(&end) => end - start,
+            };
+
+            req_ranges.push(ListRange {
+                begin_index: start,
+                count,
+            })
+        }
 
         let request = self.prep_request(
             cache_name,
             ListEraseRequest {
                 list_name: list_name.into_bytes(),
-                erase: Some(Erase::Some(ListRanges {
-                    ranges: vec![ListRange {
-                        begin_index: start,
-                        count,
-                    }],
-                })),
+                erase: Some(Erase::Some(ListRanges { ranges: req_ranges })),
             },
         )?;
 
