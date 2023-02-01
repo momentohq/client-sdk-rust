@@ -1186,6 +1186,36 @@ impl SimpleCacheClient {
             .list_length)
     }
 
+    /// Set a list within the cache.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of the cache to store the list in.
+    /// * `list_name` - list to be set in the cache.
+    /// * `values` - the values that make up the list.
+    /// * `policy` - TTL policy to use for this operation.
+    pub async fn list_set<V: IntoBytes>(
+        &mut self,
+        cache_name: &str,
+        list_name: impl IntoBytes,
+        values: impl IntoIterator<Item = V>,
+        policy: CollectionTtl,
+    ) -> MomentoResult<()> {
+        // We're exposing this as a set so updating an existing entry should count as if
+        // we are creating a new entry.
+        let policy = policy.with_refresh_on_update();
+        let values: Vec<_> = values.into_iter().map(|v| v.into_bytes()).collect();
+        let count = values.len();
+
+        self.list_concat_front(cache_name, list_name, values, count as u32, policy)
+            .await?;
+
+        Ok(())
+    }
+
     /// Fetch the entire list from the cache.
     ///
     /// *NOTE*: This is preview functionality and requires that you contact
