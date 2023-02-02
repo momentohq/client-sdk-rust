@@ -14,47 +14,52 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn is_ttl_valid(ttl: Duration) -> MomentoResult<()> {
     let max_ttl = Duration::from_millis(u64::MAX);
     if ttl > max_ttl {
-        return Err(MomentoError::InvalidArgument(format!(
-            "TTL provided, {}, needs to be less than the maximum TTL {}",
-            ttl.as_secs(),
-            max_ttl.as_secs()
-        )));
+        return Err(MomentoError::InvalidArgument {
+            description: format!(
+                "TTL provided, {}, needs to be less than the maximum TTL {}",
+                ttl.as_secs(),
+                max_ttl.as_secs()
+            ),
+            source: None
+        });
     }
     Ok(())
 }
 
 pub fn is_cache_name_valid(cache_name: &str) -> Result<(), MomentoError> {
     if cache_name.trim().is_empty() {
-        return Err(MomentoError::InvalidArgument(
-            "Cache name cannot be empty".to_string(),
-        ));
+        return Err(MomentoError::InvalidArgument {
+            description: "Cache name cannot be empty".to_string(),
+            source: None,
+        });
     }
     Ok(())
 }
 
 pub fn is_key_id_valid(key_id: &str) -> Result<(), MomentoError> {
     if key_id.trim().is_empty() {
-        return Err(MomentoError::InvalidArgument(
-            "Key ID cannot be empty".to_string(),
-        ));
+        return Err(MomentoError::InvalidArgument {
+            description: "Key ID cannot be empty".to_string(),
+            source: None,
+        });
     }
     Ok(())
 }
 
 #[derive(Debug, Error)]
 pub(crate) enum ChannelConnectError {
-    #[error("URI was invalid: {}", .0)]
+    #[error("URI was invalid")]
     BadUri(#[from] InvalidUri),
 
-    #[error("unable to connect to server: {}", .0)]
+    #[error("unable to connect to server")]
     Connection(#[from] tonic::transport::Error),
 }
 
 impl From<ChannelConnectError> for MomentoError {
     fn from(value: ChannelConnectError) -> Self {
         match value {
-            ChannelConnectError::BadUri(err) => err.into(),
-            ChannelConnectError::Connection(err) => err.into(),
+            ChannelConnectError::BadUri(err) => MomentoError::InvalidArgument { description: "bad uri".to_string(), source: Some(err.into()) },
+            ChannelConnectError::Connection(err) => MomentoError::InternalServerError { description: "connection failed".to_string(), source: err.into() },
         }
     }
 }

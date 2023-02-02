@@ -1,7 +1,7 @@
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
 
-use crate::response::MomentoError;
+use crate::{response::MomentoError};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -12,9 +12,10 @@ pub struct Claims {
 
 pub fn decode_jwt(jwt: &str, momento_endpoint: Option<String>) -> Result<Claims, MomentoError> {
     if jwt.is_empty() {
-        return Err(MomentoError::ClientSdkError(
-            "Malformed Auth Token".to_string(),
-        ));
+        return Err(MomentoError::InvalidArgument {
+            description: "missing auth token".to_string(),
+            source: None,
+        });
     }
     let key = DecodingKey::from_secret("".as_ref());
     let mut validation = Validation::new(Algorithm::HS256);
@@ -24,29 +25,27 @@ pub fn decode_jwt(jwt: &str, momento_endpoint: Option<String>) -> Result<Claims,
     validation.validate_exp = false;
     validation.insecure_disable_signature_validation();
 
-    match decode(jwt, &key, &validation) {
-        Ok(token) => {
-            let token_claims: Claims = token.claims;
+    let token = decode(jwt, &key, &validation).map_err(token_parsing_error)?;
+    let token_claims: Claims = token.claims;
 
-            // If Momento Endpoint is not provided, then `c` and `cp` claims must be present.
-            // If Momento Endpoint is present then that always takes precedence over the c and cp
-            // claims in the JWT, hence, there is no need to look for all possibilities.
-            if momento_endpoint.is_none() && (token_claims.c.is_none() || token_claims.cp.is_none())
-            {
-                log::debug!("Momento Endpoint is none and auth token is missing endpoints");
-                Err(token_parsing_error())
-            } else {
-                Ok(token_claims)
-            }
-        }
-        Err(_) => Err(token_parsing_error()),
+    // If Momento Endpoint is not provided, then `c` and `cp` claims must be present.
+    // If Momento Endpoint is present then that always takes precedence over the c and cp
+    // claims in the JWT, hence, there is no need to look for all possibilities.
+    if momento_endpoint.is_none() && (token_claims.c.is_none() || token_claims.cp.is_none()) {
+        Err(MomentoError::InvalidArgument {
+            description: "momento endpoint is none and auth token is missing endpoints. One or the other must be provided".to_string(),
+            source: None,
+        })
+    } else {
+        Ok(token_claims)
     }
 }
 
-fn token_parsing_error() -> MomentoError {
-    MomentoError::ClientSdkError(
-        "Could not parse token. Please ensure a valid token was entered correctly.".to_string(),
-    )
+fn token_parsing_error(e: jsonwebtoken::errors::Error) -> MomentoError {
+    MomentoError::ClientSdkError {
+        description: "Could not parse token. Please ensure a valid token was entered correctly.".to_string(),
+        source: crate::ErrorSource::Unknown(Box::new(e)),
+    }
 }
 
 #[cfg(test)]
@@ -70,7 +69,7 @@ mod tests {
     fn empty_jwt() {
         let e = decode_jwt("", None).unwrap_err();
         let _err_msg = "Malformed Auth Token".to_owned();
-        assert!(matches!(e, MomentoError::ClientSdkError(_err_msg)));
+        assert!(matches!(e.to_string(), _err_msg));
     }
 
     #[test]
@@ -78,7 +77,7 @@ mod tests {
         let e = decode_jwt("wfheofhriugheifweif", None).unwrap_err();
         let _err_msg =
             "Could not parse token. Please ensure a valid token was entered correctly.".to_owned();
-        assert!(matches!(e, MomentoError::ClientSdkError(_err_msg)));
+        assert!(matches!(e.to_string(), _err_msg));
     }
 
     #[test]
@@ -94,6 +93,6 @@ mod tests {
         let e = decode_jwt("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba", None).unwrap_err();
         let _err_msg =
             "Could not parse token. Please ensure a valid token was entered correctly.".to_owned();
-        assert!(matches!(e, MomentoError::ClientSdkError(_err_msg)));
+        assert!(matches!(e.to_string(), _err_msg));
     }
 }

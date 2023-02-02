@@ -151,9 +151,10 @@ fn request_meta_data<T>(request: &mut tonic::Request<T>, cache_name: &str) -> Mo
             request.metadata_mut().append("cache", value);
         })
         .map_err(|e| {
-            MomentoError::InvalidArgument(format!(
-                "Could not treat cache name as a header value: {e}"
-            ))
+            MomentoError::InvalidArgument {
+                description: format!("Could not treat cache name as a header value: {e}"),
+                source: Some(crate::ErrorSource::Unknown(Box::new(e))),
+            }
         })
 }
 
@@ -1629,8 +1630,8 @@ impl SimpleCacheClient {
     ///
     /// momento.list_set(&cache_name, "present", ["a", "b"], ttl).await?;
     ///
-    /// assert_eq!(momento.list_len(&cache_name, "present").await?, Some(2));
-    /// assert_eq!(momento.list_len(&cache_name, "missing").await?, None);
+    /// assert_eq!(momento.list_length(&cache_name, "present").await?, Some(2));
+    /// assert_eq!(momento.list_length(&cache_name, "missing").await?, None);
     /// # Ok(())
     /// # })
     /// # }

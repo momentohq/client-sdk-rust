@@ -118,7 +118,6 @@ impl MomentoEndpointsResolver {
 #[cfg(test)]
 mod tests {
     use crate::endpoint_resolver::MomentoEndpointsResolver;
-    use crate::response::MomentoError;
 
     #[test]
     fn urls_from_auth_token() {
@@ -205,6 +204,6 @@ mod tests {
         let e = MomentoEndpointsResolver::resolve(invalid_auth_token, None).unwrap_err();
         let _err_msg =
             "Could not parse token. Please ensure a valid token was entered correctly.".to_owned();
-        assert!(matches!(e, MomentoError::ClientSdkError(_err_msg)));
+        assert!(matches!(e.to_string(), _err_msg));
     }
 }
