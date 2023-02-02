@@ -20,7 +20,7 @@ pub fn is_ttl_valid(ttl: Duration) -> MomentoResult<()> {
                 ttl.as_secs(),
                 max_ttl.as_secs()
             ),
-            source: None
+            source: None,
         });
     }
     Ok(())
@@ -58,8 +58,14 @@ pub(crate) enum ChannelConnectError {
 impl From<ChannelConnectError> for MomentoError {
     fn from(value: ChannelConnectError) -> Self {
         match value {
-            ChannelConnectError::BadUri(err) => MomentoError::InvalidArgument { description: "bad uri".to_string(), source: Some(err.into()) },
-            ChannelConnectError::Connection(err) => MomentoError::InternalServerError { description: "connection failed".to_string(), source: err.into() },
+            ChannelConnectError::BadUri(err) => MomentoError::InvalidArgument {
+                description: "bad uri".to_string(),
+                source: Some(err.into()),
+            },
+            ChannelConnectError::Connection(err) => MomentoError::InternalServerError {
+                description: "connection failed".to_string(),
+                source: err.into(),
+            },
         }
     }
 }

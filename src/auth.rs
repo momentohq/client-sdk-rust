@@ -68,12 +68,30 @@ pub enum AuthError {
 impl From<AuthError> for MomentoError {
     fn from(err: AuthError) -> Self {
         match err {
-            AuthError::LoginAborted => MomentoError::Cancelled { description: "aborted login".to_string(), source: err.into() },
-            AuthError::LoginFailed(_) =>MomentoError::PermissionDenied { description: "login failed".to_string(), source: err.into() },
-            AuthError::BadUri(_) => MomentoError::BadRequest { description: "bad uri".to_string(), source: Some(err.into()) },
-            AuthError::Connection(_) => MomentoError::InternalServerError { description: "connection failed".to_string(), source: err.into() },
-            AuthError::ServerError(_) => MomentoError::InternalServerError { description: "server error".to_string(), source: err.into() },
-            AuthError::ActionError(_) => MomentoError::ClientSdkError { description: "login action failed".to_string(), source: err.into() },
+            AuthError::LoginAborted => MomentoError::Cancelled {
+                description: "aborted login".to_string(),
+                source: err.into(),
+            },
+            AuthError::LoginFailed(_) => MomentoError::PermissionDenied {
+                description: "login failed".to_string(),
+                source: err.into(),
+            },
+            AuthError::BadUri(_) => MomentoError::BadRequest {
+                description: "bad uri".to_string(),
+                source: Some(err.into()),
+            },
+            AuthError::Connection(_) => MomentoError::InternalServerError {
+                description: "connection failed".to_string(),
+                source: err.into(),
+            },
+            AuthError::ServerError(_) => MomentoError::InternalServerError {
+                description: "server error".to_string(),
+                source: err.into(),
+            },
+            AuthError::ActionError(_) => MomentoError::ClientSdkError {
+                description: "login action failed".to_string(),
+                source: err.into(),
+            },
         }
     }
 }

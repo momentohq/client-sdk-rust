@@ -1,7 +1,7 @@
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
 
-use crate::{response::MomentoError};
+use crate::response::MomentoError;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -43,15 +43,14 @@ pub fn decode_jwt(jwt: &str, momento_endpoint: Option<String>) -> Result<Claims,
 
 fn token_parsing_error(e: jsonwebtoken::errors::Error) -> MomentoError {
     MomentoError::ClientSdkError {
-        description: "Could not parse token. Please ensure a valid token was entered correctly.".to_string(),
+        description: "Could not parse token. Please ensure a valid token was entered correctly."
+            .to_string(),
         source: crate::ErrorSource::Unknown(Box::new(e)),
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::response::MomentoError;
-
     use super::decode_jwt;
 
     #[test]
