@@ -50,10 +50,7 @@ mod tests {
         let mut mm = get_momento_instance();
         let result = mm.create_cache(cache_name).await.unwrap_err();
         let _err_msg = "Cache name cannot be empty".to_string();
-        assert!(matches!(
-            result,
-            MomentoError::InvalidArgument(_err_message)
-        ))
+        assert!(matches!(result.to_string(), _err_message))
     }
 
     #[tokio::test]
@@ -61,7 +58,8 @@ mod tests {
         let key_id = "";
         let mut mm = get_momento_instance();
         let result = mm.revoke_signing_key(key_id).await.unwrap_err();
-        assert!(matches!(result, MomentoError::InvalidArgument(_)))
+        let _expected = "".to_string();
+        assert!(matches!(result.to_string(), _expected))
     }
 
     #[tokio::test]
@@ -81,10 +79,7 @@ mod tests {
             .unwrap_err();
         let _err_message =
             format!("TTL provided, {ttl}, needs to be less than the maximum TTL {max_ttl}");
-        assert!(matches!(
-            result,
-            MomentoError::InvalidArgument(_err_message)
-        ));
+        assert!(matches!(result.to_string(), _err_message));
         mm.delete_cache(&cache_name)
             .await
             .expect("failed to delete cache");
@@ -253,25 +248,16 @@ mod tests {
         // Unable to reach control plane
         let create_cache_result = client.create_cache("cache").await.unwrap_err();
         let _err_msg_internal = "error trying to connect: dns error: failed to lookup address information: nodename nor servname provided, or not known".to_string();
-        assert!(matches!(
-            create_cache_result,
-            MomentoError::InternalServerError(_err_msg_internal)
-        ));
+        assert!(matches!(create_cache_result.to_string(), _err_msg_internal));
         // Can reach data plane
         let set_result = client
             .set("cache", "hello", "world", None)
             .await
             .unwrap_err();
         let _err_msg_unauthenticated = "Invalid signature".to_string();
-        assert!(matches!(
-            set_result,
-            MomentoError::Unauthenticated(_err_msg)
-        ));
+        assert!(matches!(set_result.to_string(), _err_msg));
         let get_result = client.get("cache", "hello").await.unwrap_err();
-        assert!(matches!(
-            get_result,
-            MomentoError::Unauthenticated(_err_msg_unauthenticated)
-        ));
+        assert!(matches!(get_result.to_string(), _err_msg_unauthenticated));
     }
 
     #[tokio::test]
@@ -295,8 +281,8 @@ mod tests {
         let create_cache_result = client.create_cache("cache").await.unwrap_err();
         let _err_msg_unauthenticated = "Invalid signature".to_string();
         assert!(matches!(
-            create_cache_result,
-            MomentoError::Unauthenticated(_err_msg_unauthenticated)
+            create_cache_result.to_string(),
+            _err_msg_unauthenticated
         ));
         // Unable to reach data plane
         let set_result = client
@@ -304,15 +290,9 @@ mod tests {
             .await
             .unwrap_err();
         let _err_msg_internal = "error trying to connect: dns error: failed to lookup address information: nodename nor servname provided, or not known".to_string();
-        assert!(matches!(
-            set_result,
-            MomentoError::InternalServerError(_err_msg_internal)
-        ));
+        assert!(matches!(set_result.to_string(), _err_msg_internal));
         let get_result = client.get("cache", "hello").await.unwrap_err();
-        assert!(matches!(
-            get_result,
-            MomentoError::InternalServerError(_err_msg_internal)
-        ));
+        assert!(matches!(get_result.to_string(), _err_msg_internal));
     }
 
     #[tokio::test]

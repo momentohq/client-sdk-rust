@@ -20,6 +20,8 @@ exclude = [ "example" ]
 [dependencies]
 momento-protos = { version = "0.42" }
 log = "0.4.17"
+hyper = { version = "0.14" }
+h2 = { version = "0.3" }
 tonic = { version = "0.8", features = ["tls", "tls-roots", "tls-webpki-roots"] }
 jsonwebtoken = "8.0.1"
 rand = "0.8.5"
