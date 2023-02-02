@@ -151,7 +151,7 @@ fn request_meta_data<T>(request: &mut tonic::Request<T>, cache_name: &str) -> Mo
             request.metadata_mut().append("cache", value);
         })
         .map_err(|e| MomentoError::InvalidArgument {
-            description: format!("Could not treat cache name as a header value: {e}"),
+            description: format!("Could not treat cache name as a header value: {e}").into(),
             source: Some(crate::ErrorSource::Unknown(Box::new(e))),
         })
 }

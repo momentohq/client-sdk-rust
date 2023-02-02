@@ -19,7 +19,7 @@ pub fn is_ttl_valid(ttl: Duration) -> MomentoResult<()> {
                 "TTL provided, {}, needs to be less than the maximum TTL {}",
                 ttl.as_secs(),
                 max_ttl.as_secs()
-            ),
+            ).into(),
             source: None,
         });
     }
@@ -29,7 +29,7 @@ pub fn is_ttl_valid(ttl: Duration) -> MomentoResult<()> {
 pub fn is_cache_name_valid(cache_name: &str) -> Result<(), MomentoError> {
     if cache_name.trim().is_empty() {
         return Err(MomentoError::InvalidArgument {
-            description: "Cache name cannot be empty".to_string(),
+            description: "Cache name cannot be empty".into(),
             source: None,
         });
     }
@@ -39,7 +39,7 @@ pub fn is_cache_name_valid(cache_name: &str) -> Result<(), MomentoError> {
 pub fn is_key_id_valid(key_id: &str) -> Result<(), MomentoError> {
     if key_id.trim().is_empty() {
         return Err(MomentoError::InvalidArgument {
-            description: "Key ID cannot be empty".to_string(),
+            description: "Key ID cannot be empty".into(),
             source: None,
         });
     }
@@ -59,11 +59,11 @@ impl From<ChannelConnectError> for MomentoError {
     fn from(value: ChannelConnectError) -> Self {
         match value {
             ChannelConnectError::BadUri(err) => MomentoError::InvalidArgument {
-                description: "bad uri".to_string(),
+                description: "bad uri".into(),
                 source: Some(err.into()),
             },
             ChannelConnectError::Connection(err) => MomentoError::InternalServerError {
-                description: "connection failed".to_string(),
+                description: "connection failed".into(),
                 source: err.into(),
             },
         }

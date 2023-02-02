@@ -13,7 +13,7 @@ pub struct Claims {
 pub fn decode_jwt(jwt: &str, momento_endpoint: Option<String>) -> Result<Claims, MomentoError> {
     if jwt.is_empty() {
         return Err(MomentoError::InvalidArgument {
-            description: "missing auth token".to_string(),
+            description: "missing auth token".into(),
             source: None,
         });
     }
@@ -33,7 +33,7 @@ pub fn decode_jwt(jwt: &str, momento_endpoint: Option<String>) -> Result<Claims,
     // claims in the JWT, hence, there is no need to look for all possibilities.
     if momento_endpoint.is_none() && (token_claims.c.is_none() || token_claims.cp.is_none()) {
         Err(MomentoError::InvalidArgument {
-            description: "momento endpoint is none and auth token is missing endpoints. One or the other must be provided".to_string(),
+            description: "momento endpoint is none and auth token is missing endpoints. One or the other must be provided".into(),
             source: None,
         })
     } else {
@@ -44,7 +44,7 @@ pub fn decode_jwt(jwt: &str, momento_endpoint: Option<String>) -> Result<Claims,
 fn token_parsing_error(e: jsonwebtoken::errors::Error) -> MomentoError {
     MomentoError::ClientSdkError {
         description: "Could not parse token. Please ensure a valid token was entered correctly."
-            .to_string(),
+            .into(),
         source: crate::ErrorSource::Unknown(Box::new(e)),
     }
 }

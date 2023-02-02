@@ -69,27 +69,27 @@ impl From<AuthError> for MomentoError {
     fn from(err: AuthError) -> Self {
         match err {
             AuthError::LoginAborted => MomentoError::Cancelled {
-                description: "aborted login".to_string(),
+                description: "aborted login".into(),
                 source: err.into(),
             },
             AuthError::LoginFailed(_) => MomentoError::PermissionDenied {
-                description: "login failed".to_string(),
+                description: "login failed".into(),
                 source: err.into(),
             },
             AuthError::BadUri(_) => MomentoError::BadRequest {
-                description: "bad uri".to_string(),
+                description: "bad uri".into(),
                 source: Some(err.into()),
             },
             AuthError::Connection(_) => MomentoError::InternalServerError {
-                description: "connection failed".to_string(),
+                description: "connection failed".into(),
                 source: err.into(),
             },
             AuthError::ServerError(_) => MomentoError::InternalServerError {
-                description: "server error".to_string(),
+                description: "server error".into(),
                 source: err.into(),
             },
             AuthError::ActionError(_) => MomentoError::ClientSdkError {
-                description: "login action failed".to_string(),
+                description: "login action failed".into(),
                 source: err.into(),
             },
         }
