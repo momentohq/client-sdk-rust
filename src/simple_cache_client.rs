@@ -1626,8 +1626,8 @@ impl SimpleCacheClient {
     ///
     /// momento.list_set(&cache_name, "present", ["a", "b"], ttl).await?;
     ///
-    /// assert_eq!(momento.list_len(&cache_name, "present").await?, Some(2));
-    /// assert_eq!(momento.list_len(&cache_name, "missing").await?, None);
+    /// assert_eq!(momento.list_length(&cache_name, "present").await?, Some(2));
+    /// assert_eq!(momento.list_length(&cache_name, "missing").await?, None);
     /// # Ok(())
     /// # })
     /// # }
