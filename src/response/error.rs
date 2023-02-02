@@ -1,4 +1,4 @@
-use std::{error::Error, fmt::Debug, borrow::Cow};
+use std::{borrow::Cow, error::Error, fmt::Debug};
 
 use tonic::codegen::http;
 
@@ -218,8 +218,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
                         }
                     } else {
                         MomentoError::InternalServerError {
-                            description: "an internal http2 error terminated the request"
-                                .into(),
+                            description: "an internal http2 error terminated the request".into(),
                             source: status.into(),
                         }
                     }

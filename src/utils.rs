@@ -19,7 +19,8 @@ pub fn is_ttl_valid(ttl: Duration) -> MomentoResult<()> {
                 "TTL provided, {}, needs to be less than the maximum TTL {}",
                 ttl.as_secs(),
                 max_ttl.as_secs()
-            ).into(),
+            )
+            .into(),
             source: None,
         });
     }
