@@ -33,7 +33,7 @@ the calls will result in an `Unsupported operation` error.**
 
 ### Installing Momento and Running the Example
 
-Check out [examples](./examples/) directory!
+Check out [example](./example/) directory!
 
 <br/>
 
