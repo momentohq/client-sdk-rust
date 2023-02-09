@@ -2034,11 +2034,14 @@ impl SimpleCacheClient {
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
     ///
-    /// match momento.sorted_set_get_rankfetch(&cache_name, "test sorted set", "element a").await?.value {
-    ///     Some(rank) => {
-    ///         println!("element has rank: {rank}");
-    ///     },
-    ///     None => println!("sorted set or element not found!"),
+    /// let elements = vec!["a", "b", "c"];
+    ///
+    /// let scores = momento.sorted_set_get_score(&cache_name, "test sorted set", elements.clone()).await?;
+    ///
+    /// println!("element\tscore");
+    /// for (element, score) in elements.iter().zip(scores.iter()) {
+    ///     let score = score.map(|s| format!("{s}")).unwrap_or("None".as_string());
+    ///     println!("{element}\t{score}");
     /// }
     /// # Ok(())
     /// # })
