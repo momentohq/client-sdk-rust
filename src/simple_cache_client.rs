@@ -1960,7 +1960,7 @@ impl SimpleCacheClient {
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
     ///
-    /// match momento.sorted_set_get_rankfetch(&cache_name, "test sorted set", "element a").await?.value {
+    /// match momento.sorted_set_get_rank(&cache_name, "test sorted set", "element a").await?.value {
     ///     Some(rank) => {
     ///         println!("element has rank: {rank}");
     ///     },
@@ -2114,7 +2114,7 @@ impl SimpleCacheClient {
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
     ///
-    /// momento.sorted_set_increment(&cache_name, "test sorted set", b"a", 50.0, ttl).await?;
+    /// momento.sorted_set_increment(&cache_name, "test sorted set", "a", 50.0, ttl).await?;
     /// # Ok(())
     /// # })
     /// # }
@@ -2221,7 +2221,7 @@ impl SimpleCacheClient {
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
     ///
-    /// momento.sorted_set_remove(&cache_name, "test sorted set", vec![b"a", b"b", b"c"]).await?;
+    /// momento.sorted_set_remove(&cache_name, "test sorted set", vec!["a", "b", "c"]).await?;
     /// # Ok(())
     /// # })
     /// # }
