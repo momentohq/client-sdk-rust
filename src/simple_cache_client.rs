@@ -1,4 +1,6 @@
+pub use crate::simple_cache_client::sorted_set_fetch_request::Order;
 use chrono::{DateTime, NaiveDateTime, Utc};
+use core::num::NonZeroU32;
 use momento_protos::{
     cache_client::scs_client::*,
     cache_client::*,
@@ -28,6 +30,7 @@ use crate::response::{
     MomentoDictionarySetResponse, MomentoError, MomentoGetResponse, MomentoGetStatus,
     MomentoListCacheResult, MomentoListFetchResponse, MomentoListSigningKeyResult,
     MomentoSetDifferenceResponse, MomentoSetFetchResponse, MomentoSetResponse, MomentoSigningKey,
+    MomentoSortedSetFetchResponse,
 };
 use crate::utils;
 
@@ -1857,6 +1860,394 @@ impl SimpleCacheClient {
         elements: Vec<E>,
     ) -> MomentoResult<MomentoSetDifferenceResponse> {
         self.set_difference(cache_name, set_name, elements).await
+    }
+
+    /// Fetches a sorted set from a Momento Cache.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache.
+    /// * `set_name` - name of the set.
+    /// * `order` - specify ascending or descending order
+    /// * `limit` - optionally limit the number of results returned
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{Order, SimpleCacheClientBuilder};
+    ///
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// match momento.sorted_set_fetch(&cache_name, "test sorted set", Order::Ascending, None).await?.value {
+    ///     Some(set) => {
+    ///         println!("sorted set elements: (score and name)");
+    ///         for entry in &set {
+    ///             println!("{} {:?}", entry.score, entry.name);
+    ///         }
+    ///     },
+    ///     None => println!("sorted set not found!"),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn sorted_set_fetch(
+        &mut self,
+        cache_name: &str,
+        set_name: impl IntoBytes,
+        order: Order,
+        limit: impl Into<Option<NonZeroU32>>,
+    ) -> MomentoResult<MomentoSortedSetFetchResponse> {
+        use momento_protos::cache_client::sorted_set_fetch_request::{All, Limit, NumResults};
+        use momento_protos::cache_client::sorted_set_fetch_response::SortedSet;
+
+        let num_results = limit
+            .into()
+            .map(|v| NumResults::Limit(Limit { limit: v.into() }))
+            .unwrap_or_else(|| NumResults::All(All {}));
+
+        let request = self.prep_request(
+            cache_name,
+            SortedSetFetchRequest {
+                set_name: set_name.into_bytes(),
+                order: order.into(),
+                num_results: Some(num_results),
+            },
+        )?;
+
+        let response = self
+            .data_client
+            .sorted_set_fetch(request)
+            .await?
+            .into_inner();
+        Ok(MomentoSortedSetFetchResponse {
+            value: response.sorted_set.and_then(|s| match s {
+                SortedSet::Found(found) => Some(found.elements),
+                SortedSet::Missing(_) => None,
+            }),
+        })
+    }
+
+    /// Gets the rank of an element in a sorted set in a Momento Cache.
+    ///
+    /// The return result is a `MomentoResult` which on success contains an
+    /// option. If the sorted set or element is not found the `None` variant is
+    /// returned. Otherwise, the `Some` variant contains the rank of the item
+    /// within the sorted set.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache.
+    /// * `set_name` - name of the set.
+    /// * `element_name` - name of the element.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{Order, SimpleCacheClientBuilder};
+    ///
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// match momento.sorted_set_get_rankfetch(&cache_name, "test sorted set", "element a").await?.value {
+    ///     Some(rank) => {
+    ///         println!("element has rank: {rank}");
+    ///     },
+    ///     None => println!("sorted set or element not found!"),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn sorted_set_get_rank(
+        &mut self,
+        cache_name: &str,
+        set_name: impl IntoBytes,
+        element_name: impl IntoBytes,
+    ) -> MomentoResult<Option<u64>> {
+        use momento_protos::cache_client::sorted_set_get_rank_response::Rank;
+
+        let request = self.prep_request(
+            cache_name,
+            SortedSetGetRankRequest {
+                set_name: set_name.into_bytes(),
+                element_name: element_name.into_bytes(),
+            },
+        )?;
+
+        let response = self
+            .data_client
+            .sorted_set_get_rank(request)
+            .await?
+            .into_inner();
+
+        let rank = match response.rank {
+            Some(Rank::ElementRank(r)) => {
+                if r.result() == ECacheResult::Ok {
+                    Some(r.rank)
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        };
+
+        Ok(rank)
+    }
+
+    /// Gets the score associated with one or more elements in a sorted set in a
+    /// Momento Cache.
+    ///
+    /// The return result is a `MomentoResult` which on success contains a vec
+    /// of options. The ordering matches the order in which the element names
+    /// were provided. If the element was found, the `Some` variant contains the
+    /// score of the element within the sorted set. Otherwise, if the sorted set
+    /// or element was not found, the `None` variant will be in that position.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache.
+    /// * `set_name` - name of the set.
+    /// * `element_names` - names of the elements.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{Order, SimpleCacheClientBuilder};
+    ///
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// match momento.sorted_set_get_rankfetch(&cache_name, "test sorted set", "element a").await?.value {
+    ///     Some(rank) => {
+    ///         println!("element has rank: {rank}");
+    ///     },
+    ///     None => println!("sorted set or element not found!"),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn sorted_set_get_score(
+        &mut self,
+        cache_name: &str,
+        set_name: impl IntoBytes,
+        element_names: Vec<impl IntoBytes>,
+    ) -> MomentoResult<Vec<Option<f64>>> {
+        use momento_protos::cache_client::sorted_set_get_score_response::SortedSet;
+
+        let len = element_names.len();
+
+        let request = self.prep_request(
+            cache_name,
+            SortedSetGetScoreRequest {
+                set_name: set_name.into_bytes(),
+                element_name: convert_vec(element_names),
+            },
+        )?;
+
+        let response = self
+            .data_client
+            .sorted_set_get_score(request)
+            .await?
+            .into_inner();
+
+        match response.sorted_set {
+            Some(SortedSet::Found(s)) => Ok(s
+                .elements
+                .iter()
+                .map(|e| {
+                    if e.result() == ECacheResult::Ok {
+                        Some(e.score)
+                    } else {
+                        None
+                    }
+                })
+                .collect()),
+            _ => Ok(vec![None; len]),
+        }
+    }
+
+    /// Increments the score for an element in a sorted set in a Momento Cache.
+    ///
+    /// The return type is a `MomentoResult` where on success the element has
+    /// been incremented and the new score is returned.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache.
+    /// * `set_name` - name of the set.
+    /// * `element_name` - name of the element.
+    /// * `amount` - the amount to be added to the score.
+    /// * `policy` - TTL policy to use.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.sorted_set_increment(&cache_name, "test sorted set", b"a", 50.0, ttl).await?;
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn sorted_set_increment(
+        &mut self,
+        cache_name: &str,
+        set_name: impl IntoBytes,
+        element_name: impl IntoBytes,
+        amount: f64,
+        policy: CollectionTtl,
+    ) -> MomentoResult<f64> {
+        let request = self.prep_request(
+            cache_name,
+            SortedSetIncrementRequest {
+                set_name: set_name.into_bytes(),
+                element_name: element_name.into_bytes(),
+                amount,
+                ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
+                refresh_ttl: policy.refresh(),
+            },
+        )?;
+
+        let response = self
+            .data_client
+            .sorted_set_increment(request)
+            .await?
+            .into_inner();
+
+        Ok(response.value)
+    }
+
+    /// Adds elements to a sorted set in a Momento Cache.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache.
+    /// * `set_name` - name of the set.
+    /// * `elements` - the elements to be added.
+    /// * `policy` - TTL policy to use.
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.sorted_set_put(&cache_name, "test sorted set", vec![
+    ///     SortedSetElement { name: b"a", score: 50.0 },
+    ///     SortedSetElement { name: b"b", score: 60.0 },
+    /// ], ttl).await?;
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn sorted_set_put(
+        &mut self,
+        cache_name: &str,
+        set_name: impl IntoBytes,
+        elements: Vec<SortedSetElement>,
+        policy: CollectionTtl,
+    ) -> MomentoResult<()> {
+        let request = self.prep_request(
+            cache_name,
+            SortedSetPutRequest {
+                set_name: set_name.into_bytes(),
+                elements,
+                ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
+                refresh_ttl: policy.refresh(),
+            },
+        )?;
+
+        let _ = self.data_client.sorted_set_put(request).await?.into_inner();
+
+        Ok(())
+    }
+
+    /// Removes elements from a sorted set from a Momento Cache.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache.
+    /// * `set_name` - name of the set.
+    /// * `element_names` - the names of the elements to be removed
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// use std::time::Duration;
+    /// use momento::SimpleCacheClientBuilder;
+    ///
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.sorted_set_remove(&cache_name, "test sorted set", vec![b"a", b"b", b"c"]).await?;
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn sorted_set_remove(
+        &mut self,
+        cache_name: &str,
+        set_name: impl IntoBytes,
+        mut element_names: Vec<impl IntoBytes>,
+    ) -> MomentoResult<()> {
+        use momento_protos::cache_client::sorted_set_remove_request::{RemoveElements, Some};
+
+        let request = self.prep_request(
+            cache_name,
+            SortedSetRemoveRequest {
+                set_name: set_name.into_bytes(),
+                remove_elements: Some(RemoveElements::Some(Some {
+                    element_name: element_names.drain(..).map(|v| v.into_bytes()).collect(),
+                })),
+            },
+        )?;
+
+        let _ = self
+            .data_client
+            .sorted_set_remove(request)
+            .await?
+            .into_inner();
+
+        Ok(())
     }
 
     /// Deletes an item from a Momento Cache

@@ -11,7 +11,7 @@ mod utils;
 pub use crate::response::ErrorSource;
 pub use crate::response::MomentoError;
 pub use crate::simple_cache_client::{
-    CollectionTtl, Fields, IntoBytes, SimpleCacheClient, SimpleCacheClientBuilder,
+    CollectionTtl, Fields, IntoBytes, Order, SimpleCacheClient, SimpleCacheClientBuilder,
 };
 
 pub type MomentoResult<T> = Result<T, MomentoError>;
