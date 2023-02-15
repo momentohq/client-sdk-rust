@@ -1,5 +1,5 @@
-use std::time::SystemTime;
 use serde::{Deserialize, Serialize};
+use std::time::SystemTime;
 
 /// Response signing key for list of signing keys.
 #[derive(Debug, Serialize, Deserialize)]
