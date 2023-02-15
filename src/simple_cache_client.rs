@@ -394,7 +394,7 @@ impl SimpleCacheClient {
         let response = MomentoCreateSigningKeyResponse {
             key_id: kid.as_str().expect("'kid' not a valid str").to_owned(),
             key: res.key,
-            expires_at: SystemTime::from(UNIX_EPOCH + Duration::from_secs(res.expires_at)),
+            expires_at: UNIX_EPOCH + Duration::from_secs(res.expires_at),
             endpoint: self.data_endpoint.clone(),
         };
         Ok(response)
@@ -460,9 +460,7 @@ impl SimpleCacheClient {
             .iter()
             .map(|signing_key| MomentoSigningKey {
                 key_id: signing_key.key_id.to_string(),
-                expires_at: SystemTime::from(
-                    UNIX_EPOCH + Duration::from_secs(signing_key.expires_at),
-                ),
+                expires_at: UNIX_EPOCH + Duration::from_secs(signing_key.expires_at),
                 endpoint: self.data_endpoint.clone(),
             })
             .collect();
