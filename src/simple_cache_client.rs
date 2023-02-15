@@ -1,4 +1,3 @@
-use chrono::{DateTime, NaiveDateTime, Utc};
 use momento_protos::{
     cache_client::scs_client::*,
     cache_client::*,
@@ -11,7 +10,7 @@ use serde_json::Value;
 use std::convert::TryFrom;
 use std::iter::FromIterator;
 use std::ops::RangeBounds;
-use std::time::Duration;
+use std::time::{Duration, UNIX_EPOCH};
 use std::{
     collections::{HashMap, HashSet},
     convert::TryInto,
@@ -395,11 +394,7 @@ impl SimpleCacheClient {
         let response = MomentoCreateSigningKeyResponse {
             key_id: kid.as_str().expect("'kid' not a valid str").to_owned(),
             key: res.key,
-            expires_at: DateTime::<Utc>::from_utc(
-                NaiveDateTime::from_timestamp_opt(res.expires_at as i64, 0)
-                    .expect("couldn't parse from timestamp"),
-                Utc,
-            ),
+            expires_at: UNIX_EPOCH + Duration::from_secs(res.expires_at),
             endpoint: self.data_endpoint.clone(),
         };
         Ok(response)
@@ -465,11 +460,7 @@ impl SimpleCacheClient {
             .iter()
             .map(|signing_key| MomentoSigningKey {
                 key_id: signing_key.key_id.to_string(),
-                expires_at: DateTime::<Utc>::from_utc(
-                    NaiveDateTime::from_timestamp_opt(signing_key.expires_at as i64, 0)
-                        .expect("couldn't parse timestamp from signing key"),
-                    Utc,
-                ),
+                expires_at: UNIX_EPOCH + Duration::from_secs(signing_key.expires_at),
                 endpoint: self.data_endpoint.clone(),
             })
             .collect();
