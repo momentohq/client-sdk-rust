@@ -1879,7 +1879,8 @@ impl SimpleCacheClient {
     /// # fn main() -> momento_test_util::DoctestResult {
     /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
-    /// use momento::{Order, SimpleCacheClientBuilder};
+    /// use momento::SimpleCacheClientBuilder;
+    /// use momento::sorted_set::Order;
     ///
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
@@ -1955,12 +1956,13 @@ impl SimpleCacheClient {
     /// # fn main() -> momento_test_util::DoctestResult {
     /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
-    /// use momento::{Order, SimpleCacheClientBuilder};
+    /// use momento::SimpleCacheClientBuilder;
+    /// use momento::sorted_set::Order;
     ///
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
     ///
-    /// match momento.sorted_set_get_rank(&cache_name, "test sorted set", "element a").await?.value {
+    /// match momento.sorted_set_get_rank(&cache_name, "test sorted set", "element a").await? {
     ///     Some(rank) => {
     ///         println!("element has rank: {rank}");
     ///     },
@@ -2029,7 +2031,7 @@ impl SimpleCacheClient {
     /// # fn main() -> momento_test_util::DoctestResult {
     /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
-    /// use momento::{Order, SimpleCacheClientBuilder};
+    /// use momento::SimpleCacheClientBuilder;
     ///
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
@@ -2040,7 +2042,7 @@ impl SimpleCacheClient {
     ///
     /// println!("element\tscore");
     /// for (element, score) in elements.iter().zip(scores.iter()) {
-    ///     let score = score.map(|s| format!("{s}")).unwrap_or("None".as_string());
+    ///     let score = score.map(|s| format!("{s}")).unwrap_or("None".to_string());
     ///     println!("{element}\t{score}");
     /// }
     /// # Ok(())
@@ -2165,14 +2167,15 @@ impl SimpleCacheClient {
     /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    /// use momento::sorted_set::SortedSetElement;
     ///
     /// let ttl = CollectionTtl::default();
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.sorted_set_put(&cache_name, "test sorted set", vec![
-    ///     SortedSetElement { name: b"a", score: 50.0 },
-    ///     SortedSetElement { name: b"b", score: 60.0 },
+    ///     SortedSetElement { name: "a".into(), score: 50.0 },
+    ///     SortedSetElement { name: "b".into(), score: 60.0 },
     /// ], ttl).await?;
     /// # Ok(())
     /// # })

@@ -11,7 +11,12 @@ mod utils;
 pub use crate::response::ErrorSource;
 pub use crate::response::MomentoError;
 pub use crate::simple_cache_client::{
-    CollectionTtl, Fields, IntoBytes, Order, SimpleCacheClient, SimpleCacheClientBuilder,
+    CollectionTtl, Fields, IntoBytes, SimpleCacheClient, SimpleCacheClientBuilder,
 };
 
 pub type MomentoResult<T> = Result<T, MomentoError>;
+
+pub mod sorted_set {
+    pub use crate::simple_cache_client::Order;
+    pub use momento_protos::cache_client::SortedSetElement;
+}
