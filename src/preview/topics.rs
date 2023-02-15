@@ -171,6 +171,13 @@ pub struct Subscription {
     inner: tonic::Streaming<pubsub::SubscriptionItem>,
 }
 
+enum MapKind {
+    Heartbeat,
+    RealItem(SubscriptionItem),
+    BrokenProtocolMissingAttribute(&'static str),
+    StreamClosed,
+}
+
 impl Subscription {
     /// Wait for the next item in the stream.
     ///
@@ -178,18 +185,27 @@ impl Subscription {
     /// Result::Ok(None)          -> the server is done - there will be no more items!
     /// Result::Err(MomentoError) -> something went wrong - log it and maybe reach out if you need help!
     pub async fn item(&mut self) -> Result<Option<SubscriptionItem>, MomentoError> {
-        self.inner
-            .message()
-            .await
-            .map_err(|e| e.into())
-            .map(Subscription::map_into)
+        loop {
+            let next = self
+                .inner
+                .message()
+                .await
+                .map_err(MomentoError::from)
+                .map(Subscription::map_into)?;
+            match next {
+                MapKind::RealItem(item) => return Ok(Some(item)),
+                MapKind::StreamClosed => return Ok(None),
+                MapKind::Heartbeat => log::debug!("received a heartbeat"),
+                MapKind::BrokenProtocolMissingAttribute(missing_attribute) => log::warn!("Missing attribute: {missing_attribute} - do you need to update your Momento SDK version?"),
+            }
+        }
     }
 
     /// Yeah this is a pain, but doing it here lets us yield a simpler-typed subscription stream.
     /// Also, we don't want to expose protocol buffers types outside of the sdk, so some type map
     /// had to happen. It's all one-off at the moment though so might as well leave it as one
     /// triangle expression =)
-    fn map_into(possible_item: Option<pubsub::SubscriptionItem>) -> Option<SubscriptionItem> {
+    fn map_into(possible_item: Option<pubsub::SubscriptionItem>) -> MapKind {
         match possible_item {
             Some(item) => match item.kind {
                 Some(kind) => match kind {
@@ -198,7 +214,7 @@ impl Subscription {
                             let sequence_number = item.topic_sequence_number;
                             match value.kind {
                                 Some(topic_value_kind) => {
-                                    Some(SubscriptionItem::Value(SubscriptionValue {
+                                    MapKind::RealItem(SubscriptionItem::Value(SubscriptionValue {
                                         topic_sequence_number: sequence_number,
                                         kind: match topic_value_kind {
                                             pubsub::topic_value::Kind::Text(text) => {
@@ -210,25 +226,30 @@ impl Subscription {
                                         },
                                     }))
                                 }
-                                // Broken protocol
-                                None => Some(SubscriptionItem::Discontinuity(Discontinuity {
-                                    last_sequence_number: None,
-                                    new_sequence_number: sequence_number,
-                                })),
+                                // This is kind of a broken protocol situation - but we do have a sequence number
+                                // so communicating the discontinuity at least allows downstream consumers to
+                                // take action on a partially-unsupported stream.
+                                None => MapKind::RealItem(SubscriptionItem::Discontinuity(
+                                    Discontinuity {
+                                        last_sequence_number: None,
+                                        new_sequence_number: sequence_number,
+                                    },
+                                )),
                             }
                         }
-                        None => None, // Broken protocol
+                        None => MapKind::BrokenProtocolMissingAttribute("value kind"),
                     },
                     pubsub::subscription_item::Kind::Discontinuity(discontinuity) => {
-                        Some(SubscriptionItem::Discontinuity(Discontinuity {
+                        MapKind::RealItem(SubscriptionItem::Discontinuity(Discontinuity {
                             last_sequence_number: Some(discontinuity.last_topic_sequence),
                             new_sequence_number: discontinuity.new_topic_sequence,
                         }))
                     }
+                    pubsub::subscription_item::Kind::Heartbeat(_) => MapKind::Heartbeat,
                 },
-                None => None, // Broken protocol,
+                None => MapKind::BrokenProtocolMissingAttribute("item kind"),
             },
-            None => None, // Normal end-of-stream from server
+            None => MapKind::StreamClosed, // Normal end-of-stream from server
         }
     }
 }
