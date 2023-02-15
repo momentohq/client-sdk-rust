@@ -11,7 +11,7 @@ env:
 jobs:
   rustfmt:
     name: Style & Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
 
@@ -30,7 +30,7 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used
 
   build_rust:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       TEST_AUTH_TOKEN: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
 
@@ -55,7 +55,7 @@ jobs:
 
   rustfmt-build-examples:
     name: Style & Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
 
