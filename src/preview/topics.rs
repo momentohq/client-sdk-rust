@@ -186,10 +186,11 @@ impl Subscription {
     /// Result::Err(MomentoError) -> something went wrong - log it and maybe reach out if you need help!
     pub async fn item(&mut self) -> Result<Option<SubscriptionItem>, MomentoError> {
         loop {
-            let next = self.inner
+            let next = self
+                .inner
                 .message()
                 .await
-                .map_err(|e| MomentoError::from(e))
+                .map_err(MomentoError::from)
                 .map(Subscription::map_into)?;
             match next {
                 MapKind::RealItem(item) => return Ok(Some(item)),
@@ -228,10 +229,12 @@ impl Subscription {
                                 // This is kind of a broken protocol situation - but we do have a sequence number
                                 // so communicating the discontinuity at least allows downstream consumers to
                                 // take action on a partially-unsupported stream.
-                                None => MapKind::RealItem(SubscriptionItem::Discontinuity(Discontinuity {
-                                    last_sequence_number: None,
-                                    new_sequence_number: sequence_number,
-                                })),
+                                None => MapKind::RealItem(SubscriptionItem::Discontinuity(
+                                    Discontinuity {
+                                        last_sequence_number: None,
+                                        new_sequence_number: sequence_number,
+                                    },
+                                )),
                             }
                         }
                         None => MapKind::BrokenProtocolMissingAttribute("value kind"),
@@ -241,10 +244,8 @@ impl Subscription {
                             last_sequence_number: Some(discontinuity.last_topic_sequence),
                             new_sequence_number: discontinuity.new_topic_sequence,
                         }))
-                    },
-                    pubsub::subscription_item::Kind::Heartbeat(_) => {
-                        MapKind::Heartbeat
                     }
+                    pubsub::subscription_item::Kind::Heartbeat(_) => MapKind::Heartbeat,
                 },
                 None => MapKind::BrokenProtocolMissingAttribute("item kind"),
             },
