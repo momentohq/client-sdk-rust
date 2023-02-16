@@ -1,5 +1,3 @@
-pub use crate::simple_cache_client::sorted_set_fetch_request::Order;
-use chrono::{DateTime, NaiveDateTime, Utc};
 use core::num::NonZeroU32;
 use momento_protos::{
     cache_client::scs_client::*,
@@ -13,7 +11,7 @@ use serde_json::Value;
 use std::convert::TryFrom;
 use std::iter::FromIterator;
 use std::ops::RangeBounds;
-use std::time::Duration;
+use std::time::{Duration, UNIX_EPOCH};
 use std::{
     collections::{HashMap, HashSet},
     convert::TryInto,
@@ -32,6 +30,7 @@ use crate::response::{
     MomentoSetDifferenceResponse, MomentoSetFetchResponse, MomentoSetResponse, MomentoSigningKey,
     MomentoSortedSetFetchResponse,
 };
+use crate::sorted_set;
 use crate::utils;
 
 pub trait IntoBytes {
@@ -398,11 +397,7 @@ impl SimpleCacheClient {
         let response = MomentoCreateSigningKeyResponse {
             key_id: kid.as_str().expect("'kid' not a valid str").to_owned(),
             key: res.key,
-            expires_at: DateTime::<Utc>::from_utc(
-                NaiveDateTime::from_timestamp_opt(res.expires_at as i64, 0)
-                    .expect("couldn't parse from timestamp"),
-                Utc,
-            ),
+            expires_at: UNIX_EPOCH + Duration::from_secs(res.expires_at),
             endpoint: self.data_endpoint.clone(),
         };
         Ok(response)
@@ -468,11 +463,7 @@ impl SimpleCacheClient {
             .iter()
             .map(|signing_key| MomentoSigningKey {
                 key_id: signing_key.key_id.to_string(),
-                expires_at: DateTime::<Utc>::from_utc(
-                    NaiveDateTime::from_timestamp_opt(signing_key.expires_at as i64, 0)
-                        .expect("couldn't parse timestamp from signing key"),
-                    Utc,
-                ),
+                expires_at: UNIX_EPOCH + Duration::from_secs(signing_key.expires_at),
                 endpoint: self.data_endpoint.clone(),
             })
             .collect();
@@ -1873,6 +1864,7 @@ impl SimpleCacheClient {
     /// * `set_name` - name of the set.
     /// * `order` - specify ascending or descending order
     /// * `limit` - optionally limit the number of results returned
+    /// * `range` - constrain to a range of elements by index or by score
     ///
     /// # Example
     /// ```
@@ -1885,7 +1877,13 @@ impl SimpleCacheClient {
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
     ///
-    /// match momento.sorted_set_fetch(&cache_name, "test sorted set", Order::Ascending, None).await?.value {
+    /// match momento.sorted_set_fetch(
+    ///     &cache_name,
+    ///     "test sorted set",
+    ///     Order::Ascending,
+    ///     None,
+    ///     None
+    /// ).await?.value {
     ///     Some(set) => {
     ///         println!("sorted set elements: (score and name)");
     ///         for entry in &set {
@@ -1902,8 +1900,9 @@ impl SimpleCacheClient {
         &mut self,
         cache_name: &str,
         set_name: impl IntoBytes,
-        order: Order,
+        order: sorted_set::Order,
         limit: impl Into<Option<NonZeroU32>>,
+        range: Option<sorted_set::Range>,
     ) -> MomentoResult<MomentoSortedSetFetchResponse> {
         use momento_protos::cache_client::sorted_set_fetch_request::{All, Limit, NumResults};
         use momento_protos::cache_client::sorted_set_fetch_response::SortedSet;
@@ -1919,6 +1918,7 @@ impl SimpleCacheClient {
                 set_name: set_name.into_bytes(),
                 order: order.into(),
                 num_results: Some(num_results),
+                range,
             },
         )?;
 
@@ -2038,7 +2038,11 @@ impl SimpleCacheClient {
     ///
     /// let elements = vec!["a", "b", "c"];
     ///
-    /// let scores = momento.sorted_set_get_score(&cache_name, "test sorted set", elements.clone()).await?;
+    /// let scores = momento.sorted_set_get_score(
+    ///     &cache_name,
+    ///     "test sorted set",
+    ///     elements.clone()
+    /// ).await?;
     ///
     /// println!("element\tscore");
     /// for (element, score) in elements.iter().zip(scores.iter()) {

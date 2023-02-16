@@ -1,11 +1,11 @@
-use chrono::Utc;
 use serde::{Deserialize, Serialize};
+use std::time::SystemTime;
 
 /// Response signing key for list of signing keys.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MomentoSigningKey {
     pub key_id: String,
-    pub expires_at: chrono::DateTime<Utc>,
+    pub expires_at: SystemTime,
     pub endpoint: String,
 }
 
