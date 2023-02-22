@@ -183,6 +183,65 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn flush_cache() {
+        let cache_name = Uuid::new_v4().to_string();
+        let mut client = get_momento_instance();
+        client
+            .create_cache(&cache_name)
+            .await
+            .expect("failed to create cache");
+        client
+            .set(
+                &cache_name,
+                "firstKey",
+                "firstValue",
+                Duration::from_secs(60),
+            )
+            .await
+            .expect("set firstKey failed");
+        client
+            .set(
+                &cache_name,
+                "secondKey",
+                "secondValue",
+                Duration::from_secs(60),
+            )
+            .await
+            .expect("set secondKey failed");
+
+        let first_key_get1 = client
+            .get(&cache_name, "firstKey")
+            .await
+            .expect("failed to get first key");
+        assert!(matches!(first_key_get1.result, MomentoGetStatus::HIT));
+        assert_eq!(first_key_get1.as_string(), "firstValue");
+
+        let second_key_get1 = client
+            .get(&cache_name, "secondKey")
+            .await
+            .expect("failed to get second key");
+        assert!(matches!(second_key_get1.result, MomentoGetStatus::HIT));
+        assert_eq!(second_key_get1.as_string(), "secondValue");
+
+        client
+            .flush_cache(&cache_name)
+            .await
+            .expect("failed to flush cache");
+
+        let first_key_get2 = client
+            .get(&cache_name, "firstKey")
+            .await
+            .expect("failed to get first key");
+        assert!(matches!(first_key_get2.result, MomentoGetStatus::MISS));
+
+        let second_key_get2 = client
+            .get(&cache_name, "secondKey")
+            .await
+            .expect("failed to get second key");
+        assert!(matches!(second_key_get2.result, MomentoGetStatus::MISS));
+    }
+
+    #[tokio::test]
     async fn create_list_revoke_signing_key() {
         let mut mm = get_momento_instance();
         let response = mm

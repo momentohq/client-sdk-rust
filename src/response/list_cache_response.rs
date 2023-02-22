@@ -7,7 +7,7 @@ pub struct MomentoCache {
 
 /// The result of a cache list operation.
 #[derive(Debug)]
-pub struct MomentoListCacheResult {
+pub struct MomentoListCacheResponse {
     /// Vector of cache information defined in MomentoCache.
     pub caches: Vec<MomentoCache>,
     /// Next Page Token returned by Simple Cache Service along with the list of caches.

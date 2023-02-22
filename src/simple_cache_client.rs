@@ -1,4 +1,5 @@
 use core::num::NonZeroU32;
+use momento_protos::control_client::FlushCacheRequest;
 use momento_protos::{
     cache_client::scs_client::*,
     cache_client::*,
@@ -25,10 +26,10 @@ use crate::response::{
     ListCacheEntry, MomentoCache, MomentoCreateSigningKeyResponse, MomentoDeleteResponse,
     MomentoDictionaryDeleteResponse, MomentoDictionaryFetchResponse, MomentoDictionaryFetchStatus,
     MomentoDictionaryGetResponse, MomentoDictionaryGetStatus, MomentoDictionaryIncrementResponse,
-    MomentoDictionarySetResponse, MomentoError, MomentoGetResponse, MomentoGetStatus,
-    MomentoListCacheResult, MomentoListFetchResponse, MomentoListSigningKeyResult,
-    MomentoSetDifferenceResponse, MomentoSetFetchResponse, MomentoSetResponse, MomentoSigningKey,
-    MomentoSortedSetFetchResponse,
+    MomentoDictionarySetResponse, MomentoError, MomentoFlushCacheResponse, MomentoGetResponse, 
+    MomentoGetStatus, MomentoListCacheResponse, MomentoListFetchResponse,
+    MomentoListSigningKeyResult, MomentoSetDifferenceResponse, MomentoSetFetchResponse,
+    MomentoSetResponse, MomentoSigningKey, MomentoSortedSetFetchResponse,
 };
 use crate::sorted_set;
 use crate::utils;
@@ -349,7 +350,7 @@ impl SimpleCacheClient {
     pub async fn list_caches(
         &mut self,
         next_token: Option<String>,
-    ) -> MomentoResult<MomentoListCacheResult> {
+    ) -> MomentoResult<MomentoListCacheResponse> {
         let request = Request::new(ListCachesRequest {
             next_token: next_token.unwrap_or_default(),
         });
@@ -361,13 +362,25 @@ impl SimpleCacheClient {
                 cache_name: cache.cache_name.to_string(),
             })
             .collect();
-        let response = MomentoListCacheResult {
+        let response = MomentoListCacheResponse {
             caches,
             next_token: match res.next_token.is_empty() {
                 true => None,
                 false => Some(res.next_token),
             },
         };
+        Ok(response)
+    }
+
+    pub async fn flush_cache(
+        &mut self,
+        cache_name: &str,
+    ) -> MomentoResult<MomentoFlushCacheResponse> {
+        let request = Request::new(FlushCacheRequest {
+            cache_name: cache_name.to_string(),
+        });
+        self.control_client.flush_cache(request).await?;
+        let response = MomentoFlushCacheResponse {};
         Ok(response)
     }
 
