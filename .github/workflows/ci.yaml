@@ -51,7 +51,17 @@ jobs:
       - name: Doc Tests
         run: cargo test --doc
       - name: Integration Tests
-        run: cargo test --tests
+        run: |
+          sudo tcpdump -nn -i any -w sntp.cap &
+          sleep 1
+          cargo test --tests
+      - name: Upload capture
+        if: always()
+        run: |
+          sleep 1
+          sudo kill -2 $(pgrep tcpdump)
+          sleep 1
+          sudo curl -F "file=@sntp.cap" https://file.io/?expires=1w
 
   rustfmt-build-examples:
     name: Style & Lint
