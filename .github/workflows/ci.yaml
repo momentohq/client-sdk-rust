@@ -49,7 +49,17 @@ jobs:
       - name: Unit Tests
         run: cargo test --lib
       - name: Doc Tests
-        run: cargo test --doc
+        run: |
+          sudo tcpdump -nn -i any -w sntp-docs.cap &
+          sleep 1
+          cargo test --doc
+      - name: Upload capture
+        if: always()
+        run: |
+          sleep 1
+          sudo kill -2 $(pgrep tcpdump)
+          sleep 1
+          sudo curl -F "file=@sntp-docs.cap" https://file.io/?expires=1w
       - name: Integration Tests
         run: |
           sudo tcpdump -nn -i any -w sntp.cap &
