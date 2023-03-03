@@ -15,8 +15,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install protoc
-        run: ./install_protoc.sh
+      # - name: Install protoc
+      #   run: ./install_protoc.sh
 
       - name: Commitlint and Other Shared Build Steps
         uses: momentohq/standards-and-practices/github-actions/shared-build@gh-actions-v1
