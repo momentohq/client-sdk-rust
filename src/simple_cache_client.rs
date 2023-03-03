@@ -1874,42 +1874,11 @@ impl SimpleCacheClient {
     ///
     /// # Arguments
     ///
-    /// * `cache_name` - name of cache.
-    /// * `set_name` - name of the set.
-    /// * `order` - specify ascending or descending order
-    /// * `limit` - optionally limit the number of results returned
-    /// * `range` - constrain to a range of elements by index or by score
-    ///
-    /// # Example
-    /// ```
-    /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
-    /// use std::time::Duration;
-    /// use momento::SimpleCacheClientBuilder;
-    /// use momento::sorted_set::Order;
-    ///
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
-    ///     .build();
-    ///
-    /// match momento.sorted_set_fetch(
-    ///     &cache_name,
-    ///     "test sorted set",
-    ///     Order::Ascending,
-    ///     None,
-    ///     None
-    /// ).await?.value {
-    ///     Some(set) => {
-    ///         println!("sorted set elements: (score and name)");
-    ///         for entry in &set {
-    ///             println!("{} {:?}", entry.score, entry.name);
-    ///         }
-    ///     },
-    ///     None => println!("sorted set not found!"),
-    /// }
-    /// # Ok(())
-    /// # })
-    /// # }
-    /// ```
+    /// * `_cache_name` - name of cache.
+    /// * `_set_name` - name of the set.
+    /// * `_order` - specify ascending or descending order
+    /// * `_limit` - optionally limit the number of results returned
+    /// * `_range` - constrain to a range of elements by index or by score
     pub async fn sorted_set_fetch(
         &mut self,
         _cache_name: &str,
@@ -2166,8 +2135,8 @@ impl SimpleCacheClient {
     ///     .build();
     ///
     /// momento.sorted_set_put(&cache_name, "test sorted set", vec![
-    ///     SortedSetElement { name: "a".into(), score: 50.0 },
-    ///     SortedSetElement { name: "b".into(), score: 60.0 },
+    ///     SortedSetElement { value: "a".into(), score: 50.0 },
+    ///     SortedSetElement { value: "b".into(), score: 60.0 },
     /// ], ttl).await?;
     /// # Ok(())
     /// # })
