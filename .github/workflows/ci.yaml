@@ -37,8 +37,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      # - name: Install protoc
-      #   run: ./install_protoc.sh
+      - name: Install protoc
+        run: ./scripts/install_protoc_osx.sh
 
       - uses: Swatinem/rust-cache@v2
 
