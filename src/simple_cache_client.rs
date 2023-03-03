@@ -1964,6 +1964,7 @@ impl SimpleCacheClient {
         set_name: impl IntoBytes,
         element_name: impl IntoBytes,
     ) -> MomentoResult<Option<u64>> {
+        use momento_protos::cache_client::sorted_set_get_rank_request::Order::Ascending;
         use momento_protos::cache_client::sorted_set_get_rank_response::Rank;
 
         let request = self.prep_request(
@@ -1971,7 +1972,7 @@ impl SimpleCacheClient {
             SortedSetGetRankRequest {
                 set_name: set_name.into_bytes(),
                 value: element_name.into_bytes(),
-                order: 0,
+                order: Ascending.into(),
             },
         )?;
 
