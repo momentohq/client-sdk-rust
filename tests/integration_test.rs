@@ -4,7 +4,6 @@ mod tests {
 
     use momento::{response::MomentoGetStatus, SimpleCacheClient};
     use momento::{MomentoError, SimpleCacheClientBuilder};
-    use momento_protos::control_client::generate_api_token_request::Expiry;
     use serde_json::Value;
     use tokio::time::sleep;
     use uuid::Uuid;
