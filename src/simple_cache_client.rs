@@ -1912,11 +1912,11 @@ impl SimpleCacheClient {
     /// ```
     pub async fn sorted_set_fetch(
         &mut self,
-        cache_name: &str,
-        set_name: impl IntoBytes,
-        order: sorted_set::Order,
-        limit: impl Into<Option<NonZeroU32>>,
-        range: Option<sorted_set::Range>,
+        _cache_name: &str,
+        _set_name: impl IntoBytes,
+        _order: sorted_set::Order,
+        _limit: impl Into<Option<NonZeroU32>>,
+        _range: Option<sorted_set::Range>,
     ) -> MomentoResult<MomentoSortedSetFetchResponse> {
         todo!();
     }
