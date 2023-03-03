@@ -27,7 +27,7 @@ mod tests {
     }
 
     fn create_random_cache_name() -> String {
-        return "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
+        "rust-sdk-".to_string() + &Uuid::new_v4().to_string()
     }
 
     #[tokio::test]

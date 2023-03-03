@@ -298,7 +298,7 @@ impl SimpleCacheClient {
     /// use momento::SimpleCacheClientBuilder;
     ///
     /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    /// let cache_name = Uuid::new_v4().to_string();
+    /// let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))?
     ///     .build();
     ///
@@ -330,7 +330,7 @@ impl SimpleCacheClient {
     /// use momento::SimpleCacheClientBuilder;
     ///
     /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    /// let cache_name = Uuid::new_v4().to_string();
+    /// let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))?
     ///     .build();
     ///
