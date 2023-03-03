@@ -2,7 +2,7 @@
 set -e
 set -x
 
-VERSION=3.18.1
+VERSION=21.9
 
 sudo apt-get -y install zip tree
 curl -L https://github.com/protocolbuffers/protobuf/releases/download/v$VERSION/protoc-$VERSION-linux-x86_64.zip -o protoc.zip
