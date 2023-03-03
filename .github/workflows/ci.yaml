@@ -30,7 +30,7 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used
 
   build_rust:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     env:
       TEST_AUTH_TOKEN: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
 
