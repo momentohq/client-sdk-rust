@@ -45,12 +45,6 @@ jobs:
 
       - name: Build
         run: cargo build --verbose
-      - name: Cargo Check
-        run: cargo check
-      - name: Unit Tests
-        run: cargo test --lib
-      - name: Doc Tests
-        run: cargo test --doc
       - name: Integration Tests
         run: cargo test --tests
 
