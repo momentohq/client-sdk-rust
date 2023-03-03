@@ -26,9 +26,13 @@ mod tests {
             .build()
     }
 
+    fn create_random_cache_name() -> String {
+        return "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
+    }
+
     #[tokio::test]
     async fn cache_miss() {
-        let cache_name = Uuid::new_v4().to_string();
+        let cache_name = create_random_cache_name();
         let cache_key = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance();
         mm.create_cache(&cache_name)
@@ -64,7 +68,7 @@ mod tests {
 
     #[tokio::test]
     async fn ttl_validation() {
-        let cache_name = Uuid::new_v4().to_string();
+        let cache_name = create_random_cache_name();
         let cache_key = Uuid::new_v4().to_string();
         let cache_body = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance();
@@ -87,7 +91,7 @@ mod tests {
 
     #[tokio::test]
     async fn cache_hit() {
-        let cache_name = Uuid::new_v4().to_string();
+        let cache_name = create_random_cache_name();
         let cache_key = Uuid::new_v4().to_string();
         let cache_body = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance();
@@ -110,7 +114,7 @@ mod tests {
 
     #[tokio::test]
     async fn cache_respects_default_ttl() {
-        let cache_name = Uuid::new_v4().to_string();
+        let cache_name = create_random_cache_name();
         let cache_key = Uuid::new_v4().to_string();
         let cache_body = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance();
@@ -133,7 +137,7 @@ mod tests {
 
     #[tokio::test]
     async fn create_cache_then_set() {
-        let cache_name = Uuid::new_v4().to_string();
+        let cache_name = create_random_cache_name();
         let cache_key = Uuid::new_v4().to_string();
         let cache_body = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance();
@@ -156,7 +160,7 @@ mod tests {
 
     #[tokio::test]
     async fn list_caches() {
-        let cache_name = Uuid::new_v4().to_string();
+        let cache_name = create_random_cache_name();
         let mut mm = get_momento_instance();
         mm.create_cache(&cache_name)
             .await
@@ -184,7 +188,7 @@ mod tests {
 
     #[tokio::test]
     async fn flush_cache() {
-        let cache_name = Uuid::new_v4().to_string();
+        let cache_name = create_random_cache_name();
         let mut client = get_momento_instance();
         client
             .create_cache(&cache_name)
@@ -356,7 +360,7 @@ mod tests {
 
     #[tokio::test]
     async fn delete_item() {
-        let cache_name = Uuid::new_v4().to_string();
+        let cache_name = create_random_cache_name();
         let cache_key = Uuid::new_v4().to_string();
         let cache_body = Uuid::new_v4().to_string();
         let mut mm = get_momento_instance();
