@@ -29,14 +29,6 @@ impl tonic::service::Interceptor for HeaderInterceptor {
                 .expect("couldn't parse val from auth token"),
         );
 
-        request
-            .metadata_mut()
-            // 5000 ms
-            .insert(
-                "grpc-timeout",
-                "5000m".parse().expect("couldn't parse grpc timeout"),
-            );
-
         if !ARE_ONLY_ONCE_HEADER_SENT.load(Ordering::Relaxed) {
             request.metadata_mut().insert(
                 tonic::metadata::AsciiMetadataKey::from_static("agent"),
