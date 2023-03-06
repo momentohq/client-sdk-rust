@@ -17,6 +17,7 @@ use std::ops::RangeBounds;
 use std::time::{Duration, UNIX_EPOCH};
 use tonic::{codegen::InterceptedService, transport::Channel, Request};
 
+use crate::requests::generate_api_token_request::TokenExpiry;
 use crate::{endpoint_resolver::MomentoEndpointsResolver, utils::user_agent, MomentoResult};
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 
@@ -2260,11 +2261,21 @@ impl SimpleCacheClient {
     ///
     /// # Arguments
     ///
-    /// * `expiry` - when should the token expire, can be set to Never to never expire
+    /// * `token_expiry` - when should the token expire, can be set to Never to never expire
     pub async fn generate_api_token(
         &mut self,
-        expiry: Expiry,
+        token_expiry: TokenExpiry,
     ) -> MomentoResult<MomentoGenerateApiTokenResponse> {
+        let expiry = match token_expiry {
+            TokenExpiry::Never => {
+                Expiry::Never(momento_protos::control_client::generate_api_token_request::Never {})
+            }
+            TokenExpiry::Expires { valid_for_seconds } => Expiry::Expires(
+                momento_protos::control_client::generate_api_token_request::Expires {
+                    valid_for_seconds,
+                },
+            ),
+        };
         let request = GenerateApiTokenRequest {
             expiry: Some(expiry),
         };
