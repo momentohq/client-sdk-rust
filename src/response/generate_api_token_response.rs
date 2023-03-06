@@ -22,6 +22,7 @@ impl Debug for ApiToken {
 }
 
 /// The response of a generate api token operation.
+#[derive(Serialize, Deserialize)]
 pub struct MomentoGenerateApiTokenResponse {
     pub api_token: String,
     pub refresh_token: String,
