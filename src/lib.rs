@@ -1,5 +1,6 @@
 pub mod auth;
 pub mod preview;
+pub mod requests;
 pub mod response;
 
 mod endpoint_resolver;
@@ -19,10 +20,4 @@ pub type MomentoResult<T> = Result<T, MomentoError>;
 pub mod sorted_set {
     pub use momento_protos::cache_client::sorted_set_fetch_request::{Order, Range};
     pub use momento_protos::cache_client::SortedSetElement;
-}
-
-pub mod token_expiry {
-    pub use momento_protos::control_client::generate_api_token_request::Expires;
-    pub use momento_protos::control_client::generate_api_token_request::Expiry;
-    pub use momento_protos::control_client::generate_api_token_request::Never;
 }
