@@ -7,6 +7,7 @@ mod cache_sorted_set_fetch_response;
 mod create_signing_key_response;
 mod error;
 mod flush_cache_response;
+mod generate_api_token_response;
 mod list_cache_response;
 mod list_signing_keys_response;
 
@@ -19,6 +20,7 @@ pub use self::cache_sorted_set_fetch_response::*;
 pub use self::create_signing_key_response::*;
 pub use self::error::*;
 pub use self::flush_cache_response::*;
+pub use self::generate_api_token_response::*;
 pub use self::list_cache_response::*;
 pub use self::list_signing_keys_response::*;
 

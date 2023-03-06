@@ -24,7 +24,7 @@ where
     // The constructor for the cache client needs a tokio runtime to be active.
     let _guard = runtime.enter();
 
-    let cache_name = Uuid::new_v4().to_string();
+    let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
     let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
 
     let mut client =

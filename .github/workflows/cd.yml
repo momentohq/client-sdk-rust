@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install protoc
-        run: ./install_protoc.sh
+        run: ./scripts/install_protoc_linux.sh
 
       - name: rustfmt
         run: cargo fmt -- --check
@@ -42,7 +42,7 @@ jobs:
         run: echo "::set-output name=release::${{ steps.semrel.outputs.version }}"
 
   publish:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     needs: release
     env:
       TEST_AUTH_TOKEN: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
@@ -50,7 +50,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install protoc
-        run: ./install_protoc.sh
+        run: ./scripts/install_protoc_osx.sh
 
       - uses: actions-rs/toolchain@v1
         with:

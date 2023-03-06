@@ -1,5 +1,6 @@
 use core::num::NonZeroU32;
-use momento_protos::control_client::FlushCacheRequest;
+use momento_protos::control_client::generate_api_token_request::Expiry;
+use momento_protos::control_client::{FlushCacheRequest, GenerateApiTokenRequest};
 use momento_protos::{
     cache_client::scs_client::*,
     cache_client::*,
@@ -9,30 +10,28 @@ use momento_protos::{
     },
 };
 use serde_json::Value;
-use std::convert::TryFrom;
+use std::collections::{HashMap, HashSet};
+use std::convert::{TryFrom, TryInto};
 use std::iter::FromIterator;
 use std::ops::RangeBounds;
 use std::time::{Duration, UNIX_EPOCH};
-use std::{
-    collections::{HashMap, HashSet},
-    convert::TryInto,
-};
 use tonic::{codegen::InterceptedService, transport::Channel, Request};
 
 use crate::{endpoint_resolver::MomentoEndpointsResolver, utils::user_agent, MomentoResult};
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 
 use crate::response::{
-    ListCacheEntry, MomentoCache, MomentoCreateSigningKeyResponse, MomentoDeleteResponse,
+    ApiToken, ListCacheEntry, MomentoCache, MomentoCreateSigningKeyResponse, MomentoDeleteResponse,
     MomentoDictionaryDeleteResponse, MomentoDictionaryFetchResponse, MomentoDictionaryFetchStatus,
     MomentoDictionaryGetResponse, MomentoDictionaryGetStatus, MomentoDictionaryIncrementResponse,
-    MomentoDictionarySetResponse, MomentoError, MomentoFlushCacheResponse, MomentoGetResponse,
-    MomentoGetStatus, MomentoListCacheResponse, MomentoListFetchResponse,
-    MomentoListSigningKeyResult, MomentoSetDifferenceResponse, MomentoSetFetchResponse,
-    MomentoSetResponse, MomentoSigningKey, MomentoSortedSetFetchResponse,
+    MomentoDictionarySetResponse, MomentoError, MomentoFlushCacheResponse,
+    MomentoGenerateApiTokenResponse, MomentoGetResponse, MomentoGetStatus,
+    MomentoListCacheResponse, MomentoListFetchResponse, MomentoListSigningKeyResult,
+    MomentoSetDifferenceResponse, MomentoSetFetchResponse, MomentoSetResponse, MomentoSigningKey,
+    MomentoSortedSetFetchResponse,
 };
 use crate::sorted_set;
-use crate::utils;
+use crate::utils::{self, base64_encode};
 
 pub trait IntoBytes {
     fn into_bytes(self) -> Vec<u8>;
@@ -299,7 +298,7 @@ impl SimpleCacheClient {
     /// use momento::SimpleCacheClientBuilder;
     ///
     /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    /// let cache_name = Uuid::new_v4().to_string();
+    /// let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))?
     ///     .build();
     ///
@@ -331,7 +330,7 @@ impl SimpleCacheClient {
     /// use momento::SimpleCacheClientBuilder;
     ///
     /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    /// let cache_name = Uuid::new_v4().to_string();
+    /// let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))?
     ///     .build();
     ///
@@ -1306,6 +1305,8 @@ impl SimpleCacheClient {
             cache_name,
             ListFetchRequest {
                 list_name: list_name.into_bytes(),
+                start_index: None,
+                end_index: None,
             },
         )?;
 
@@ -1873,79 +1874,20 @@ impl SimpleCacheClient {
     ///
     /// # Arguments
     ///
-    /// * `cache_name` - name of cache.
-    /// * `set_name` - name of the set.
-    /// * `order` - specify ascending or descending order
-    /// * `limit` - optionally limit the number of results returned
-    /// * `range` - constrain to a range of elements by index or by score
-    ///
-    /// # Example
-    /// ```
-    /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
-    /// use std::time::Duration;
-    /// use momento::SimpleCacheClientBuilder;
-    /// use momento::sorted_set::Order;
-    ///
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
-    ///     .build();
-    ///
-    /// match momento.sorted_set_fetch(
-    ///     &cache_name,
-    ///     "test sorted set",
-    ///     Order::Ascending,
-    ///     None,
-    ///     None
-    /// ).await?.value {
-    ///     Some(set) => {
-    ///         println!("sorted set elements: (score and name)");
-    ///         for entry in &set {
-    ///             println!("{} {:?}", entry.score, entry.name);
-    ///         }
-    ///     },
-    ///     None => println!("sorted set not found!"),
-    /// }
-    /// # Ok(())
-    /// # })
-    /// # }
-    /// ```
+    /// * `_cache_name` - name of cache.
+    /// * `_set_name` - name of the set.
+    /// * `_order` - specify ascending or descending order
+    /// * `_limit` - optionally limit the number of results returned
+    /// * `_range` - constrain to a range of elements by index or by score
     pub async fn sorted_set_fetch(
         &mut self,
-        cache_name: &str,
-        set_name: impl IntoBytes,
-        order: sorted_set::Order,
-        limit: impl Into<Option<NonZeroU32>>,
-        range: Option<sorted_set::Range>,
+        _cache_name: &str,
+        _set_name: impl IntoBytes,
+        _order: sorted_set::Order,
+        _limit: impl Into<Option<NonZeroU32>>,
+        _range: Option<sorted_set::Range>,
     ) -> MomentoResult<MomentoSortedSetFetchResponse> {
-        use momento_protos::cache_client::sorted_set_fetch_request::{All, Limit, NumResults};
-        use momento_protos::cache_client::sorted_set_fetch_response::SortedSet;
-
-        let num_results = limit
-            .into()
-            .map(|v| NumResults::Limit(Limit { limit: v.into() }))
-            .unwrap_or_else(|| NumResults::All(All {}));
-
-        let request = self.prep_request(
-            cache_name,
-            SortedSetFetchRequest {
-                set_name: set_name.into_bytes(),
-                order: order.into(),
-                num_results: Some(num_results),
-                range,
-            },
-        )?;
-
-        let response = self
-            .data_client
-            .sorted_set_fetch(request)
-            .await?
-            .into_inner();
-        Ok(MomentoSortedSetFetchResponse {
-            value: response.sorted_set.and_then(|s| match s {
-                SortedSet::Found(found) => Some(found.elements),
-                SortedSet::Missing(_) => None,
-            }),
-        })
+        todo!("This api was reworked and is pending implementation in the rust sdk: https://github.com/momentohq/client-sdk-rust/issues/135");
     }
 
     /// Gets the rank of an element in a sorted set in a Momento Cache.
@@ -1991,13 +1933,15 @@ impl SimpleCacheClient {
         set_name: impl IntoBytes,
         element_name: impl IntoBytes,
     ) -> MomentoResult<Option<u64>> {
+        use momento_protos::cache_client::sorted_set_get_rank_request::Order::Ascending;
         use momento_protos::cache_client::sorted_set_get_rank_response::Rank;
 
         let request = self.prep_request(
             cache_name,
             SortedSetGetRankRequest {
                 set_name: set_name.into_bytes(),
-                element_name: element_name.into_bytes(),
+                value: element_name.into_bytes(),
+                order: Ascending.into(),
             },
         )?;
 
@@ -2080,7 +2024,7 @@ impl SimpleCacheClient {
             cache_name,
             SortedSetGetScoreRequest {
                 set_name: set_name.into_bytes(),
-                element_name: convert_vec(element_names),
+                values: convert_vec(element_names),
             },
         )?;
 
@@ -2150,7 +2094,7 @@ impl SimpleCacheClient {
             cache_name,
             SortedSetIncrementRequest {
                 set_name: set_name.into_bytes(),
-                element_name: element_name.into_bytes(),
+                value: element_name.into_bytes(),
                 amount,
                 ttl_milliseconds: self.expand_ttl_ms(policy.ttl())?,
                 refresh_ttl: policy.refresh(),
@@ -2163,7 +2107,7 @@ impl SimpleCacheClient {
             .await?
             .into_inner();
 
-        Ok(response.value)
+        Ok(response.score)
     }
 
     /// Adds elements to a sorted set in a Momento Cache.
@@ -2191,8 +2135,8 @@ impl SimpleCacheClient {
     ///     .build();
     ///
     /// momento.sorted_set_put(&cache_name, "test sorted set", vec![
-    ///     SortedSetElement { name: "a".into(), score: 50.0 },
-    ///     SortedSetElement { name: "b".into(), score: 60.0 },
+    ///     SortedSetElement { value: "a".into(), score: 50.0 },
+    ///     SortedSetElement { value: "b".into(), score: 60.0 },
     /// ], ttl).await?;
     /// # Ok(())
     /// # })
@@ -2259,7 +2203,7 @@ impl SimpleCacheClient {
             SortedSetRemoveRequest {
                 set_name: set_name.into_bytes(),
                 remove_elements: Some(RemoveElements::Some(Some {
-                    element_name: element_names.drain(..).map(|v| v.into_bytes()).collect(),
+                    values: element_names.drain(..).map(|v| v.into_bytes()).collect(),
                 })),
             },
         )?;
@@ -2310,6 +2254,36 @@ impl SimpleCacheClient {
         )?;
         self.data_client.delete(request).await?.into_inner();
         Ok(MomentoDeleteResponse::new())
+    }
+
+    /// Generates an api token for Momento
+    ///
+    /// # Arguments
+    ///
+    /// * `expiry` - when should the token expire, can be set to Never to never expire
+    pub async fn generate_api_token(
+        &mut self,
+        expiry: Expiry,
+    ) -> MomentoResult<MomentoGenerateApiTokenResponse> {
+        let request = GenerateApiTokenRequest {
+            expiry: Some(expiry),
+        };
+        let resp = self
+            .control_client
+            .generate_api_token(request)
+            .await?
+            .into_inner();
+
+        let api_key_with_endpoint = ApiToken {
+            api_key: resp.api_key,
+            endpoint: resp.endpoint,
+        };
+
+        Ok(MomentoGenerateApiTokenResponse {
+            api_token: base64_encode(api_key_with_endpoint),
+            refresh_token: resp.refresh_token,
+            valid_until: UNIX_EPOCH + Duration::from_secs(resp.valid_until),
+        })
     }
 
     fn expand_ttl_ms(&self, ttl: Option<Duration>) -> MomentoResult<u64> {
