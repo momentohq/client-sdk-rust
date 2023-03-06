@@ -21,7 +21,7 @@ pub mod sorted_set {
     pub use momento_protos::cache_client::SortedSetElement;
 }
 
-pub mod tokens {
+pub mod token_expiry {
     pub use momento_protos::control_client::generate_api_token_request::Expires;
     pub use momento_protos::control_client::generate_api_token_request::Expiry;
     pub use momento_protos::control_client::generate_api_token_request::Never;
