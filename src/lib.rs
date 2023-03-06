@@ -20,3 +20,9 @@ pub mod sorted_set {
     pub use momento_protos::cache_client::sorted_set_fetch_request::{Order, Range};
     pub use momento_protos::cache_client::SortedSetElement;
 }
+
+pub mod tokens {
+    pub use momento_protos::control_client::generate_api_token_request::Expires;
+    pub use momento_protos::control_client::generate_api_token_request::Expiry;
+    pub use momento_protos::control_client::generate_api_token_request::Never;
+}
