@@ -21,11 +21,11 @@ use crate::{endpoint_resolver::MomentoEndpointsResolver, utils::user_agent, Mome
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 
 use crate::response::{
-    ApiKeyWithEndpoint, ListCacheEntry, MomentoCache, MomentoCreateSigningKeyResponse,
-    MomentoDeleteResponse, MomentoDictionaryDeleteResponse, MomentoDictionaryFetchResponse,
-    MomentoDictionaryFetchStatus, MomentoDictionaryGetResponse, MomentoDictionaryGetStatus,
-    MomentoDictionaryIncrementResponse, MomentoDictionarySetResponse, MomentoError,
-    MomentoFlushCacheResponse, MomentoGenerateApiTokenResult, MomentoGetResponse, MomentoGetStatus,
+    ApiToken, ListCacheEntry, MomentoCache, MomentoCreateSigningKeyResponse, MomentoDeleteResponse,
+    MomentoDictionaryDeleteResponse, MomentoDictionaryFetchResponse, MomentoDictionaryFetchStatus,
+    MomentoDictionaryGetResponse, MomentoDictionaryGetStatus, MomentoDictionaryIncrementResponse,
+    MomentoDictionarySetResponse, MomentoError, MomentoFlushCacheResponse,
+    MomentoGenerateApiTokenResponse, MomentoGetResponse, MomentoGetStatus,
     MomentoListCacheResponse, MomentoListFetchResponse, MomentoListSigningKeyResult,
     MomentoSetDifferenceResponse, MomentoSetFetchResponse, MomentoSetResponse, MomentoSigningKey,
     MomentoSortedSetFetchResponse,
@@ -1887,7 +1887,7 @@ impl SimpleCacheClient {
         _limit: impl Into<Option<NonZeroU32>>,
         _range: Option<sorted_set::Range>,
     ) -> MomentoResult<MomentoSortedSetFetchResponse> {
-        todo!();
+        todo!("This api was reworked and is pending implementation in the rust sdk: https://github.com/momentohq/client-sdk-rust/issues/135");
     }
 
     /// Gets the rank of an element in a sorted set in a Momento Cache.
@@ -2256,7 +2256,7 @@ impl SimpleCacheClient {
         Ok(MomentoDeleteResponse::new())
     }
 
-    /// Generates a token for Momento
+    /// Generates an api token for Momento
     ///
     /// # Arguments
     ///
@@ -2264,7 +2264,7 @@ impl SimpleCacheClient {
     pub async fn generate_api_token(
         &mut self,
         expiry: Expiry,
-    ) -> MomentoResult<MomentoGenerateApiTokenResult> {
+    ) -> MomentoResult<MomentoGenerateApiTokenResponse> {
         let request = GenerateApiTokenRequest {
             expiry: Some(expiry),
         };
@@ -2274,12 +2274,12 @@ impl SimpleCacheClient {
             .await?
             .into_inner();
 
-        let api_key_with_endpoint = ApiKeyWithEndpoint {
+        let api_key_with_endpoint = ApiToken {
             api_key: resp.api_key,
             endpoint: resp.endpoint,
         };
 
-        Ok(MomentoGenerateApiTokenResult {
+        Ok(MomentoGenerateApiTokenResponse {
             api_token: base64_encode(api_key_with_endpoint),
             refresh_token: resp.refresh_token,
             valid_until: UNIX_EPOCH + Duration::from_secs(resp.valid_until),
