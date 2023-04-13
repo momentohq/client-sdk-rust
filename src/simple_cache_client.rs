@@ -22,14 +22,13 @@ use crate::{endpoint_resolver::MomentoEndpointsResolver, utils::user_agent, Mome
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 
 use crate::response::{
-    ApiToken, ListCacheEntry, MomentoCache, MomentoCreateSigningKeyResponse, MomentoDeleteResponse,
-    MomentoDictionaryDeleteResponse, MomentoDictionaryFetchResponse, MomentoDictionaryFetchStatus,
-    MomentoDictionaryGetResponse, MomentoDictionaryGetStatus, MomentoDictionaryIncrementResponse,
-    MomentoDictionarySetResponse, MomentoError, MomentoFlushCacheResponse,
-    MomentoGenerateApiTokenResponse, MomentoGetResponse, MomentoGetStatus,
-    MomentoListCacheResponse, MomentoListFetchResponse, MomentoListSigningKeyResult,
-    MomentoSetDifferenceResponse, MomentoSetFetchResponse, MomentoSetResponse, MomentoSigningKey,
-    MomentoSortedSetFetchResponse,
+    ApiToken, Get, GetValue, ListCacheEntry, MomentoCache, MomentoCreateSigningKeyResponse,
+    MomentoDeleteResponse, MomentoDictionaryDeleteResponse, MomentoDictionaryFetchResponse,
+    MomentoDictionaryFetchStatus, MomentoDictionaryGetResponse, MomentoDictionaryGetStatus,
+    MomentoDictionaryIncrementResponse, MomentoDictionarySetResponse, MomentoError,
+    MomentoFlushCacheResponse, MomentoGenerateApiTokenResponse, MomentoListCacheResponse,
+    MomentoListFetchResponse, MomentoListSigningKeyResult, MomentoSetDifferenceResponse,
+    MomentoSetFetchResponse, MomentoSetResponse, MomentoSigningKey, MomentoSortedSetFetchResponse,
 };
 use crate::sorted_set;
 use crate::utils::{self, base64_encode};
@@ -567,11 +566,7 @@ impl SimpleCacheClient {
     /// # })
     /// # }
     /// ```
-    pub async fn get(
-        &mut self,
-        cache_name: &str,
-        key: impl IntoBytes,
-    ) -> MomentoResult<MomentoGetResponse> {
+    pub async fn get(&mut self, cache_name: &str, key: impl IntoBytes) -> MomentoResult<Get> {
         let request = self.prep_request(
             cache_name,
             GetRequest {
@@ -581,14 +576,12 @@ impl SimpleCacheClient {
 
         let response = self.data_client.get(request).await?.into_inner();
         match response.result() {
-            ECacheResult::Hit => Ok(MomentoGetResponse {
-                result: MomentoGetStatus::HIT,
-                value: response.cache_body,
+            ECacheResult::Hit => Ok(Get::Hit {
+                value: GetValue {
+                    raw_item: response.cache_body,
+                },
             }),
-            ECacheResult::Miss => Ok(MomentoGetResponse {
-                result: MomentoGetStatus::MISS,
-                value: response.cache_body,
-            }),
+            ECacheResult::Miss => Ok(Get::Miss),
             _ => unreachable!(),
         }
     }

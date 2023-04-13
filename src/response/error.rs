@@ -106,6 +106,20 @@ pub enum MomentoError {
         #[source]
         source: ErrorSource,
     },
+
+    /// Tried to use a missing result as a present result.
+    /// This may happen when you try to convert a GetResponse directly into a String, when you are opinionated that a miss should ?-propagate out.
+    #[error("cannot treat as a hit: {description}")]
+    Miss { description: Cow<'static, str> },
+
+    /// Tried to parse a value as something it could not be parsed into.
+    /// This may happen when you try to convert a GetResponse directly into a String, when what is in the value is not actually a utf-8 string.
+    #[error("cannot treat as the requested type: {description}")]
+    TypeError {
+        description: Cow<'static, str>,
+        #[source]
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
 }
 
 #[derive(Debug, thiserror::Error)]

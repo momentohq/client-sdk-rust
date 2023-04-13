@@ -2,11 +2,18 @@
 mod tests {
     use std::{env, time::Duration};
 
-    use momento::{response::MomentoGetStatus, SimpleCacheClient};
+    use momento::response::{Get, GetValue};
+    use momento::SimpleCacheClient;
     use momento::{MomentoError, SimpleCacheClientBuilder};
     use serde_json::Value;
     use tokio::time::sleep;
     use uuid::Uuid;
+
+    fn hit(value: impl Into<Vec<u8>>) -> Get {
+        Get::Hit {
+            value: GetValue::new(value.into()),
+        }
+    }
 
     fn get_momento_instance_with_token(
         auth_token: String,
@@ -42,7 +49,7 @@ mod tests {
             .get(&cache_name, cache_key)
             .await
             .expect("failure when trying get");
-        assert!(matches!(result.result, MomentoGetStatus::MISS));
+        assert_eq!(result, Get::Miss);
         mm.delete_cache(&cache_name)
             .await
             .expect("failed to delete cache");
@@ -105,8 +112,7 @@ mod tests {
             .get(&cache_name, cache_key.clone())
             .await
             .expect("failed to perform get");
-        assert!(matches!(result.result, MomentoGetStatus::HIT));
-        assert_eq!(result.value, cache_body.as_bytes());
+        assert_eq!(result, hit(cache_body));
         mm.delete_cache(&cache_name)
             .await
             .expect("failed to delete cache");
@@ -129,7 +135,7 @@ mod tests {
             .get(&cache_name, cache_key.clone())
             .await
             .expect("failed to perform get");
-        assert!(matches!(result.result, MomentoGetStatus::HIT));
+        assert_eq!(result, hit(cache_body));
         mm.delete_cache(&cache_name)
             .await
             .expect("failed to delete cache");
@@ -151,8 +157,7 @@ mod tests {
             .get(&cache_name, cache_key.clone())
             .await
             .expect("failed to perform get");
-        assert!(matches!(result.result, MomentoGetStatus::HIT));
-        assert_eq!(result.value, cache_body.as_bytes());
+        assert_eq!(result, hit(cache_body));
         mm.delete_cache(&cache_name)
             .await
             .expect("failed to delete cache");
@@ -217,15 +222,13 @@ mod tests {
             .get(&cache_name, "firstKey")
             .await
             .expect("failed to get first key");
-        assert!(matches!(first_key_get1.result, MomentoGetStatus::HIT));
-        assert_eq!(first_key_get1.as_string(), "firstValue");
+        assert_eq!(first_key_get1, hit("firstValue"));
 
         let second_key_get1 = client
             .get(&cache_name, "secondKey")
             .await
             .expect("failed to get second key");
-        assert!(matches!(second_key_get1.result, MomentoGetStatus::HIT));
-        assert_eq!(second_key_get1.as_string(), "secondValue");
+        assert_eq!(second_key_get1, hit("secondValue"));
 
         client
             .flush_cache(&cache_name)
@@ -236,13 +239,13 @@ mod tests {
             .get(&cache_name, "firstKey")
             .await
             .expect("failed to get first key");
-        assert!(matches!(first_key_get2.result, MomentoGetStatus::MISS));
+        assert_eq!(first_key_get2, Get::Miss);
 
         let second_key_get2 = client
             .get(&cache_name, "secondKey")
             .await
             .expect("failed to get second key");
-        assert!(matches!(second_key_get2.result, MomentoGetStatus::MISS));
+        assert_eq!(second_key_get2, Get::Miss);
     }
 
     #[tokio::test]
@@ -379,8 +382,7 @@ mod tests {
             .get(&cache_name, cache_key.clone())
             .await
             .expect("failed to exercise get");
-        assert!(matches!(result.result, MomentoGetStatus::HIT));
-        assert_eq!(result.value, cache_body.as_bytes());
+        assert_eq!(result, hit(cache_body));
         mm.delete(&cache_name, cache_key.clone())
             .await
             .expect("failed to delete cache");
@@ -388,7 +390,7 @@ mod tests {
             .get(&cache_name, cache_key.clone())
             .await
             .expect("failed to exercise get");
-        assert!(matches!(result.result, MomentoGetStatus::MISS));
+        assert_eq!(result, Get::Miss);
         mm.delete_cache(&cache_name)
             .await
             .expect("failed to delete cache");
