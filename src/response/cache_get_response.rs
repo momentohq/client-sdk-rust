@@ -2,6 +2,8 @@ use std::convert::{TryFrom, TryInto};
 
 use crate::MomentoError;
 
+use super::parse_string;
+
 /// Response for a cache get operation.
 ///
 /// If you'd like to handle misses you can simply match and handle your response:
@@ -67,10 +69,7 @@ impl TryFrom<GetValue> for String {
     type Error = MomentoError;
 
     fn try_from(value: GetValue) -> Result<Self, Self::Error> {
-        String::from_utf8(value.raw_item).map_err(|e| MomentoError::TypeError {
-            description: std::borrow::Cow::Borrowed("item is not a utf-8 string"),
-            source: Box::new(e),
-        })
+        parse_string(value.raw_item)
     }
 }
 

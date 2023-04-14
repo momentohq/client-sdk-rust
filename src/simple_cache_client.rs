@@ -22,9 +22,9 @@ use crate::{endpoint_resolver::MomentoEndpointsResolver, utils::user_agent, Mome
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 
 use crate::response::{
-    ApiToken, Get, GetValue, ListCacheEntry, MomentoCache, MomentoCreateSigningKeyResponse,
-    MomentoDeleteResponse, MomentoDictionaryDeleteResponse, MomentoDictionaryFetchResponse,
-    MomentoDictionaryFetchStatus, MomentoDictionaryGetResponse, MomentoDictionaryGetStatus,
+    ApiToken, DictionaryGet, DictionaryGetValue, Get, GetValue, ListCacheEntry, MomentoCache,
+    MomentoCreateSigningKeyResponse, MomentoDeleteResponse, MomentoDictionaryDeleteResponse,
+    MomentoDictionaryFetchResponse, MomentoDictionaryFetchStatus,
     MomentoDictionaryIncrementResponse, MomentoDictionarySetResponse, MomentoError,
     MomentoFlushCacheResponse, MomentoGenerateApiTokenResponse, MomentoListCacheResponse,
     MomentoListFetchResponse, MomentoListSigningKeyResult, MomentoSetDifferenceResponse,
@@ -666,6 +666,7 @@ impl SimpleCacheClient {
     /// use std::time::Duration;
     /// use std::iter::FromIterator;
     /// use std::collections::HashMap;
+    /// use std::convert::TryInto;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
@@ -675,10 +676,10 @@ impl SimpleCacheClient {
     /// let dict = HashMap::from_iter([("k1", "v1"), ("k2", "v2")]);
     /// momento.dictionary_set(&cache_name, "dict", dict, ttl).await?;
     ///
-    /// let dict = momento
+    /// let dict: HashMap<Vec<u8>, Vec<u8>> = momento
     ///     .dictionary_get(&cache_name, "dict", vec!["k1"])
     ///     .await?
-    ///     .dictionary
+    ///     .try_into()
     ///     .expect("dictionary does not exist");
     ///
     /// assert!(matches!(dict.get("k1".as_bytes()), Some(v) if v == b"v1"));
@@ -693,7 +694,7 @@ impl SimpleCacheClient {
         cache_name: &str,
         dictionary: impl IntoBytes,
         fields: Vec<K>,
-    ) -> MomentoResult<MomentoDictionaryGetResponse> {
+    ) -> MomentoResult<DictionaryGet> {
         use dictionary_get_response::Dictionary;
 
         let fields = convert_vec(fields);
@@ -709,23 +710,19 @@ impl SimpleCacheClient {
         match response.dictionary {
             Some(Dictionary::Found(response)) => {
                 // map the dictionary response parts to get responses
-                let dictionary = HashMap::from_iter(
-                    fields
-                        .into_iter()
-                        .zip(response.items.into_iter())
-                        .filter(|(_, item)| item.result() == ECacheResult::Hit)
-                        .map(|(field, item)| (field, item.cache_body)),
-                );
+                // Defer paying to turn these into a map in case the user has a different hasher or data structure in mind.
+                let pairs: Vec<(Vec<u8>, Vec<u8>)> = fields
+                    .into_iter()
+                    .zip(response.items.into_iter())
+                    .filter(|(_, item)| item.result() == ECacheResult::Hit)
+                    .map(|(field, item)| (field, item.cache_body))
+                    .collect();
 
-                Ok(MomentoDictionaryGetResponse {
-                    result: MomentoDictionaryGetStatus::FOUND,
-                    dictionary: Some(dictionary),
+                Ok(DictionaryGet::Found {
+                    value: DictionaryGetValue { raw_value: pairs },
                 })
             }
-            Some(Dictionary::Missing(_)) | None => Ok(MomentoDictionaryGetResponse {
-                result: MomentoDictionaryGetStatus::MISSING,
-                dictionary: None,
-            }),
+            Some(Dictionary::Missing(_)) | None => Ok(DictionaryGet::Missing),
         }
     }
 
