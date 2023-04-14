@@ -502,7 +502,6 @@ impl SimpleCacheClient {
     /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
-    /// use momento::response::MomentoGetStatus;
     ///
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
@@ -549,7 +548,7 @@ impl SimpleCacheClient {
     /// # momento_test_util::doctest(|cache_name, auth_token| async move {
     /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
-    /// use momento::response::MomentoGetStatus;
+    /// use momento::response::{Get, GetValue};
     ///
     /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
     ///     .build();
@@ -559,9 +558,8 @@ impl SimpleCacheClient {
     /// let present = momento.get(&cache_name, "present").await?;
     /// let missing = momento.get(&cache_name, "missing").await?;
     ///
-    /// assert!(matches!(present.result, MomentoGetStatus::HIT));
-    /// assert!(matches!(missing.result, MomentoGetStatus::MISS));
-    /// assert_eq!(present.value, b"value");
+    /// assert_eq!(present, Get::Hit { value: GetValue::new(b"value".to_vec()) });
+    /// assert_eq!(missing, Get::Miss);
     /// # Ok(())
     /// # })
     /// # }
