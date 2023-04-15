@@ -11,19 +11,20 @@ use super::parse_string;
 /// # use momento::response::Get;
 /// # use momento::MomentoResult;
 /// # let get_response = Get::Hit { value: momento::response::GetValue::new(vec![]) };
-/// let item: Vec<u8> = match get_response {
-///     Get::Hit { value } => value.into(),
+/// use std::convert::TryInto;
+/// let item: String = match get_response {
+///     Get::Hit { value } => value.try_into().expect("I stored a string!"),
 ///     Get::Miss => return // probably you'll do something else here
 /// };
 /// ```
-/// Or, if you are using utf-8 strings:
+///
+/// Or, if you're storing raw bytes you can get at them simply:
 /// ```
 /// # use momento::response::Get;
 /// # use momento::MomentoResult;
 /// # let get_response = Get::Hit { value: momento::response::GetValue::new(vec![]) };
-/// use std::convert::TryInto;
-/// let item: String = match get_response {
-///     Get::Hit { value } => value.try_into().expect("I stored a string!"),
+/// let item: Vec<u8> = match get_response {
+///     Get::Hit { value } => value.into(),
 ///     Get::Miss => return // probably you'll do something else here
 /// };
 /// ```

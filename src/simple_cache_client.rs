@@ -676,14 +676,13 @@ impl SimpleCacheClient {
     /// let dict = HashMap::from_iter([("k1", "v1"), ("k2", "v2")]);
     /// momento.dictionary_set(&cache_name, "dict", dict, ttl).await?;
     ///
-    /// let dict: HashMap<Vec<u8>, Vec<u8>> = momento
+    /// let dict: HashMap<String, String> = momento
     ///     .dictionary_get(&cache_name, "dict", vec!["k1"])
     ///     .await?
-    ///     .try_into()
-    ///     .expect("dictionary does not exist");
+    ///     .try_into()?;
     ///
-    /// assert!(matches!(dict.get("k1".as_bytes()), Some(v) if v == b"v1"));
-    /// assert!(matches!(dict.get("k2".as_bytes()), None));
+    /// assert_eq!(dict.get("k1"), Some(&"v1".to_string()));
+    /// assert_eq!(dict.get("k2"), None);
     /// assert_eq!(dict.len(), 1);
     /// # Ok(())
     /// # })

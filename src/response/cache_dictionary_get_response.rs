@@ -16,19 +16,6 @@ pub enum DictionaryGet {
     Miss,
 }
 
-impl TryFrom<DictionaryGet> for HashMap<Vec<u8>, Vec<u8>> {
-    type Error = MomentoError;
-
-    fn try_from(value: DictionaryGet) -> Result<Self, Self::Error> {
-        match value {
-            DictionaryGet::Hit { value } => Ok(value.into()),
-            DictionaryGet::Miss => Err(MomentoError::Miss {
-                description: std::borrow::Cow::Borrowed("dictionary was not found"),
-            }),
-        }
-    }
-}
-
 impl TryFrom<DictionaryGet> for HashMap<String, Vec<u8>> {
     type Error = MomentoError;
 

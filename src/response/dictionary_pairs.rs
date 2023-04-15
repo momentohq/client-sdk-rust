@@ -72,12 +72,6 @@ impl From<DictionaryPairs> for Vec<(Vec<u8>, Vec<u8>)> {
     }
 }
 
-impl From<DictionaryPairs> for HashMap<Vec<u8>, Vec<u8>> {
-    fn from(value: DictionaryPairs) -> Self {
-        value.into_iter().collect()
-    }
-}
-
 impl TryFrom<DictionaryPairs> for HashMap<String, Vec<u8>> {
     type Error = MomentoError;
 
