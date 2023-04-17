@@ -1,20 +1,43 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    convert::{TryFrom, TryInto},
+};
 
-/// Encapsulates the status of a cache disctionary get operation.
-#[derive(Debug)]
-pub enum MomentoDictionaryGetStatus {
-    /// Status if the dictionary was found
-    FOUND,
-    /// Status if the dictionary was missing
-    MISSING,
-    ERROR,
-}
+use crate::MomentoError;
+
+use super::DictionaryPairs;
 
 /// Response for a cache get operation.
-#[derive(Debug)]
-pub struct MomentoDictionaryGetResponse {
-    /// The result of a cache dictionary get operation.
-    pub result: MomentoDictionaryGetStatus,
-    /// The dictionary contents if it was found.
-    pub dictionary: Option<HashMap<Vec<u8>, Vec<u8>>>,
+#[derive(Debug, PartialEq, Eq)]
+pub enum DictionaryGet {
+    /// The dictionary item existed in the cache
+    Hit { value: DictionaryPairs },
+    /// The dictionary item did not exist
+    Miss,
+}
+
+impl TryFrom<DictionaryGet> for HashMap<String, Vec<u8>> {
+    type Error = MomentoError;
+
+    fn try_from(value: DictionaryGet) -> Result<Self, Self::Error> {
+        match value {
+            DictionaryGet::Hit { value } => value.try_into(),
+            DictionaryGet::Miss => Err(MomentoError::Miss {
+                description: std::borrow::Cow::Borrowed("dictionary was not found"),
+            }),
+        }
+    }
+}
+
+impl TryFrom<DictionaryGet> for HashMap<String, String> {
+    type Error = MomentoError;
+
+    fn try_from(value: DictionaryGet) -> Result<Self, Self::Error> {
+        match value {
+            DictionaryGet::Hit { value } => value.try_into(),
+            DictionaryGet::Miss => Err(MomentoError::Miss {
+                description: std::borrow::Cow::Borrowed("dictionary was not found"),
+            }),
+        }
+    }
 }
