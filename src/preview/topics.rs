@@ -1,3 +1,5 @@
+use futures::future::BoxFuture;
+use futures::{Future, FutureExt};
 use momento_protos::cache_client::pubsub::{
     self, pubsub_client::PubsubClient, PublishRequest, SubscriptionRequest,
 };
@@ -20,6 +22,7 @@ pub struct TopicClient {
 /// Work with topics, publishing and subscribing.
 /// ```rust
 /// use momento::preview::topics::TopicClient;
+/// use futures::StreamExt;
 ///
 /// async {
 ///     // Get a topic client
@@ -36,7 +39,7 @@ pub struct TopicClient {
 ///         .expect("subscribe rpc failed");
 ///
 ///     // Consume the subscription
-///     while let Some(item) = subscription.item().await.expect("subscription stream interrupted") {
+///     while let Some(item) = subscription.next().await {
 ///         println!("{item:?}")
 ///     }
 /// };
@@ -115,27 +118,7 @@ impl TopicClient {
         resume_at_topic_sequence_number: Option<u64>,
     ) -> Result<Subscription, MomentoError> {
         TopicClient::actually_subscribe(
-            &mut self.client.clone(),
-            cache_name,
-            topic,
-            resume_at_topic_sequence_number,
-        )
-        .await
-    }
-
-    /// Subscribe to a topic.
-    /// The cache is used as a namespace for your topics, and it needs to exist.
-    /// You don't create topics, you just start using them.
-    ///
-    /// Use this if you have &mut, as it will save you a small amount of overhead for reusing the client.
-    pub async fn subscribe_mut(
-        &mut self,
-        cache_name: String,
-        topic: String,
-        resume_at_topic_sequence_number: Option<u64>,
-    ) -> Result<Subscription, MomentoError> {
-        TopicClient::actually_subscribe(
-            &mut self.client,
+            self.client.clone(),
             cache_name,
             topic,
             resume_at_topic_sequence_number,
@@ -144,22 +127,26 @@ impl TopicClient {
     }
 
     async fn actually_subscribe(
-        client: &mut PubsubClient<ChannelType>,
+        mut client: PubsubClient<ChannelType>,
         cache_name: String,
         topic: String,
         resume_at_topic_sequence_number: Option<u64>,
     ) -> Result<Subscription, MomentoError> {
         let tonic_stream = client
             .subscribe(SubscriptionRequest {
-                cache_name,
-                topic,
+                cache_name: cache_name.clone(),
+                topic: topic.clone(),
                 resume_at_topic_sequence_number: resume_at_topic_sequence_number
                     .unwrap_or_default(),
             })
             .await?
             .into_inner();
         Ok(Subscription {
-            inner: tonic_stream,
+            client,
+            cache_name,
+            topic,
+            current_sequence_number: resume_at_topic_sequence_number.unwrap_or_default(),
+            current_subscription: SubscriptionState::Subscribed(tonic_stream),
         })
     }
 }
@@ -167,89 +154,185 @@ impl TopicClient {
 /// A stream of items from a topic.
 /// This will run more or less forever and yield items as long as you're
 /// subscribed and someone is publishing.
+///
+/// A Subscription is a futures::Stream<SubscriptionItem>. It will try to
+/// stay connected for as long as you try to consume it.
 pub struct Subscription {
-    inner: tonic::Streaming<pubsub::SubscriptionItem>,
+    client: PubsubClient<ChannelType>,
+    cache_name: String,
+    topic: String,
+    current_sequence_number: u64,
+    current_subscription: SubscriptionState,
+}
+
+type SubscriptionFuture = BoxFuture<
+    'static,
+    Result<tonic::Response<tonic::Streaming<pubsub::SubscriptionItem>>, tonic::Status>,
+>;
+
+enum SubscriptionState {
+    Subscribed(tonic::Streaming<pubsub::SubscriptionItem>),
+    Resubscribing {
+        subscription_future: SubscriptionFuture,
+    },
 }
 
 enum MapKind {
     Heartbeat,
     RealItem(SubscriptionItem),
     BrokenProtocolMissingAttribute(&'static str),
-    StreamClosed,
 }
 
 impl Subscription {
-    /// Wait for the next item in the stream.
-    ///
-    /// Result::Ok(Some(item))    -> the server sent you a subscription item!
-    /// Result::Ok(None)          -> the server is done - there will be no more items!
-    /// Result::Err(MomentoError) -> something went wrong - log it and maybe reach out if you need help!
-    pub async fn item(&mut self) -> Result<Option<SubscriptionItem>, MomentoError> {
-        loop {
-            let next = self
-                .inner
-                .message()
-                .await
-                .map_err(MomentoError::from)
-                .map(Subscription::map_into)?;
-            match next {
-                MapKind::RealItem(item) => return Ok(Some(item)),
-                MapKind::StreamClosed => return Ok(None),
-                MapKind::Heartbeat => log::debug!("received a heartbeat"),
-                MapKind::BrokenProtocolMissingAttribute(missing_attribute) => log::warn!("Missing attribute: {missing_attribute} - do you need to update your Momento SDK version?"),
-            }
-        }
-    }
-
     /// Yeah this is a pain, but doing it here lets us yield a simpler-typed subscription stream.
     /// Also, we don't want to expose protocol buffers types outside of the sdk, so some type map
     /// had to happen. It's all one-off at the moment though so might as well leave it as one
     /// triangle expression =)
-    fn map_into(possible_item: Option<pubsub::SubscriptionItem>) -> MapKind {
-        match possible_item {
-            Some(item) => match item.kind {
-                Some(kind) => match kind {
-                    pubsub::subscription_item::Kind::Item(item) => match item.value {
-                        Some(value) => {
-                            let sequence_number = item.topic_sequence_number;
-                            match value.kind {
-                                Some(topic_value_kind) => {
-                                    MapKind::RealItem(SubscriptionItem::Value(SubscriptionValue {
-                                        topic_sequence_number: sequence_number,
-                                        kind: match topic_value_kind {
-                                            pubsub::topic_value::Kind::Text(text) => {
-                                                ValueKind::Text(text)
-                                            }
-                                            pubsub::topic_value::Kind::Binary(binary) => {
-                                                ValueKind::Binary(binary)
-                                            }
-                                        },
-                                    }))
-                                }
-                                // This is kind of a broken protocol situation - but we do have a sequence number
-                                // so communicating the discontinuity at least allows downstream consumers to
-                                // take action on a partially-unsupported stream.
-                                None => MapKind::RealItem(SubscriptionItem::Discontinuity(
-                                    Discontinuity {
-                                        last_sequence_number: None,
-                                        new_sequence_number: sequence_number,
+    fn map_into(item: pubsub::SubscriptionItem) -> MapKind {
+        match item.kind {
+            Some(kind) => match kind {
+                pubsub::subscription_item::Kind::Item(item) => match item.value {
+                    Some(value) => {
+                        let sequence_number = item.topic_sequence_number;
+                        match value.kind {
+                            Some(topic_value_kind) => {
+                                MapKind::RealItem(SubscriptionItem::Value(SubscriptionValue {
+                                    topic_sequence_number: sequence_number,
+                                    kind: match topic_value_kind {
+                                        pubsub::topic_value::Kind::Text(text) => {
+                                            ValueKind::Text(text)
+                                        }
+                                        pubsub::topic_value::Kind::Binary(binary) => {
+                                            ValueKind::Binary(binary)
+                                        }
                                     },
-                                )),
+                                }))
+                            }
+                            // This is kind of a broken protocol situation - but we do have a sequence number
+                            // so communicating the discontinuity at least allows downstream consumers to
+                            // take action on a partially-unsupported stream.
+                            None => {
+                                MapKind::RealItem(SubscriptionItem::Discontinuity(Discontinuity {
+                                    last_sequence_number: None,
+                                    new_sequence_number: sequence_number,
+                                }))
                             }
                         }
-                        None => MapKind::BrokenProtocolMissingAttribute("value kind"),
-                    },
-                    pubsub::subscription_item::Kind::Discontinuity(discontinuity) => {
-                        MapKind::RealItem(SubscriptionItem::Discontinuity(Discontinuity {
-                            last_sequence_number: Some(discontinuity.last_topic_sequence),
-                            new_sequence_number: discontinuity.new_topic_sequence,
-                        }))
                     }
-                    pubsub::subscription_item::Kind::Heartbeat(_) => MapKind::Heartbeat,
+                    None => MapKind::BrokenProtocolMissingAttribute("value kind"),
                 },
-                None => MapKind::BrokenProtocolMissingAttribute("item kind"),
+                pubsub::subscription_item::Kind::Discontinuity(discontinuity) => {
+                    MapKind::RealItem(SubscriptionItem::Discontinuity(Discontinuity {
+                        last_sequence_number: Some(discontinuity.last_topic_sequence),
+                        new_sequence_number: discontinuity.new_topic_sequence,
+                    }))
+                }
+                pubsub::subscription_item::Kind::Heartbeat(_) => MapKind::Heartbeat,
             },
-            None => MapKind::StreamClosed, // Normal end-of-stream from server
+            None => MapKind::BrokenProtocolMissingAttribute("item kind"),
+        }
+    }
+
+    fn resubscribe(&self) -> SubscriptionFuture {
+        let mut client = self.client.clone();
+        let cache_name = self.cache_name.clone();
+        let topic = self.topic.clone();
+        let resume_at_topic_sequence_number = self.current_sequence_number;
+        async move {
+            client
+                .subscribe(SubscriptionRequest {
+                    cache_name,
+                    topic,
+                    resume_at_topic_sequence_number,
+                })
+                .await
+        }
+        .boxed()
+    }
+}
+
+impl futures::Stream for Subscription {
+    type Item = SubscriptionItem;
+
+    fn poll_next(
+        mut self: std::pin::Pin<&mut Self>,
+        context: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Option<Self::Item>> {
+        loop {
+            match &mut self.as_mut().current_subscription {
+                SubscriptionState::Subscribed(subscription) => {
+                    match std::pin::pin!(subscription).poll_next(context) {
+                        std::task::Poll::Ready(possible_result) => match possible_result {
+                            Some(result) => match result {
+                                Ok(item) => match Self::map_into(item) {
+                                    MapKind::RealItem(item) => {
+                                        log::trace!("received an item: {item:?}");
+                                        match &item {
+                                            SubscriptionItem::Value(v) => {
+                                                self.current_sequence_number =
+                                                    v.topic_sequence_number
+                                            }
+                                            SubscriptionItem::Discontinuity(d) => {
+                                                self.current_sequence_number = d.new_sequence_number
+                                            }
+                                        }
+                                        break std::task::Poll::Ready(Some(item));
+                                    }
+                                    MapKind::Heartbeat => {
+                                        log::trace!("received a heartbeat - skipping...");
+                                    }
+                                    MapKind::BrokenProtocolMissingAttribute(e) => {
+                                        log::debug!("bad item! Missing {e} - skipping...");
+                                    }
+                                },
+                                Err(e) => {
+                                    log::debug!(
+                                        "error talking to momento! {e:?} - Reconnecting..."
+                                    );
+                                    self.current_subscription = SubscriptionState::Resubscribing {
+                                        subscription_future: self.resubscribe(),
+                                    };
+                                }
+                            },
+                            None => {
+                                log::debug!("stream closed - reconnecting...");
+                                self.current_subscription = SubscriptionState::Resubscribing {
+                                    subscription_future: self.resubscribe(),
+                                };
+                            }
+                        },
+                        std::task::Poll::Pending => {
+                            // Nobody has published anything just yet.
+                            break std::task::Poll::Pending;
+                        }
+                    }
+                }
+                SubscriptionState::Resubscribing {
+                    subscription_future,
+                } => {
+                    match std::pin::pin!(subscription_future).poll(context) {
+                        std::task::Poll::Ready(subscription_result) => match subscription_result {
+                            Ok(new_subscription) => {
+                                log::trace!("state transitioned back to subscribed");
+                                self.current_subscription =
+                                    SubscriptionState::Subscribed(new_subscription.into_inner());
+                            }
+                            Err(e) => {
+                                log::debug!(
+                                    "error while trying to resubscribe. {e:?} - trying again..."
+                                );
+                                self.current_subscription = SubscriptionState::Resubscribing {
+                                    subscription_future: self.resubscribe(),
+                                };
+                            }
+                        },
+                        std::task::Poll::Pending => {
+                            // Not reconnected just yet.
+                            break std::task::Poll::Pending;
+                        }
+                    }
+                }
+            }
         }
     }
 }
