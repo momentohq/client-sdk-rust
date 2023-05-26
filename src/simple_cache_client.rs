@@ -17,10 +17,8 @@ use std::ops::RangeBounds;
 use std::time::{Duration, UNIX_EPOCH};
 use tonic::{codegen::InterceptedService, transport::Channel, Request};
 
+use crate::credential_provider::CredentialProvider;
 use crate::requests::generate_api_token_request::TokenExpiry;
-use crate::{endpoint_resolver::MomentoEndpointsResolver, utils::user_agent, MomentoResult};
-use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
-
 use crate::response::{
     ApiToken, DictionaryFetch, DictionaryGet, DictionaryPairs, Get, GetValue, ListCacheEntry,
     MomentoCache, MomentoCreateSigningKeyResponse, MomentoDeleteResponse,
@@ -32,6 +30,8 @@ use crate::response::{
 };
 use crate::sorted_set;
 use crate::utils::{self, base64_encode};
+use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
+use crate::{utils::user_agent, MomentoResult};
 
 pub trait IntoBytes {
     fn into_bytes(self) -> Vec<u8>;
@@ -163,65 +163,55 @@ impl SimpleCacheClientBuilder {
     ///
     /// # Arguments
     ///
-    /// * `auth_token` - Momento Token
+    /// * `credential_provider` - Momento Credential Provider
     /// * `default_ttl` - Default TTL for items put into a cache.
     /// # Examples
     ///
     /// ```
     /// # tokio_test::block_on(async {
-    ///     use momento::SimpleCacheClientBuilder;
+    ///     use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
     ///     use std::env;
     ///     use std::time::Duration;
-    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    ///     let momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
+    ///     let credential_provider = CredentialProviderBuilder::new_from_environment_variable("TEST_AUTH_TOKEN")
+    ///         .build()
+    ///         .expect("TEST_AUTH_TOKEN must be set");
+    ///     let momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))
     ///         .expect("could not create a client")
     ///         .build();
     /// # })
     /// ```
-    pub fn new(auth_token: String, default_ttl: Duration) -> MomentoResult<Self> {
-        SimpleCacheClientBuilder::new_with_explicit_agent_name(auth_token, default_ttl, "sdk", None)
-    }
-
-    /// Like new() above, but requires a momento_endpoint.
-    // TODO: Update the documentation and tests and deprecate the existing new method. This will be
-    // done once we start vending out tokens with no endpoints and have published the new momento
-    // endpoints.
-    pub fn new_with_endpoint(
-        auth_token: String,
+    pub fn new(
+        credential_provider: CredentialProvider,
         default_ttl: Duration,
-        momento_endpoint: String,
     ) -> MomentoResult<Self> {
         SimpleCacheClientBuilder::new_with_explicit_agent_name(
-            auth_token,
+            credential_provider,
             default_ttl,
             "sdk",
-            Some(momento_endpoint),
         )
     }
 
     /// Like new() above, but used for naming integrations.
     pub fn new_with_explicit_agent_name(
-        auth_token: String,
+        credential_provider: CredentialProvider,
         default_ttl: Duration,
         user_agent_name: &str,
-        momento_endpoint: Option<String>,
     ) -> MomentoResult<Self> {
-        let momento_endpoints =
-            match MomentoEndpointsResolver::resolve(&auth_token, momento_endpoint) {
-                Ok(endpoints) => endpoints,
-                Err(e) => return Err(e),
-            };
-        log::debug!("connecting to endpoints: {:?}", momento_endpoints);
+        log::debug!(
+            "connecting to cache endpoint: {:?}, connecting to control endpoint: {:?}",
+            &credential_provider.cache_endpoint,
+            &credential_provider.control_endpoint
+        );
 
-        let control_channel = connect_channel_lazily(&momento_endpoints.control_endpoint.url)?;
-        let data_channel = connect_channel_lazily(&momento_endpoints.data_endpoint.url)?;
+        let control_channel = connect_channel_lazily(&credential_provider.control_endpoint)?;
+        let data_channel = connect_channel_lazily(&credential_provider.cache_endpoint)?;
 
         match utils::is_ttl_valid(default_ttl) {
             Ok(_) => Ok(Self {
-                data_endpoint: momento_endpoints.data_endpoint.hostname,
+                data_endpoint: credential_provider.cache_endpoint,
                 control_channel,
                 data_channel,
-                auth_token,
+                auth_token: credential_provider.auth_token,
                 default_ttl,
                 user_agent_name: user_agent_name.to_string(),
             }),
@@ -295,11 +285,13 @@ impl SimpleCacheClient {
     /// # tokio_test::block_on(async {
     /// use uuid::Uuid;
     /// use std::time::Duration;
-    /// use momento::SimpleCacheClientBuilder;
+    /// use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
     ///
-    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    /// let credential_provider = CredentialProviderBuilder::new_from_environment_variable("TEST_AUTH_TOKEN")
+    ///     .build()
+    ///     .expect("TEST_AUTH_TOKEN must be set");
     /// let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(5))?
     ///     .build();
     ///
     /// momento.create_cache(&cache_name).await?;
@@ -327,11 +319,13 @@ impl SimpleCacheClient {
     /// # use futures::FutureExt;
     /// use uuid::Uuid;
     /// use std::time::Duration;
-    /// use momento::SimpleCacheClientBuilder;
+    /// use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
     ///
-    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    /// let credential_provider = CredentialProviderBuilder::new_from_environment_variable("TEST_AUTH_TOKEN")
+    ///     .build()
+    ///     .expect("TEST_AUTH_TOKEN must be set");
     /// let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(5))?
     ///     .build();
     ///
     /// momento.create_cache(&cache_name).await?;
@@ -439,11 +433,13 @@ impl SimpleCacheClient {
     /// # use futures::FutureExt;
     /// use uuid::Uuid;
     /// use std::time::Duration;
-    /// use momento::SimpleCacheClientBuilder;
+    /// use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
     ///
     /// let ttl_minutes = 10;
-    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))?
+    /// let credential_provider = CredentialProviderBuilder::new_from_environment_variable("TEST_AUTH_TOKEN")
+    ///     .build()
+    ///     .expect("TEST_AUTH_TOKEN must be set");
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(5))?
     ///     .build();
     ///
     /// let key = momento.create_signing_key(ttl_minutes).await?;
@@ -499,11 +495,11 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
     ///
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// // Use client default TTL: 30 seconds, as specified above.
@@ -545,12 +541,12 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
     /// use momento::response::{Get, GetValue};
     ///
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.set(&cache_name, "present", "value", None).await?;
@@ -600,14 +596,14 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use std::iter::FromIterator;
     /// use std::collections::HashMap;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// let dict = HashMap::from_iter([("k1", "v1"), ("k2", "v2")]);
@@ -662,7 +658,7 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use std::iter::FromIterator;
     /// use std::collections::HashMap;
@@ -670,7 +666,7 @@ impl SimpleCacheClient {
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// let dict = HashMap::from_iter([("k1", "v1"), ("k2", "v2")]);
@@ -739,14 +735,14 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use std::iter::FromIterator;
     /// use std::collections::HashMap;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder, response::DictionaryFetch};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// let dict = HashMap::from_iter([("key", "value")]);
@@ -816,14 +812,14 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use std::iter::FromIterator;
     /// use std::collections::HashMap;
     /// use momento::{CollectionTtl, Fields, SimpleCacheClientBuilder, response::DictionaryFetch};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// let dict = HashMap::from_iter([("a", "b"), ("c", "d"), ("e", "f")]);
@@ -892,12 +888,12 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// let resp = momento.dictionary_increment(&cache_name, "dict", "key", 10, ttl).await?;
@@ -955,12 +951,12 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// assert_eq!(momento.list_concat_front(&cache_name, "list", ["a", "b"], 3, ttl).await?, 2);
@@ -1020,12 +1016,12 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// assert_eq!(momento.list_concat_back(&cache_name, "list", ["a", "b"], 3, ttl).await?, 2);
@@ -1087,12 +1083,12 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.list_set(&cache_name, "list", ["a", "b"], ttl).await?;
@@ -1152,12 +1148,12 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.list_set(&cache_name, "list", ["a", "b"], ttl).await?;
@@ -1213,12 +1209,12 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.list_set(&cache_name, "list", ["a", "b"], ttl).await?;
@@ -1264,12 +1260,12 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.list_set(&cache_name, "list", ["a", "b"], ttl).await?;
@@ -1318,12 +1314,12 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.list_set(&cache_name, "list", ["a", "b"], ttl).await?;
@@ -1377,12 +1373,12 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.list_set(&cache_name, "list", ["a", "b"], ttl).await?;
@@ -1437,12 +1433,12 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.list_set(&cache_name, "list", ["a", "b", "c", "a"], ttl).await?;
@@ -1490,12 +1486,12 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.list_set(&cache_name, "list", ["a", "b", "c", "d"], ttl).await?;
@@ -1532,12 +1528,12 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.list_set(&cache_name, "list", ["a", "b", "c", "d", "e", "f"], ttl).await?;
@@ -1611,12 +1607,12 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.list_set(&cache_name, "present", ["a", "b"], ttl).await?;
@@ -1662,11 +1658,11 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
     ///
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// match momento.set_fetch(&cache_name, "test set").await?.value {
@@ -1720,12 +1716,12 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.set_union(&cache_name, "myset", vec!["c", "d"], ttl).await?;
@@ -1777,13 +1773,13 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     /// use momento::response::MomentoSetDifferenceResponse;
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.set_union(&cache_name, "test set", vec!["a", "b", "c", "d"], ttl).await?;
@@ -1897,12 +1893,12 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
     /// use momento::sorted_set::Order;
     ///
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// match momento.sorted_set_get_rank(&cache_name, "test sorted set", "element a").await? {
@@ -1974,11 +1970,11 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
     ///
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// let elements = vec!["a", "b", "c"];
@@ -2057,12 +2053,12 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.sorted_set_increment(&cache_name, "test sorted set", "a", 50.0, ttl).await?;
@@ -2113,13 +2109,13 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
     /// use momento::sorted_set::SortedSetElement;
     ///
     /// let ttl = CollectionTtl::default();
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.sorted_set_put(&cache_name, "test sorted set", vec![
@@ -2166,11 +2162,11 @@ impl SimpleCacheClient {
     /// # Example
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
     ///
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.sorted_set_remove(&cache_name, "test sorted set", vec!["a", "b", "c"]).await?;
@@ -2216,11 +2212,11 @@ impl SimpleCacheClient {
     ///
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
-    /// # momento_test_util::doctest(|cache_name, auth_token| async move {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
     ///
-    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))?
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
     /// momento.set(&cache_name, "key", "value", None).await?;

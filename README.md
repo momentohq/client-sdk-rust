@@ -14,20 +14,11 @@ Rust SDK for Momento, a serverless cache that automatically scales without any o
 
 <br/>
 
-## Preview Features
-
-This SDK contains APIs for interacting with collection data structures: Lists, Sets, and Dictionaries.  These APIs
-are currently in preview.  If you would like to request early access to the data structure APIs, please contact us
-at `support@momentohq.com`.
-
-**Note that if you call the List, Set, or Dictionary APIs without first signing up for our early access preview, you
-the calls will result in an `Unsupported operation` error.**
-
 ## Getting Started 🏃
 
 ### Requirements
 
-- A Momento Auth Token is required, you can generate one using the [Momento CLI](https://github.com/momentohq/momento-cli)
+- A Momento Auth Token is required, you can generate one using the [Momento Console](https://console.gomomento.com)
 
 <br/>
 
@@ -40,17 +31,19 @@ Check out [example](./example/) directory!
 ### Using Momento
 
 ```rust
-use momento::simple_cache_client::SimpleCacheClientBuilder;
+use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
 use std::env;
 use std::num::NonZeroU64;
 
 async fn demo_cache_usage() {
     // Initialize Momento
-    let auth_token = env::var("MOMENTO_AUTH_TOKEN")
-        .expect("env var MOMENTO_AUTH_TOKEN must be set to your auth token");
+    let credential_provider =
+        CredentialProviderBuilder::new_from_environment_variable("MOMENTO_AUTH_TOKEN")
+            .build()
+            .expect("env var MOMENTO_AUTH_TOKEN must be set to your auth token");
     let item_default_ttl_seconds = 60;
     let mut cache_client = SimpleCacheClientBuilder::new(
-        auth_token,
+        credential_provider,
         NonZeroU64::new(item_default_ttl_seconds).unwrap(),
     )
     .unwrap()

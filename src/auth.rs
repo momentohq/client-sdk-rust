@@ -5,7 +5,6 @@ use thiserror::Error;
 use tonic::{codegen::http::uri::InvalidUri, transport::Channel, Streaming};
 
 use crate::{
-    endpoint_resolver::MomentoEndpointsResolver,
     response::MomentoError,
     utils::{connect_channel_lazily, ChannelConnectError},
 };
@@ -190,7 +189,19 @@ async fn consume_login_messages(
 }
 
 fn auth_client() -> Result<AuthClient<Channel>, AuthError> {
-    let hostname = MomentoEndpointsResolver::get_login_endpoint();
+    let hostname = get_login_endpoint();
     let channel = connect_channel_lazily(&hostname)?;
     Ok(AuthClient::new(channel))
+}
+
+const LOGIN_HOSTNAMES: &[&str] = &["control.cell-us-east-1-1.prod.a.momentohq.com"];
+fn get_login_endpoint() -> String {
+    match std::env::var("LOGIN_ENDPOINT") {
+        Ok(override_hostname) => override_hostname,
+        Err(_) => {
+            let random = rand::random::<usize>();
+            let hostname = LOGIN_HOSTNAMES[random % LOGIN_HOSTNAMES.len()].to_string();
+            format!("https://{hostname}:443")
+        }
+    }
 }

@@ -2,6 +2,7 @@ use std::future::Future;
 use std::time::Duration;
 
 use momento::SimpleCacheClientBuilder;
+use momento::{CredentialProvider, CredentialProviderBuilder};
 use uuid::Uuid;
 
 pub type DoctestResult = anyhow::Result<()>;
@@ -14,7 +15,7 @@ pub type DoctestResult = anyhow::Result<()>;
 /// - Ensuring that cache is deleted, even if the test case panics.
 pub fn doctest<'ctx, Fn: 'ctx, Fut: 'ctx>(func: Fn) -> DoctestResult
 where
-    Fn: FnOnce(String, String) -> Fut,
+    Fn: FnOnce(String, CredentialProvider) -> Fut,
     Fut: Future<Output = DoctestResult>,
 {
     let runtime = tokio::runtime::Builder::new_current_thread()
@@ -25,10 +26,13 @@ where
     let _guard = runtime.enter();
 
     let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
-    let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    let credential_provider =
+        CredentialProviderBuilder::new_from_environment_variable("TEST_AUTH_TOKEN")
+            .build()
+            .expect("TEST_AUTH_TOKEN must be set");
 
     let mut client =
-        SimpleCacheClientBuilder::new(auth_token.clone(), Duration::from_secs(5))?.build();
+        SimpleCacheClientBuilder::new(credential_provider.clone(), Duration::from_secs(5))?.build();
     runtime.block_on(client.create_cache(&cache_name))?;
 
     let runtime = scopeguard::guard(runtime, {
@@ -41,5 +45,5 @@ where
         }
     });
 
-    runtime.block_on(func(cache_name, auth_token))
+    runtime.block_on(func(cache_name, credential_provider))
 }
