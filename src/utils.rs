@@ -77,7 +77,7 @@ pub(crate) fn connect_channel_lazily(uri_string: &str) -> Result<Channel, Channe
     let uri = Uri::try_from(uri_string)?;
     let endpoint = Channel::builder(uri)
         .keep_alive_while_idle(true)
-        .http2_keep_alive_interval(time::Duration::from_secs(2 * 60))
+        .http2_keep_alive_interval(time::Duration::from_secs(30))
         .tls_config(ClientTlsConfig::default())?;
     Ok(endpoint.connect_lazy())
 }
