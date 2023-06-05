@@ -17,7 +17,9 @@ where
     Fn: FnOnce(String, String) -> Fut,
     Fut: Future<Output = DoctestResult>,
 {
-    eprintln!("FIXME: auth is broken at the moment. When it is fixed, please restore the below test cfg.");
+    eprintln!(
+        "FIXME: auth is broken at the moment. When it is fixed, please restore the below test cfg."
+    );
     Ok(())
 }
 
