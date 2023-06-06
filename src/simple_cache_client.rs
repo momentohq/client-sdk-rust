@@ -167,18 +167,17 @@ impl SimpleCacheClientBuilder {
     /// * `default_ttl` - Default TTL for items put into a cache.
     /// # Examples
     ///
-    // FIXME: Restore tests when auth works
-    // ```
-    // # tokio_test::block_on(async {
-    //     use momento::SimpleCacheClientBuilder;
-    //     use std::env;
-    //     use std::time::Duration;
-    //     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    //     let momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
-    //         .expect("could not create a client")
-    //         .build();
-    // # })
-    // ```
+    /// ```
+    /// # tokio_test::block_on(async {
+    ///     use momento::SimpleCacheClientBuilder;
+    ///     use std::env;
+    ///     use std::time::Duration;
+    ///     let auth_token = env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    ///     let momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(30))
+    ///         .expect("could not create a client")
+    ///         .build();
+    /// # })
+    /// ```
     pub fn new(auth_token: String, default_ttl: Duration) -> MomentoResult<Self> {
         SimpleCacheClientBuilder::new_with_explicit_agent_name(auth_token, default_ttl, "sdk", None)
     }
@@ -289,27 +288,26 @@ impl SimpleCacheClient {
     ///
     /// * `name` - name of cache to delete
     ///
-    // FIXME: Restore tests when auth works
-    // # Examples
-    //
-    // ```
-    // # fn main() -> anyhow::Result<()> {
-    // # tokio_test::block_on(async {
-    // use uuid::Uuid;
-    // use std::time::Duration;
-    // use momento::SimpleCacheClientBuilder;
-    //
-    // let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    // let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
-    // let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))?
-    //     .build();
-    //
-    // momento.create_cache(&cache_name).await?;
-    // momento.delete_cache(&cache_name).await?;
-    // # Ok(())
-    // # })
-    // # }
-    // ```
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # tokio_test::block_on(async {
+    /// use uuid::Uuid;
+    /// use std::time::Duration;
+    /// use momento::SimpleCacheClientBuilder;
+    ///
+    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    /// let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))?
+    ///     .build();
+    ///
+    /// momento.create_cache(&cache_name).await?;
+    /// momento.delete_cache(&cache_name).await?;
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
     pub async fn delete_cache(&mut self, name: &str) -> MomentoResult<()> {
         utils::is_cache_name_valid(name)?;
         let request = Request::new(DeleteCacheRequest {
@@ -323,32 +321,31 @@ impl SimpleCacheClient {
     ///
     /// # Examples
     ///
-    // FIXME: Restore tests when auth works
-    // ```
-    // # fn main() -> anyhow::Result<()> {
-    // # tokio_test::block_on(async {
-    // # use futures::FutureExt;
-    // use uuid::Uuid;
-    // use std::time::Duration;
-    // use momento::SimpleCacheClientBuilder;
-    //
-    // let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    // let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
-    // let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))?
-    //     .build();
-    //
-    // momento.create_cache(&cache_name).await?;
-    // # let result = std::panic::AssertUnwindSafe(async {
-    // let resp = momento.list_caches(None).await?;
-    //
-    // assert!(resp.caches.iter().any(|cache| cache.cache_name == cache_name));
-    // # Ok(())
-    // # }).catch_unwind().await;
-    // # momento.delete_cache(&cache_name).await?;
-    // # result.unwrap_or_else(|e| std::panic::resume_unwind(e))
-    // # })
-    // # }
-    // ```
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # tokio_test::block_on(async {
+    /// # use futures::FutureExt;
+    /// use uuid::Uuid;
+    /// use std::time::Duration;
+    /// use momento::SimpleCacheClientBuilder;
+    ///
+    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    /// let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))?
+    ///     .build();
+    ///
+    /// momento.create_cache(&cache_name).await?;
+    /// # let result = std::panic::AssertUnwindSafe(async {
+    /// let resp = momento.list_caches(None).await?;
+    ///
+    /// assert!(resp.caches.iter().any(|cache| cache.cache_name == cache_name));
+    /// # Ok(())
+    /// # }).catch_unwind().await;
+    /// # momento.delete_cache(&cache_name).await?;
+    /// # result.unwrap_or_else(|e| std::panic::resume_unwind(e))
+    /// # })
+    /// # }
+    /// ```
     pub async fn list_caches(
         &mut self,
         next_token: Option<String>,
@@ -436,32 +433,31 @@ impl SimpleCacheClient {
     ///
     /// # Examples
     ///
-    // FIXME: Restore tests when auth works
-    // ```
-    // # fn main() -> anyhow::Result<()> {
-    // # tokio_test::block_on(async {
-    // # use futures::FutureExt;
-    // use uuid::Uuid;
-    // use std::time::Duration;
-    // use momento::SimpleCacheClientBuilder;
-    //
-    // let ttl_minutes = 10;
-    // let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
-    // let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))?
-    //     .build();
-    //
-    // let key = momento.create_signing_key(ttl_minutes).await?;
-    // # let result = std::panic::AssertUnwindSafe(async {
-    // let list = momento.list_signing_keys(None).await?.signing_keys;
-    // assert!(list.iter().any(|sk| sk.key_id == key.key_id));
-    // # Ok(())
-    // # }).catch_unwind().await;
-    //
-    // momento.revoke_signing_key(&key.key_id).await?;
-    // # result.unwrap_or_else(|e| std::panic::resume_unwind(e))
-    // # })
-    // # }
-    // ```
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # tokio_test::block_on(async {
+    /// # use futures::FutureExt;
+    /// use uuid::Uuid;
+    /// use std::time::Duration;
+    /// use momento::SimpleCacheClientBuilder;
+    ///
+    /// let ttl_minutes = 10;
+    /// let auth_token = std::env::var("TEST_AUTH_TOKEN").expect("TEST_AUTH_TOKEN must be set");
+    /// let mut momento = SimpleCacheClientBuilder::new(auth_token, Duration::from_secs(5))?
+    ///     .build();
+    ///
+    /// let key = momento.create_signing_key(ttl_minutes).await?;
+    /// # let result = std::panic::AssertUnwindSafe(async {
+    /// let list = momento.list_signing_keys(None).await?.signing_keys;
+    /// assert!(list.iter().any(|sk| sk.key_id == key.key_id));
+    /// # Ok(())
+    /// # }).catch_unwind().await;
+    ///
+    /// momento.revoke_signing_key(&key.key_id).await?;
+    /// # result.unwrap_or_else(|e| std::panic::resume_unwind(e))
+    /// # })
+    /// # }
+    /// ```
     pub async fn list_signing_keys(
         &mut self,
         next_token: Option<&str>,

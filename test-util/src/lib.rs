@@ -12,24 +12,7 @@ pub type DoctestResult = anyhow::Result<()>;
 /// - Reading the auth token from the environment
 /// - Creating a cache for the doctest to use.
 /// - Ensuring that cache is deleted, even if the test case panics.
-pub fn doctest<'ctx, Fn: 'ctx, Fut: 'ctx>(_func: Fn) -> DoctestResult
-where
-    Fn: FnOnce(String, String) -> Fut,
-    Fut: Future<Output = DoctestResult>,
-{
-    eprintln!(
-        "FIXME: auth is broken at the moment. When it is fixed, please restore the below test cfg."
-    );
-    Ok(())
-}
-
-/// Doctest helper function.
-///
-/// This function takes care of common setup/cleanup tasks for doctests:
-/// - Reading the auth token from the environment
-/// - Creating a cache for the doctest to use.
-/// - Ensuring that cache is deleted, even if the test case panics.
-pub fn doctest_intended<'ctx, Fn: 'ctx, Fut: 'ctx>(func: Fn) -> DoctestResult
+pub fn doctest<'ctx, Fn: 'ctx, Fut: 'ctx>(func: Fn) -> DoctestResult
 where
     Fn: FnOnce(String, String) -> Fut,
     Fut: Future<Output = DoctestResult>,

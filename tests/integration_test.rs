@@ -1,13 +1,5 @@
 #[cfg(test)]
 mod tests {
-    #[tokio::test]
-    async fn error_please_fix_auth() {
-        log::error!("FIXME: auth is broken at the moment. When it is fixed, please restore the below test cfg.")
-    }
-}
-
-#[cfg(test2)]
-mod tests {
     use std::{env, time::Duration};
 
     use momento::response::{Get, GetValue};
