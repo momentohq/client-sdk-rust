@@ -6,9 +6,12 @@ use std::env;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct JwtClaims {
-    sub: String,
-    c: Option<String>,
-    cp: Option<String>,
+    #[serde(rename = "sub")]
+    subject: String,
+    #[serde(rename = "c")]
+    cache_endpoint: Option<String>,
+    #[serde(rename = "cp")]
+    control_endpoint: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -16,9 +19,6 @@ struct V1Token {
     pub api_key: String,
     pub endpoint: String,
 }
-
-const CACHE_ENDPOINT_PREFIX: &str = "cache.";
-const CONTROL_ENDPOINT_PREFIX: &str = "control.";
 
 #[derive(Debug, Clone)]
 pub struct CredentialProvider {
@@ -172,13 +172,13 @@ impl<'a> CredentialProviderBuilder<'a> {
         // claims in the JWT
         // If endpoint override is not provided, then `c` and `cp` claims must be present.
         let cache_endpoint = cache_endpoint_override
-            .or(token_claims.c)
+            .or(token_claims.cache_endpoint)
             .ok_or_else(|| MomentoError::InvalidArgument {
                 description: "auth token is missing cache endpoint and endpoint override is missing. One or the other must be provided".into(),
                 source: None,
             })?;
         let control_endpoint = control_endpoint_override
-            .or(token_claims.cp)
+            .or(token_claims.control_endpoint)
             .ok_or_else(|| MomentoError::InvalidArgument {
                 description: "auth token is missing control endpoint and endpoint override is missing. One or the other must be provided.".into(),
                 source: None,
@@ -191,11 +191,11 @@ impl<'a> CredentialProviderBuilder<'a> {
     }
 
     fn get_cache_endpoint(endpoint: &str) -> String {
-        format!("{CACHE_ENDPOINT_PREFIX}{endpoint}")
+        format!("cache.{endpoint}")
     }
 
     fn get_control_endpoint(endpoint: &str) -> String {
-        format!("{CONTROL_ENDPOINT_PREFIX}{endpoint}")
+        format!("control.{endpoint}")
     }
 
     fn https_endpoint(hostname: String) -> String {
