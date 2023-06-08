@@ -79,23 +79,23 @@ impl CredentialProviderBuilder {
         }
     }
 
-    pub fn with_cache_endpoint(mut self, cache_endpoint_override: Option<String>) -> Self {
-        self.cache_endpoint_override = cache_endpoint_override;
+    pub fn with_cache_endpoint(mut self, cache_endpoint_override: String) -> Self {
+        self.cache_endpoint_override = Some(cache_endpoint_override);
         self
     }
 
-    pub fn with_control_endpoint(mut self, control_endpoint_override: Option<String>) -> Self {
-        self.control_endpoint_override = control_endpoint_override;
+    pub fn with_control_endpoint(mut self, control_endpoint_override: String) -> Self {
+        self.control_endpoint_override = Some(control_endpoint_override);
         self
     }
 
-    pub fn with_momento_endpoint(mut self, endpoint_override: Option<String>) -> Self {
-        if let Some(endpoint) = endpoint_override {
-            self.cache_endpoint_override =
-                Some(CredentialProviderBuilder::get_cache_endpoint(&endpoint));
-            self.control_endpoint_override =
-                Some(CredentialProviderBuilder::get_control_endpoint(&endpoint));
-        }
+    pub fn with_momento_endpoint(mut self, endpoint_override: String) -> Self {
+        self.cache_endpoint_override = Some(CredentialProviderBuilder::get_cache_endpoint(
+            &endpoint_override,
+        ));
+        self.control_endpoint_override = Some(CredentialProviderBuilder::get_control_endpoint(
+            &endpoint_override,
+        ));
         self
     }
 
@@ -348,8 +348,8 @@ mod tests {
         // }
         let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
         let credential_provider = CredentialProviderBuilder::from_string(auth_token.to_string())
-            .with_cache_endpoint(Some("cache.help.com".to_string()))
-            .with_control_endpoint(Some("control.help.com".to_string()))
+            .with_cache_endpoint("cache.help.com".to_string())
+            .with_control_endpoint("control.help.com".to_string())
             .build()
             .expect("should be able to get credentials");
 
@@ -379,7 +379,7 @@ mod tests {
         // }
         let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
         let credential_provider = CredentialProviderBuilder::from_string(auth_token.to_string())
-            .with_momento_endpoint(Some("help.com".to_string()))
+            .with_momento_endpoint("help.com".to_string())
             .build()
             .expect("should be able to get credentials");
 
@@ -409,7 +409,7 @@ mod tests {
         // }
         let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
         let e = CredentialProviderBuilder::from_string(auth_token.to_string())
-            .with_control_endpoint(Some("foo".to_string()))
+            .with_control_endpoint("foo".to_string())
             .build()
             .unwrap_err();
         let _err_msg =
@@ -435,7 +435,7 @@ mod tests {
         // }
         let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
         let e = CredentialProviderBuilder::from_string(auth_token.to_string())
-            .with_cache_endpoint(Some("foo".to_string()))
+            .with_cache_endpoint("foo".to_string())
             .build()
             .unwrap_err();
         let _err_msg =
@@ -466,8 +466,8 @@ mod tests {
         let v1_token = "eyJlbmRwb2ludCI6Im1vbWVudG9fZW5kcG9pbnQiLCJhcGlfa2V5IjoiZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKemRXSWlPaUowWlhOMElITjFZbXBsWTNRaUxDSjJaWElpT2pFc0luQWlPaUlpZlEuaGcyd01iV2Utd2VzUVZ0QTd3dUpjUlVMalJwaFhMUXdRVFZZZlFMM0w3YyJ9Cg==".to_string();
 
         let credential_provider = CredentialProviderBuilder::from_string(v1_token)
-            .with_cache_endpoint(Some("cache.foo.com".to_string()))
-            .with_control_endpoint(Some("control.foo.com".to_string()))
+            .with_cache_endpoint("cache.foo.com".to_string())
+            .with_control_endpoint("control.foo.com".to_string())
             .build()
             .expect("failed to parse token");
         assert_eq!("https://cache.foo.com", credential_provider.cache_endpoint);
