@@ -27,7 +27,7 @@ where
 
     let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
     let credential_provider =
-        CredentialProviderBuilder::new_from_environment_variable("TEST_AUTH_TOKEN")
+        CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
             .build()
             .expect("TEST_AUTH_TOKEN must be set");
 

@@ -196,10 +196,9 @@ fn auth_client() -> Result<AuthClient<Channel>, AuthError> {
 
 fn get_login_endpoint() -> String {
     const LOGIN_HOSTNAMES: &[&str] = &["control.cell-us-east-1-1.prod.a.momentohq.com"];
-    std::env::var("LOGIN_ENDPOINT")
-        .unwrap_or_else(|_| {
-            let random = rand::random::<usize>();
-            let hostname = LOGIN_HOSTNAMES[random % LOGIN_HOSTNAMES.len()].to_string();
-            format!("https://{hostname}:443")
-        })
+    std::env::var("LOGIN_ENDPOINT").unwrap_or_else(|_| {
+        let random = rand::random::<usize>();
+        let hostname = LOGIN_HOSTNAMES[random % LOGIN_HOSTNAMES.len()].to_string();
+        format!("https://{hostname}:443")
+    })
 }

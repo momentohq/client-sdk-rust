@@ -1,8 +1,10 @@
+use crate::credential_provider::AuthTokenSource::{EnvironmentVariable, LiteralToken};
 use crate::{MomentoError, MomentoResult};
 use base64::Engine;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
 use std::env;
+use std::fmt::{Debug, Formatter};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct JwtClaims {
@@ -14,41 +16,64 @@ struct JwtClaims {
     control_endpoint: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 struct V1Token {
     pub api_key: String,
     pub endpoint: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct CredentialProvider {
     pub auth_token: String,
     pub control_endpoint: String,
     pub cache_endpoint: String,
 }
 
+impl Debug for CredentialProvider {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CredentialProvider")
+            .field("auth_token", &"<redacted>")
+            .field("cache_endpoint", &self.cache_endpoint)
+            .field("control_endpoint", &self.control_endpoint)
+            .finish()
+    }
+}
+
+enum AuthTokenSource {
+    EnvironmentVariable(String),
+    LiteralToken(String),
+}
+
+impl Debug for AuthTokenSource {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match &self {
+            EnvironmentVariable(env_var_name) => {
+                f.write_fmt(format_args!("EnvironmentVariable(\"{}\")", env_var_name))
+            }
+            LiteralToken(_) => f.write_str("LiteralToken(<redacted>)"),
+        }
+    }
+}
+
 #[derive(Debug)]
-pub struct CredentialProviderBuilder<'a> {
-    auth_token_string: Option<String>,
-    auth_token_env_var: Option<&'a str>,
+pub struct CredentialProviderBuilder {
+    auth_token_source: AuthTokenSource,
     cache_endpoint_override: Option<String>,
     control_endpoint_override: Option<String>,
 }
 
-impl<'a> CredentialProviderBuilder<'a> {
-    pub fn new_from_environment_variable(env_var_name: &'a str) -> Self {
+impl CredentialProviderBuilder {
+    pub fn from_environment_variable(env_var_name: String) -> Self {
         CredentialProviderBuilder {
-            auth_token_env_var: Some(env_var_name),
-            auth_token_string: None,
+            auth_token_source: EnvironmentVariable(env_var_name),
             cache_endpoint_override: None,
             control_endpoint_override: None,
         }
     }
 
-    pub fn new_from_string(auth_token: String) -> Self {
+    pub fn from_string(auth_token: String) -> Self {
         CredentialProviderBuilder {
-            auth_token_env_var: None,
-            auth_token_string: Some(auth_token),
+            auth_token_source: LiteralToken(auth_token),
             cache_endpoint_override: None,
             control_endpoint_override: None,
         }
@@ -75,8 +100,8 @@ impl<'a> CredentialProviderBuilder<'a> {
     }
 
     pub fn build(self) -> MomentoResult<CredentialProvider> {
-        let token_to_process = if let Some(env_var_name) = &self.auth_token_env_var {
-            match env::var(env_var_name) {
+        let token_to_process = match self.auth_token_source {
+            EnvironmentVariable(env_var_name) => match env::var(&env_var_name) {
                 Ok(auth_token) => auth_token,
                 Err(e) => {
                     return Err(MomentoError::InvalidArgument {
@@ -84,21 +109,16 @@ impl<'a> CredentialProviderBuilder<'a> {
                         source: Some(crate::ErrorSource::Unknown(Box::new(e))),
                     })
                 }
+            },
+            LiteralToken(auth_token_string) => {
+                if auth_token_string.is_empty() {
+                    return Err(MomentoError::InvalidArgument {
+                        description: "Auth token string cannot be empty".into(),
+                        source: None,
+                    });
+                }
+                auth_token_string
             }
-        } else if let Some(auth_token) = self.auth_token_string {
-            if auth_token.is_empty() {
-                return Err(MomentoError::InvalidArgument {
-                    description: "Auth token string cannot be empty".into(),
-                    source: None,
-                });
-            }
-            auth_token
-        } else {
-            return Err(MomentoError::InvalidArgument {
-                description: "Either environment variable or auth token string must be provided"
-                    .into(),
-                source: None,
-            });
         };
 
         CredentialProviderBuilder::decode_auth_token(
@@ -156,7 +176,7 @@ impl<'a> CredentialProviderBuilder<'a> {
         cache_endpoint_override: Option<String>,
         control_endpoint_override: Option<String>,
     ) -> MomentoResult<CredentialProvider> {
-        let key = DecodingKey::from_secret("".as_ref());
+        let key = DecodingKey::from_secret(b"");
         let mut validation = Validation::new(Algorithm::HS256);
         validation.required_spec_claims.clear();
         validation.required_spec_claims.insert("sub".to_string());
@@ -222,7 +242,7 @@ mod tests {
         let v1_token = "eyJlbmRwb2ludCI6Im1vbWVudG9fZW5kcG9pbnQiLCJhcGlfa2V5IjoiZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKemRXSWlPaUowWlhOMElITjFZbXBsWTNRaUxDSjJaWElpT2pFc0luQWlPaUlpZlEuaGcyd01iV2Utd2VzUVZ0QTd3dUpjUlVMalJwaFhMUXdRVFZZZlFMM0w3YyJ9Cg==".to_string();
         env::set_var(env_var_name, v1_token);
         let credential_provider =
-            CredentialProviderBuilder::new_from_environment_variable(env_var_name)
+            CredentialProviderBuilder::from_environment_variable(env_var_name.to_string())
                 .build()
                 .expect("should be able to build credential provider");
         env::remove_var(env_var_name);
@@ -242,7 +262,7 @@ mod tests {
     fn env_var_not_set() {
         let env_var_name = "TEST_ENV_VAR_CREDENTIAL_PROVIDER_NOT_SET";
         let _err_msg = format!("invalid argument: Env var {env_var_name} must be set");
-        let e = CredentialProviderBuilder::new_from_environment_variable(env_var_name)
+        let e = CredentialProviderBuilder::from_environment_variable(env_var_name.to_string())
             .build()
             .unwrap_err();
 
@@ -254,7 +274,7 @@ mod tests {
         let env_var_name = "TEST_ENV_VAR_CREDENTIAL_PROVIDER_EMPTY_STRING";
         env::set_var(env_var_name, "");
         let _err_msg = "client error: Could not parse token. Please ensure a valid token was entered correctly.";
-        let e = CredentialProviderBuilder::new_from_environment_variable(env_var_name)
+        let e = CredentialProviderBuilder::from_environment_variable(env_var_name.to_string())
             .build()
             .unwrap_err();
 
@@ -277,7 +297,7 @@ mod tests {
         //   "sub": "squirrel"
         // }
         let legacy_jwt = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzcXVpcnJlbCIsImNwIjoiY29udHJvbCBwbGFuZSBlbmRwb2ludCIsImMiOiJkYXRhIHBsYW5lIGVuZHBvaW50In0.zsTsEXFawetTCZI".to_owned();
-        let credential_provider = CredentialProviderBuilder::new_from_string(legacy_jwt.clone())
+        let credential_provider = CredentialProviderBuilder::from_string(legacy_jwt.clone())
             .build()
             .expect("should be able to build credential provider");
         assert_eq!(
@@ -293,7 +313,7 @@ mod tests {
 
     #[test]
     fn empty_token() {
-        let e = CredentialProviderBuilder::new_from_string("".to_string())
+        let e = CredentialProviderBuilder::from_string("".to_string())
             .build()
             .unwrap_err();
         let _err_msg = "invalid argument: Auth token string cannot be empty".to_owned();
@@ -302,7 +322,7 @@ mod tests {
 
     #[test]
     fn invalid_token() {
-        let e = CredentialProviderBuilder::new_from_string("wfheofhriugheifweif".to_string())
+        let e = CredentialProviderBuilder::from_string("wfheofhriugheifweif".to_string())
             .build()
             .unwrap_err();
         let _err_msg =
@@ -327,12 +347,11 @@ mod tests {
         //   "sub": "abcd"
         // }
         let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
-        let credential_provider =
-            CredentialProviderBuilder::new_from_string(auth_token.to_string())
-                .with_cache_endpoint(Some("cache.help.com".to_string()))
-                .with_control_endpoint(Some("control.help.com".to_string()))
-                .build()
-                .expect("should be able to get credentials");
+        let credential_provider = CredentialProviderBuilder::from_string(auth_token.to_string())
+            .with_cache_endpoint(Some("cache.help.com".to_string()))
+            .with_control_endpoint(Some("control.help.com".to_string()))
+            .build()
+            .expect("should be able to get credentials");
 
         assert_eq!(credential_provider.auth_token, auth_token.to_string());
         assert_eq!(
@@ -359,11 +378,10 @@ mod tests {
         //   "sub": "abcd"
         // }
         let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
-        let credential_provider =
-            CredentialProviderBuilder::new_from_string(auth_token.to_string())
-                .with_momento_endpoint(Some("help.com".to_string()))
-                .build()
-                .expect("should be able to get credentials");
+        let credential_provider = CredentialProviderBuilder::from_string(auth_token.to_string())
+            .with_momento_endpoint(Some("help.com".to_string()))
+            .build()
+            .expect("should be able to get credentials");
 
         assert_eq!(credential_provider.auth_token, auth_token.to_string());
         assert_eq!(
@@ -390,7 +408,7 @@ mod tests {
         //   "sub": "abcd"
         // }
         let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
-        let e = CredentialProviderBuilder::new_from_string(auth_token.to_string())
+        let e = CredentialProviderBuilder::from_string(auth_token.to_string())
             .with_control_endpoint(Some("foo".to_string()))
             .build()
             .unwrap_err();
@@ -416,7 +434,7 @@ mod tests {
         //   "sub": "abcd"
         // }
         let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
-        let e = CredentialProviderBuilder::new_from_string(auth_token.to_string())
+        let e = CredentialProviderBuilder::from_string(auth_token.to_string())
             .with_cache_endpoint(Some("foo".to_string()))
             .build()
             .unwrap_err();
@@ -429,7 +447,7 @@ mod tests {
     fn valid_v1_token() {
         let v1_token = "eyJlbmRwb2ludCI6Im1vbWVudG9fZW5kcG9pbnQiLCJhcGlfa2V5IjoiZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKemRXSWlPaUowWlhOMElITjFZbXBsWTNRaUxDSjJaWElpT2pFc0luQWlPaUlpZlEuaGcyd01iV2Utd2VzUVZ0QTd3dUpjUlVMalJwaFhMUXdRVFZZZlFMM0w3YyJ9Cg==".to_string();
 
-        let credential_provider = CredentialProviderBuilder::new_from_string(v1_token)
+        let credential_provider = CredentialProviderBuilder::from_string(v1_token)
             .build()
             .expect("failed to parse token");
         assert_eq!(
@@ -447,7 +465,7 @@ mod tests {
     fn v1_token_with_overrides() {
         let v1_token = "eyJlbmRwb2ludCI6Im1vbWVudG9fZW5kcG9pbnQiLCJhcGlfa2V5IjoiZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKemRXSWlPaUowWlhOMElITjFZbXBsWTNRaUxDSjJaWElpT2pFc0luQWlPaUlpZlEuaGcyd01iV2Utd2VzUVZ0QTd3dUpjUlVMalJwaFhMUXdRVFZZZlFMM0w3YyJ9Cg==".to_string();
 
-        let credential_provider = CredentialProviderBuilder::new_from_string(v1_token)
+        let credential_provider = CredentialProviderBuilder::from_string(v1_token)
             .with_cache_endpoint(Some("cache.foo.com".to_string()))
             .with_control_endpoint(Some("control.foo.com".to_string()))
             .build()
@@ -463,7 +481,7 @@ mod tests {
     #[test]
     fn invalid_v1_token_json() {
         let auth_token = "eyJmb28iOiJiYXIifQo=";
-        let e = CredentialProviderBuilder::new_from_string(auth_token.to_string())
+        let e = CredentialProviderBuilder::from_string(auth_token.to_string())
             .build()
             .unwrap_err();
         let _err_msg =

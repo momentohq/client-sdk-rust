@@ -25,7 +25,7 @@ pub struct TopicClient {
 /// use futures::StreamExt;
 ///
 /// async {
-///     let credential_provider = CredentialProviderBuilder::new_from_string("token".to_string())
+///     let credential_provider = CredentialProviderBuilder::from_string("token".to_string())
 ///        .build()
 ///        .expect("could not get credentials");
 ///     // Get a topic client

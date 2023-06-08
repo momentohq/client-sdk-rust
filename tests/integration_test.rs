@@ -19,7 +19,7 @@ mod tests {
         auth_token: String,
     ) -> Result<SimpleCacheClientBuilder, MomentoError> {
         SimpleCacheClientBuilder::new_with_explicit_agent_name(
-            CredentialProviderBuilder::new_from_string(auth_token)
+            CredentialProviderBuilder::from_string(auth_token)
                 .build()
                 .expect("auth token should be valid"),
             Duration::from_secs(5),

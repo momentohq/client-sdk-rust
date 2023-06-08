@@ -172,7 +172,7 @@ impl SimpleCacheClientBuilder {
     ///     use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
     ///     use std::env;
     ///     use std::time::Duration;
-    ///     let credential_provider = CredentialProviderBuilder::new_from_environment_variable("TEST_AUTH_TOKEN")
+    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
     ///         .build()
     ///         .expect("TEST_AUTH_TOKEN must be set");
     ///     let momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))
@@ -287,7 +287,7 @@ impl SimpleCacheClient {
     /// use std::time::Duration;
     /// use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
     ///
-    /// let credential_provider = CredentialProviderBuilder::new_from_environment_variable("TEST_AUTH_TOKEN")
+    /// let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
     ///     .build()
     ///     .expect("TEST_AUTH_TOKEN must be set");
     /// let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
@@ -321,7 +321,7 @@ impl SimpleCacheClient {
     /// use std::time::Duration;
     /// use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
     ///
-    /// let credential_provider = CredentialProviderBuilder::new_from_environment_variable("TEST_AUTH_TOKEN")
+    /// let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
     ///     .build()
     ///     .expect("TEST_AUTH_TOKEN must be set");
     /// let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
@@ -436,7 +436,7 @@ impl SimpleCacheClient {
     /// use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
     ///
     /// let ttl_minutes = 10;
-    /// let credential_provider = CredentialProviderBuilder::new_from_environment_variable("TEST_AUTH_TOKEN")
+    /// let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
     ///     .build()
     ///     .expect("TEST_AUTH_TOKEN must be set");
     /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(5))?
