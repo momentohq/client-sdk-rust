@@ -22,6 +22,8 @@ struct V1Token {
     pub endpoint: String,
 }
 
+/// Provides information that the client needs in order to establish a connection to and
+/// authenticate with the Momento service.
 #[derive(Clone)]
 pub struct CredentialProvider {
     pub auth_token: String,
@@ -63,6 +65,23 @@ pub struct CredentialProviderBuilder {
 }
 
 impl CredentialProviderBuilder {
+    /// Returns a builder to produce a Credential Provider using an auth token stored in the provided
+    /// environment variable
+    ///
+    /// # Arguments
+    ///
+    /// * `env_var_name` - Name of the environment variable to read token from
+    /// # Examples
+    ///
+    /// ```
+    /// # tokio_test::block_on(async {
+    ///     use momento::CredentialProviderBuilder;
+    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
+    ///         .build()
+    ///         .expect("TEST_AUTH_TOKEN must be set");
+    /// # })
+    /// ```
+    ///
     pub fn from_environment_variable(env_var_name: String) -> Self {
         CredentialProviderBuilder {
             auth_token_source: EnvironmentVariable(env_var_name),
@@ -71,6 +90,21 @@ impl CredentialProviderBuilder {
         }
     }
 
+    /// Returns a builder to produce a Credential Provider from the provided auth token
+    ///
+    /// # Arguments
+    ///
+    /// * `auth_token` - Momento auth token string
+    /// # Examples
+    ///
+    /// ```
+    /// # tokio_test::block_on(async {
+    ///     use momento::CredentialProviderBuilder;
+    ///     let credential_provider = CredentialProviderBuilder::from_string("eyJlbmRwb2ludCI6Im1vbWVudG9fZW5kcG9pbnQiLCJhcGlfa2V5IjoiZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKemRXSWlPaUowWlhOMElITjFZbXBsWTNRaUxDSjJaWElpT2pFc0luQWlPaUlpZlEuaGcyd01iV2Utd2VzUVZ0QTd3dUpjUlVMalJwaFhMUXdRVFZZZlFMM0w3YyJ9Cg==".to_string())
+    ///         .build()
+    ///         .expect("could not build credential provider");
+    /// # })
+    /// ```
     pub fn from_string(auth_token: String) -> Self {
         CredentialProviderBuilder {
             auth_token_source: LiteralToken(auth_token),
@@ -79,16 +113,68 @@ impl CredentialProviderBuilder {
         }
     }
 
+    /// Override the data plane endpoint
+    /// # Arguments
+    ///
+    /// * `cache_endpoint_override` - The host which the Momento client will connect to for Momento data plane operations
+    ///
+    /// # Examples
+    /// ```
+    /// # tokio_test::block_on(async {
+    ///     use momento::CredentialProviderBuilder;
+    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
+    ///         .with_cache_endpoint("my_cache_endpoint.com".to_string())
+    ///         .build()
+    ///         .expect("TEST_AUTH_TOKEN must be set");
+    ///      assert_eq!("https://my_cache_endpoint.com", credential_provider.cache_endpoint);
+    /// # })
+    /// ```
+    ///
     pub fn with_cache_endpoint(mut self, cache_endpoint_override: String) -> Self {
         self.cache_endpoint_override = Some(cache_endpoint_override);
         self
     }
 
+    /// Override the control plane endpoint
+    /// # Arguments
+    ///
+    /// * `control_endpoint_override` - The host which the Momento client will connect to for Momento control plane operations
+    ///
+    /// # Examples
+    /// ```
+    /// # tokio_test::block_on(async {
+    ///     use momento::CredentialProviderBuilder;
+    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
+    ///         .with_control_endpoint("my_control_endpoint.com".to_string())
+    ///         .build()
+    ///         .expect("TEST_AUTH_TOKEN must be set");
+    ///      assert_eq!("https://my_control_endpoint.com", credential_provider.control_endpoint);
+    /// # })
+    /// ```
+    ///
     pub fn with_control_endpoint(mut self, control_endpoint_override: String) -> Self {
         self.control_endpoint_override = Some(control_endpoint_override);
         self
     }
 
+    /// Override both control plane and data plane endpoints
+    /// # Arguments
+    ///
+    /// * `endpoint_override` - The host which will be used to build control and data plane endpoints by prepending `control` and `cache` subdomains.
+    ///
+    /// # Examples
+    /// ```
+    /// # tokio_test::block_on(async {
+    ///     use momento::CredentialProviderBuilder;
+    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
+    ///         .with_momento_endpoint("my_endpoint.com".to_string())
+    ///         .build()
+    ///         .expect("TEST_AUTH_TOKEN must be set");
+    ///      assert_eq!("https://cache.my_endpoint.com", credential_provider.cache_endpoint);
+    ///      assert_eq!("https://control.my_endpoint.com", credential_provider.control_endpoint);
+    /// # })
+    /// ```
+    ///
     pub fn with_momento_endpoint(mut self, endpoint_override: String) -> Self {
         self.cache_endpoint_override = Some(CredentialProviderBuilder::get_cache_endpoint(
             &endpoint_override,

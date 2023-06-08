@@ -170,7 +170,6 @@ impl SimpleCacheClientBuilder {
     /// ```
     /// # tokio_test::block_on(async {
     ///     use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
-    ///     use std::env;
     ///     use std::time::Duration;
     ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
     ///         .build()
