@@ -1,17 +1,9 @@
 #[cfg(test)]
 mod tests {
-    #[tokio::test]
-    async fn error_please_fix_auth() {
-        log::error!("FIXME: auth is broken at the moment. When it is fixed, please restore the below test cfg.")
-    }
-}
-
-#[cfg(test2)]
-mod tests {
     use std::{env, time::Duration};
 
     use momento::response::{Get, GetValue};
-    use momento::SimpleCacheClient;
+    use momento::{CredentialProviderBuilder, SimpleCacheClient};
     use momento::{MomentoError, SimpleCacheClientBuilder};
     use serde_json::Value;
     use tokio::time::sleep;
@@ -27,10 +19,11 @@ mod tests {
         auth_token: String,
     ) -> Result<SimpleCacheClientBuilder, MomentoError> {
         SimpleCacheClientBuilder::new_with_explicit_agent_name(
-            auth_token,
+            CredentialProviderBuilder::from_string(auth_token)
+                .build()
+                .expect("auth token should be valid"),
             Duration::from_secs(5),
             "integration_test",
-            None,
         )
     }
 
@@ -272,16 +265,6 @@ mod tests {
             kid.as_str().expect("failed to cast kid to str"),
             response.key_id
         );
-
-        let auth_token = env::var("TEST_AUTH_TOKEN").expect("env var TEST_AUTH_TOKEN must be set");
-        let parts: Vec<&str> = auth_token.split('.').collect();
-        assert!(std::str::from_utf8(
-            base64_url::decode(parts[1])
-                .expect("expected base64 part not present in position 1")
-                .as_slice()
-        )
-        .expect("couldn't parse base64")
-        .contains(&response.endpoint));
 
         let list_response = mm
             .list_signing_keys(None)

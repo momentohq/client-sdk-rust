@@ -5,13 +5,12 @@ use momento_protos::cache_client::pubsub::{
 };
 use tonic::{codegen::InterceptedService, transport::Channel};
 
-use crate::MomentoError;
 use crate::{
-    endpoint_resolver::MomentoEndpointsResolver,
     grpc::header_interceptor::HeaderInterceptor,
     utils::{connect_channel_lazily, user_agent},
     MomentoResult,
 };
+use crate::{CredentialProvider, MomentoError};
 
 type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 
@@ -22,13 +21,16 @@ pub struct TopicClient {
 /// Work with topics, publishing and subscribing.
 /// ```rust
 /// use momento::preview::topics::TopicClient;
+/// use momento::{CredentialProvider, CredentialProviderBuilder};
 /// use futures::StreamExt;
 ///
 /// async {
+///     let credential_provider = CredentialProviderBuilder::from_string("token".to_string())
+///        .build()
+///        .expect("could not get credentials");
 ///     // Get a topic client
 ///     let client = TopicClient::connect(
-///         "token".to_string(),
-///         Some("some.momento.endpoint".to_string()),
+///         credential_provider,
 ///         Some("github-demo")
 ///     ).expect("could not connect");
 ///
@@ -46,16 +48,14 @@ pub struct TopicClient {
 /// ```
 impl TopicClient {
     pub fn connect(
-        auth_token: String,
-        momento_endpoint: Option<String>,
+        credential_provider: CredentialProvider,
         user_application_name: Option<&str>,
     ) -> MomentoResult<Self> {
-        let momento_endpoints = MomentoEndpointsResolver::resolve(&auth_token, momento_endpoint)?;
-        let channel = connect_channel_lazily(&momento_endpoints.data_endpoint.url)?;
+        let channel = connect_channel_lazily(&credential_provider.cache_endpoint)?;
         let authorized_channel = InterceptedService::new(
             channel,
             HeaderInterceptor::new(
-                &auth_token,
+                &credential_provider.auth_token,
                 &user_agent(user_application_name.unwrap_or("sdk")),
             ),
         );
