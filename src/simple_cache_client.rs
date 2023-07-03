@@ -1988,6 +1988,10 @@ impl SimpleCacheClient {
             .await?
             .into_inner();
 
+        // this flattens the response returning a None for both a missing sorted
+        // set and for a request that returns Found with elements being None and
+        // converting the SortedSet enum into the interior collection of
+        // elements.
         match response.sorted_set {
             Some(crate::sorted_set::SortedSet::Found(elements)) => match elements.elements {
                 Some(elements) => Ok(Some(elements)),
