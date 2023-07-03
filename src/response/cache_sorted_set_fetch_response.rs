@@ -1,7 +1,7 @@
-use momento_protos::cache_client::SortedSetElement;
+use momento_protos::cache_client::sorted_set_fetch_response::SortedSet;
 
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct MomentoSortedSetFetchResponse {
-    pub value: Option<Vec<SortedSetElement>>,
+    pub value: Option<SortedSet>,
 }

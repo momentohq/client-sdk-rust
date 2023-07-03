@@ -1873,6 +1873,133 @@ impl SimpleCacheClient {
         todo!("This api was reworked and is pending implementation in the rust sdk: https://github.com/momentohq/client-sdk-rust/issues/135");
     }
 
+    /// Fetches a range of elements from a sorted set from a Momento Cache
+    /// selecting by index (rank).
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `_cache_name` - name of cache.
+    /// * `_set_name` - name of the set.
+    /// * `_order` - specify ascending or descending order
+    /// * `_limit` - optionally limit the number of results returned
+    /// * `_range` - constrain to a range of elements by index or by score
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
+    /// use std::time::Duration;
+    /// use momento::SimpleCacheClientBuilder;
+    /// use momento::sorted_set::{Elements, Order};
+    ///
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// // this will fetch the first 10 elements (with their scores) in the
+    /// // sorted set, sorted by index (rank) in ascending order. Any valid
+    /// // `core::ops::Range` can be used to select and limit the returned
+    /// // elements.
+    /// match momento.sorted_set_fetch_by_index(
+    ///     &cache_name,
+    ///     "test sorted set",
+    ///     Order::Ascending,
+    ///     0..10,
+    ///     true,
+    /// ).await? {
+    ///     Some(elements) => match elements {
+    ///         Elements::ValuesWithScores(elements) => {
+    ///             for element in elements.elements {
+    ///                 println!("element: {:?} has score: {}", element.value, element.score);
+    ///             }
+    ///         }
+    ///         Elements::Values(_) => {
+    ///             panic!("should have returned elements with scores");
+    ///         }
+    ///     }
+    ///     None => {
+    ///         println!("sorted set or elements not found");
+    ///     }
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn sorted_set_fetch_by_index(
+        &mut self,
+        cache_name: &str,
+        set_name: impl IntoBytes,
+        order: sorted_set::Order,
+        range: impl RangeBounds<i32>,
+        with_scores: bool,
+    ) -> MomentoResult<Option<crate::sorted_set::Elements>> {
+        // transforms the Rust `Range` start into a Momento start index. Because
+        // the Momento start index is always Inclusive (or Unbounded) we need to
+        // map the value of a Rust `Excluded` start bound to an
+        // `InclusiveStartIndex` by adding one to the value.
+        let start = match range.start_bound() {
+            std::ops::Bound::Included(v) => {
+                sorted_set_fetch_request::by_index::Start::InclusiveStartIndex(*v)
+            }
+            std::ops::Bound::Excluded(v) => {
+                sorted_set_fetch_request::by_index::Start::InclusiveStartIndex(*v + 1)
+            }
+            std::ops::Bound::Unbounded => {
+                sorted_set_fetch_request::by_index::Start::UnboundedStart(Unbounded {})
+            }
+        };
+
+        // transforms the Rust `Range` end into a Momento end index. Because the
+        // Momento end index is always Exclusive (or Unbounded) we need to map
+        // the value of a Rust `Included` end bound to an `ExclusiveEndIndex` by
+        // adding one to the value.
+        let end = match range.end_bound() {
+            std::ops::Bound::Included(v) => {
+                sorted_set_fetch_request::by_index::End::ExclusiveEndIndex(*v + 1)
+            }
+            std::ops::Bound::Excluded(v) => {
+                sorted_set_fetch_request::by_index::End::ExclusiveEndIndex(*v)
+            }
+            std::ops::Bound::Unbounded => {
+                sorted_set_fetch_request::by_index::End::UnboundedEnd(Unbounded {})
+            }
+        };
+
+        let request = self.prep_request(
+            cache_name,
+            SortedSetFetchRequest {
+                set_name: set_name.into_bytes(),
+                order: order.into(),
+                with_scores,
+                range: Some(sorted_set_fetch_request::Range::ByIndex(
+                    sorted_set_fetch_request::ByIndex {
+                        start: Some(start),
+                        end: Some(end),
+                    },
+                )),
+            },
+        )?;
+
+        let response = self
+            .data_client
+            .sorted_set_fetch(request)
+            .await?
+            .into_inner();
+
+        match response.sorted_set {
+            Some(crate::sorted_set::SortedSet::Found(elements)) => match elements.elements {
+                Some(elements) => Ok(Some(elements)),
+                None => Ok(None),
+            },
+            Some(momento_protos::cache_client::sorted_set_fetch_response::SortedSet::Missing(
+                _,
+            )) => Ok(None),
+            None => Ok(None),
+        }
+    }
+
     /// Gets the rank of an element in a sorted set in a Momento Cache.
     ///
     /// The return result is a `MomentoResult` which on success contains an

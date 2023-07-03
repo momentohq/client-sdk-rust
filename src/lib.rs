@@ -19,5 +19,7 @@ pub type MomentoResult<T> = Result<T, MomentoError>;
 
 pub mod sorted_set {
     pub use momento_protos::cache_client::sorted_set_fetch_request::{Order, Range};
+    pub use momento_protos::cache_client::sorted_set_fetch_response::found::Elements;
+    pub use momento_protos::cache_client::sorted_set_fetch_response::SortedSet;
     pub use momento_protos::cache_client::SortedSetElement;
 }
