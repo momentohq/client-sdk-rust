@@ -73,15 +73,19 @@ impl TryFrom<SortedSetFetch> for Vec<(String, f64)> {
                 Elements::ValuesWithScores(mut values) => {
                     let mut result = Vec::with_capacity(values.elements.len());
                     for element in values.elements.drain(..) {
-                        let value = String::from_utf8(element.value).map_err(|e| {
-                            return Err::<Self, Self::Error>(MomentoError::TypeError {
-                                description: std::borrow::Cow::Borrowed(
-                                    "element value was not a valid utf-8 string",
-                                ),
-                                source: Box::new(e),
-                            });
-                        });
-                        result.push((value.unwrap(), element.score));
+                        match String::from_utf8(element.value) {
+                            Ok(value) => {
+                                result.push((value, element.score));
+                            }
+                            Err(e) => {
+                                return Err::<Self, Self::Error>(MomentoError::TypeError {
+                                    description: std::borrow::Cow::Borrowed(
+                                        "element value was not a valid utf-8 string",
+                                    ),
+                                    source: Box::new(e),
+                                })
+                            }
+                        }
                     }
                     Ok(result)
                 }
@@ -111,30 +115,38 @@ impl TryFrom<SortedSetFetch> for Vec<String> {
                 Elements::ValuesWithScores(mut values) => {
                     let mut result = Vec::with_capacity(values.elements.len());
                     for element in values.elements.drain(..) {
-                        let value = String::from_utf8(element.value).map_err(|e| {
-                            return Err::<Self, Self::Error>(MomentoError::TypeError {
-                                description: std::borrow::Cow::Borrowed(
-                                    "element value was not a valid utf-8 string",
-                                ),
-                                source: Box::new(e),
-                            });
-                        });
-                        result.push(value.unwrap());
+                        match String::from_utf8(element.value) {
+                            Ok(value) => {
+                                result.push(value);
+                            }
+                            Err(e) => {
+                                return Err::<Self, Self::Error>(MomentoError::TypeError {
+                                    description: std::borrow::Cow::Borrowed(
+                                        "element value was not a valid utf-8 string",
+                                    ),
+                                    source: Box::new(e),
+                                })
+                            }
+                        }
                     }
                     Ok(result)
                 }
                 Elements::Values(mut values) => {
                     let mut result = Vec::with_capacity(values.values.len());
                     for value in values.values.drain(..) {
-                        let value = String::from_utf8(value).map_err(|e| {
-                            return Err::<Self, Self::Error>(MomentoError::TypeError {
-                                description: std::borrow::Cow::Borrowed(
-                                    "element value was not a valid utf-8 string",
-                                ),
-                                source: Box::new(e),
-                            });
-                        });
-                        result.push(value.unwrap());
+                        match String::from_utf8(value) {
+                            Ok(value) => {
+                                result.push(value);
+                            }
+                            Err(e) => {
+                                return Err::<Self, Self::Error>(MomentoError::TypeError {
+                                    description: std::borrow::Cow::Borrowed(
+                                        "element value was not a valid utf-8 string",
+                                    ),
+                                    source: Box::new(e),
+                                })
+                            }
+                        }
                     }
                     Ok(result)
                 }
