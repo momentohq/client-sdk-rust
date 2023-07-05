@@ -26,7 +26,7 @@ use crate::response::{
     MomentoDictionarySetResponse, MomentoError, MomentoFlushCacheResponse,
     MomentoGenerateApiTokenResponse, MomentoListCacheResponse, MomentoListFetchResponse,
     MomentoListSigningKeyResult, MomentoSetDifferenceResponse, MomentoSetFetchResponse,
-    MomentoSetResponse, MomentoSigningKey, MomentoSortedSetFetchResponse,
+    MomentoSetResponse, MomentoSigningKey, MomentoSortedSetFetchResponse, SortedSetFetch,
 };
 use crate::sorted_set;
 use crate::utils::{self, base64_encode};
@@ -1891,6 +1891,7 @@ impl SimpleCacheClient {
     /// ```
     /// # fn main() -> momento_test_util::DoctestResult {
     /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
+    /// use std::convert::TryInto;
     /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
     /// use momento::sorted_set::{Elements, Order};
@@ -1902,26 +1903,20 @@ impl SimpleCacheClient {
     /// // sorted set, sorted by index (rank) in ascending order. Any valid
     /// // `core::ops::Range` can be used to select and limit the returned
     /// // elements.
-    /// match momento.sorted_set_fetch_by_index(
+    /// let result = momento.sorted_set_fetch_by_index(
     ///     &cache_name,
     ///     "test sorted set",
     ///     Order::Ascending,
     ///     0..10,
     ///     true,
-    /// ).await? {
-    ///     Some(elements) => match elements {
-    ///         Elements::ValuesWithScores(elements) => {
-    ///             for element in elements.elements {
-    ///                 println!("element: {:?} has score: {}", element.value, element.score);
-    ///             }
-    ///         }
-    ///         Elements::Values(_) => {
-    ///             panic!("should have returned elements with scores");
-    ///         }
+    /// ).await?;
+    ///
+    /// if let Ok(elements) = TryInto::<Vec<(Vec<u8>, f64)>>::try_into(result) {
+    ///     for (value, score) in elements {
+    ///         println!("value: {:?} score: {score}", value);
     ///     }
-    ///     None => {
-    ///         println!("sorted set or elements not found");
-    ///     }
+    /// } else {
+    ///     println!("sorted set was missing or the response was invalid");
     /// }
     /// # Ok(())
     /// # })
@@ -1934,7 +1929,7 @@ impl SimpleCacheClient {
         order: sorted_set::Order,
         range: impl RangeBounds<i32>,
         with_scores: bool,
-    ) -> MomentoResult<Option<crate::sorted_set::Elements>> {
+    ) -> MomentoResult<SortedSetFetch> {
         // transforms the Rust `Range` start into a Momento start index. Because
         // the Momento start index is always Inclusive (or Unbounded) we need to
         // map the value of a Rust `Excluded` start bound to an
@@ -1994,13 +1989,13 @@ impl SimpleCacheClient {
         // elements.
         match response.sorted_set {
             Some(crate::sorted_set::SortedSet::Found(elements)) => match elements.elements {
-                Some(elements) => Ok(Some(elements)),
-                None => Ok(None),
+                Some(elements) => Ok(SortedSetFetch::Found { elements }),
+                None => Ok(SortedSetFetch::Missing),
             },
             Some(momento_protos::cache_client::sorted_set_fetch_response::SortedSet::Missing(
                 _,
-            )) => Ok(None),
-            None => Ok(None),
+            )) => Ok(SortedSetFetch::Missing),
+            None => Ok(SortedSetFetch::Missing),
         }
     }
 
