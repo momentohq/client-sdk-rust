@@ -1928,22 +1928,20 @@ impl SimpleCacheClient {
         set_name: impl IntoBytes,
         order: sorted_set::Order,
         range: impl RangeBounds<i32>,
-        with_scores: bool,
     ) -> MomentoResult<SortedSetFetch> {
+        use core::ops::Bound;
+        use sorted_set_fetch_request::by_index::{End, Start};
+        use sorted_set_fetch_request::{ByIndex, Range};
+        use sorted_set_fetch_response::found::Elements;
+
         // transforms the Rust `Range` start into a Momento start index. Because
         // the Momento start index is always Inclusive (or Unbounded) we need to
         // map the value of a Rust `Excluded` start bound to an
         // `InclusiveStartIndex` by adding one to the value.
         let start = match range.start_bound() {
-            std::ops::Bound::Included(v) => {
-                sorted_set_fetch_request::by_index::Start::InclusiveStartIndex(*v)
-            }
-            std::ops::Bound::Excluded(v) => {
-                sorted_set_fetch_request::by_index::Start::InclusiveStartIndex(*v + 1)
-            }
-            std::ops::Bound::Unbounded => {
-                sorted_set_fetch_request::by_index::Start::UnboundedStart(Unbounded {})
-            }
+            Bound::Included(v) => Start::InclusiveStartIndex(*v),
+            Bound::Excluded(v) => Start::InclusiveStartIndex(*v + 1),
+            Bound::Unbounded => Start::UnboundedStart(Unbounded {}),
         };
 
         // transforms the Rust `Range` end into a Momento end index. Because the
@@ -1951,15 +1949,9 @@ impl SimpleCacheClient {
         // the value of a Rust `Included` end bound to an `ExclusiveEndIndex` by
         // adding one to the value.
         let end = match range.end_bound() {
-            std::ops::Bound::Included(v) => {
-                sorted_set_fetch_request::by_index::End::ExclusiveEndIndex(*v + 1)
-            }
-            std::ops::Bound::Excluded(v) => {
-                sorted_set_fetch_request::by_index::End::ExclusiveEndIndex(*v)
-            }
-            std::ops::Bound::Unbounded => {
-                sorted_set_fetch_request::by_index::End::UnboundedEnd(Unbounded {})
-            }
+            Bound::Included(v) => End::ExclusiveEndIndex(*v + 1),
+            Bound::Excluded(v) => End::ExclusiveEndIndex(*v),
+            Bound::Unbounded => End::UnboundedEnd(Unbounded {}),
         };
 
         let request = self.prep_request(
@@ -1967,13 +1959,11 @@ impl SimpleCacheClient {
             SortedSetFetchRequest {
                 set_name: set_name.into_bytes(),
                 order: order.into(),
-                with_scores,
-                range: Some(sorted_set_fetch_request::Range::ByIndex(
-                    sorted_set_fetch_request::ByIndex {
-                        start: Some(start),
-                        end: Some(end),
-                    },
-                )),
+                with_scores: true,
+                range: Some(Range::ByIndex(ByIndex {
+                    start: Some(start),
+                    end: Some(end),
+                })),
             },
         )?;
 
@@ -1989,13 +1979,22 @@ impl SimpleCacheClient {
         // elements.
         match response.sorted_set {
             Some(crate::sorted_set::SortedSet::Found(elements)) => match elements.elements {
-                Some(elements) => Ok(SortedSetFetch::Found { elements }),
-                None => Ok(SortedSetFetch::Missing),
+                Some(elements) => match elements {
+                    Elements::ValuesWithScores(elements) => Ok(SortedSetFetch::Hit {
+                        elements: elements.elements,
+                    }),
+                    Elements::Values(_) => {
+                        // since with_scores is hardcoded to true, we should
+                        // never reach this.
+                        unreachable!()
+                    }
+                },
+                None => Ok(SortedSetFetch::Hit {
+                    elements: Vec::new(),
+                }),
             },
-            Some(momento_protos::cache_client::sorted_set_fetch_response::SortedSet::Missing(
-                _,
-            )) => Ok(SortedSetFetch::Missing),
-            None => Ok(SortedSetFetch::Missing),
+            Some(sorted_set_fetch_response::SortedSet::Missing(_)) => Ok(SortedSetFetch::Miss),
+            None => Ok(SortedSetFetch::Miss),
         }
     }
 
