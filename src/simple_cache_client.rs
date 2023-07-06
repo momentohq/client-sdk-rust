@@ -2029,9 +2029,16 @@ impl SimpleCacheClient {
                         elements: elements.elements,
                     }),
                     Elements::Values(_) => {
-                        // since with_scores is hardcoded to true, we should
-                        // never reach this.
-                        unreachable!()
+                        return Err(MomentoError::ClientSdkError {
+                            description: std::borrow::Cow::Borrowed(
+                                "sorted_set_fetch_by_index response included elements without values"
+                            ),
+                            source: crate::response::ErrorSource::Unknown(
+                                std::io::Error::new(
+                                    std::io::ErrorKind::InvalidData,
+                                    "unexpected response"
+                            ).into()),
+                        });
                     }
                 },
                 None => Ok(SortedSetFetch::Hit {
