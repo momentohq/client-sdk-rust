@@ -1884,7 +1884,6 @@ impl SimpleCacheClient {
     /// * `_cache_name` - name of cache.
     /// * `_set_name` - name of the set.
     /// * `_order` - specify ascending or descending order
-    /// * `_limit` - optionally limit the number of results returned
     /// * `_range` - constrain to a range of elements by index or by score
     ///
     /// # Example
@@ -1893,30 +1892,76 @@ impl SimpleCacheClient {
     /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::convert::TryInto;
     /// use std::time::Duration;
-    /// use momento::SimpleCacheClientBuilder;
-    /// use momento::sorted_set::{Elements, Order};
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    /// use momento::sorted_set::{Elements, Order, SortedSetElement};
     ///
+    /// let ttl = CollectionTtl::default();
     /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
     ///
-    /// // this will fetch the first 10 elements (with their scores) in the
+    /// // some elements that we'll add to the sorted set
+    /// let test_elements = vec![
+    ///     SortedSetElement { value: "a".into(), score: 2.0 },
+    ///     SortedSetElement { value: "b".into(), score: 3.0 },
+    ///     SortedSetElement { value: "c".into(), score: 5.0 },
+    ///     SortedSetElement { value: "d".into(), score: 7.0 },
+    ///     SortedSetElement { value: "e".into(), score: 11.0 },
+    ///     SortedSetElement { value: "f".into(), score: 13.0 },
+    /// ];
+    ///
+    /// // add some elements to a sorted set
+    /// let result = momento.sorted_set_put(
+    ///     &cache_name,
+    ///     "test sorted set",
+    ///     test_elements.clone(),
+    ///     ttl,
+    /// ).await?;
+    ///
+    /// // this will fetch the all the elements (with their scores) in the
     /// // sorted set, sorted by index (rank) in ascending order. Any valid
     /// // `core::ops::Range` can be used to select and limit the returned
-    /// // elements.
+    /// // elements. Here we use `0..` to select all the elements.
     /// let result = momento.sorted_set_fetch_by_index(
     ///     &cache_name,
     ///     "test sorted set",
     ///     Order::Ascending,
-    ///     0..10,
-    ///     true,
+    ///     0..,
     /// ).await?;
     ///
     /// if let Ok(elements) = TryInto::<Vec<(Vec<u8>, f64)>>::try_into(result) {
-    ///     for (value, score) in elements {
+    ///     // we only set 6 elements, check that we got exactly what we set
+    ///     assert_eq!(elements.len(), test_elements.len());
+    ///
+    ///     // we can iterate and print the elements
+    ///     for (idx, (value, score)) in elements.iter().enumerate() {
     ///         println!("value: {:?} score: {score}", value);
+    ///
+    ///         // check that the value is correct
+    ///         assert_eq!(*value, test_elements[idx].value);
     ///     }
     /// } else {
-    ///     println!("sorted set was missing or the response was invalid");
+    ///     panic!("sorted set was missing or the response was invalid");
+    /// }
+    ///
+    /// // by changing the range, we can get a subset of the sorted set. This
+    /// // will select just first 3 elements, again in ascending order.
+    /// let result = momento.sorted_set_fetch_by_index(
+    ///     &cache_name,
+    ///     "test sorted set",
+    ///     Order::Ascending,
+    ///     0..3,
+    /// ).await?;
+    ///
+    /// if let Ok(elements) = TryInto::<Vec<(Vec<u8>, f64)>>::try_into(result) {
+    ///     // we only wanted 3 elements, check that we got 3
+    ///     assert_eq!(elements.len(), 3);
+    ///
+    ///     // check that the values are correct
+    ///     for (idx, (value, _score)) in elements.iter().enumerate() {
+    ///         assert_eq!(*value, test_elements[idx].value);
+    ///     }
+    /// } else {
+    ///     panic!("sorted set was missing or the response was invalid");
     /// }
     /// # Ok(())
     /// # })
