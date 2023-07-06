@@ -26,7 +26,7 @@ use crate::response::{
     MomentoDictionarySetResponse, MomentoError, MomentoFlushCacheResponse,
     MomentoGenerateApiTokenResponse, MomentoListCacheResponse, MomentoListFetchResponse,
     MomentoListSigningKeyResult, MomentoSetDifferenceResponse, MomentoSetFetchResponse,
-    MomentoSetResponse, MomentoSigningKey, MomentoSortedSetFetchResponse,
+    MomentoSetResponse, MomentoSigningKey, MomentoSortedSetFetchResponse, SortedSetFetch,
 };
 use crate::sorted_set;
 use crate::utils::{self, base64_encode};
@@ -1871,6 +1871,183 @@ impl SimpleCacheClient {
         _range: Option<sorted_set::Range>,
     ) -> MomentoResult<MomentoSortedSetFetchResponse> {
         todo!("This api was reworked and is pending implementation in the rust sdk: https://github.com/momentohq/client-sdk-rust/issues/135");
+    }
+
+    /// Fetches a range of elements from a sorted set from a Momento Cache
+    /// selecting by index (rank).
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `_cache_name` - name of cache.
+    /// * `_set_name` - name of the set.
+    /// * `_order` - specify ascending or descending order
+    /// * `_range` - constrain to a range of elements by index or by score
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
+    /// use std::convert::TryInto;
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    /// use momento::sorted_set::{Elements, Order, SortedSetElement};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// // some elements that we'll add to the sorted set
+    /// let test_elements = vec![
+    ///     SortedSetElement { value: "a".into(), score: 2.0 },
+    ///     SortedSetElement { value: "b".into(), score: 3.0 },
+    ///     SortedSetElement { value: "c".into(), score: 5.0 },
+    ///     SortedSetElement { value: "d".into(), score: 7.0 },
+    ///     SortedSetElement { value: "e".into(), score: 11.0 },
+    ///     SortedSetElement { value: "f".into(), score: 13.0 },
+    /// ];
+    ///
+    /// // add some elements to a sorted set
+    /// let result = momento.sorted_set_put(
+    ///     &cache_name,
+    ///     "test sorted set",
+    ///     test_elements.clone(),
+    ///     ttl,
+    /// ).await?;
+    ///
+    /// // this will fetch the all the elements (with their scores) in the
+    /// // sorted set, sorted by index (rank) in ascending order. Any valid
+    /// // `core::ops::Range` can be used to select and limit the returned
+    /// // elements. Here we use `0..` to select all the elements.
+    /// let result = momento.sorted_set_fetch_by_index(
+    ///     &cache_name,
+    ///     "test sorted set",
+    ///     Order::Ascending,
+    ///     0..,
+    /// ).await?;
+    ///
+    /// if let Ok(elements) = TryInto::<Vec<(Vec<u8>, f64)>>::try_into(result) {
+    ///     // we only set 6 elements, check that we got exactly what we set
+    ///     assert_eq!(elements.len(), test_elements.len());
+    ///
+    ///     // we can iterate and print the elements
+    ///     for (idx, (value, score)) in elements.iter().enumerate() {
+    ///         println!("value: {:?} score: {score}", value);
+    ///
+    ///         // check that the value is correct
+    ///         assert_eq!(*value, test_elements[idx].value);
+    ///     }
+    /// } else {
+    ///     panic!("sorted set was missing or the response was invalid");
+    /// }
+    ///
+    /// // by changing the range, we can get a subset of the sorted set. This
+    /// // will select just first 3 elements, again in ascending order.
+    /// let result = momento.sorted_set_fetch_by_index(
+    ///     &cache_name,
+    ///     "test sorted set",
+    ///     Order::Ascending,
+    ///     0..3,
+    /// ).await?;
+    ///
+    /// if let Ok(elements) = TryInto::<Vec<(Vec<u8>, f64)>>::try_into(result) {
+    ///     // we only wanted 3 elements, check that we got 3
+    ///     assert_eq!(elements.len(), 3);
+    ///
+    ///     // check that the values are correct
+    ///     for (idx, (value, _score)) in elements.iter().enumerate() {
+    ///         assert_eq!(*value, test_elements[idx].value);
+    ///     }
+    /// } else {
+    ///     panic!("sorted set was missing or the response was invalid");
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn sorted_set_fetch_by_index(
+        &mut self,
+        cache_name: &str,
+        set_name: impl IntoBytes,
+        order: sorted_set::Order,
+        range: impl RangeBounds<i32>,
+    ) -> MomentoResult<SortedSetFetch> {
+        use core::ops::Bound;
+        use sorted_set_fetch_request::by_index::{End, Start};
+        use sorted_set_fetch_request::{ByIndex, Range};
+        use sorted_set_fetch_response::found::Elements;
+
+        // transforms the Rust `Range` start into a Momento start index. Because
+        // the Momento start index is always Inclusive (or Unbounded) we need to
+        // map the value of a Rust `Excluded` start bound to an
+        // `InclusiveStartIndex` by adding one to the value.
+        let start = match range.start_bound() {
+            Bound::Included(v) => Start::InclusiveStartIndex(*v),
+            Bound::Excluded(v) => Start::InclusiveStartIndex(*v + 1),
+            Bound::Unbounded => Start::UnboundedStart(Unbounded {}),
+        };
+
+        // transforms the Rust `Range` end into a Momento end index. Because the
+        // Momento end index is always Exclusive (or Unbounded) we need to map
+        // the value of a Rust `Included` end bound to an `ExclusiveEndIndex` by
+        // adding one to the value.
+        let end = match range.end_bound() {
+            Bound::Included(v) => End::ExclusiveEndIndex(*v + 1),
+            Bound::Excluded(v) => End::ExclusiveEndIndex(*v),
+            Bound::Unbounded => End::UnboundedEnd(Unbounded {}),
+        };
+
+        let request = self.prep_request(
+            cache_name,
+            SortedSetFetchRequest {
+                set_name: set_name.into_bytes(),
+                order: order.into(),
+                with_scores: true,
+                range: Some(Range::ByIndex(ByIndex {
+                    start: Some(start),
+                    end: Some(end),
+                })),
+            },
+        )?;
+
+        let response = self
+            .data_client
+            .sorted_set_fetch(request)
+            .await?
+            .into_inner();
+
+        // this flattens the response returning a None for both a missing sorted
+        // set and for a request that returns Found with elements being None and
+        // converting the SortedSet enum into the interior collection of
+        // elements.
+        match response.sorted_set {
+            Some(crate::sorted_set::SortedSet::Found(elements)) => match elements.elements {
+                Some(elements) => match elements {
+                    Elements::ValuesWithScores(elements) => Ok(SortedSetFetch::Hit {
+                        elements: elements.elements,
+                    }),
+                    Elements::Values(_) => {
+                        return Err(MomentoError::ClientSdkError {
+                            description: std::borrow::Cow::Borrowed(
+                                "sorted_set_fetch_by_index response included elements without values"
+                            ),
+                            source: crate::response::ErrorSource::Unknown(
+                                std::io::Error::new(
+                                    std::io::ErrorKind::InvalidData,
+                                    "unexpected response"
+                            ).into()),
+                        });
+                    }
+                },
+                None => Ok(SortedSetFetch::Hit {
+                    elements: Vec::new(),
+                }),
+            },
+            Some(sorted_set_fetch_response::SortedSet::Missing(_)) => Ok(SortedSetFetch::Miss),
+            None => Ok(SortedSetFetch::Miss),
+        }
     }
 
     /// Gets the rank of an element in a sorted set in a Momento Cache.
