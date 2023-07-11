@@ -1881,10 +1881,10 @@ impl SimpleCacheClient {
     ///
     /// # Arguments
     ///
-    /// * `_cache_name` - name of cache.
-    /// * `_set_name` - name of the set.
-    /// * `_order` - specify ascending or descending order
-    /// * `_range` - constrain to a range of elements by index or by score
+    /// * `cache_name` - name of cache.
+    /// * `set_name` - name of the set.
+    /// * `order` - specify ascending or descending order
+    /// * `range` - constrain to a range of elements by index
     ///
     /// # Example
     /// ```
@@ -2008,6 +2008,179 @@ impl SimpleCacheClient {
                 range: Some(Range::ByIndex(ByIndex {
                     start: Some(start),
                     end: Some(end),
+                })),
+            },
+        )?;
+
+        let response = self
+            .data_client
+            .sorted_set_fetch(request)
+            .await?
+            .into_inner();
+
+        // this flattens the response returning a None for both a missing sorted
+        // set and for a request that returns Found with elements being None and
+        // converting the SortedSet enum into the interior collection of
+        // elements.
+        match response.sorted_set {
+            Some(crate::sorted_set::SortedSet::Found(elements)) => match elements.elements {
+                Some(elements) => match elements {
+                    Elements::ValuesWithScores(elements) => Ok(SortedSetFetch::Hit {
+                        elements: elements.elements,
+                    }),
+                    Elements::Values(_) => {
+                        return Err(MomentoError::ClientSdkError {
+                            description: std::borrow::Cow::Borrowed(
+                                "sorted_set_fetch_by_index response included elements without values"
+                            ),
+                            source: crate::response::ErrorSource::Unknown(
+                                std::io::Error::new(
+                                    std::io::ErrorKind::InvalidData,
+                                    "unexpected response"
+                            ).into()),
+                        });
+                    }
+                },
+                None => Ok(SortedSetFetch::Hit {
+                    elements: Vec::new(),
+                }),
+            },
+            Some(sorted_set_fetch_response::SortedSet::Missing(_)) => Ok(SortedSetFetch::Miss),
+            None => Ok(SortedSetFetch::Miss),
+        }
+    }
+
+    /// Fetches a range of elements from a sorted set from a Momento Cache
+    /// selecting by score.
+    ///
+    /// *NOTE*: This is preview functionality and requires that you contact
+    /// Momento Support to enable these APIs for your cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `_cache_name` - name of cache.
+    /// * `_set_name` - name of the set.
+    /// * `_order` - specify ascending or descending order
+    /// * `_range` - constrain to a range of elements by index or by score
+    ///
+    /// # Example
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
+    /// use std::convert::TryInto;
+    /// use std::time::Duration;
+    /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
+    /// use momento::sorted_set::{Elements, Order, SortedSetElement};
+    ///
+    /// let ttl = CollectionTtl::default();
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// // some elements that we'll add to the sorted set
+    /// let test_elements = vec![
+    ///     SortedSetElement { value: "a".into(), score: 2.0 },
+    ///     SortedSetElement { value: "b".into(), score: 3.0 },
+    ///     SortedSetElement { value: "c".into(), score: 5.0 },
+    ///     SortedSetElement { value: "d".into(), score: 7.0 },
+    ///     SortedSetElement { value: "e".into(), score: 11.0 },
+    ///     SortedSetElement { value: "f".into(), score: 13.0 },
+    /// ];
+    ///
+    /// // add some elements to a sorted set
+    /// let result = momento.sorted_set_put(
+    ///     &cache_name,
+    ///     "test sorted set",
+    ///     test_elements.clone(),
+    ///     ttl,
+    /// ).await?;
+    ///
+    /// // this will fetch the all the elements (with their scores) in the
+    /// // sorted set, sorted by score in ascending order. Any valid
+    /// // `core::ops::Range` can be used to select and limit the returned
+    /// // elements. Here we use `..` to select all the elements.
+    /// let result = momento.sorted_set_fetch_by_score(
+    ///     &cache_name,
+    ///     "test sorted set",
+    ///     Order::Ascending,
+    ///     ..,
+    /// ).await?;
+    ///
+    /// if let Ok(elements) = TryInto::<Vec<(Vec<u8>, f64)>>::try_into(result) {
+    ///     // we only set 6 elements, check that we got exactly what we set
+    ///     assert_eq!(elements.len(), test_elements.len());
+    ///
+    ///     // we can iterate and print the elements
+    ///     for (idx, (value, score)) in elements.iter().enumerate() {
+    ///         println!("value: {:?} score: {score}", value);
+    ///
+    ///         // check that the value is correct
+    ///         assert_eq!(*value, test_elements[idx].value);
+    ///     }
+    /// } else {
+    ///     panic!("sorted set was missing or the response was invalid");
+    /// }
+    ///
+    /// // by changing the range, we can get a subset of the sorted set. This
+    /// // will select just 3 elements, again in ascending order.
+    /// let result = momento.sorted_set_fetch_by_score(
+    ///     &cache_name,
+    ///     "test sorted set",
+    ///     Order::Ascending,
+    ///     3.0..=7.0,
+    /// ).await?;
+    ///
+    /// if let Ok(elements) = TryInto::<Vec<(Vec<u8>, f64)>>::try_into(result) {
+    ///     // we only wanted 3 elements, check that we got 3
+    ///     assert_eq!(elements.len(), 3);
+    ///
+    ///     // check that the values are correct
+    ///     for (idx, (value, _score)) in elements.iter().enumerate() {
+    ///         assert_eq!(*value, test_elements[idx + 1].value);
+    ///     }
+    /// } else {
+    ///     panic!("sorted set was missing or the response was invalid");
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn sorted_set_fetch_by_score(
+        &mut self,
+        cache_name: &str,
+        set_name: impl IntoBytes,
+        order: sorted_set::Order,
+        range: impl RangeBounds<f64>,
+    ) -> MomentoResult<SortedSetFetch> {
+        use core::ops::Bound;
+        use sorted_set_fetch_request::by_score::{Min, Max, Score};
+        use sorted_set_fetch_request::{ByScore, Range};
+        use sorted_set_fetch_response::found::Elements;
+
+        // transforms the Rust `Range` start into a Momento min score.
+        let min = match range.start_bound() {
+            Bound::Included(v) => Min::MinScore(Score { score: *v, exclusive: false }),
+            Bound::Excluded(v) => Min::MinScore(Score { score: *v, exclusive: true }),
+            Bound::Unbounded => Min::UnboundedMin(Unbounded {}),
+        };
+
+        // transforms the Rust `Range` end into a Momento max score.
+        let max = match range.end_bound() {
+            Bound::Included(v) => Max::MaxScore(Score { score: *v, exclusive: false }),
+            Bound::Excluded(v) => Max::MaxScore(Score { score: *v, exclusive: true }),
+            Bound::Unbounded => Max::UnboundedMax(Unbounded {}),
+        };
+
+        let request = self.prep_request(
+            cache_name,
+            SortedSetFetchRequest {
+                set_name: set_name.into_bytes(),
+                order: order.into(),
+                with_scores: true,
+                range: Some(Range::ByScore(ByScore {
+                    offset: 0,
+                    count: -1,
+                    min: Some(min),
+                    max: Some(max),
                 })),
             },
         )?;
