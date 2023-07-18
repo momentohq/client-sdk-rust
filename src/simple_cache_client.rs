@@ -2152,21 +2152,33 @@ impl SimpleCacheClient {
         range: impl RangeBounds<f64>,
     ) -> MomentoResult<SortedSetFetch> {
         use core::ops::Bound;
-        use sorted_set_fetch_request::by_score::{Min, Max, Score};
+        use sorted_set_fetch_request::by_score::{Max, Min, Score};
         use sorted_set_fetch_request::{ByScore, Range};
         use sorted_set_fetch_response::found::Elements;
 
         // transforms the Rust `Range` start into a Momento min score.
         let min = match range.start_bound() {
-            Bound::Included(v) => Min::MinScore(Score { score: *v, exclusive: false }),
-            Bound::Excluded(v) => Min::MinScore(Score { score: *v, exclusive: true }),
+            Bound::Included(v) => Min::MinScore(Score {
+                score: *v,
+                exclusive: false,
+            }),
+            Bound::Excluded(v) => Min::MinScore(Score {
+                score: *v,
+                exclusive: true,
+            }),
             Bound::Unbounded => Min::UnboundedMin(Unbounded {}),
         };
 
         // transforms the Rust `Range` end into a Momento max score.
         let max = match range.end_bound() {
-            Bound::Included(v) => Max::MaxScore(Score { score: *v, exclusive: false }),
-            Bound::Excluded(v) => Max::MaxScore(Score { score: *v, exclusive: true }),
+            Bound::Included(v) => Max::MaxScore(Score {
+                score: *v,
+                exclusive: false,
+            }),
+            Bound::Excluded(v) => Max::MaxScore(Score {
+                score: *v,
+                exclusive: true,
+            }),
             Bound::Unbounded => Max::UnboundedMax(Unbounded {}),
         };
 
