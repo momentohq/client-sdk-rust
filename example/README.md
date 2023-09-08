@@ -11,7 +11,7 @@ _Read this in other languages_: [日本語](README.ja.md)
 
 ```bash
 # Run example code
-MOMENTO_AUTH_TOKEN=<YOUR AUTH TOKEN> cargo run
+MOMENTO_API_KEY=<YOUR AUTH TOKEN> cargo run
 ```
 
 Example Code: [main.rs](src/main.rs)

@@ -1,1 +1,1 @@
-pub mod generate_api_token_request;
+pub mod generate_api_key_request;

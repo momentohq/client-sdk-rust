@@ -38,9 +38,9 @@ use std::num::NonZeroU64;
 async fn demo_cache_usage() {
     // Initialize Momento
     let credential_provider =
-        CredentialProviderBuilder::new_from_environment_variable("MOMENTO_AUTH_TOKEN")
+        CredentialProviderBuilder::new_from_environment_variable("MOMENTO_API_KEY")
             .build()
-            .expect("env var MOMENTO_AUTH_TOKEN must be set to your auth token");
+            .expect("env var MOMENTO_API_KEY must be set to your API key");
     let item_default_ttl_seconds = 60;
     let mut cache_client = SimpleCacheClientBuilder::new(
         credential_provider,
@@ -78,7 +78,7 @@ async fn demo_cache_usage() {
 
 ## Running Tests ⚡
 
-Doc and integration tests require an auth token for testing. Set the env var `TEST_AUTH_TOKEN` to
+Doc and integration tests require an API key for testing. Set the env var `TEST_API_KEY` to
 provide it.
 
 Running unit tests:
@@ -90,13 +90,13 @@ cargo test --lib
 Running doc tests:
 
 ```
-TEST_AUTH_TOKEN=<auth token> cargo test --doc
+TEST_API_KEY=<API key> cargo test --doc
 ```
 
 Running integration tests:
 
 ```
-TEST_AUTH_TOKEN=<auth token> cargo test --tests
+TEST_API_KEY=<API key> cargo test --tests
 ```
 
 ## Development 🔨

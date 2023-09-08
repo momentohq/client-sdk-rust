@@ -3,14 +3,14 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 #[derive(Clone)]
 pub struct HeaderInterceptor {
-    auth_token: String,
+    api_key: String,
     sdk_agent: String,
 }
 
 impl HeaderInterceptor {
     pub fn new(authorization: &str, sdk_agent: &str) -> HeaderInterceptor {
         HeaderInterceptor {
-            auth_token: authorization.to_string(),
+            api_key: authorization.to_string(),
             sdk_agent: sdk_agent.to_string(),
         }
     }
@@ -25,15 +25,15 @@ impl tonic::service::Interceptor for HeaderInterceptor {
 
         request.metadata_mut().insert(
             tonic::metadata::AsciiMetadataKey::from_static("authorization"),
-            tonic::metadata::AsciiMetadataValue::try_from(&self.auth_token)
-                .expect("couldn't parse val from auth token"),
+            tonic::metadata::AsciiMetadataValue::try_from(&self.api_key)
+                .expect("couldn't parse val from API key"),
         );
 
         if !ARE_ONLY_ONCE_HEADER_SENT.load(Ordering::Relaxed) {
             request.metadata_mut().insert(
                 tonic::metadata::AsciiMetadataKey::from_static("agent"),
                 tonic::metadata::AsciiMetadataValue::try_from(&self.sdk_agent)
-                    .expect("couldn't parse val from auth token"),
+                    .expect("couldn't parse val from API key"),
             );
             ARE_ONLY_ONCE_HEADER_SENT.store(true, Ordering::Relaxed);
         }

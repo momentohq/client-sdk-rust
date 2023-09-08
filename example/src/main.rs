@@ -7,11 +7,11 @@ use std::process;
 #[tokio::main]
 async fn main() {
     // Initializing Momento
-    let auth_token =
-        env::var("MOMENTO_AUTH_TOKEN").expect("env var MOMENTO_AUTH_TOKEN must be set");
+    let api_key =
+        env::var("MOMENTO_API_KEY").expect("env var MOMENTO_API_KEY must be set");
     let item_default_ttl_seconds = 60;
     let mut cache_client = match SimpleCacheClientBuilder::new(
-        auth_token,
+        api_key,
         NonZeroU64::new(item_default_ttl_seconds).expect("expected a non-zero number"),
     ) {
         Ok(client) => client,

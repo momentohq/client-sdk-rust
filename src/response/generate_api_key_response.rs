@@ -8,14 +8,14 @@ use serde::{Deserialize, Serialize};
 /// sdks, hence why we are calling this struct an ApiToken.
 #[derive(Serialize, Deserialize)]
 pub struct ApiToken {
-    pub api_key: String,
+    pub momento_api_key: String,
     pub endpoint: String,
 }
 
 impl Debug for ApiToken {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ApiToken")
-            .field("api_key", &"<redacted>")
+            .field("MOMENTO_API_KEY", &"<redacted>")
             .field("endpoint", &self.endpoint)
             .finish()
     }
@@ -23,16 +23,16 @@ impl Debug for ApiToken {
 
 /// The response of a generate api token operation.
 #[derive(Serialize, Deserialize)]
-pub struct MomentoGenerateApiTokenResponse {
-    pub api_token: String,
+pub struct MomentoGenerateApiKeyResponse {
+    pub api_key: String,
     pub refresh_token: String,
     pub valid_until: SystemTime,
 }
 
-impl Debug for MomentoGenerateApiTokenResponse {
+impl Debug for MomentoGenerateApiKeyResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("MomentoGenerateApiTokenResponse")
-            .field("api_token", &"<redacted>")
+        f.debug_struct("MomentoGenerateApiKeyResponse")
+            .field("api_key", &"<redacted>")
             .field("refresh_token", &"<redacted>")
             .field("valid_until", &self.valid_until)
             .finish()

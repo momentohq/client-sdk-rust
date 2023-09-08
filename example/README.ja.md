@@ -13,7 +13,7 @@ _他言語バージョンもあります_：[English](README.md)
 cargo build
 
 # SDKコード例を実行する
-MOMENTO_AUTH_TOKEN=<YOUR AUTH TOKEN> ./target/debug/rust
+MOMENTO_API_KEY=<YOUR AUTH TOKEN> ./target/debug/rust
 ```
 
 SDK コード例: [main.rs](src/main.rs)

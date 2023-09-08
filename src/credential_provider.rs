@@ -18,7 +18,7 @@ struct JwtClaims {
 
 #[derive(Serialize, Deserialize)]
 struct V1Token {
-    pub api_key: String,
+    pub momento_api_key: String,
     pub endpoint: String,
 }
 
@@ -26,7 +26,7 @@ struct V1Token {
 /// authenticate with the Momento service.
 #[derive(Clone)]
 pub struct CredentialProvider {
-    pub auth_token: String,
+    pub api_key: String,
     pub control_endpoint: String,
     pub cache_endpoint: String,
 }
@@ -34,7 +34,7 @@ pub struct CredentialProvider {
 impl Debug for CredentialProvider {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("CredentialProvider")
-            .field("auth_token", &"<redacted>")
+            .field("api_key", &"<redacted>")
             .field("cache_endpoint", &self.cache_endpoint)
             .field("control_endpoint", &self.control_endpoint)
             .finish()
@@ -59,42 +59,42 @@ impl Debug for AuthTokenSource {
 
 #[derive(Debug)]
 pub struct CredentialProviderBuilder {
-    auth_token_source: AuthTokenSource,
+    api_key_source: AuthTokenSource,
     cache_endpoint_override: Option<String>,
     control_endpoint_override: Option<String>,
 }
 
 impl CredentialProviderBuilder {
-    /// Returns a builder to produce a Credential Provider using an auth token stored in the provided
+    /// Returns a builder to produce a Credential Provider using an API key stored in the provided
     /// environment variable
     ///
     /// # Arguments
     ///
-    /// * `env_var_name` - Name of the environment variable to read token from
+    /// * `env_var_name` - Name of the environment variable to read API key from
     /// # Examples
     ///
     /// ```
     /// # tokio_test::block_on(async {
     ///     use momento::CredentialProviderBuilder;
-    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
+    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_API_KEY".to_string())
     ///         .build()
-    ///         .expect("TEST_AUTH_TOKEN must be set");
+    ///         .expect("TEST_API_KEY must be set");
     /// # })
     /// ```
     ///
     pub fn from_environment_variable(env_var_name: String) -> Self {
         CredentialProviderBuilder {
-            auth_token_source: EnvironmentVariable(env_var_name),
+            api_key_source: EnvironmentVariable(env_var_name),
             cache_endpoint_override: None,
             control_endpoint_override: None,
         }
     }
 
-    /// Returns a builder to produce a Credential Provider from the provided auth token
+    /// Returns a builder to produce a Credential Provider from the provided API key
     ///
     /// # Arguments
     ///
-    /// * `auth_token` - Momento auth token string
+    /// * `api_key` - Momento API key string
     /// # Examples
     ///
     /// ```
@@ -105,9 +105,9 @@ impl CredentialProviderBuilder {
     ///         .expect("could not build credential provider");
     /// # })
     /// ```
-    pub fn from_string(auth_token: String) -> Self {
+    pub fn from_string(api_key: String) -> Self {
         CredentialProviderBuilder {
-            auth_token_source: LiteralToken(auth_token),
+            api_key_source: LiteralToken(api_key),
             cache_endpoint_override: None,
             control_endpoint_override: None,
         }
@@ -122,10 +122,10 @@ impl CredentialProviderBuilder {
     /// ```
     /// # tokio_test::block_on(async {
     ///     use momento::CredentialProviderBuilder;
-    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
+    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_API_KEY".to_string())
     ///         .with_cache_endpoint("my_cache_endpoint.com".to_string())
     ///         .build()
-    ///         .expect("TEST_AUTH_TOKEN must be set");
+    ///         .expect("TEST_API_KEY must be set");
     ///      assert_eq!("https://my_cache_endpoint.com", credential_provider.cache_endpoint);
     /// # })
     /// ```
@@ -144,10 +144,10 @@ impl CredentialProviderBuilder {
     /// ```
     /// # tokio_test::block_on(async {
     ///     use momento::CredentialProviderBuilder;
-    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
+    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_API_KEY".to_string())
     ///         .with_control_endpoint("my_control_endpoint.com".to_string())
     ///         .build()
-    ///         .expect("TEST_AUTH_TOKEN must be set");
+    ///         .expect("TEST_API_KEY must be set");
     ///      assert_eq!("https://my_control_endpoint.com", credential_provider.control_endpoint);
     /// # })
     /// ```
@@ -166,10 +166,10 @@ impl CredentialProviderBuilder {
     /// ```
     /// # tokio_test::block_on(async {
     ///     use momento::CredentialProviderBuilder;
-    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
+    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_API_KEY".to_string())
     ///         .with_momento_endpoint("my_endpoint.com".to_string())
     ///         .build()
-    ///         .expect("TEST_AUTH_TOKEN must be set");
+    ///         .expect("TEST_API_KEY must be set");
     ///      assert_eq!("https://cache.my_endpoint.com", credential_provider.cache_endpoint);
     ///      assert_eq!("https://control.my_endpoint.com", credential_provider.control_endpoint);
     /// # })
@@ -186,9 +186,9 @@ impl CredentialProviderBuilder {
     }
 
     pub fn build(self) -> MomentoResult<CredentialProvider> {
-        let token_to_process = match self.auth_token_source {
+        let token_to_process = match self.api_key_source {
             EnvironmentVariable(env_var_name) => match env::var(&env_var_name) {
-                Ok(auth_token) => auth_token,
+                Ok(api_key) => api_key,
                 Err(e) => {
                     return Err(MomentoError::InvalidArgument {
                         description: format!("Env var {env_var_name} must be set").into(),
@@ -196,37 +196,37 @@ impl CredentialProviderBuilder {
                     })
                 }
             },
-            LiteralToken(auth_token_string) => {
-                if auth_token_string.is_empty() {
+            LiteralToken(api_key_string) => {
+                if api_key_string.is_empty() {
                     return Err(MomentoError::InvalidArgument {
-                        description: "Auth token string cannot be empty".into(),
+                        description: "API key string cannot be empty".into(),
                         source: None,
                     });
                 }
-                auth_token_string
+                api_key_string
             }
         };
 
-        CredentialProviderBuilder::decode_auth_token(
+        CredentialProviderBuilder::decode_api_key(
             token_to_process,
             self.cache_endpoint_override,
             self.control_endpoint_override,
         )
     }
 
-    fn decode_auth_token(
-        auth_token: String,
+    fn decode_api_key(
+        api_key: String,
         cache_endpoint_override: Option<String>,
         control_endpoint_override: Option<String>,
     ) -> MomentoResult<CredentialProvider> {
-        match base64::engine::general_purpose::URL_SAFE.decode(&auth_token) {
-            Ok(auth_token_bytes) => CredentialProviderBuilder::process_v1_token(
-                auth_token_bytes,
+        match base64::engine::general_purpose::URL_SAFE.decode(&api_key) {
+            Ok(api_key_bytes) => CredentialProviderBuilder::process_v1_token(
+                api_key_bytes,
                 cache_endpoint_override,
                 control_endpoint_override,
             ),
             Err(_) => CredentialProviderBuilder::process_jwt_token(
-                auth_token,
+                api_key,
                 cache_endpoint_override,
                 control_endpoint_override,
             ),
@@ -234,11 +234,11 @@ impl CredentialProviderBuilder {
     }
 
     fn process_v1_token(
-        auth_token_bytes: Vec<u8>,
+        api_key_bytes: Vec<u8>,
         cache_endpoint_override: Option<String>,
         control_endpoint_override: Option<String>,
     ) -> MomentoResult<CredentialProvider> {
-        let json: V1Token = serde_json::from_slice(&auth_token_bytes)
+        let json: V1Token = serde_json::from_slice(&api_key_bytes)
             .map_err(|e| token_parsing_error(Box::new(e)))?;
 
         // If endpoint override is present then that always takes precedence over the
@@ -251,14 +251,14 @@ impl CredentialProviderBuilder {
         );
 
         Ok(CredentialProvider {
-            auth_token: json.api_key,
+            api_key: json.momento_api_key,
             cache_endpoint: CredentialProviderBuilder::https_endpoint(cache_endpoint),
             control_endpoint: CredentialProviderBuilder::https_endpoint(control_endpoint),
         })
     }
 
     fn process_jwt_token(
-        auth_token: String,
+        api_key: String,
         cache_endpoint_override: Option<String>,
         control_endpoint_override: Option<String>,
     ) -> MomentoResult<CredentialProvider> {
@@ -271,7 +271,7 @@ impl CredentialProviderBuilder {
         validation.insecure_disable_signature_validation();
 
         let token =
-            decode(&auth_token, &key, &validation).map_err(|e| token_parsing_error(Box::new(e)))?;
+            decode(&api_key, &key, &validation).map_err(|e| token_parsing_error(Box::new(e)))?;
         let token_claims: JwtClaims = token.claims;
 
         // If endpoint override is present then that always takes precedence over the c and cp
@@ -280,17 +280,17 @@ impl CredentialProviderBuilder {
         let cache_endpoint = cache_endpoint_override
             .or(token_claims.cache_endpoint)
             .ok_or_else(|| MomentoError::InvalidArgument {
-                description: "auth token is missing cache endpoint and endpoint override is missing. One or the other must be provided".into(),
+                description: "API key is missing cache endpoint and endpoint override is missing. One or the other must be provided".into(),
                 source: None,
             })?;
         let control_endpoint = control_endpoint_override
             .or(token_claims.control_endpoint)
             .ok_or_else(|| MomentoError::InvalidArgument {
-                description: "auth token is missing control endpoint and endpoint override is missing. One or the other must be provided.".into(),
+                description: "API key is missing control endpoint and endpoint override is missing. One or the other must be provided.".into(),
                 source: None,
             })?;
         Ok(CredentialProvider {
-            auth_token,
+            api_key,
             cache_endpoint: CredentialProviderBuilder::https_endpoint(cache_endpoint),
             control_endpoint: CredentialProviderBuilder::https_endpoint(control_endpoint),
         })
@@ -311,7 +311,7 @@ impl CredentialProviderBuilder {
 
 fn token_parsing_error(e: Box<dyn std::error::Error + Send + Sync>) -> MomentoError {
     MomentoError::ClientSdkError {
-        description: "Could not parse token. Please ensure a valid token was entered correctly."
+        description: "Could not parse auth credentials. Please ensure a valid key or token was used."
             .into(),
         source: crate::ErrorSource::Unknown(e),
     }
@@ -341,7 +341,7 @@ mod tests {
             "https://control.momento_endpoint",
             credential_provider.control_endpoint
         );
-        assert_eq!("eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0IHN1YmplY3QiLCJ2ZXIiOjEsInAiOiIifQ.hg2wMbWe-wesQVtA7wuJcRULjRphXLQwQTVYfQL3L7c", credential_provider.auth_token);
+        assert_eq!("eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0IHN1YmplY3QiLCJ2ZXIiOjEsInAiOiIifQ.hg2wMbWe-wesQVtA7wuJcRULjRphXLQwQTVYfQL3L7c", credential_provider.api_key);
     }
 
     #[test]
@@ -359,7 +359,7 @@ mod tests {
     fn env_var_empty_string() {
         let env_var_name = "TEST_ENV_VAR_CREDENTIAL_PROVIDER_EMPTY_STRING";
         env::set_var(env_var_name, "");
-        let _err_msg = "client error: Could not parse token. Please ensure a valid token was entered correctly.";
+        let _err_msg = "client error: Could not parse auth credentials. Please ensure a valid key or token was used.";
         let e = CredentialProviderBuilder::from_environment_variable(env_var_name.to_string())
             .build()
             .unwrap_err();
@@ -394,7 +394,7 @@ mod tests {
             credential_provider.control_endpoint,
             "https://control plane endpoint"
         );
-        assert_eq!(credential_provider.auth_token, legacy_jwt);
+        assert_eq!(credential_provider.api_key, legacy_jwt);
     }
 
     #[test]
@@ -402,7 +402,7 @@ mod tests {
         let e = CredentialProviderBuilder::from_string("".to_string())
             .build()
             .unwrap_err();
-        let _err_msg = "invalid argument: Auth token string cannot be empty".to_owned();
+        let _err_msg = "invalid argument: API key string cannot be empty".to_owned();
         assert_eq!(e.to_string(), _err_msg);
     }
 
@@ -412,7 +412,7 @@ mod tests {
             .build()
             .unwrap_err();
         let _err_msg =
-            "client error: Could not parse token. Please ensure a valid token was entered correctly.".to_owned();
+            "client error: Could not parse auth credentials. Please ensure a valid key or token was used.".to_owned();
         assert_eq!(e.to_string(), _err_msg);
     }
 
@@ -432,14 +432,14 @@ mod tests {
         //   "name": "John Doe",
         //   "sub": "abcd"
         // }
-        let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
-        let credential_provider = CredentialProviderBuilder::from_string(auth_token.to_string())
+        let api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
+        let credential_provider = CredentialProviderBuilder::from_string(api_key.to_string())
             .with_cache_endpoint("cache.help.com".to_string())
             .with_control_endpoint("control.help.com".to_string())
             .build()
             .expect("should be able to get credentials");
 
-        assert_eq!(credential_provider.auth_token, auth_token.to_string());
+        assert_eq!(credential_provider.api_key, api_key.to_string());
         assert_eq!(
             credential_provider.control_endpoint,
             "https://control.help.com"
@@ -463,13 +463,13 @@ mod tests {
         //   "name": "John Doe",
         //   "sub": "abcd"
         // }
-        let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
-        let credential_provider = CredentialProviderBuilder::from_string(auth_token.to_string())
+        let api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
+        let credential_provider = CredentialProviderBuilder::from_string(api_key.to_string())
             .with_momento_endpoint("help.com".to_string())
             .build()
             .expect("should be able to get credentials");
 
-        assert_eq!(credential_provider.auth_token, auth_token.to_string());
+        assert_eq!(credential_provider.api_key, api_key.to_string());
         assert_eq!(
             credential_provider.control_endpoint,
             "https://control.help.com"
@@ -493,13 +493,13 @@ mod tests {
         //   "name": "John Doe",
         //   "sub": "abcd"
         // }
-        let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
-        let e = CredentialProviderBuilder::from_string(auth_token.to_string())
+        let api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
+        let e = CredentialProviderBuilder::from_string(api_key.to_string())
             .with_control_endpoint("foo".to_string())
             .build()
             .unwrap_err();
         let _err_msg =
-            "invalid argument: auth token is missing cache endpoint and endpoint override is missing. One or the other must be provided".to_string();
+            "invalid argument: API key is missing cache endpoint and endpoint override is missing. One or the other must be provided".to_string();
         assert_eq!(e.to_string(), _err_msg);
     }
 
@@ -519,13 +519,13 @@ mod tests {
         //   "name": "John Doe",
         //   "sub": "abcd"
         // }
-        let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
-        let e = CredentialProviderBuilder::from_string(auth_token.to_string())
+        let api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
+        let e = CredentialProviderBuilder::from_string(api_key.to_string())
             .with_cache_endpoint("foo".to_string())
             .build()
             .unwrap_err();
         let _err_msg =
-        "invalid argument: auth token is missing control endpoint and endpoint override is missing. One or the other must be provided.".to_string();
+        "invalid argument: API key is missing control endpoint and endpoint override is missing. One or the other must be provided.".to_string();
         assert_eq!(e.to_string(), _err_msg);
     }
 
@@ -544,7 +544,7 @@ mod tests {
             "https://cache.momento_endpoint",
             credential_provider.cache_endpoint
         );
-        assert_eq!("eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0IHN1YmplY3QiLCJ2ZXIiOjEsInAiOiIifQ.hg2wMbWe-wesQVtA7wuJcRULjRphXLQwQTVYfQL3L7c", credential_provider.auth_token);
+        assert_eq!("eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0IHN1YmplY3QiLCJ2ZXIiOjEsInAiOiIifQ.hg2wMbWe-wesQVtA7wuJcRULjRphXLQwQTVYfQL3L7c", credential_provider.api_key);
     }
 
     #[test]
@@ -561,17 +561,17 @@ mod tests {
             "https://control.foo.com",
             credential_provider.control_endpoint
         );
-        assert_eq!("eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0IHN1YmplY3QiLCJ2ZXIiOjEsInAiOiIifQ.hg2wMbWe-wesQVtA7wuJcRULjRphXLQwQTVYfQL3L7c", credential_provider.auth_token);
+        assert_eq!("eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0IHN1YmplY3QiLCJ2ZXIiOjEsInAiOiIifQ.hg2wMbWe-wesQVtA7wuJcRULjRphXLQwQTVYfQL3L7c", credential_provider.api_key);
     }
 
     #[test]
     fn invalid_v1_token_json() {
-        let auth_token = "eyJmb28iOiJiYXIifQo=";
-        let e = CredentialProviderBuilder::from_string(auth_token.to_string())
+        let api_key = "eyJmb28iOiJiYXIifQo=";
+        let e = CredentialProviderBuilder::from_string(api_key.to_string())
             .build()
             .unwrap_err();
         let _err_msg =
-            "client error: Could not parse token. Please ensure a valid token was entered correctly.".to_string();
+            "client error: Could not parse auth credentials. Please ensure a valid key or token was used.".to_string();
         assert_eq!(e.to_string(), _err_msg);
     }
 }

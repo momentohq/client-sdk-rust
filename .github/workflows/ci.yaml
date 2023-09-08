@@ -32,7 +32,7 @@ jobs:
   build_rust:
     runs-on: macos-latest
     env:
-      TEST_AUTH_TOKEN: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
+      TEST_API_KEY: ${{ secrets.ALPHA_TEST_API_KEY }}
 
     steps:
       - uses: actions/checkout@v2

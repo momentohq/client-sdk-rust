@@ -16,20 +16,20 @@ mod tests {
     }
 
     fn get_momento_instance_with_token(
-        auth_token: String,
+        api_key: String,
     ) -> Result<SimpleCacheClientBuilder, MomentoError> {
         SimpleCacheClientBuilder::new_with_explicit_agent_name(
-            CredentialProviderBuilder::from_string(auth_token)
+            CredentialProviderBuilder::from_string(api_key)
                 .build()
-                .expect("auth token should be valid"),
+                .expect("API key should be valid"),
             Duration::from_secs(5),
             "integration_test",
         )
     }
 
     fn get_momento_instance() -> SimpleCacheClient {
-        let auth_token = env::var("TEST_AUTH_TOKEN").expect("env var TEST_AUTH_TOKEN must be set");
-        get_momento_instance_with_token(auth_token)
+        let api_key = env::var("TEST_API_KEY").expect("env var TEST_API_KEY must be set");
+        get_momento_instance_with_token(api_key)
             .expect("failed to build an integration test client builder")
             .build()
     }

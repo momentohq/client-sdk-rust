@@ -55,7 +55,7 @@ impl TopicClient {
         let authorized_channel = InterceptedService::new(
             channel,
             HeaderInterceptor::new(
-                &credential_provider.auth_token,
+                &credential_provider.api_key,
                 &user_agent(user_application_name.unwrap_or("sdk")),
             ),
         );

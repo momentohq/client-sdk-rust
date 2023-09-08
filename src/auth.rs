@@ -15,23 +15,23 @@ pub type LoginActionConsumer = fn(LoginAction) -> EarlyOutActionResult;
 /// Credentials as returned from the auth workflow.
 #[derive(Clone, Debug)]
 pub struct Credentials {
-    token: String,
+    api_key: String,
     valid_for: Duration,
 }
 
 impl Credentials {
-    pub fn new(token: String, valid_for: Duration) -> Self {
-        Self { token, valid_for }
+    pub fn new(api_key: String, valid_for: Duration) -> Self {
+        Self { api_key: api_key, valid_for }
     }
 
-    /// An auth token for use with [`SimpleCacheClient`].
+    /// An API key for use with [`SimpleCacheClient`].
     ///
     /// [`SimpleCacheClient`]: crate::simple_cache_client::SimpleCacheClient
-    pub fn token(&self) -> &str {
-        &self.token
+    pub fn api_key(&self) -> &str {
+        &self.api_key
     }
 
-    /// How long this auth token is valid for.
+    /// How long this API key is valid for.
     pub fn valid_for(&self) -> Duration {
         self.valid_for
     }
@@ -123,7 +123,7 @@ impl From<ChannelConnectError> for AuthError {
 /// }).await;
 ///
 /// match result {
-///     Ok(credentials) => println!("Logged in! Session token: {}", credentials.token()),
+///     Ok(credentials) => println!("Logged in! Session token: {}", credentials.api_key()),
 ///     Err(err) => println!("Failed to log in: {err}")
 /// }
 /// # });

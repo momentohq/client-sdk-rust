@@ -45,7 +45,7 @@ jobs:
     runs-on: macos-latest
     needs: release
     env:
-      TEST_AUTH_TOKEN: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
+      TEST_API_KEY: ${{ secrets.ALPHA_TEST_API_KEY }}
       CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
     steps:
       - uses: actions/checkout@v2

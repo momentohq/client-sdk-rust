@@ -18,13 +18,13 @@ use std::time::{Duration, UNIX_EPOCH};
 use tonic::{codegen::InterceptedService, transport::Channel, Request};
 
 use crate::credential_provider::CredentialProvider;
-use crate::requests::generate_api_token_request::TokenExpiry;
+use crate::requests::generate_api_key_request::ApiKeyExpiry;
 use crate::response::{
     ApiToken, DictionaryFetch, DictionaryGet, DictionaryPairs, Get, GetValue, ListCacheEntry,
     MomentoCache, MomentoCreateSigningKeyResponse, MomentoDeleteResponse,
     MomentoDictionaryDeleteResponse, MomentoDictionaryIncrementResponse,
     MomentoDictionarySetResponse, MomentoError, MomentoFlushCacheResponse,
-    MomentoGenerateApiTokenResponse, MomentoListCacheResponse, MomentoListFetchResponse,
+    MomentoGenerateApiKeyResponse, MomentoListCacheResponse, MomentoListFetchResponse,
     MomentoListSigningKeyResult, MomentoSetDifferenceResponse, MomentoSetFetchResponse,
     MomentoSetResponse, MomentoSigningKey, MomentoSortedSetFetchResponse, SortedSetFetch,
 };
@@ -142,7 +142,7 @@ pub struct SimpleCacheClientBuilder {
     data_endpoint: String,
     control_channel: Channel,
     data_channel: Channel,
-    auth_token: String,
+    api_key: String,
     default_ttl: Duration,
     user_agent_name: String,
 }
@@ -171,9 +171,9 @@ impl SimpleCacheClientBuilder {
     /// # tokio_test::block_on(async {
     ///     use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
     ///     use std::time::Duration;
-    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
+    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_API_KEY".to_string())
     ///         .build()
-    ///         .expect("TEST_AUTH_TOKEN must be set");
+    ///         .expect("TEST_API_KEY must be set");
     ///     let momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))
     ///         .expect("could not create a client")
     ///         .build();
@@ -210,7 +210,7 @@ impl SimpleCacheClientBuilder {
                 data_endpoint: credential_provider.cache_endpoint,
                 control_channel,
                 data_channel,
-                auth_token: credential_provider.auth_token,
+                api_key: credential_provider.api_key,
                 default_ttl,
                 user_agent_name: user_agent_name.to_string(),
             }),
@@ -228,13 +228,13 @@ impl SimpleCacheClientBuilder {
         let agent_value = user_agent(&self.user_agent_name);
         let control_interceptor = InterceptedService::new(
             self.control_channel,
-            HeaderInterceptor::new(&self.auth_token, &agent_value),
+            HeaderInterceptor::new(&self.api_key, &agent_value),
         );
         let control_client = ScsControlClient::new(control_interceptor);
 
         let data_interceptor = InterceptedService::new(
             self.data_channel,
-            HeaderInterceptor::new(&self.auth_token, &agent_value),
+            HeaderInterceptor::new(&self.api_key, &agent_value),
         );
         let data_client = ScsClient::new(data_interceptor);
 
@@ -286,9 +286,9 @@ impl SimpleCacheClient {
     /// use std::time::Duration;
     /// use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
     ///
-    /// let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
+    /// let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_API_KEY".to_string())
     ///     .build()
-    ///     .expect("TEST_AUTH_TOKEN must be set");
+    ///     .expect("TEST_API_KEY must be set");
     /// let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
     /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(5))?
     ///     .build();
@@ -320,9 +320,9 @@ impl SimpleCacheClient {
     /// use std::time::Duration;
     /// use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
     ///
-    /// let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
+    /// let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_API_KEY".to_string())
     ///     .build()
-    ///     .expect("TEST_AUTH_TOKEN must be set");
+    ///     .expect("TEST_API_KEY must be set");
     /// let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
     /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(5))?
     ///     .build();
@@ -435,9 +435,9 @@ impl SimpleCacheClient {
     /// use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
     ///
     /// let ttl_minutes = 10;
-    /// let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
+    /// let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_API_KEY".to_string())
     ///     .build()
-    ///     .expect("TEST_AUTH_TOKEN must be set");
+    ///     .expect("TEST_API_KEY must be set");
     /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(5))?
     ///     .build();
     ///
@@ -2601,20 +2601,20 @@ impl SimpleCacheClient {
         Ok(MomentoDeleteResponse::new())
     }
 
-    /// Generates an api token for Momento
+    /// Generates an api key for Momento
     ///
     /// # Arguments
     ///
     /// * `token_expiry` - when should the token expire, can be set to Never to never expire
     pub async fn generate_api_token(
         &mut self,
-        token_expiry: TokenExpiry,
-    ) -> MomentoResult<MomentoGenerateApiTokenResponse> {
-        let expiry = match token_expiry {
-            TokenExpiry::Never => {
+        api_key_expiry: ApiKeyExpiry,
+    ) -> MomentoResult<MomentoGenerateApiKeyResponse> {
+        let expiry = match api_key_expiry {
+            ApiKeyExpiry::Never => {
                 Expiry::Never(momento_protos::control_client::generate_api_token_request::Never {})
             }
-            TokenExpiry::Expires { valid_for_seconds } => Expiry::Expires(
+            ApiKeyExpiry::Expires { valid_for_seconds } => Expiry::Expires(
                 momento_protos::control_client::generate_api_token_request::Expires {
                     valid_for_seconds,
                 },
@@ -2629,13 +2629,13 @@ impl SimpleCacheClient {
             .await?
             .into_inner();
 
-        let api_key_with_endpoint = ApiToken {
-            api_key: resp.api_key,
+        let momento_api_key_with_endpoint = ApiToken {
+            momento_api_key: resp.api_key,
             endpoint: resp.endpoint,
         };
 
-        Ok(MomentoGenerateApiTokenResponse {
-            api_token: base64_encode(api_key_with_endpoint),
+        Ok(MomentoGenerateApiKeyResponse {
+            api_key: base64_encode(momento_api_key_with_endpoint),
             refresh_token: resp.refresh_token,
             valid_until: UNIX_EPOCH + Duration::from_secs(resp.valid_until),
         })
