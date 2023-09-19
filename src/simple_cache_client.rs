@@ -17,6 +17,7 @@ use std::ops::RangeBounds;
 use std::time::{Duration, UNIX_EPOCH};
 use tonic::{codegen::InterceptedService, transport::Channel, Request};
 
+use crate::compression_utils::{compress_json, decompress_json};
 use crate::credential_provider::CredentialProvider;
 use crate::requests::generate_api_token_request::TokenExpiry;
 use crate::response::{
@@ -529,6 +530,23 @@ impl SimpleCacheClient {
         Ok(MomentoSetResponse::new())
     }
 
+    pub async fn set_with_compression(
+        &mut self,
+        cache_name: &str,
+        key: impl IntoBytes,
+        body: impl IntoBytes,
+        ttl: impl Into<Option<Duration>>,
+    ) -> MomentoResult<MomentoSetResponse> {
+        let compressed_body = compress_json(&body.into_bytes());
+        match compressed_body {
+            Ok(compressed) => self.set(cache_name, key, compressed, ttl).await,
+            Err(err) => Err(MomentoError::ClientSdkError {
+                description: "unable to compress json".into(),
+                source: crate::ErrorSource::Unknown(Box::new(err)),
+            }),
+        }
+    }
+
     /// Gets an item from a Momento Cache
     ///
     /// # Arguments
@@ -576,6 +594,34 @@ impl SimpleCacheClient {
             }),
             ECacheResult::Miss => Ok(Get::Miss),
             _ => unreachable!(),
+        }
+    }
+
+    pub async fn get_with_deccompression(
+        &mut self,
+        cache_name: &str,
+        key: impl IntoBytes,
+    ) -> MomentoResult<Get> {
+        let get_resp = self.get(cache_name, key).await;
+        match get_resp {
+            Ok(hit) => match hit {
+                Get::Hit { value } => {
+                    let decompressed_item = decompress_json(&value.raw_item);
+                    match decompressed_item {
+                        Ok(decompressed) => Ok(Get::Hit {
+                            value: GetValue {
+                                raw_item: decompressed,
+                            },
+                        }),
+                        Err(err) => Err(MomentoError::ClientSdkError {
+                            description: "unable to decompress json".into(),
+                            source: crate::ErrorSource::Unknown(Box::new(err)),
+                        }),
+                    }
+                }
+                Get::Miss => Ok(Get::Miss),
+            },
+            Err(e) => Err(e),
         }
     }
 
