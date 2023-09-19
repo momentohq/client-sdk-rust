@@ -530,6 +530,33 @@ impl SimpleCacheClient {
         Ok(MomentoSetResponse::new())
     }
 
+    /// Sets an item in a Momento Cache, compressing it first. Item must be retrieved with
+    /// get_with_decompression to be read properly
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache
+    /// * `cache_key` - key of entry within the cache.
+    /// * `cache_body` - data stored within the cache entry.
+    /// * `ttl` - The TTL to use for the
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
+    /// use std::time::Duration;
+    /// use momento::SimpleCacheClientBuilder;
+    ///
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// // Use client default TTL: 30 seconds, as specified above.
+    /// momento.set_with_compression(&cache_name, "k1", "v1", None).await?;
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
     pub async fn set_with_compression(
         &mut self,
         cache_name: &str,
@@ -597,6 +624,37 @@ impl SimpleCacheClient {
         }
     }
 
+    /// Gets an item from a Momento Cache and decompresses the value before returning to the user. Item must be
+    /// set_with_compression for the return value to be correct
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache
+    /// * `key` - cache key
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
+    /// use std::time::Duration;
+    /// use momento::SimpleCacheClientBuilder;
+    /// use momento::response::{Get, GetValue};
+    ///
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.set_with_compression(&cache_name, "present", "value", None).await?;
+    ///
+    /// let present = momento.get_with_deccompression(&cache_name, "present").await?;
+    /// let missing = momento.get_with_deccompression(&cache_name, "missing").await?;
+    ///
+    /// assert_eq!(present, Get::Hit { value: GetValue::new(b"value".to_vec()) });
+    /// assert_eq!(missing, Get::Miss);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
     pub async fn get_with_deccompression(
         &mut self,
         cache_name: &str,
