@@ -3,6 +3,7 @@ pub mod preview;
 pub mod requests;
 pub mod response;
 
+mod compression_utils;
 mod credential_provider;
 mod grpc;
 mod simple_cache_client;

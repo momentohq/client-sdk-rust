@@ -30,6 +30,7 @@ serde_json = "1.0.79"
 thiserror = "1.0.38"
 base64 = "0.21.0"
 futures = "0"
+zstd = "0.12.4"
 
 [dev-dependencies]
 base64-url = "1.4.13"

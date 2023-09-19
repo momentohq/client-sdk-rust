@@ -17,6 +17,7 @@ use std::ops::RangeBounds;
 use std::time::{Duration, UNIX_EPOCH};
 use tonic::{codegen::InterceptedService, transport::Channel, Request};
 
+use crate::compression_utils::{compress_json, decompress_json};
 use crate::credential_provider::CredentialProvider;
 use crate::requests::generate_api_token_request::TokenExpiry;
 use crate::response::{
@@ -529,6 +530,50 @@ impl SimpleCacheClient {
         Ok(MomentoSetResponse::new())
     }
 
+    /// Sets an item in a Momento Cache, compressing it first. Item must be retrieved with
+    /// get_with_decompression to be read properly
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache
+    /// * `cache_key` - key of entry within the cache.
+    /// * `cache_body` - data stored within the cache entry.
+    /// * `ttl` - The TTL to use for the
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
+    /// use std::time::Duration;
+    /// use momento::SimpleCacheClientBuilder;
+    ///
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// // Use client default TTL: 30 seconds, as specified above.
+    /// momento.set_with_compression(&cache_name, "k1", "v1", None).await?;
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn set_with_compression(
+        &mut self,
+        cache_name: &str,
+        key: impl IntoBytes,
+        body: impl IntoBytes,
+        ttl: impl Into<Option<Duration>>,
+    ) -> MomentoResult<MomentoSetResponse> {
+        let compressed_body = compress_json(&body.into_bytes());
+        match compressed_body {
+            Ok(compressed) => self.set(cache_name, key, compressed, ttl).await,
+            Err(err) => Err(MomentoError::ClientSdkError {
+                description: "unable to compress json".into(),
+                source: crate::ErrorSource::Unknown(Box::new(err)),
+            }),
+        }
+    }
+
     /// Gets an item from a Momento Cache
     ///
     /// # Arguments
@@ -576,6 +621,65 @@ impl SimpleCacheClient {
             }),
             ECacheResult::Miss => Ok(Get::Miss),
             _ => unreachable!(),
+        }
+    }
+
+    /// Gets an item from a Momento Cache and decompresses the value before returning to the user. Item must be
+    /// set_with_compression for the return value to be correct
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache
+    /// * `key` - cache key
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # fn main() -> momento_test_util::DoctestResult {
+    /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
+    /// use std::time::Duration;
+    /// use momento::SimpleCacheClientBuilder;
+    /// use momento::response::{Get, GetValue};
+    ///
+    /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
+    ///     .build();
+    ///
+    /// momento.set_with_compression(&cache_name, "present", "value", None).await?;
+    ///
+    /// let present = momento.get_with_decompression(&cache_name, "present").await?;
+    /// let missing = momento.get_with_decompression(&cache_name, "missing").await?;
+    ///
+    /// assert_eq!(present, Get::Hit { value: GetValue::new(b"value".to_vec()) });
+    /// assert_eq!(missing, Get::Miss);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn get_with_decompression(
+        &mut self,
+        cache_name: &str,
+        key: impl IntoBytes,
+    ) -> MomentoResult<Get> {
+        let get_resp = self.get(cache_name, key).await;
+        match get_resp {
+            Ok(hit) => match hit {
+                Get::Hit { value } => {
+                    let decompressed_item = decompress_json(&value.raw_item);
+                    match decompressed_item {
+                        Ok(decompressed) => Ok(Get::Hit {
+                            value: GetValue {
+                                raw_item: decompressed,
+                            },
+                        }),
+                        Err(err) => Err(MomentoError::ClientSdkError {
+                            description: "unable to decompress json".into(),
+                            source: crate::ErrorSource::Unknown(Box::new(err)),
+                        }),
+                    }
+                }
+                Get::Miss => Ok(Get::Miss),
+            },
+            Err(e) => Err(e),
         }
     }
 
