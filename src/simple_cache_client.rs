@@ -646,8 +646,8 @@ impl SimpleCacheClient {
     ///
     /// momento.set_with_compression(&cache_name, "present", "value", None).await?;
     ///
-    /// let present = momento.get_with_deccompression(&cache_name, "present").await?;
-    /// let missing = momento.get_with_deccompression(&cache_name, "missing").await?;
+    /// let present = momento.get_with_decompression(&cache_name, "present").await?;
+    /// let missing = momento.get_with_decompression(&cache_name, "missing").await?;
     ///
     /// assert_eq!(present, Get::Hit { value: GetValue::new(b"value".to_vec()) });
     /// assert_eq!(missing, Get::Miss);
@@ -655,7 +655,7 @@ impl SimpleCacheClient {
     /// # })
     /// # }
     /// ```
-    pub async fn get_with_deccompression(
+    pub async fn get_with_decompression(
         &mut self,
         cache_name: &str,
         key: impl IntoBytes,
