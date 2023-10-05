@@ -18,26 +18,26 @@ members = [
 exclude = [ "example" ]
 
 [dependencies]
-momento-protos = { version = "0.49.1" }
-log = "0.4.17"
+momento-protos = { version = "0.84.1" }
+log = "0.4"
 hyper = { version = "0.14" }
 h2 = { version = "0.3" }
-tonic = { version = "0.8", features = ["tls", "tls-roots", "tls-webpki-roots"] }
-jsonwebtoken = "8.0.1"
+tonic = { version = "0.10", features = ["tls", "tls-roots", "tls-webpki-roots"] }
+jsonwebtoken = "8.3"
 rand = "0.8.5"
 serde = {version = "1.0", features = ["derive"] }
-serde_json = "1.0.79"
-thiserror = "1.0.38"
-base64 = "0.21.0"
+serde_json = "1.0"
+thiserror = "1.0"
+base64 = "0.21"
 futures = "0"
 zstd = "0.12.4"
 
 [dev-dependencies]
-base64-url = "1.4.13"
-env_logger = "0.9.0"
-tokio = { version = "1.26.0", features = ["full"] }
-tokio-test = "0.4.2"
-uuid = { version = "1.2.2", features = ["v4"] }
-futures = "0.3.25"
-anyhow = "1.0.68"
+base64-url = "2"
+env_logger = "0"
+tokio = { version = "1", features = ["full"] }
+tokio-test = "0"
+uuid = { version = "1", features = ["v4"] }
+futures = "0"
+anyhow = "1"
 momento-test-util = { path = "test-util" }

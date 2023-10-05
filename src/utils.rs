@@ -1,5 +1,3 @@
-use base64::{engine::general_purpose, Engine as _};
-use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tonic::{
     codegen::http::uri::InvalidUri,
@@ -84,12 +82,4 @@ pub(crate) fn connect_channel_lazily(uri_string: &str) -> Result<Channel, Channe
 
 pub fn user_agent(user_agent_name: &str) -> String {
     format!("rust-{user_agent_name}:{VERSION}")
-}
-
-pub fn base64_encode<T>(o: T) -> String
-where
-    for<'a> T: Serialize + Deserialize<'a>,
-{
-    let s = serde_json::to_string(&o).expect("failed to encode json to string");
-    general_purpose::STANDARD.encode(s.as_str())
 }

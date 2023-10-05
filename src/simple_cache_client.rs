@@ -1,12 +1,11 @@
 use core::num::NonZeroU32;
-use momento_protos::control_client::generate_api_token_request::Expiry;
-use momento_protos::control_client::{FlushCacheRequest, GenerateApiTokenRequest};
 use momento_protos::{
     cache_client::scs_client::*,
     cache_client::*,
     control_client::{
         scs_control_client::ScsControlClient, CreateCacheRequest, CreateSigningKeyRequest,
-        DeleteCacheRequest, ListCachesRequest, ListSigningKeysRequest, RevokeSigningKeyRequest,
+        DeleteCacheRequest, FlushCacheRequest, ListCachesRequest, ListSigningKeysRequest,
+        RevokeSigningKeyRequest,
     },
 };
 use serde_json::Value;
@@ -19,18 +18,16 @@ use tonic::{codegen::InterceptedService, transport::Channel, Request};
 
 use crate::compression_utils::{compress_json, decompress_json};
 use crate::credential_provider::CredentialProvider;
-use crate::requests::generate_api_token_request::TokenExpiry;
 use crate::response::{
-    ApiToken, DictionaryFetch, DictionaryGet, DictionaryPairs, Get, GetValue, ListCacheEntry,
-    MomentoCache, MomentoCreateSigningKeyResponse, MomentoDeleteResponse,
-    MomentoDictionaryDeleteResponse, MomentoDictionaryIncrementResponse,
-    MomentoDictionarySetResponse, MomentoError, MomentoFlushCacheResponse,
-    MomentoGenerateApiTokenResponse, MomentoListCacheResponse, MomentoListFetchResponse,
+    DictionaryFetch, DictionaryGet, DictionaryPairs, Get, GetValue, ListCacheEntry, MomentoCache,
+    MomentoCreateSigningKeyResponse, MomentoDeleteResponse, MomentoDictionaryDeleteResponse,
+    MomentoDictionaryIncrementResponse, MomentoDictionarySetResponse, MomentoError,
+    MomentoFlushCacheResponse, MomentoListCacheResponse, MomentoListFetchResponse,
     MomentoListSigningKeyResult, MomentoSetDifferenceResponse, MomentoSetFetchResponse,
     MomentoSetResponse, MomentoSigningKey, MomentoSortedSetFetchResponse, SortedSetFetch,
 };
 use crate::sorted_set;
-use crate::utils::{self, base64_encode};
+use crate::utils;
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 use crate::{utils::user_agent, MomentoResult};
 
@@ -2707,43 +2704,14 @@ impl SimpleCacheClient {
 
     /// Generates an api token for Momento
     ///
-    /// # Arguments
+    /// todo: Rework to match the latest proto
     ///
     /// * `token_expiry` - when should the token expire, can be set to Never to never expire
-    pub async fn generate_api_token(
-        &mut self,
-        token_expiry: TokenExpiry,
-    ) -> MomentoResult<MomentoGenerateApiTokenResponse> {
-        let expiry = match token_expiry {
-            TokenExpiry::Never => {
-                Expiry::Never(momento_protos::control_client::generate_api_token_request::Never {})
-            }
-            TokenExpiry::Expires { valid_for_seconds } => Expiry::Expires(
-                momento_protos::control_client::generate_api_token_request::Expires {
-                    valid_for_seconds,
-                },
-            ),
-        };
-        let request = GenerateApiTokenRequest {
-            expiry: Some(expiry),
-        };
-        let resp = self
-            .control_client
-            .generate_api_token(request)
-            .await?
-            .into_inner();
-
-        let api_key_with_endpoint = ApiToken {
-            api_key: resp.api_key,
-            endpoint: resp.endpoint,
-        };
-
-        Ok(MomentoGenerateApiTokenResponse {
-            api_token: base64_encode(api_key_with_endpoint),
-            refresh_token: resp.refresh_token,
-            valid_until: UNIX_EPOCH + Duration::from_secs(resp.valid_until),
-        })
-    }
+    // pub async fn generate_api_token(
+    //     &mut self,
+    //     token_expiry: TokenExpiry,
+    // ) -> MomentoResult<MomentoGenerateApiTokenResponse> {
+    // }
 
     fn expand_ttl_ms(&self, ttl: Option<Duration>) -> MomentoResult<u64> {
         let ttl = ttl.unwrap_or(self.item_default_ttl);
