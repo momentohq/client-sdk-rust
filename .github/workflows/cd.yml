@@ -23,56 +23,56 @@ jobs:
       - name: Rigorous lint via Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used
 
-  release:
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.release.outputs.release }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set release
-        id: semrel
-        uses: go-semantic-release/action@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          allow-initial-development-versions: true
-          force-bump-patch-version: true
-
-      - name: Output release
-        id: release
-        run: echo "::set-output name=release::${{ steps.semrel.outputs.version }}"
-
-  publish:
-    runs-on: macos-latest
-    needs: release
-    env:
-      TEST_AUTH_TOKEN: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
-      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install protoc
-        run: ./scripts/install_protoc_osx.sh
-
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          components: rustfmt
-          override: true
-
-      - name: Build
-        run: cargo build --verbose
-
-      - name: Integration Tests
-        run: cargo test --tests
-
-      - name: Update Cargo Version
-        run: |
-          chmod +x set_cargo_version.sh
-          ./set_cargo_version.sh ${{ needs.release.outputs.version }}
-          cat Cargo.toml
-        shell: bash
-
-      - name: Login to crates.io
-        run: cargo login $CARGO_REGISTRY_TOKEN
-
-      - name: Publish crate
-        run: cargo publish --allow-dirty
+#  release:
+#    runs-on: ubuntu-latest
+#    outputs:
+#      version: ${{ steps.release.outputs.release }}
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Set release
+#        id: semrel
+#        uses: go-semantic-release/action@v1
+#        with:
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
+#          allow-initial-development-versions: true
+#          force-bump-patch-version: true
+#
+#      - name: Output release
+#        id: release
+#        run: echo "::set-output name=release::${{ steps.semrel.outputs.version }}"
+#
+#  publish:
+#    runs-on: macos-latest
+#    needs: release
+#    env:
+#      TEST_AUTH_TOKEN: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
+#      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Install protoc
+#        run: ./scripts/install_protoc_osx.sh
+#
+#      - uses: actions-rs/toolchain@v1
+#        with:
+#          toolchain: stable
+#          components: rustfmt
+#          override: true
+#
+#      - name: Build
+#        run: cargo build --verbose
+#
+#      - name: Integration Tests
+#        run: cargo test --tests
+#
+#      - name: Update Cargo Version
+#        run: |
+#          chmod +x set_cargo_version.sh
+#          ./set_cargo_version.sh ${{ needs.release.outputs.version }}
+#          cat Cargo.toml
+#        shell: bash
+#
+#      - name: Login to crates.io
+#        run: cargo login $CARGO_REGISTRY_TOKEN
+#
+#      - name: Publish crate
+#        run: cargo publish --allow-dirty
