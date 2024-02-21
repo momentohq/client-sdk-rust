@@ -174,7 +174,7 @@ mod tests {
 
         let list_cache_result = mm.list_caches().await.expect("failed to list caches");
 
-        assert!(list_cache_result.caches.len() > 0);
+        assert!(!list_cache_result.caches.is_empty());
         mm.delete_cache(&cache_name)
             .await
             .expect("failed to delete cache");
