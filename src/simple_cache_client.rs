@@ -327,7 +327,7 @@ impl SimpleCacheClient {
     ///
     /// momento.create_cache(&cache_name).await?;
     /// # let result = std::panic::AssertUnwindSafe(async {
-    /// let resp = momento.list_caches(None).await?;
+    /// let resp = momento.list_caches().await?;
     ///
     /// assert!(resp.caches.iter().any(|cache| cache.cache_name == cache_name));
     /// # Ok(())
@@ -339,10 +339,9 @@ impl SimpleCacheClient {
     /// ```
     pub async fn list_caches(
         &mut self,
-        next_token: Option<String>,
     ) -> MomentoResult<MomentoListCacheResponse> {
         let request = Request::new(ListCachesRequest {
-            next_token: next_token.unwrap_or_default(),
+            next_token: String::new(),
         });
         let res = self.control_client.list_caches(request).await?.into_inner();
         let caches = res
@@ -354,10 +353,6 @@ impl SimpleCacheClient {
             .collect();
         let response = MomentoListCacheResponse {
             caches,
-            next_token: match res.next_token.is_empty() {
-                true => None,
-                false => Some(res.next_token),
-            },
         };
         Ok(response)
     }
@@ -441,7 +436,7 @@ impl SimpleCacheClient {
     ///
     /// let key = momento.create_signing_key(ttl_minutes).await?;
     /// # let result = std::panic::AssertUnwindSafe(async {
-    /// let list = momento.list_signing_keys(None).await?.signing_keys;
+    /// let list = momento.list_signing_keys().await?.signing_keys;
     /// assert!(list.iter().any(|sk| sk.key_id == key.key_id));
     /// # Ok(())
     /// # }).catch_unwind().await;
@@ -453,10 +448,9 @@ impl SimpleCacheClient {
     /// ```
     pub async fn list_signing_keys(
         &mut self,
-        next_token: Option<&str>,
     ) -> MomentoResult<MomentoListSigningKeyResult> {
         let request = Request::new(ListSigningKeysRequest {
-            next_token: next_token.unwrap_or_default().to_string(),
+            next_token: String::new(),
         });
         let res = self
             .control_client
@@ -474,7 +468,6 @@ impl SimpleCacheClient {
             .collect();
         let response = MomentoListSigningKeyResult {
             signing_keys,
-            next_token: res.next_token,
         };
         Ok(response)
     }
