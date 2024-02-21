@@ -337,9 +337,7 @@ impl SimpleCacheClient {
     /// # })
     /// # }
     /// ```
-    pub async fn list_caches(
-        &mut self,
-    ) -> MomentoResult<MomentoListCacheResponse> {
+    pub async fn list_caches(&mut self) -> MomentoResult<MomentoListCacheResponse> {
         let request = Request::new(ListCachesRequest {
             next_token: String::new(),
         });
@@ -351,9 +349,7 @@ impl SimpleCacheClient {
                 cache_name: cache.cache_name.to_string(),
             })
             .collect();
-        let response = MomentoListCacheResponse {
-            caches,
-        };
+        let response = MomentoListCacheResponse { caches };
         Ok(response)
     }
 
@@ -446,9 +442,7 @@ impl SimpleCacheClient {
     /// # })
     /// # }
     /// ```
-    pub async fn list_signing_keys(
-        &mut self,
-    ) -> MomentoResult<MomentoListSigningKeyResult> {
+    pub async fn list_signing_keys(&mut self) -> MomentoResult<MomentoListSigningKeyResult> {
         let request = Request::new(ListSigningKeysRequest {
             next_token: String::new(),
         });
@@ -466,9 +460,7 @@ impl SimpleCacheClient {
                 endpoint: self.data_endpoint.clone(),
             })
             .collect();
-        let response = MomentoListSigningKeyResult {
-            signing_keys,
-        };
+        let response = MomentoListSigningKeyResult { signing_keys };
         Ok(response)
     }
 
@@ -1660,7 +1652,7 @@ impl SimpleCacheClient {
             };
             let count = match range.end_bound() {
                 Bound::Unbounded if start == 0 => {
-                    return self.delete(cache_name, list_name).await.map(|_| ())
+                    return self.delete(cache_name, list_name).await.map(|_| ());
                 }
                 Bound::Unbounded => u32::MAX - start,
                 Bound::Included(&end) if end < start => return Ok(()),
@@ -1764,7 +1756,7 @@ impl SimpleCacheClient {
     ///         for entry in &set {
     ///             println!("{:?}", entry);
     ///         }
-    ///     },
+    ///     }
     ///     None => println!("set not found!"),
     /// }
     /// # Ok(())
@@ -2130,8 +2122,8 @@ impl SimpleCacheClient {
                             source: crate::response::ErrorSource::Unknown(
                                 std::io::Error::new(
                                     std::io::ErrorKind::InvalidData,
-                                    "unexpected response"
-                            ).into()),
+                                    "unexpected response",
+                                ).into()),
                         });
                     }
                 },
@@ -2315,8 +2307,8 @@ impl SimpleCacheClient {
                             source: crate::response::ErrorSource::Unknown(
                                 std::io::Error::new(
                                     std::io::ErrorKind::InvalidData,
-                                    "unexpected response"
-                            ).into()),
+                                    "unexpected response",
+                                ).into()),
                         });
                     }
                 },
@@ -2359,7 +2351,7 @@ impl SimpleCacheClient {
     /// match momento.sorted_set_get_rank(&cache_name, "test sorted set", "element a").await? {
     ///     Some(rank) => {
     ///         println!("element has rank: {rank}");
-    ///     },
+    ///     }
     ///     None => println!("sorted set or element not found!"),
     /// }
     /// # Ok(())
