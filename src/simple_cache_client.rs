@@ -515,7 +515,7 @@ impl SimpleCacheClient {
         body: impl IntoBytes,
         ttl: impl Into<Option<Duration>>,
     ) -> MomentoResult<MomentoSetResponse> {
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             SetRequest {
                 cache_key: key.into_bytes(),
@@ -602,7 +602,7 @@ impl SimpleCacheClient {
     /// # }
     /// ```
     pub async fn get(&mut self, cache_name: &str, key: impl IntoBytes) -> MomentoResult<Get> {
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             GetRequest {
                 cache_key: key.into_bytes(),
@@ -729,7 +729,7 @@ impl SimpleCacheClient {
             })
             .collect();
 
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             DictionarySetRequest {
                 dictionary_name: dictionary_name.into_bytes(),
@@ -793,7 +793,7 @@ impl SimpleCacheClient {
         use dictionary_get_response::Dictionary;
 
         let fields = convert_vec(fields);
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             DictionaryGetRequest {
                 dictionary_name: dictionary.into_bytes(),
@@ -868,7 +868,7 @@ impl SimpleCacheClient {
     ) -> MomentoResult<DictionaryFetch> {
         use dictionary_fetch_response::Dictionary;
 
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             DictionaryFetchRequest {
                 dictionary_name: dictionary.into_bytes(),
@@ -961,7 +961,7 @@ impl SimpleCacheClient {
         };
 
         self.data_client
-            .dictionary_delete(self.prep_request(cache_name, request)?)
+            .dictionary_delete(prep_request(cache_name, request)?)
             .await?;
         Ok(MomentoDictionaryDeleteResponse::new())
     }
@@ -1012,7 +1012,7 @@ impl SimpleCacheClient {
         amount: i64,
         policy: CollectionTtl,
     ) -> MomentoResult<MomentoDictionaryIncrementResponse> {
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             DictionaryIncrementRequest {
                 dictionary_name: dictionary.into_bytes(),
@@ -1081,7 +1081,7 @@ impl SimpleCacheClient {
         truncate_to: impl Into<Option<u32>>,
         policy: CollectionTtl,
     ) -> MomentoResult<u32> {
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             ListConcatenateFrontRequest {
                 list_name: list_name.into_bytes(),
@@ -1146,7 +1146,7 @@ impl SimpleCacheClient {
         truncate_to: impl Into<Option<u32>>,
         policy: CollectionTtl,
     ) -> MomentoResult<u32> {
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             ListConcatenateBackRequest {
                 list_name: list_name.into_bytes(),
@@ -1210,7 +1210,7 @@ impl SimpleCacheClient {
         truncate_to: impl Into<Option<u32>>,
         policy: CollectionTtl,
     ) -> MomentoResult<u32> {
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             ListPushFrontRequest {
                 list_name: list_name.into_bytes(),
@@ -1275,7 +1275,7 @@ impl SimpleCacheClient {
         truncate_to: impl Into<Option<u32>>,
         policy: CollectionTtl,
     ) -> MomentoResult<u32> {
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             ListPushBackRequest {
                 list_name: list_name.into_bytes(),
@@ -1385,7 +1385,7 @@ impl SimpleCacheClient {
     ) -> MomentoResult<MomentoListFetchResponse> {
         use list_fetch_response::List;
 
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             ListFetchRequest {
                 list_name: list_name.into_bytes(),
@@ -1439,7 +1439,7 @@ impl SimpleCacheClient {
     ) -> MomentoResult<Option<Vec<u8>>> {
         use momento_protos::cache_client::list_pop_front_response::List;
 
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             ListPopFrontRequest {
                 list_name: list_name.into_bytes(),
@@ -1498,7 +1498,7 @@ impl SimpleCacheClient {
     ) -> MomentoResult<Option<Vec<u8>>> {
         use momento_protos::cache_client::list_pop_back_response::List;
 
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             ListPopBackRequest {
                 list_name: list_name.into_bytes(),
@@ -1560,7 +1560,7 @@ impl SimpleCacheClient {
     ) -> MomentoResult<()> {
         use list_remove_request::Remove;
 
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             ListRemoveRequest {
                 list_name: list_name.into_bytes(),
@@ -1682,7 +1682,7 @@ impl SimpleCacheClient {
             })
         }
 
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             ListEraseRequest {
                 list_name: list_name.into_bytes(),
@@ -1730,7 +1730,7 @@ impl SimpleCacheClient {
     ) -> MomentoResult<Option<u32>> {
         use list_length_response::List;
 
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             ListLengthRequest {
                 list_name: list_name.into_bytes(),
@@ -1785,7 +1785,7 @@ impl SimpleCacheClient {
     ) -> MomentoResult<MomentoSetFetchResponse> {
         use set_fetch_response::Set;
 
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             SetFetchRequest {
                 set_name: set_name.into_bytes(),
@@ -1844,7 +1844,7 @@ impl SimpleCacheClient {
         elements: Vec<E>,
         policy: CollectionTtl,
     ) -> MomentoResult<()> {
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             SetUnionRequest {
                 set_name: set_name.into_bytes(),
@@ -1906,7 +1906,7 @@ impl SimpleCacheClient {
         use set_difference_request::{Difference, Subtrahend};
         use set_difference_response::Set;
 
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             SetDifferenceRequest {
                 set_name: set_name.into_bytes(),
@@ -2100,7 +2100,7 @@ impl SimpleCacheClient {
             Bound::Unbounded => End::UnboundedEnd(Unbounded {}),
         };
 
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             SortedSetFetchRequest {
                 set_name: set_name.into_bytes(),
@@ -2283,7 +2283,7 @@ impl SimpleCacheClient {
             Bound::Unbounded => Max::UnboundedMax(Unbounded {}),
         };
 
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             SortedSetFetchRequest {
                 set_name: set_name.into_bytes(),
@@ -2382,7 +2382,7 @@ impl SimpleCacheClient {
         use momento_protos::cache_client::sorted_set_get_rank_request::Order::Ascending;
         use momento_protos::cache_client::sorted_set_get_rank_response::Rank;
 
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             SortedSetGetRankRequest {
                 set_name: set_name.into_bytes(),
@@ -2466,7 +2466,7 @@ impl SimpleCacheClient {
 
         let len = element_names.len();
 
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             SortedSetGetScoreRequest {
                 set_name: set_name.into_bytes(),
@@ -2536,7 +2536,7 @@ impl SimpleCacheClient {
         amount: f64,
         policy: CollectionTtl,
     ) -> MomentoResult<f64> {
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             SortedSetIncrementRequest {
                 set_name: set_name.into_bytes(),
@@ -2595,7 +2595,7 @@ impl SimpleCacheClient {
         elements: Vec<SortedSetElement>,
         policy: CollectionTtl,
     ) -> MomentoResult<()> {
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             SortedSetPutRequest {
                 set_name: set_name.into_bytes(),
@@ -2644,7 +2644,7 @@ impl SimpleCacheClient {
     ) -> MomentoResult<()> {
         use momento_protos::cache_client::sorted_set_remove_request::{RemoveElements, Some};
 
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             SortedSetRemoveRequest {
                 set_name: set_name.into_bytes(),
@@ -2692,7 +2692,7 @@ impl SimpleCacheClient {
         cache_name: &str,
         key: impl IntoBytes,
     ) -> MomentoResult<MomentoDeleteResponse> {
-        let request = self.prep_request(
+        let request = prep_request(
             cache_name,
             DeleteRequest {
                 cache_key: key.into_bytes(),
@@ -2719,14 +2719,14 @@ impl SimpleCacheClient {
 
         Ok(ttl.as_millis().try_into().unwrap_or(i64::MAX as u64))
     }
+}
 
-    fn prep_request<R>(&self, cache_name: &str, request: R) -> MomentoResult<tonic::Request<R>> {
-        utils::is_cache_name_valid(cache_name)?;
+pub(crate) fn prep_request<R>(cache_name: &str, request: R) -> MomentoResult<tonic::Request<R>> {
+    utils::is_cache_name_valid(cache_name)?;
 
-        let mut request = tonic::Request::new(request);
-        request_meta_data(&mut request, cache_name)?;
-        Ok(request)
-    }
+    let mut request = tonic::Request::new(request);
+    request_meta_data(&mut request, cache_name)?;
+    Ok(request)
 }
 
 /// An enum that is used to indicate if an operation should apply to all fields
