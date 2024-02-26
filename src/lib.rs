@@ -7,6 +7,7 @@ mod compression_utils;
 mod credential_provider;
 mod grpc;
 mod simple_cache_client;
+mod cache_client;
 mod utils;
 
 pub use crate::credential_provider::{CredentialProvider, CredentialProviderBuilder};
@@ -15,6 +16,8 @@ pub use crate::response::MomentoError;
 pub use crate::simple_cache_client::{
     CollectionTtl, Fields, IntoBytes, SimpleCacheClient, SimpleCacheClientBuilder,
 };
+
+pub use crate::cache_client::CacheClient;
 
 pub type MomentoResult<T> = Result<T, MomentoError>;
 
