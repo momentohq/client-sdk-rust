@@ -327,7 +327,7 @@ impl SimpleCacheClient {
     ///
     /// momento.create_cache(&cache_name).await?;
     /// # let result = std::panic::AssertUnwindSafe(async {
-    /// let resp = momento.list_caches(None).await?;
+    /// let resp = momento.list_caches().await?;
     ///
     /// assert!(resp.caches.iter().any(|cache| cache.cache_name == cache_name));
     /// # Ok(())
@@ -337,12 +337,9 @@ impl SimpleCacheClient {
     /// # })
     /// # }
     /// ```
-    pub async fn list_caches(
-        &mut self,
-        next_token: Option<String>,
-    ) -> MomentoResult<MomentoListCacheResponse> {
+    pub async fn list_caches(&mut self) -> MomentoResult<MomentoListCacheResponse> {
         let request = Request::new(ListCachesRequest {
-            next_token: next_token.unwrap_or_default(),
+            next_token: String::new(),
         });
         let res = self.control_client.list_caches(request).await?.into_inner();
         let caches = res
@@ -352,13 +349,7 @@ impl SimpleCacheClient {
                 cache_name: cache.cache_name.to_string(),
             })
             .collect();
-        let response = MomentoListCacheResponse {
-            caches,
-            next_token: match res.next_token.is_empty() {
-                true => None,
-                false => Some(res.next_token),
-            },
-        };
+        let response = MomentoListCacheResponse { caches };
         Ok(response)
     }
 
@@ -441,7 +432,7 @@ impl SimpleCacheClient {
     ///
     /// let key = momento.create_signing_key(ttl_minutes).await?;
     /// # let result = std::panic::AssertUnwindSafe(async {
-    /// let list = momento.list_signing_keys(None).await?.signing_keys;
+    /// let list = momento.list_signing_keys().await?.signing_keys;
     /// assert!(list.iter().any(|sk| sk.key_id == key.key_id));
     /// # Ok(())
     /// # }).catch_unwind().await;
@@ -451,12 +442,9 @@ impl SimpleCacheClient {
     /// # })
     /// # }
     /// ```
-    pub async fn list_signing_keys(
-        &mut self,
-        next_token: Option<&str>,
-    ) -> MomentoResult<MomentoListSigningKeyResult> {
+    pub async fn list_signing_keys(&mut self) -> MomentoResult<MomentoListSigningKeyResult> {
         let request = Request::new(ListSigningKeysRequest {
-            next_token: next_token.unwrap_or_default().to_string(),
+            next_token: String::new(),
         });
         let res = self
             .control_client
@@ -472,10 +460,7 @@ impl SimpleCacheClient {
                 endpoint: self.data_endpoint.clone(),
             })
             .collect();
-        let response = MomentoListSigningKeyResult {
-            signing_keys,
-            next_token: res.next_token,
-        };
+        let response = MomentoListSigningKeyResult { signing_keys };
         Ok(response)
     }
 
@@ -1667,7 +1652,7 @@ impl SimpleCacheClient {
             };
             let count = match range.end_bound() {
                 Bound::Unbounded if start == 0 => {
-                    return self.delete(cache_name, list_name).await.map(|_| ())
+                    return self.delete(cache_name, list_name).await.map(|_| ());
                 }
                 Bound::Unbounded => u32::MAX - start,
                 Bound::Included(&end) if end < start => return Ok(()),
@@ -1771,7 +1756,7 @@ impl SimpleCacheClient {
     ///         for entry in &set {
     ///             println!("{:?}", entry);
     ///         }
-    ///     },
+    ///     }
     ///     None => println!("set not found!"),
     /// }
     /// # Ok(())
@@ -2137,8 +2122,8 @@ impl SimpleCacheClient {
                             source: crate::response::ErrorSource::Unknown(
                                 std::io::Error::new(
                                     std::io::ErrorKind::InvalidData,
-                                    "unexpected response"
-                            ).into()),
+                                    "unexpected response",
+                                ).into()),
                         });
                     }
                 },
@@ -2322,8 +2307,8 @@ impl SimpleCacheClient {
                             source: crate::response::ErrorSource::Unknown(
                                 std::io::Error::new(
                                     std::io::ErrorKind::InvalidData,
-                                    "unexpected response"
-                            ).into()),
+                                    "unexpected response",
+                                ).into()),
                         });
                     }
                 },
@@ -2366,7 +2351,7 @@ impl SimpleCacheClient {
     /// match momento.sorted_set_get_rank(&cache_name, "test sorted set", "element a").await? {
     ///     Some(rank) => {
     ///         println!("element has rank: {rank}");
-    ///     },
+    ///     }
     ///     None => println!("sorted set or element not found!"),
     /// }
     /// # Ok(())

@@ -172,21 +172,9 @@ mod tests {
             .await
             .expect("failed to create cache");
 
-        let mut next_token: Option<String> = None;
-        let mut num_pages = 0;
-        loop {
-            let list_cache_result = mm
-                .list_caches(next_token)
-                .await
-                .expect("failed to list caches");
-            num_pages += 1;
-            next_token = list_cache_result.next_token;
-            if next_token.is_none() {
-                break;
-            }
-        }
+        let list_cache_result = mm.list_caches().await.expect("failed to list caches");
 
-        assert_eq!(1, num_pages, "we expect a single page of caches to list");
+        assert!(!list_cache_result.caches.is_empty());
         mm.delete_cache(&cache_name)
             .await
             .expect("failed to delete cache");
@@ -247,6 +235,10 @@ mod tests {
             .await
             .expect("failed to get second key");
         assert_eq!(second_key_get2, Get::Miss);
+        client
+            .delete_cache(&cache_name)
+            .await
+            .expect("failed to delete cache");
     }
 
     #[tokio::test]
@@ -267,7 +259,7 @@ mod tests {
         );
 
         let list_response = mm
-            .list_signing_keys(None)
+            .list_signing_keys()
             .await
             .expect("couldn't list signing keys");
         assert!(

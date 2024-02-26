@@ -10,6 +10,4 @@ pub struct MomentoCache {
 pub struct MomentoListCacheResponse {
     /// Vector of cache information defined in MomentoCache.
     pub caches: Vec<MomentoCache>,
-    /// Next Page Token returned by Simple Cache Service along with the list of caches.
-    pub next_token: Option<String>,
 }

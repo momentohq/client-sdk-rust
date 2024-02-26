@@ -14,6 +14,4 @@ pub struct MomentoSigningKey {
 pub struct MomentoListSigningKeyResult {
     /// Vector of signing key information defined in MomentoSigningKey.
     pub signing_keys: Vec<MomentoSigningKey>,
-    /// Next Page Token returned by Simple Cache Service along with the list of signing keys.
-    pub next_token: String,
 }
