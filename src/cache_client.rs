@@ -49,7 +49,7 @@ impl CacheClient {
     /// let cache_client = momento::CacheClient::new(credential_provider, Duration::from_secs(5))?;
     ///
     /// let set_add_elements_response = cache_client.set_add_elements(cache_name.to_string(), "set", vec!["element1", "element2"]).await?;
-    /// assert_eq!(set_add_elements_response, SetAddElements::Success {});
+    /// assert_eq!(set_add_elements_response, SetAddElements {});
     /// # Ok(())
     /// # })
     /// #
@@ -83,7 +83,7 @@ impl CacheClient {
     /// let set_add_elements_response = cache_client.send_request(
     ///     SetAddElementsRequest::new(cache_name.to_string(), "set", vec!["element1", "element2"])
     /// ).await?;
-    /// assert_eq!(set_add_elements_response, SetAddElements::Success {});
+    /// assert_eq!(set_add_elements_response, SetAddElements {});
     /// # Ok(())
     /// # })
     /// #

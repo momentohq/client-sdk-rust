@@ -45,6 +45,8 @@ jobs:
 #    runs-on: macos-latest
 #    needs: release
 #    env:
+#      MOMENTO_API_KEY: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
+#      # TODO: get rid of this once everything has been migrated to MOMENTO_API_KEY
 #      TEST_AUTH_TOKEN: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
 #      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 #    steps:
