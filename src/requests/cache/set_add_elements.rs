@@ -50,28 +50,23 @@ impl<S: IntoBytes, E: IntoBytes> MomentoRequest for SetAddElementsRequest<S, E> 
 impl<S: IntoBytes, E: IntoBytes> MomentoSendableRequest<SetAddElementsRequest<S, E>>
     for SetAddElementsRequest<S, E>
 {
-    fn send(
-        self: Self,
-        cache_client: &CacheClient,
-    ) -> impl std::future::Future<Output = MomentoResult<SetAddElements>> + Send {
-        async move {
-            let collection_ttl = self.collection_ttl.unwrap_or_default();
-            let elements = self.elements.into_iter().map(|e| e.into_bytes()).collect();
-            let set_name = self.set_name.into_bytes();
-            let cache_name = &self.cache_name;
-            let request = prep_request(
-                cache_name,
-                SetUnionRequest {
-                    set_name,
-                    elements,
-                    ttl_milliseconds: cache_client.expand_ttl_ms(collection_ttl.ttl())?,
-                    refresh_ttl: collection_ttl.refresh(),
-                },
-            )?;
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetAddElements> {
+        let collection_ttl = self.collection_ttl.unwrap_or_default();
+        let elements = self.elements.into_iter().map(|e| e.into_bytes()).collect();
+        let set_name = self.set_name.into_bytes();
+        let cache_name = &self.cache_name;
+        let request = prep_request(
+            cache_name,
+            SetUnionRequest {
+                set_name,
+                elements,
+                ttl_milliseconds: cache_client.expand_ttl_ms(collection_ttl.ttl())?,
+                refresh_ttl: collection_ttl.refresh(),
+            },
+        )?;
 
-            let _ = cache_client.data_client.clone().set_union(request).await?;
-            Ok(SetAddElements {})
-        }
+        let _ = cache_client.data_client.clone().set_union(request).await?;
+        Ok(SetAddElements {})
     }
 }
 

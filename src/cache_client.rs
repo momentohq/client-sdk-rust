@@ -56,13 +56,13 @@ impl CacheClient {
     /// }
     /// ```
     pub async fn set_add_elements<E: IntoBytes>(
-        self: &Self,
+        self,
         cache_name: String,
         set_name: impl IntoBytes,
         elements: Vec<E>,
     ) -> MomentoResult<SetAddElements> {
         let request = SetAddElementsRequest::new(cache_name, set_name, elements);
-        request.send(self).await
+        request.send(&self).await
     }
 
     /// ```
@@ -90,13 +90,13 @@ impl CacheClient {
     /// }
     /// ```
     pub async fn send_request<R: MomentoRequest>(
-        self: &Self,
+        self,
         request: R,
     ) -> MomentoResult<R::Response>
     where
         R: MomentoSendableRequest<R>,
     {
-        request.send(self).await
+        request.send(&self).await
     }
 
     /* helper fns */

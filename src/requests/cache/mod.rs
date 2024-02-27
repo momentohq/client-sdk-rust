@@ -9,7 +9,7 @@ pub trait MomentoRequest {
 
 pub trait MomentoSendableRequest<R: MomentoRequest> {
     fn send(
-        self: Self,
+        self,
         cache_client: &CacheClient,
     ) -> impl std::future::Future<Output = MomentoResult<R::Response>> + Send;
 }
