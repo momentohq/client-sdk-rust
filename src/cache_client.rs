@@ -89,10 +89,7 @@ impl CacheClient {
     /// #
     /// }
     /// ```
-    pub async fn send_request<R: MomentoRequest>(
-        self,
-        request: R,
-    ) -> MomentoResult<R::Response>
+    pub async fn send_request<R: MomentoRequest>(self, request: R) -> MomentoResult<R::Response>
     where
         R: MomentoSendableRequest<R>,
     {
