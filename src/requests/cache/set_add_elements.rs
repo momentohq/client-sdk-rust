@@ -1,5 +1,5 @@
 use crate::cache_client::CacheClient;
-use crate::requests::cache::{MomentoRequest, MomentoResponse};
+use crate::requests::cache::{MomentoRequest, MomentoSendableRequest};
 use crate::simple_cache_client::prep_request;
 use crate::{CollectionTtl, IntoBytes, MomentoResult};
 use momento_protos::cache_client::SetUnionRequest;
@@ -18,7 +18,7 @@ use momento_protos::cache_client::SetUnionRequest;
 /// let cache_client = momento::CacheClient::new(credential_provider, Duration::from_secs(5))?;
 ///
 /// let set_add_elements_response = cache_client.set_add_elements(cache_name.to_string(), "set", vec!["element1", "element2"]).await?;
-/// assert_eq!(set_add_elements_response, SetAddElements::Success {});
+/// assert_eq!(set_add_elements_response, SetAddElements {});
 /// # Ok(())
 /// # })
 /// #
@@ -43,7 +43,12 @@ impl<S: IntoBytes, E: IntoBytes> SetAddElementsRequest<S, E> {
     }
 }
 
-impl<S: IntoBytes, E: IntoBytes> MomentoRequest<SetAddElements> for SetAddElementsRequest<S, E> {
+
+impl<S: IntoBytes, E: IntoBytes> MomentoRequest for SetAddElementsRequest<S, E> {
+    type Response = SetAddElements;
+}
+
+impl<S: IntoBytes, E: IntoBytes> MomentoSendableRequest<SetAddElementsRequest<S, E>> for SetAddElementsRequest<S, E> {
     fn send(
         self: Self,
         cache_client: &CacheClient,
@@ -67,16 +72,11 @@ impl<S: IntoBytes, E: IntoBytes> MomentoRequest<SetAddElements> for SetAddElemen
                 .data_client
                 .clone()
                 .set_union(request)
-                .await?
-                .into_inner();
-            Ok(SetAddElements::Success {})
+                .await?;
+            Ok(SetAddElements {})
         }
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum SetAddElements {
-    Success {},
-}
-
-impl MomentoResponse for SetAddElements {}
+pub struct SetAddElements {}
