@@ -43,12 +43,13 @@ impl<S: IntoBytes, E: IntoBytes> SetAddElementsRequest<S, E> {
     }
 }
 
-
 impl<S: IntoBytes, E: IntoBytes> MomentoRequest for SetAddElementsRequest<S, E> {
     type Response = SetAddElements;
 }
 
-impl<S: IntoBytes, E: IntoBytes> MomentoSendableRequest<SetAddElementsRequest<S, E>> for SetAddElementsRequest<S, E> {
+impl<S: IntoBytes, E: IntoBytes> MomentoSendableRequest<SetAddElementsRequest<S, E>>
+    for SetAddElementsRequest<S, E>
+{
     fn send(
         self: Self,
         cache_client: &CacheClient,
@@ -68,11 +69,7 @@ impl<S: IntoBytes, E: IntoBytes> MomentoSendableRequest<SetAddElementsRequest<S,
                 },
             )?;
 
-            let _ = cache_client
-                .data_client
-                .clone()
-                .set_union(request)
-                .await?;
+            let _ = cache_client.data_client.clone().set_union(request).await?;
             Ok(SetAddElements {})
         }
     }

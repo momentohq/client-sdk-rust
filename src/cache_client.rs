@@ -1,13 +1,13 @@
 use crate::grpc::header_interceptor::HeaderInterceptor;
 use crate::requests::cache::set_add_elements::{SetAddElements, SetAddElementsRequest};
 use crate::requests::cache::{MomentoRequest, MomentoSendableRequest};
-use crate::utils::{user_agent};
+use crate::utils::user_agent;
 use crate::{utils, CredentialProvider, IntoBytes, MomentoResult};
 use momento_protos::cache_client::scs_client::ScsClient;
-use std::convert::{TryInto};
+use std::convert::TryInto;
 use std::time::Duration;
 use tonic::codegen::InterceptedService;
-use tonic::transport::{Channel};
+use tonic::transport::Channel;
 
 pub struct CacheClient {
     pub(crate) data_client: ScsClient<InterceptedService<Channel, HeaderInterceptor>>,
@@ -65,7 +65,6 @@ impl CacheClient {
         request.send(self).await
     }
 
-
     /// ```
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_protos::cache_client::update_ttl_response::Result::Set;
@@ -90,12 +89,12 @@ impl CacheClient {
     /// #
     /// }
     /// ```
-    pub async fn send_request<R: MomentoRequest>
-    (
+    pub async fn send_request<R: MomentoRequest>(
         self: &Self,
         request: R,
     ) -> MomentoResult<R::Response>
-        where R: MomentoSendableRequest<R>
+    where
+        R: MomentoSendableRequest<R>,
     {
         request.send(self).await
     }
