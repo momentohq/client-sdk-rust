@@ -1,5 +1,5 @@
 use crate::cache_client::CacheClient;
-use crate::requests::cache::{MomentoRequest, MomentoSendableRequest};
+use crate::requests::cache::MomentoRequest;
 use crate::simple_cache_client::prep_request;
 use crate::{CollectionTtl, IntoBytes, MomentoResult};
 use momento_protos::cache_client::SetUnionRequest;
@@ -45,11 +45,7 @@ impl<S: IntoBytes, E: IntoBytes> SetAddElementsRequest<S, E> {
 
 impl<S: IntoBytes, E: IntoBytes> MomentoRequest for SetAddElementsRequest<S, E> {
     type Response = SetAddElements;
-}
 
-impl<S: IntoBytes, E: IntoBytes> MomentoSendableRequest<SetAddElementsRequest<S, E>>
-    for SetAddElementsRequest<S, E>
-{
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetAddElements> {
         let collection_ttl = self.collection_ttl.unwrap_or_default();
         let elements = self.elements.into_iter().map(|e| e.into_bytes()).collect();

@@ -1,6 +1,6 @@
 use crate::grpc::header_interceptor::HeaderInterceptor;
 use crate::requests::cache::set_add_elements::{SetAddElements, SetAddElementsRequest};
-use crate::requests::cache::{MomentoRequest, MomentoSendableRequest};
+use crate::requests::cache::MomentoRequest;
 use crate::utils::user_agent;
 use crate::{utils, CredentialProvider, IntoBytes, MomentoResult};
 use momento_protos::cache_client::scs_client::ScsClient;
@@ -89,10 +89,7 @@ impl CacheClient {
     /// #
     /// }
     /// ```
-    pub async fn send_request<R: MomentoRequest>(self, request: R) -> MomentoResult<R::Response>
-    where
-        R: MomentoSendableRequest<R>,
-    {
+    pub async fn send_request<R: MomentoRequest>(self, request: R) -> MomentoResult<R::Response> {
         request.send(&self).await
     }
 
