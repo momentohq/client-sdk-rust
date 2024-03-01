@@ -31,11 +31,11 @@ use crate::utils;
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 use crate::{utils::user_agent, MomentoResult};
 
-pub trait IntoBytes {
+pub trait IntoBytes: Send {
     fn into_bytes(self) -> Vec<u8>;
 }
 
-impl<T> IntoBytes for T
+impl<T: Send> IntoBytes for T
 where
     T: Into<Vec<u8>>,
 {

@@ -3,6 +3,7 @@ pub mod preview;
 pub mod requests;
 pub mod response;
 
+mod cache_client;
 mod compression_utils;
 mod credential_provider;
 mod grpc;
@@ -15,6 +16,8 @@ pub use crate::response::MomentoError;
 pub use crate::simple_cache_client::{
     CollectionTtl, Fields, IntoBytes, SimpleCacheClient, SimpleCacheClientBuilder,
 };
+
+pub use crate::cache_client::CacheClient;
 
 pub type MomentoResult<T> = Result<T, MomentoError>;
 
