@@ -2714,6 +2714,19 @@ pub(crate) fn prep_request<R>(cache_name: &str, request: R) -> MomentoResult<ton
     Ok(request)
 }
 
+pub(crate) fn prep_request_with_timeout<R>(
+    cache_name: &str,
+    timeout: Duration,
+    request: R,
+) -> MomentoResult<Request<R>> {
+    utils::is_cache_name_valid(cache_name)?;
+
+    let mut request = Request::new(request);
+    request_meta_data(&mut request, cache_name)?;
+    request.set_timeout(timeout);
+    Ok(request)
+}
+
 /// An enum that is used to indicate if an operation should apply to all fields
 /// or just some fields of a dictionary.
 pub enum Fields<K> {

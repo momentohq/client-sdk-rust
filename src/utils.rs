@@ -4,6 +4,7 @@ use tonic::{
     transport::{Channel, ClientTlsConfig, Uri},
 };
 
+use crate::config::grpc_configuration::GrpcConfiguration;
 use crate::response::MomentoError;
 use crate::MomentoResult;
 use std::convert::TryFrom;
@@ -76,6 +77,19 @@ pub(crate) fn connect_channel_lazily(uri_string: &str) -> Result<Channel, Channe
     let endpoint = Channel::builder(uri)
         .keep_alive_while_idle(true)
         .http2_keep_alive_interval(time::Duration::from_secs(30))
+        .tls_config(ClientTlsConfig::default())?;
+    Ok(endpoint.connect_lazy())
+}
+
+pub(crate) fn connect_channel_lazily_configurable(
+    uri_string: &str,
+    grpc_config: GrpcConfiguration,
+) -> Result<Channel, ChannelConnectError> {
+    let uri = Uri::try_from(uri_string)?;
+    let endpoint = Channel::builder(uri)
+        .keep_alive_while_idle(grpc_config.keep_alive_while_idle)
+        .http2_keep_alive_interval(grpc_config.keep_alive_interval)
+        .keep_alive_timeout(grpc_config.keep_alive_timeout)
         .tls_config(ClientTlsConfig::default())?;
     Ok(endpoint.connect_lazy())
 }
