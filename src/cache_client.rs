@@ -56,7 +56,7 @@ impl CacheClient {
     ///
     /// let cache_client = momento::CacheClient::new(
     ///    credential_provider,
-    ///    configurations::laptop::LATEST,
+    ///    configurations::laptop::latest(),
     ///    Duration::from_secs(5),
     ///)?;
     ///
@@ -93,7 +93,7 @@ impl CacheClient {
     ///
     /// let cache_client = momento::CacheClient::new(
     ///    credential_provider,
-    ///    configurations::laptop::LATEST,
+    ///    configurations::laptop::latest(),
     ///    Duration::from_secs(5),
     ///)?;
     ///

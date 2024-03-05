@@ -5,7 +5,7 @@ use std::time::Duration;
 pub struct GrpcConfiguration {
     /// The duration the client is willing to wait for an RPC to complete before it is terminated
     /// with a DeadlineExceeded error.
-    pub deadline_millis: Duration,
+    pub deadline: Duration,
     /// Indicates whether the client should send keep-alive pings.
     ///
     /// NOTE: keep-alives are very important for long-lived server environments where there may be
@@ -20,4 +20,68 @@ pub struct GrpcConfiguration {
     /// The duration the client is willing to wait for a keep-alive ping to be acknowledged before
     /// closing the connection.
     pub keep_alive_timeout: Duration,
+}
+
+impl GrpcConfiguration {
+    pub fn new(
+        deadline_millis: Duration,
+        keep_alive_while_idle: bool,
+        keep_alive_interval: Duration,
+        keep_alive_timeout: Duration,
+    ) -> Self {
+        GrpcConfiguration {
+            deadline: deadline_millis,
+            keep_alive_while_idle,
+            keep_alive_interval,
+            keep_alive_timeout,
+        }
+    }
+}
+
+/// Builder for `GrpcConfiguration`.
+pub struct GrpcConfigurationBuilder {
+    deadline: Duration,
+    keep_alive_while_idle: bool,
+    keep_alive_interval: Duration,
+    keep_alive_timeout: Duration,
+}
+
+impl GrpcConfigurationBuilder {
+    pub fn new(deadline: Duration) -> Self {
+        GrpcConfigurationBuilder {
+            deadline,
+            keep_alive_while_idle: true,
+            keep_alive_interval: Duration::from_secs(5000),
+            keep_alive_timeout: Duration::from_secs(1000),
+        }
+    }
+
+    pub fn with_deadline(mut self, deadline: Duration) -> Self {
+        self.deadline = deadline;
+        self
+    }
+
+    pub fn with_keep_alive_while_idle(mut self, keep_alive_while_idle: bool) -> Self {
+        self.keep_alive_while_idle = keep_alive_while_idle;
+        self
+    }
+
+    pub fn with_keep_alive_interval(mut self, keep_alive_interval: Duration) -> Self {
+        self.keep_alive_interval = keep_alive_interval;
+        self
+    }
+
+    pub fn with_keep_alive_timeout(mut self, keep_alive_timeout: Duration) -> Self {
+        self.keep_alive_timeout = keep_alive_timeout;
+        self
+    }
+
+    pub fn build(self) -> GrpcConfiguration {
+        GrpcConfiguration {
+            deadline: self.deadline,
+            keep_alive_while_idle: self.keep_alive_while_idle,
+            keep_alive_interval: self.keep_alive_interval,
+            keep_alive_timeout: self.keep_alive_timeout,
+        }
+    }
 }

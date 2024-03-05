@@ -86,11 +86,17 @@ pub(crate) fn connect_channel_lazily_configurable(
     grpc_config: GrpcConfiguration,
 ) -> Result<Channel, ChannelConnectError> {
     let uri = Uri::try_from(uri_string)?;
-    let endpoint = Channel::builder(uri)
-        .keep_alive_while_idle(grpc_config.keep_alive_while_idle)
-        .http2_keep_alive_interval(grpc_config.keep_alive_interval)
-        .keep_alive_timeout(grpc_config.keep_alive_timeout)
-        .tls_config(ClientTlsConfig::default())?;
+    let endpoint = if grpc_config.keep_alive_while_idle {
+        Channel::builder(uri)
+            .keep_alive_while_idle(true)
+            .http2_keep_alive_interval(grpc_config.keep_alive_interval)
+            .keep_alive_timeout(grpc_config.keep_alive_timeout)
+            .tls_config(ClientTlsConfig::default())?
+    } else {
+        Channel::builder(uri)
+            .keep_alive_while_idle(false)
+            .tls_config(ClientTlsConfig::default())?
+    };
     Ok(endpoint.connect_lazy())
 }
 

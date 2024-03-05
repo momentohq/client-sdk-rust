@@ -16,7 +16,7 @@ use momento_protos::cache_client::SetUnionRequest;
 ///     .build()?;
 /// let cache_name = "cache";
 ///
-/// let cache_client = momento::CacheClient::new(credential_provider, configurations::laptop::LATEST, Duration::from_secs(5))?;
+/// let cache_client = momento::CacheClient::new(credential_provider, configurations::laptop::latest(), Duration::from_secs(5))?;
 ///
 /// let set_add_elements_response = cache_client.set_add_elements(cache_name.to_string(), "set", vec!["element1", "element2"]).await?;
 /// assert_eq!(set_add_elements_response, SetAddElements {});
