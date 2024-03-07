@@ -17,28 +17,46 @@ use crate::config::transport_strategy::TransportStrategy;
 /// ```
 /// use std::time::Duration;
 /// use momento::config::configuration::Configuration;
-/// use momento::config::grpc_configuration::GrpcConfigurationBuilder;
+/// use momento::config::grpc_configuration::{GrpcConfiguration, GrpcConfigurationBuilder};
 /// use momento::config::transport_strategy::TransportStrategy;
 ///
-/// let config = Configuration {
-///             transport_strategy: TransportStrategy {
-///                 grpc_configuration: GrpcConfigurationBuilder::new(Duration::from_millis(1000))
-///                     .build(),
-///             },
-///         };
+/// let config = Configuration::builder(
+///            TransportStrategy::builder(
+///                GrpcConfiguration::builder(Duration::from_millis(1000)).build(),
+///            )
+///            .build(),
+///        )
+///        .build();
 #[derive(Clone)]
 pub struct Configuration {
     /// Low-level options for network interactions with Momento.
-    pub transport_strategy: TransportStrategy,
+    pub(crate) transport_strategy: TransportStrategy,
 }
 
 impl Configuration {
-    pub fn new(transport_strategy: TransportStrategy) -> Self {
-        Configuration { transport_strategy }
+    pub fn builder(transport_strategy: TransportStrategy) -> ConfigurationBuilder {
+        ConfigurationBuilder { transport_strategy }
     }
 
     /// Returns the duration the client will wait before terminating an RPC with a DeadlineExceeded error.
     pub fn deadline_millis(&self) -> Duration {
         self.transport_strategy.grpc_configuration.deadline
+    }
+}
+
+pub struct ConfigurationBuilder {
+    transport_strategy: TransportStrategy,
+}
+
+impl ConfigurationBuilder {
+    pub fn with_transport_strategy(mut self, transport_strategy: TransportStrategy) -> Self {
+        self.transport_strategy = transport_strategy;
+        self
+    }
+
+    pub fn build(self) -> Configuration {
+        Configuration {
+            transport_strategy: self.transport_strategy,
+        }
     }
 }

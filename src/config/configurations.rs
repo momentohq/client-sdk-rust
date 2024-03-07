@@ -4,7 +4,7 @@ pub mod laptop {
     use std::time::Duration;
 
     use crate::config::configuration::Configuration;
-    use crate::config::grpc_configuration::GrpcConfigurationBuilder;
+    use crate::config::grpc_configuration::GrpcConfiguration;
     use crate::config::transport_strategy::TransportStrategy;
 
     /// Latest recommended config for a laptop development environment.
@@ -19,15 +19,17 @@ pub mod laptop {
     ///
     /// This config is guaranteed not to change in future releases of the Momento Rust SDK.
     pub fn v1() -> Configuration {
-        Configuration {
-            transport_strategy: TransportStrategy {
-                grpc_configuration: GrpcConfigurationBuilder::new(Duration::from_millis(15000))
+        Configuration::builder(
+            TransportStrategy::builder(
+                GrpcConfiguration::builder(Duration::from_millis(15000))
                     .with_keep_alive_while_idle(true)
                     .with_keep_alive_interval(Duration::from_secs(5000))
                     .with_keep_alive_timeout(Duration::from_secs(1000))
                     .build(),
-            },
-        }
+            )
+            .build(),
+        )
+        .build()
     }
 }
 
@@ -37,7 +39,7 @@ pub mod in_region {
     use std::time::Duration;
 
     use crate::config::configuration::Configuration;
-    use crate::config::grpc_configuration::GrpcConfigurationBuilder;
+    use crate::config::grpc_configuration::GrpcConfiguration;
     use crate::config::transport_strategy::TransportStrategy;
 
     /// Latest recommended config for a typical in-region environment.
@@ -52,15 +54,17 @@ pub mod in_region {
     ///
     /// This config is guaranteed not to change in future releases of the Momento Rust SDK.
     pub fn v1() -> Configuration {
-        Configuration {
-            transport_strategy: TransportStrategy {
-                grpc_configuration: GrpcConfigurationBuilder::new(Duration::from_millis(1100))
+        Configuration::builder(
+            TransportStrategy::builder(
+                GrpcConfiguration::builder(Duration::from_millis(1100))
                     .with_keep_alive_while_idle(true)
                     .with_keep_alive_interval(Duration::from_secs(5000))
                     .with_keep_alive_timeout(Duration::from_secs(1000))
                     .build(),
-            },
-        }
+            )
+            .build(),
+        )
+        .build()
     }
 }
 
@@ -71,7 +75,7 @@ pub mod low_latency {
     use std::time::Duration;
 
     use crate::config::configuration::Configuration;
-    use crate::config::grpc_configuration::GrpcConfigurationBuilder;
+    use crate::config::grpc_configuration::GrpcConfiguration;
     use crate::config::transport_strategy::TransportStrategy;
 
     /// Latest recommended config for a low-latency environment.
@@ -86,15 +90,17 @@ pub mod low_latency {
     ///
     /// This config is guaranteed not to change in future releases of the Momento Rust SDK.
     pub fn v1() -> Configuration {
-        Configuration {
-            transport_strategy: TransportStrategy {
-                grpc_configuration: GrpcConfigurationBuilder::new(Duration::from_millis(500))
+        Configuration::builder(
+            TransportStrategy::builder(
+                GrpcConfiguration::builder(Duration::from_millis(500))
                     .with_keep_alive_while_idle(true)
                     .with_keep_alive_interval(Duration::from_secs(5000))
                     .with_keep_alive_timeout(Duration::from_secs(1000))
                     .build(),
-            },
-        }
+            )
+            .build(),
+        )
+        .build()
     }
 }
 
@@ -104,7 +110,7 @@ pub mod lambda {
     use std::time::Duration;
 
     use crate::config::configuration::Configuration;
-    use crate::config::grpc_configuration::GrpcConfigurationBuilder;
+    use crate::config::grpc_configuration::GrpcConfiguration;
     use crate::config::transport_strategy::TransportStrategy;
 
     /// Latest recommended config for a typical lambda environment.
@@ -119,12 +125,14 @@ pub mod lambda {
     ///
     /// This config is guaranteed not to change in future releases of the Momento Rust SDK.
     pub fn v1() -> Configuration {
-        Configuration {
-            transport_strategy: TransportStrategy {
-                grpc_configuration: GrpcConfigurationBuilder::new(Duration::from_millis(1100))
+        Configuration::builder(
+            TransportStrategy::builder(
+                GrpcConfiguration::builder(Duration::from_millis(1100))
                     .with_keep_alive_while_idle(false)
                     .build(),
-            },
-        }
+            )
+            .build(),
+        )
+        .build()
     }
 }
