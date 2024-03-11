@@ -1,7 +1,14 @@
 use crate::cache_client::CacheClient;
 use crate::MomentoResult;
 
+pub mod create_cache;
+pub mod delete_cache;
+
 pub mod set_add_elements;
+pub mod sorted_set_fetch_by_rank;
+pub mod sorted_set_fetch_by_score;
+pub mod sorted_set_put_element;
+pub mod sorted_set_put_elements;
 
 pub trait MomentoRequest {
     type Response;

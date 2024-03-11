@@ -7,6 +7,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  TEST_CACHE_NAME: rust-integration-test-ci-${{ github.sha }}
 
 jobs:
   rustfmt:
@@ -33,6 +34,7 @@ jobs:
     runs-on: macos-latest
     env:
       MOMENTO_API_KEY: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
+      TEST_API_KEY: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
       # TODO: get rid of this once everything has been migrated to MOMENTO_API_KEY
       TEST_AUTH_TOKEN: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
 
@@ -48,12 +50,17 @@ jobs:
         run: cargo build --verbose
       - name: Cargo Check
         run: cargo check
+      - name: Test Setup
+        run: cargo run --example test-setup
       - name: Unit Tests
         run: cargo test --lib
       - name: Doc Tests
         run: cargo test --doc
       - name: Integration Tests
         run: cargo test --tests
+      - name: Test Teardown
+        if: always()
+        run: cargo run --example test-teardown
 
   rustfmt-build-examples:
     name: Style & Lint
