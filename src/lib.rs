@@ -1,4 +1,6 @@
 pub mod auth;
+/// Configuration structs for the Momento clients.
+pub mod config;
 pub mod preview;
 pub mod requests;
 pub mod response;

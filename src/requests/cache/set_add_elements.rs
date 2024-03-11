@@ -1,6 +1,6 @@
 use crate::cache_client::CacheClient;
 use crate::requests::cache::MomentoRequest;
-use crate::simple_cache_client::prep_request;
+use crate::simple_cache_client::prep_request_with_timeout;
 use crate::{CollectionTtl, IntoBytes, MomentoResult};
 use momento_protos::cache_client::SetUnionRequest;
 
@@ -10,12 +10,13 @@ use momento_protos::cache_client::SetUnionRequest;
 /// use std::time::Duration;
 /// use momento::{CredentialProviderBuilder};
 /// use momento::requests::cache::set_add_elements::SetAddElements;
+/// use momento::config::configurations;
 ///
 /// let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
 ///     .build()?;
 /// let cache_name = "cache";
 ///
-/// let cache_client = momento::CacheClient::new(credential_provider, Duration::from_secs(5))?;
+/// let cache_client = momento::CacheClient::new(credential_provider, configurations::laptop::latest(), Duration::from_secs(5))?;
 ///
 /// let set_add_elements_response = cache_client.set_add_elements(cache_name.to_string(), "set", vec!["element1", "element2"]).await?;
 /// assert_eq!(set_add_elements_response, SetAddElements {});
@@ -51,8 +52,9 @@ impl<S: IntoBytes, E: IntoBytes> MomentoRequest for SetAddElementsRequest<S, E> 
         let elements = self.elements.into_iter().map(|e| e.into_bytes()).collect();
         let set_name = self.set_name.into_bytes();
         let cache_name = &self.cache_name;
-        let request = prep_request(
+        let request = prep_request_with_timeout(
             cache_name,
+            cache_client.configuration.deadline_millis(),
             SetUnionRequest {
                 set_name,
                 elements,

@@ -1,3 +1,4 @@
+use crate::config::configuration::Configuration;
 use crate::grpc::header_interceptor::HeaderInterceptor;
 use crate::requests::cache::set_add_elements::{SetAddElements, SetAddElementsRequest};
 use crate::requests::cache::MomentoRequest;
@@ -11,6 +12,7 @@ use tonic::transport::Channel;
 
 pub struct CacheClient {
     pub(crate) data_client: ScsClient<InterceptedService<Channel, HeaderInterceptor>>,
+    pub(crate) configuration: Configuration,
     item_default_ttl: Duration,
 }
 
@@ -18,9 +20,13 @@ impl CacheClient {
     /* constructor */
     pub fn new(
         credential_provider: CredentialProvider,
+        configuration: Configuration,
         default_ttl: Duration,
     ) -> MomentoResult<Self> {
-        let data_channel = utils::connect_channel_lazily(&credential_provider.cache_endpoint)?;
+        let data_channel = utils::connect_channel_lazily_configurable(
+            &credential_provider.cache_endpoint,
+            configuration.transport_strategy.grpc_configuration.clone(),
+        )?;
 
         let data_interceptor = InterceptedService::new(
             data_channel,
@@ -29,6 +35,7 @@ impl CacheClient {
         let data_client = ScsClient::new(data_interceptor);
         Ok(CacheClient {
             data_client,
+            configuration,
             item_default_ttl: default_ttl,
         })
     }
@@ -39,14 +46,19 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # tokio_test::block_on(async {
     /// use std::time::Duration;
-    /// use momento::{CredentialProviderBuilder};
+    /// use momento::config::configurations;
+    /// use momento::CredentialProviderBuilder;
     /// use momento::requests::cache::set_add_elements::SetAddElements;
     ///
     /// let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
     ///     .build()?;
     /// let cache_name = "cache";
     ///
-    /// let cache_client = momento::CacheClient::new(credential_provider, Duration::from_secs(5))?;
+    /// let cache_client = momento::CacheClient::new(
+    ///    credential_provider,
+    ///    configurations::laptop::latest(),
+    ///    Duration::from_secs(5),
+    ///)?;
     ///
     /// let set_add_elements_response = cache_client.set_add_elements(cache_name.to_string(), "set", vec!["element1", "element2"]).await?;
     /// assert_eq!(set_add_elements_response, SetAddElements {});
@@ -71,14 +83,19 @@ impl CacheClient {
     /// use momento::requests::cache::set_add_elements::SetAddElementsRequest;
     /// tokio_test::block_on(async {
     /// use std::time::Duration;
-    /// use momento::{CredentialProviderBuilder};
+    /// use momento::config::configurations;
+    /// use momento::CredentialProviderBuilder;
     /// use momento::requests::cache::set_add_elements::SetAddElements;
     ///
     /// let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
     ///     .build()?;
     /// let cache_name = "cache";
     ///
-    /// let cache_client = momento::CacheClient::new(credential_provider, Duration::from_secs(5))?;
+    /// let cache_client = momento::CacheClient::new(
+    ///    credential_provider,
+    ///    configurations::laptop::latest(),
+    ///    Duration::from_secs(5),
+    ///)?;
     ///
     /// let set_add_elements_response = cache_client.send_request(
     ///     SetAddElementsRequest::new(cache_name.to_string(), "set", vec!["element1", "element2"])
