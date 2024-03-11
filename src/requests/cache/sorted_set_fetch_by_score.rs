@@ -66,22 +66,26 @@ impl<S: IntoBytes> MomentoRequest for SortedSetFetchByScoreRequest<S> {
         let cache_name = &self.cache_name;
 
         let by_score = ByScore {
-            min: if self.min_score.is_some() {
-                Some(by_score::Min::MinScore(Score {
-                    score: self.min_score.unwrap(),
-                    exclusive: false,
-                }))
-            } else {
-                Some(by_score::Min::UnboundedMin(Unbounded {}))
-            },
-            max: if self.max_score.is_some() {
-                Some(by_score::Max::MaxScore(Score {
-                    score: self.max_score.unwrap(),
-                    exclusive: false,
-                }))
-            } else {
-                Some(by_score::Max::UnboundedMax(Unbounded {}))
-            },
+            min: Some(
+                self.min_score
+                    .map(|score| {
+                        by_score::Min::MinScore(Score {
+                            score,
+                            exclusive: false,
+                        })
+                    })
+                    .unwrap_or(by_score::Min::UnboundedMin(Unbounded {})),
+            ),
+            max: Some(
+                self.max_score
+                    .map(|score| {
+                        by_score::Max::MaxScore(Score {
+                            score,
+                            exclusive: false,
+                        })
+                    })
+                    .unwrap_or(by_score::Max::UnboundedMax(Unbounded {})),
+            ),
             offset: self.offset.unwrap_or(0),
             count: self.count.unwrap_or(-1),
         };

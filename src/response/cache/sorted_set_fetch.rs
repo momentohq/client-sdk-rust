@@ -93,6 +93,10 @@ impl SortedSetElements {
     pub fn len(&self) -> usize {
         self.elements.len()
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.elements.is_empty()
+    }
 }
 
 impl TryFrom<SortedSetElements> for Vec<(Vec<u8>, f64)> {

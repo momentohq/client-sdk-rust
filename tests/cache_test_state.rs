@@ -1,10 +1,12 @@
-use momento::config::configurations;
-use momento::{CacheClient, CredentialProviderBuilder, MomentoError};
-use once_cell::sync::Lazy;
 use std::env;
 use std::sync::Arc;
 use std::time::Duration;
+
+use once_cell::sync::Lazy;
 use tokio::sync::watch::channel;
+
+use momento::config::configurations;
+use momento::{CacheClient, CredentialProviderBuilder, MomentoError};
 
 pub static TEST_STATE: Lazy<Arc<TestState>> = Lazy::new(|| Arc::new(TestState::new()));
 
@@ -32,7 +34,7 @@ impl TestState {
         let runtime = tokio::runtime::Builder::new_multi_thread()
             .enable_all()
             .build()
-            .unwrap();
+            .expect("test state tokio runtime failure");
         let (sender, client_receiver) = channel(None);
         let barrier = Arc::new(std::sync::Barrier::new(2));
         let thread_barrier = barrier.clone();
@@ -56,7 +58,9 @@ impl TestState {
                 },
             }
 
-            sender.send(Some(cache_client)).unwrap();
+            sender
+                .send(Some(cache_client))
+                .expect("client should be sent to test state thread");
             thread_barrier.wait();
         });
         barrier.wait();

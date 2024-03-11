@@ -52,11 +52,11 @@ impl CacheClient {
 
         let data_interceptor = InterceptedService::new(
             data_channel,
-            HeaderInterceptor::new(&credential_provider.auth_token, &agent_value),
+            HeaderInterceptor::new(&credential_provider.auth_token, agent_value),
         );
         let control_interceptor = InterceptedService::new(
             control_channel,
-            HeaderInterceptor::new(&credential_provider.auth_token, &agent_value),
+            HeaderInterceptor::new(&credential_provider.auth_token, agent_value),
         );
 
         let data_client = ScsClient::new(data_interceptor);

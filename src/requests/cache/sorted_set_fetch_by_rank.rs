@@ -56,18 +56,16 @@ impl<S: IntoBytes> MomentoRequest for SortedSetFetchByRankRequest<S> {
         let cache_name = &self.cache_name;
 
         let by_index = ByIndex {
-            start: if self.start_rank.is_some() {
-                Some(by_index::Start::InclusiveStartIndex(
-                    self.start_rank.unwrap(),
-                ))
-            } else {
-                Some(by_index::Start::UnboundedStart(Unbounded {}))
-            },
-            end: if self.end_rank.is_some() {
-                Some(by_index::End::ExclusiveEndIndex(self.end_rank.unwrap()))
-            } else {
-                Some(by_index::End::UnboundedEnd(Unbounded {}))
-            },
+            start: Some(
+                self.start_rank
+                    .map(by_index::Start::InclusiveStartIndex)
+                    .unwrap_or_else(|| by_index::Start::UnboundedStart(Unbounded {})),
+            ),
+            end: Some(
+                self.end_rank
+                    .map(by_index::End::ExclusiveEndIndex)
+                    .unwrap_or_else(|| by_index::End::UnboundedEnd(Unbounded {})),
+            ),
         };
 
         let request = prep_request_with_timeout(
