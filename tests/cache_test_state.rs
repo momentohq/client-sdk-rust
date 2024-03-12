@@ -7,6 +7,7 @@ use tokio::sync::watch::channel;
 
 use momento::config::configurations;
 use momento::{CacheClient, CredentialProviderBuilder, MomentoError};
+use momento_test_util::{get_test_cache_name, get_test_credential_provider};
 
 pub static TEST_STATE: Lazy<Arc<TestState>> = Lazy::new(|| Arc::new(TestState::new()));
 
@@ -19,15 +20,11 @@ pub struct TestState {
 
 impl TestState {
     fn new() -> Self {
-        let cache_name =
-            env::var("TEST_CACHE_NAME").unwrap_or_else(|_| "rust-test-cache".to_string());
+        let cache_name = get_test_cache_name();
         println!("Using cache name: {}", cache_name);
         let thread_cache_name = cache_name.clone();
 
-        let credential_provider =
-            CredentialProviderBuilder::from_environment_variable("TEST_API_KEY".to_string())
-                .build()
-                .expect("auth token should be valid");
+        let credential_provider = get_test_credential_provider();
 
         // The cache client must be created using a separate tokio runtime because each test
         // creates it own runtime, and the client will stop running if its runtime is destroyed.

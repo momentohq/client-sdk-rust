@@ -52,15 +52,8 @@ where
 }
 
 pub fn create_doctest_client() -> (CacheClient, String) {
-    let cache_name =
-        env::var("TEST_CACHE_NAME").expect("environment variable TEST_CACHE_NAME should be set");
-
-    let credential_provider =
-        CredentialProviderBuilder::from_environment_variable("TEST_API_KEY".to_string())
-            .build()
-            .expect(
-                "credential provider should be created using the TEST_API_KEY environment variable",
-            );
+    let cache_name = get_test_cache_name();
+    let credential_provider = get_test_credential_provider();
 
     let cache_client = momento::CacheClient::new(
         credential_provider,
@@ -70,4 +63,14 @@ pub fn create_doctest_client() -> (CacheClient, String) {
     .expect("cache client should be created");
 
     (cache_client, cache_name)
+}
+
+pub fn get_test_cache_name() -> String {
+    env::var("TEST_CACHE_NAME").unwrap_or("rust-sdk-test-cache".to_string())
+}
+
+pub fn get_test_credential_provider() -> CredentialProvider {
+    CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
+        .build()
+        .expect("auth token should be valid")
 }

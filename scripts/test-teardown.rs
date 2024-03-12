@@ -3,16 +3,12 @@ use std::time::Duration;
 
 use momento::config::configurations;
 use momento::{CacheClient, CredentialProviderBuilder};
+use momento_test_util::{get_test_cache_name, get_test_credential_provider};
 
 #[tokio::main]
 async fn main() {
-    let cache_name =
-        env::var("TEST_CACHE_NAME").expect("environment variable TEST_CACHE_NAME should be set");
-
-    let credential_provider =
-        CredentialProviderBuilder::from_environment_variable("TEST_API_KEY".to_string())
-            .build()
-            .expect("auth token should be valid");
+    let cache_name = get_test_cache_name();
+    let credential_provider = get_test_credential_provider();
 
     let cache_client = CacheClient::new(
         credential_provider,
