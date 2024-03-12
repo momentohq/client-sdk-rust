@@ -1,9 +1,12 @@
+use std::env;
 use std::future::Future;
 use std::time::Duration;
 
-use momento::SimpleCacheClientBuilder;
-use momento::{CredentialProvider, CredentialProviderBuilder};
 use uuid::Uuid;
+
+use momento::config::configurations;
+use momento::{CacheClient, SimpleCacheClientBuilder};
+use momento::{CredentialProvider, CredentialProviderBuilder};
 
 pub type DoctestResult = anyhow::Result<()>;
 
@@ -46,4 +49,25 @@ where
     });
 
     runtime.block_on(func(cache_name, credential_provider))
+}
+
+pub fn create_doctest_client() -> (CacheClient, String) {
+    let cache_name =
+        env::var("TEST_CACHE_NAME").expect("environment variable TEST_CACHE_NAME should be set");
+
+    let credential_provider =
+        CredentialProviderBuilder::from_environment_variable("TEST_API_KEY".to_string())
+            .build()
+            .expect(
+                "credential provider should be created using the TEST_API_KEY environment variable",
+            );
+
+    let cache_client = momento::CacheClient::new(
+        credential_provider,
+        configurations::laptop::latest(),
+        Duration::from_secs(5),
+    )
+    .expect("cache client should be created");
+
+    (cache_client, cache_name)
 }

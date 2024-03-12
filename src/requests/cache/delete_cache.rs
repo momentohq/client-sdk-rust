@@ -4,6 +4,30 @@ use tonic::Request;
 use crate::requests::cache::MomentoRequest;
 use crate::{utils, CacheClient, MomentoResult};
 
+/// Request to delete a cache
+///
+/// # Arguments
+///
+/// * `name` - The name of the cache to be deleted.
+///
+/// # Examples
+/// Assumes that a CacheClient named `cache_client` has been created and is available.
+/// ```no_run
+/// # fn main() -> anyhow::Result<()> {
+/// # use momento_test_util::create_doctest_client;
+/// # tokio_test::block_on(async {
+/// use momento::requests::cache::delete_cache::DeleteCache;
+/// use momento::requests::cache::delete_cache::DeleteCacheRequest;
+/// # let (cache_client, cache_name) = create_doctest_client();
+///
+/// let delete_cache_request = DeleteCacheRequest::new(cache_name.to_string());
+///
+/// let delete_cache_response = cache_client.send_request(delete_cache_request).await?;
+///
+/// assert_eq!(delete_cache_response, DeleteCache {});
+/// # Ok(())
+/// # })
+/// # }
 pub struct DeleteCacheRequest {
     pub cache_name: String,
 }
@@ -34,4 +58,5 @@ impl MomentoRequest for DeleteCacheRequest {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub struct DeleteCache {}
