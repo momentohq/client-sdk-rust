@@ -51,6 +51,7 @@ jobs:
       - name: Cargo Check
         run: cargo check
       - name: Test Setup
+        # This script relies on dev dependencies such as Tokio, so we run it with the --example flag
         run: cargo run --example test-setup
       - name: Unit Tests
         run: cargo test --lib
@@ -59,7 +60,9 @@ jobs:
       - name: Integration Tests
         run: cargo test --tests
       - name: Test Teardown
+        # We want the teardown to execute even if an earlier step fails, hence the `always()` condition
         if: always()
+        # This script relies on dev dependencies such as Tokio, so we run it with the --example flag
         run: cargo run --example test-teardown
 
   rustfmt-build-examples:

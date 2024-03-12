@@ -181,6 +181,7 @@ impl CacheClient {
     ///
     /// let set_add_elements_response = cache_client.set_add_elements(cache_name.to_string(), "set", vec!["element1", "element2"]).await?;
     /// assert_eq!(set_add_elements_response, SetAddElements {});
+    /// assert_eq!(true, false);
     /// # Ok(())
     /// # })
     /// #
