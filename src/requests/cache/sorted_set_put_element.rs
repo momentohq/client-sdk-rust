@@ -43,16 +43,16 @@ use crate::{CacheClient, CollectionTtl, IntoBytes, MomentoResult};
 /// # Ok(())
 /// # })
 /// # }
-pub struct SortedSetPutElementRequest<S: IntoBytes, E: IntoBytes> {
+pub struct SortedSetPutElementRequest<S: IntoBytes, V: IntoBytes> {
     cache_name: String,
     sorted_set_name: S,
-    value: E,
+    value: V,
     score: f64,
     collection_ttl: Option<CollectionTtl>,
 }
 
-impl<S: IntoBytes, E: IntoBytes> SortedSetPutElementRequest<S, E> {
-    pub fn new(cache_name: String, sorted_set_name: S, value: E, score: f64) -> Self {
+impl<S: IntoBytes, V: IntoBytes> SortedSetPutElementRequest<S, V> {
+    pub fn new(cache_name: String, sorted_set_name: S, value: V, score: f64) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
             cache_name,
@@ -70,7 +70,7 @@ impl<S: IntoBytes, E: IntoBytes> SortedSetPutElementRequest<S, E> {
     }
 }
 
-impl<S: IntoBytes, E: IntoBytes> MomentoRequest for SortedSetPutElementRequest<S, E> {
+impl<S: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetPutElementRequest<S, V> {
     type Response = SortedSetPutElement;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<SortedSetPutElement> {
