@@ -1,3 +1,5 @@
+mod readme;
+
 use momento::response::MomentoGetStatus;
 use momento::simple_cache_client::SimpleCacheClientBuilder;
 use std::env;

@@ -16,6 +16,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Verify README generation
+        uses: momentohq/standards-and-practices/github-actions/oss-readme-template@gh-actions-v2
+        with:
+          project_status: official
+          project_stability: alpha
+          project_type: sdk
+          sdk_language: Rust
+          dev_docs_slug: rust
+
       - name: Install protoc
         run: ./scripts/install_protoc_linux.sh
 
@@ -24,11 +33,12 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: rustfmt
-        run: cargo fmt -- --check
-
-      - name: Rigorous lint via Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used
+      - name: Lint (rustfmt and lippy)
+        run: make lint
+#        run: cargo fmt -- --check
+#
+#      - name: Rigorous lint via Clippy
+#        run: cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used
 
   build_rust:
     runs-on: macos-latest
@@ -44,9 +54,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Build
-        run: cargo build --verbose
-      - name: Cargo Check
-        run: cargo check
+        run: make build
+#        run: cargo build --verbose
+#      - name: Cargo Check
+#        run: cargo check
       - name: Test Setup
         # This script relies on dev dependencies such as Tokio, so we run it with the --example flag
         run: cargo run --example test-setup
@@ -66,7 +77,7 @@ jobs:
     name: Style & Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install protoc
         run: ./scripts/install_protoc_linux.sh
@@ -80,11 +91,14 @@ jobs:
         id: validation
         continue-on-error: true
         run: |
-          pushd example
-            cargo fmt -- --check
-            cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used 
-            cargo build --verbose
-          popd
+          make build-examples
+#          pushd example
+#            make lint
+#            make build
+#            cargo fmt -- --check
+#            cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used
+#            cargo build --verbose
+#          popd
       - name: Send CI failure mail
         if: ${{ steps.validation.outcome == 'failure' }}
         uses: ./.github/actions/error-email-action
