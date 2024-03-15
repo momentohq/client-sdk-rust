@@ -28,7 +28,7 @@ mod tests {
     }
 
     fn get_momento_instance() -> SimpleCacheClient {
-        let auth_token = env::var("TEST_AUTH_TOKEN").expect("env var TEST_AUTH_TOKEN must be set");
+        let auth_token = env::var("MOMENTO_API_KEY").expect("env var MOMENTO_API_KEY must be set");
         get_momento_instance_with_token(auth_token)
             .expect("failed to build an integration test client builder")
             .build()

@@ -78,7 +78,7 @@ async fn demo_cache_usage() {
 
 ## Running Tests ⚡
 
-Doc and integration tests require an auth token for testing. Set the env var `TEST_AUTH_TOKEN` to
+Doc and integration tests require an auth token for testing. Set the env var `MOMENTO_API_KEY` to
 provide it.
 
 Running unit tests:
@@ -90,13 +90,13 @@ cargo test --lib
 Running doc tests:
 
 ```
-TEST_AUTH_TOKEN=<auth token> cargo test --doc
+MOMENTO_API_KEY=<auth token> cargo test --doc
 ```
 
 Running integration tests:
 
 ```
-TEST_AUTH_TOKEN=<auth token> cargo test --tests
+MOMENTO_API_KEY=<auth token> cargo test --tests
 ```
 
 ## Development 🔨
