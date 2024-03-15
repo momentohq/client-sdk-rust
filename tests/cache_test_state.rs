@@ -1,4 +1,3 @@
-use std::env;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -6,7 +5,7 @@ use once_cell::sync::Lazy;
 use tokio::sync::watch::channel;
 
 use momento::config::configurations;
-use momento::{CacheClient, CredentialProviderBuilder, MomentoError};
+use momento::{CacheClient, MomentoError};
 use momento_test_util::{get_test_cache_name, get_test_credential_provider};
 
 pub static TEST_STATE: Lazy<Arc<TestState>> = Lazy::new(|| Arc::new(TestState::new()));
