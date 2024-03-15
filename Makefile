@@ -49,10 +49,10 @@ test: test-unit test-integration test-doctests
 .PHONY: build-examples
 ## Build example code
 build-examples:
-	pushd example
+	cd example
 	make lint
 	make build
-	popd
+	cd ..
 
 # See <https://gist.github.com/klmr/575726c7e05d8780505a> for explanation.
 .PHONY: help
