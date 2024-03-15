@@ -1,8 +1,9 @@
+use momento_protos::cache_client::SetUnionRequest;
+
 use crate::cache_client::CacheClient;
 use crate::requests::cache::MomentoRequest;
 use crate::simple_cache_client::prep_request_with_timeout;
 use crate::{CollectionTtl, IntoBytes, MomentoResult};
-use momento_protos::cache_client::SetUnionRequest;
 
 /// ```
 /// # fn main() -> anyhow::Result<()> {
@@ -41,6 +42,11 @@ impl<S: IntoBytes, E: IntoBytes> SetAddElementsRequest<S, E> {
             elements,
             collection_ttl: Some(collection_ttl),
         }
+    }
+
+    pub fn with_ttl(mut self, collection_ttl: CollectionTtl) -> Self {
+        self.collection_ttl = Some(collection_ttl);
+        self
     }
 }
 

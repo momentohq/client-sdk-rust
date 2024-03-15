@@ -1,9 +1,12 @@
+use std::env;
 use std::future::Future;
 use std::time::Duration;
 
-use momento::SimpleCacheClientBuilder;
-use momento::{CredentialProvider, CredentialProviderBuilder};
 use uuid::Uuid;
+
+use momento::config::configurations;
+use momento::{CacheClient, SimpleCacheClientBuilder};
+use momento::{CredentialProvider, CredentialProviderBuilder};
 
 pub type DoctestResult = anyhow::Result<()>;
 
@@ -46,4 +49,28 @@ where
     });
 
     runtime.block_on(func(cache_name, credential_provider))
+}
+
+pub fn create_doctest_client() -> (CacheClient, String) {
+    let cache_name = get_test_cache_name();
+    let credential_provider = get_test_credential_provider();
+
+    let cache_client = momento::CacheClient::new(
+        credential_provider,
+        configurations::laptop::latest(),
+        Duration::from_secs(5),
+    )
+    .expect("cache client should be created");
+
+    (cache_client, cache_name)
+}
+
+pub fn get_test_cache_name() -> String {
+    env::var("TEST_CACHE_NAME").unwrap_or("rust-sdk-test-cache".to_string())
+}
+
+pub fn get_test_credential_provider() -> CredentialProvider {
+    CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
+        .build()
+        .expect("auth token should be valid")
 }
