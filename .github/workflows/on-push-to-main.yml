@@ -18,10 +18,8 @@ jobs:
       - name: Install protoc
         run: ./scripts/install_protoc_linux.sh
 
-      - name: rustfmt
-        run: cargo fmt -- --check
-      - name: Rigorous lint via Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used
+      - name: Lint (rustfmt and clippy)
+        run: make lint
 
 #  release:
 #    runs-on: ubuntu-latest

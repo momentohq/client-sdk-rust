@@ -35,10 +35,6 @@ jobs:
 
       - name: Lint (rustfmt and lippy)
         run: make lint
-#        run: cargo fmt -- --check
-#
-#      - name: Rigorous lint via Clippy
-#        run: cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used
 
   build_rust:
     runs-on: macos-latest
@@ -55,18 +51,15 @@ jobs:
 
       - name: Build
         run: make build
-#        run: cargo build --verbose
-#      - name: Cargo Check
-#        run: cargo check
       - name: Test Setup
         # This script relies on dev dependencies such as Tokio, so we run it with the --example flag
         run: cargo run --example test-setup
-      - name: Unit Tests
-        run: cargo test --lib
-      - name: Doc Tests
-        run: cargo test --doc
+      - name: Unit tests
+        run: make test-unit
       - name: Integration Tests
-        run: cargo test --tests
+        run: make test-integration
+      - name: Doc Tests
+        run: make test-doctests
       - name: Test Teardown
         # We want the teardown to execute even if an earlier step fails, hence the `always()` condition
         if: always()
@@ -92,13 +85,6 @@ jobs:
         continue-on-error: true
         run: |
           make build-examples
-#          pushd example
-#            make lint
-#            make build
-#            cargo fmt -- --check
-#            cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used
-#            cargo build --verbose
-#          popd
       - name: Send CI failure mail
         if: ${{ steps.validation.outcome == 'failure' }}
         uses: ./.github/actions/error-email-action
