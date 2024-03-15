@@ -11,7 +11,7 @@ env:
 
 jobs:
   rustfmt:
-    name: Style & Lint
+    name: main - Style & Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -67,7 +67,7 @@ jobs:
         run: cargo run --example test-teardown
 
   rustfmt-build-examples:
-    name: Style & Lint
+    name: examples - Style & Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
