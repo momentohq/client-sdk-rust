@@ -13,22 +13,20 @@ jobs:
     name: Style & Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install protoc
         run: ./scripts/install_protoc_linux.sh
 
-      - name: rustfmt
-        run: cargo fmt -- --check
-      - name: Rigorous lint via Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used
+      - name: Lint (rustfmt and clippy)
+        run: make lint
 
 #  release:
 #    runs-on: ubuntu-latest
 #    outputs:
 #      version: ${{ steps.release.outputs.release }}
 #    steps:
-#      - uses: actions/checkout@v2
+#      - uses: actions/checkout@v3
 #      - name: Set release
 #        id: semrel
 #        uses: go-semantic-release/action@v1
@@ -48,7 +46,7 @@ jobs:
 #      MOMENTO_API_KEY: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
 #      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 #    steps:
-#      - uses: actions/checkout@v2
+#      - uses: actions/checkout@v3
 #      - name: Install protoc
 #        run: ./scripts/install_protoc_osx.sh
 #
@@ -76,3 +74,23 @@ jobs:
 #
 #      - name: Publish crate
 #        run: cargo publish --allow-dirty
+
+
+  generate_readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.MOMENTO_MACHINE_USER_GITHUB_TOKEN }}
+
+      - name: Generate README
+        uses: momentohq/standards-and-practices/github-actions/generate-and-commit-oss-readme@gh-actions-v2
+        with:
+          project_status: official
+          project_stability: alpha
+          project_type: sdk
+          sdk_language: Rust
+          template_file: ./README.template.md
+          output_file: ./README.md
+          dev_docs_slug: rust

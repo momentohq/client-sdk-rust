@@ -11,10 +11,19 @@ env:
 
 jobs:
   rustfmt:
-    name: Style & Lint
+    name: main - Style & Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+
+      - name: Verify README generation
+        uses: momentohq/standards-and-practices/github-actions/oss-readme-template@gh-actions-v2
+        with:
+          project_status: official
+          project_stability: alpha
+          project_type: sdk
+          sdk_language: Rust
+          dev_docs_slug: rust
 
       - name: Install protoc
         run: ./scripts/install_protoc_linux.sh
@@ -24,11 +33,8 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: rustfmt
-        run: cargo fmt -- --check
-
-      - name: Rigorous lint via Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used
+      - name: Lint (rustfmt and lippy)
+        run: make lint
 
   build_rust:
     runs-on: macos-latest
@@ -36,7 +42,7 @@ jobs:
       MOMENTO_API_KEY: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install protoc
         run: ./scripts/install_protoc_osx.sh
@@ -44,18 +50,16 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Build
-        run: cargo build --verbose
-      - name: Cargo Check
-        run: cargo check
+        run: make build
       - name: Test Setup
         # This script relies on dev dependencies such as Tokio, so we run it with the --example flag
         run: cargo run --example test-setup
-      - name: Unit Tests
-        run: cargo test --lib
-      - name: Doc Tests
-        run: cargo test --doc
+      - name: Unit tests
+        run: make test-unit
       - name: Integration Tests
-        run: cargo test --tests
+        run: make test-integration
+      - name: Doc Tests
+        run: make test-doctests
       - name: Test Teardown
         # We want the teardown to execute even if an earlier step fails, hence the `always()` condition
         if: always()
@@ -63,10 +67,10 @@ jobs:
         run: cargo run --example test-teardown
 
   rustfmt-build-examples:
-    name: Style & Lint
+    name: examples - Style & Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install protoc
         run: ./scripts/install_protoc_linux.sh
@@ -80,11 +84,7 @@ jobs:
         id: validation
         continue-on-error: true
         run: |
-          pushd example
-            cargo fmt -- --check
-            cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used 
-            cargo build --verbose
-          popd
+          make build-examples
       - name: Send CI failure mail
         if: ${{ steps.validation.outcome == 'failure' }}
         uses: ./.github/actions/error-email-action
