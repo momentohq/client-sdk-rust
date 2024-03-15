@@ -76,9 +76,9 @@ impl CredentialProviderBuilder {
     /// ```
     /// # tokio_test::block_on(async {
     ///     use momento::CredentialProviderBuilder;
-    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
+    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
     ///         .build()
-    ///         .expect("TEST_AUTH_TOKEN must be set");
+    ///         .expect("MOMENTO_API_KEY must be set");
     /// # })
     /// ```
     ///
@@ -122,10 +122,10 @@ impl CredentialProviderBuilder {
     /// ```
     /// # tokio_test::block_on(async {
     ///     use momento::CredentialProviderBuilder;
-    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
+    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
     ///         .with_cache_endpoint("my_cache_endpoint.com".to_string())
     ///         .build()
-    ///         .expect("TEST_AUTH_TOKEN must be set");
+    ///         .expect("MOMENTO_API_KEY must be set");
     ///      assert_eq!("https://my_cache_endpoint.com", credential_provider.cache_endpoint);
     /// # })
     /// ```
@@ -144,10 +144,10 @@ impl CredentialProviderBuilder {
     /// ```
     /// # tokio_test::block_on(async {
     ///     use momento::CredentialProviderBuilder;
-    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
+    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
     ///         .with_control_endpoint("my_control_endpoint.com".to_string())
     ///         .build()
-    ///         .expect("TEST_AUTH_TOKEN must be set");
+    ///         .expect("MOMENTO_API_KEY must be set");
     ///      assert_eq!("https://my_control_endpoint.com", credential_provider.control_endpoint);
     /// # })
     /// ```
@@ -166,10 +166,10 @@ impl CredentialProviderBuilder {
     /// ```
     /// # tokio_test::block_on(async {
     ///     use momento::CredentialProviderBuilder;
-    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
+    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
     ///         .with_momento_endpoint("my_endpoint.com".to_string())
     ///         .build()
-    ///         .expect("TEST_AUTH_TOKEN must be set");
+    ///         .expect("MOMENTO_API_KEY must be set");
     ///      assert_eq!("https://cache.my_endpoint.com", credential_provider.cache_endpoint);
     ///      assert_eq!("https://control.my_endpoint.com", credential_provider.control_endpoint);
     /// # })

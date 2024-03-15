@@ -30,9 +30,9 @@ where
 
     let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
     let credential_provider =
-        CredentialProviderBuilder::from_environment_variable("TEST_AUTH_TOKEN".to_string())
+        CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
             .build()
-            .expect("TEST_AUTH_TOKEN must be set");
+            .expect("MOMENTO_API_KEY must be set");
 
     let mut client =
         SimpleCacheClientBuilder::new(credential_provider.clone(), Duration::from_secs(5))?.build();
