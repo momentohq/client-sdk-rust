@@ -14,7 +14,7 @@ jobs:
     name: main - Style & Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Verify README generation
         uses: momentohq/standards-and-practices/github-actions/oss-readme-template@gh-actions-v2
@@ -42,7 +42,7 @@ jobs:
       MOMENTO_API_KEY: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install protoc
         run: ./scripts/install_protoc_osx.sh
