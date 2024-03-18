@@ -12,7 +12,7 @@ use std::time::{self, Duration};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub fn is_ttl_valid(ttl: Duration) -> MomentoResult<()> {
+pub(crate) fn is_ttl_valid(ttl: Duration) -> MomentoResult<()> {
     let max_ttl = Duration::from_millis(u64::MAX);
     if ttl > max_ttl {
         return Err(MomentoError::InvalidArgument {
@@ -28,7 +28,7 @@ pub fn is_ttl_valid(ttl: Duration) -> MomentoResult<()> {
     Ok(())
 }
 
-pub fn is_cache_name_valid(cache_name: &str) -> Result<(), MomentoError> {
+pub(crate) fn is_cache_name_valid(cache_name: &str) -> Result<(), MomentoError> {
     if cache_name.trim().is_empty() {
         return Err(MomentoError::InvalidArgument {
             description: "Cache name cannot be empty".into(),
@@ -38,7 +38,7 @@ pub fn is_cache_name_valid(cache_name: &str) -> Result<(), MomentoError> {
     Ok(())
 }
 
-pub fn is_key_id_valid(key_id: &str) -> Result<(), MomentoError> {
+pub(crate) fn is_key_id_valid(key_id: &str) -> Result<(), MomentoError> {
     if key_id.trim().is_empty() {
         return Err(MomentoError::InvalidArgument {
             description: "Key ID cannot be empty".into(),
@@ -100,6 +100,13 @@ pub(crate) fn connect_channel_lazily_configurable(
     Ok(endpoint.connect_lazy())
 }
 
-pub fn user_agent(user_agent_name: &str) -> String {
+pub(crate) fn user_agent(user_agent_name: &str) -> String {
     format!("rust-{user_agent_name}:{VERSION}")
+}
+
+pub(crate) fn parse_string(raw: Vec<u8>) -> MomentoResult<String> {
+    String::from_utf8(raw).map_err(|e| MomentoError::TypeError {
+        description: std::borrow::Cow::Borrowed("item is not a utf-8 string"),
+        source: Box::new(e),
+    })
 }

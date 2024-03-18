@@ -21,12 +21,11 @@ pub struct TopicClient {
 /// Work with topics, publishing and subscribing.
 /// ```rust
 /// use momento::preview::topics::TopicClient;
-/// use momento::{CredentialProvider, CredentialProviderBuilder};
+/// use momento::{CredentialProvider};
 /// use futures::StreamExt;
 ///
 /// async {
-///     let credential_provider = CredentialProviderBuilder::from_string("token".to_string())
-///        .build()
+///     let credential_provider = CredentialProvider::from_string("token".to_string())
 ///        .expect("could not get credentials");
 ///     // Get a topic client
 ///     let client = TopicClient::connect(

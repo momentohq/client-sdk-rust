@@ -167,10 +167,9 @@ impl SimpleCacheClientBuilder {
     ///
     /// ```
     /// # tokio_test::block_on(async {
-    ///     use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
+    ///     use momento::{CredentialProvider, SimpleCacheClientBuilder};
     ///     use std::time::Duration;
-    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
-    ///         .build()
+    ///     let credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
     ///         .expect("MOMENTO_API_KEY must be set");
     ///     let momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))
     ///         .expect("could not create a client")
@@ -282,10 +281,9 @@ impl SimpleCacheClient {
     /// # tokio_test::block_on(async {
     /// use uuid::Uuid;
     /// use std::time::Duration;
-    /// use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
+    /// use momento::{CredentialProvider, SimpleCacheClientBuilder};
     ///
-    /// let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
-    ///     .build()
+    /// let credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
     ///     .expect("MOMENTO_API_KEY must be set");
     /// let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
     /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(5))?
@@ -316,10 +314,9 @@ impl SimpleCacheClient {
     /// # use futures::FutureExt;
     /// use uuid::Uuid;
     /// use std::time::Duration;
-    /// use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
+    /// use momento::{CredentialProvider, SimpleCacheClientBuilder};
     ///
-    /// let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
-    ///     .build()
+    /// let credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
     ///     .expect("MOMENTO_API_KEY must be set");
     /// let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
     /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(5))?
@@ -421,11 +418,10 @@ impl SimpleCacheClient {
     /// # use futures::FutureExt;
     /// use uuid::Uuid;
     /// use std::time::Duration;
-    /// use momento::{CredentialProviderBuilder, SimpleCacheClientBuilder};
+    /// use momento::{CredentialProvider, SimpleCacheClientBuilder};
     ///
     /// let ttl_minutes = 10;
-    /// let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
-    ///     .build()
+    /// let credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
     ///     .expect("MOMENTO_API_KEY must be set");
     /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(5))?
     ///     .build();

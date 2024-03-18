@@ -1,8 +1,10 @@
 use uuid::Uuid;
 
-use momento::requests::cache::sorted_set_fetch_by_rank::SortOrder::{Ascending, Descending};
-use momento::requests::cache::sorted_set_fetch_by_rank::SortedSetFetchByRankRequest;
-use momento::requests::cache::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
+use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder::{
+    Ascending, Descending,
+};
+use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetFetchByRankRequest;
+use momento::requests::cache::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
 use momento::response::cache::sorted_set_fetch::SortedSetFetch;
 
 use crate::cache_test_state::TEST_STATE;

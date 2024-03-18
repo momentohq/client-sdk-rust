@@ -31,6 +31,59 @@ pub struct CredentialProvider {
     pub cache_endpoint: String,
 }
 
+impl CredentialProvider {
+    /// Returns a builder to produce a Credential Provider using an API key stored in the specified
+    /// environment variable
+    ///
+    /// # Arguments
+    ///
+    /// * `env_var_name` - Name of the environment variable to read token from
+    /// # Examples
+    ///
+    /// ```
+    /// # tokio_test::block_on(async {
+    ///     use momento::CredentialProvider;
+    ///     let credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
+    ///         .expect("MOMENTO_API_KEY must be set");
+    /// # })
+    /// ```
+    ///
+    pub fn from_env_var(env_var_name: String) -> MomentoResult<CredentialProvider> {
+        CredentialProviderBuilder::from_environment_variable(env_var_name).build()
+    }
+
+    /// Returns a builder to produce a Credential Provider from the provided API key
+    ///
+    /// # Arguments
+    ///
+    /// * `api_key` - Momento API key
+    /// # Examples
+    ///
+    /// ```
+    /// # use momento::MomentoResult;
+    /// # fn main() -> () {
+    /// # tokio_test::block_on(async {
+    ///     use momento::CredentialProvider;
+    ///
+    ///     let api_key = "YOUR API KEY GOES HERE";
+    ///     let credential_provider = match(CredentialProvider::from_string(api_key.to_string())) {
+    ///        Ok(credential_provider) => credential_provider,
+    ///        Err(e) => {
+    ///             println!("Error while creating credential provider: {}", e);
+    ///             return // probably you will do something else here
+    ///        }
+    ///     };
+    ///
+    /// # ()
+    /// # })
+    /// #
+    /// }
+    /// ```
+    pub fn from_string(auth_token: String) -> MomentoResult<CredentialProvider> {
+        CredentialProviderBuilder::from_string(auth_token).build()
+    }
+}
+
 impl Debug for CredentialProvider {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("CredentialProvider")
@@ -58,31 +111,14 @@ impl Debug for AuthTokenSource {
 }
 
 #[derive(Debug)]
-pub struct CredentialProviderBuilder {
+struct CredentialProviderBuilder {
     auth_token_source: AuthTokenSource,
     cache_endpoint_override: Option<String>,
     control_endpoint_override: Option<String>,
 }
 
 impl CredentialProviderBuilder {
-    /// Returns a builder to produce a Credential Provider using an auth token stored in the provided
-    /// environment variable
-    ///
-    /// # Arguments
-    ///
-    /// * `env_var_name` - Name of the environment variable to read token from
-    /// # Examples
-    ///
-    /// ```
-    /// # tokio_test::block_on(async {
-    ///     use momento::CredentialProviderBuilder;
-    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
-    ///         .build()
-    ///         .expect("MOMENTO_API_KEY must be set");
-    /// # })
-    /// ```
-    ///
-    pub fn from_environment_variable(env_var_name: String) -> Self {
+    fn from_environment_variable(env_var_name: String) -> Self {
         CredentialProviderBuilder {
             auth_token_source: EnvironmentVariable(env_var_name),
             cache_endpoint_override: None,
@@ -90,22 +126,7 @@ impl CredentialProviderBuilder {
         }
     }
 
-    /// Returns a builder to produce a Credential Provider from the provided auth token
-    ///
-    /// # Arguments
-    ///
-    /// * `auth_token` - Momento auth token string
-    /// # Examples
-    ///
-    /// ```
-    /// # tokio_test::block_on(async {
-    ///     use momento::CredentialProviderBuilder;
-    ///     let credential_provider = CredentialProviderBuilder::from_string("eyJlbmRwb2ludCI6Im1vbWVudG9fZW5kcG9pbnQiLCJhcGlfa2V5IjoiZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKemRXSWlPaUowWlhOMElITjFZbXBsWTNRaUxDSjJaWElpT2pFc0luQWlPaUlpZlEuaGcyd01iV2Utd2VzUVZ0QTd3dUpjUlVMalJwaFhMUXdRVFZZZlFMM0w3YyJ9Cg==".to_string())
-    ///         .build()
-    ///         .expect("could not build credential provider");
-    /// # })
-    /// ```
-    pub fn from_string(auth_token: String) -> Self {
+    fn from_string(auth_token: String) -> Self {
         CredentialProviderBuilder {
             auth_token_source: LiteralToken(auth_token),
             cache_endpoint_override: None,
@@ -113,79 +134,79 @@ impl CredentialProviderBuilder {
         }
     }
 
-    /// Override the data plane endpoint
-    /// # Arguments
-    ///
-    /// * `cache_endpoint_override` - The host which the Momento client will connect to for Momento data plane operations
-    ///
-    /// # Examples
-    /// ```
-    /// # tokio_test::block_on(async {
-    ///     use momento::CredentialProviderBuilder;
-    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
-    ///         .with_cache_endpoint("my_cache_endpoint.com".to_string())
-    ///         .build()
-    ///         .expect("MOMENTO_API_KEY must be set");
-    ///      assert_eq!("https://my_cache_endpoint.com", credential_provider.cache_endpoint);
-    /// # })
-    /// ```
-    ///
-    pub fn with_cache_endpoint(mut self, cache_endpoint_override: String) -> Self {
-        self.cache_endpoint_override = Some(cache_endpoint_override);
-        self
-    }
+    // /// Override the data plane endpoint
+    // /// # Arguments
+    // ///
+    // /// * `cache_endpoint_override` - The host which the Momento client will connect to for Momento data plane operations
+    // ///
+    // /// # Examples
+    // /// ```
+    // /// # tokio_test::block_on(async {
+    // ///     use momento::CredentialProviderBuilder;
+    // ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
+    // ///         .with_cache_endpoint("my_cache_endpoint.com".to_string())
+    // ///         .build()
+    // ///         .expect("MOMENTO_API_KEY must be set");
+    // ///      assert_eq!("https://my_cache_endpoint.com", credential_provider.cache_endpoint);
+    // /// # })
+    // /// ```
+    // ///
+    // fn with_cache_endpoint(mut self, cache_endpoint_override: String) -> Self {
+    //     self.cache_endpoint_override = Some(cache_endpoint_override);
+    //     self
+    // }
 
-    /// Override the control plane endpoint
-    /// # Arguments
-    ///
-    /// * `control_endpoint_override` - The host which the Momento client will connect to for Momento control plane operations
-    ///
-    /// # Examples
-    /// ```
-    /// # tokio_test::block_on(async {
-    ///     use momento::CredentialProviderBuilder;
-    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
-    ///         .with_control_endpoint("my_control_endpoint.com".to_string())
-    ///         .build()
-    ///         .expect("MOMENTO_API_KEY must be set");
-    ///      assert_eq!("https://my_control_endpoint.com", credential_provider.control_endpoint);
-    /// # })
-    /// ```
-    ///
-    pub fn with_control_endpoint(mut self, control_endpoint_override: String) -> Self {
-        self.control_endpoint_override = Some(control_endpoint_override);
-        self
-    }
+    // /// Override the control plane endpoint
+    // /// # Arguments
+    // ///
+    // /// * `control_endpoint_override` - The host which the Momento client will connect to for Momento control plane operations
+    // ///
+    // /// # Examples
+    // /// ```
+    // /// # tokio_test::block_on(async {
+    // ///     use momento::CredentialProviderBuilder;
+    // ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
+    // ///         .with_control_endpoint("my_control_endpoint.com".to_string())
+    // ///         .build()
+    // ///         .expect("MOMENTO_API_KEY must be set");
+    // ///      assert_eq!("https://my_control_endpoint.com", credential_provider.control_endpoint);
+    // /// # })
+    // /// ```
+    // ///
+    // fn with_control_endpoint(mut self, control_endpoint_override: String) -> Self {
+    //     self.control_endpoint_override = Some(control_endpoint_override);
+    //     self
+    // }
 
-    /// Override both control plane and data plane endpoints
-    /// # Arguments
-    ///
-    /// * `endpoint_override` - The host which will be used to build control and data plane endpoints by prepending `control` and `cache` subdomains.
-    ///
-    /// # Examples
-    /// ```
-    /// # tokio_test::block_on(async {
-    ///     use momento::CredentialProviderBuilder;
-    ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
-    ///         .with_momento_endpoint("my_endpoint.com".to_string())
-    ///         .build()
-    ///         .expect("MOMENTO_API_KEY must be set");
-    ///      assert_eq!("https://cache.my_endpoint.com", credential_provider.cache_endpoint);
-    ///      assert_eq!("https://control.my_endpoint.com", credential_provider.control_endpoint);
-    /// # })
-    /// ```
-    ///
-    pub fn with_momento_endpoint(mut self, endpoint_override: String) -> Self {
-        self.cache_endpoint_override = Some(CredentialProviderBuilder::get_cache_endpoint(
-            &endpoint_override,
-        ));
-        self.control_endpoint_override = Some(CredentialProviderBuilder::get_control_endpoint(
-            &endpoint_override,
-        ));
-        self
-    }
+    // /// Override both control plane and data plane endpoints
+    // /// # Arguments
+    // ///
+    // /// * `endpoint_override` - The host which will be used to build control and data plane endpoints by prepending `control` and `cache` subdomains.
+    // ///
+    // /// # Examples
+    // /// ```
+    // /// # tokio_test::block_on(async {
+    // ///     use momento::CredentialProviderBuilder;
+    // ///     let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
+    // ///         .with_momento_endpoint("my_endpoint.com".to_string())
+    // ///         .build()
+    // ///         .expect("MOMENTO_API_KEY must be set");
+    // ///      assert_eq!("https://cache.my_endpoint.com", credential_provider.cache_endpoint);
+    // ///      assert_eq!("https://control.my_endpoint.com", credential_provider.control_endpoint);
+    // /// # })
+    // /// ```
+    // ///
+    // fn with_momento_endpoint(mut self, endpoint_override: String) -> Self {
+    //     self.cache_endpoint_override = Some(CredentialProviderBuilder::get_cache_endpoint(
+    //         &endpoint_override,
+    //     ));
+    //     self.control_endpoint_override = Some(CredentialProviderBuilder::get_control_endpoint(
+    //         &endpoint_override,
+    //     ));
+    //     self
+    // }
 
-    pub fn build(self) -> MomentoResult<CredentialProvider> {
+    fn build(self) -> MomentoResult<CredentialProvider> {
         let token_to_process = match self.auth_token_source {
             EnvironmentVariable(env_var_name) => match env::var(&env_var_name) {
                 Ok(auth_token) => auth_token,
@@ -320,6 +341,7 @@ fn token_parsing_error(e: Box<dyn std::error::Error + Send + Sync>) -> MomentoEr
 #[cfg(test)]
 mod tests {
     use crate::credential_provider::CredentialProviderBuilder;
+    use crate::CredentialProvider;
     use std::env;
 
     #[test]
@@ -416,66 +438,66 @@ mod tests {
         assert_eq!(e.to_string(), _err_msg);
     }
 
-    #[test]
-    fn valid_no_c_cp_claims_jwt_with_endpoint_overrides() {
-        // Token header
-        // ------------
-        // {
-        //   "typ": "JWT",
-        //   "alg": "HS256"
-        // }
-        //
-        // Token claims
-        // ------------
-        // {
-        //   "iat": 1516239022,
-        //   "name": "John Doe",
-        //   "sub": "abcd"
-        // }
-        let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
-        let credential_provider = CredentialProviderBuilder::from_string(auth_token.to_string())
-            .with_cache_endpoint("cache.help.com".to_string())
-            .with_control_endpoint("control.help.com".to_string())
-            .build()
-            .expect("should be able to get credentials");
+    // #[test]
+    // fn valid_no_c_cp_claims_jwt_with_endpoint_overrides() {
+    //     // Token header
+    //     // ------------
+    //     // {
+    //     //   "typ": "JWT",
+    //     //   "alg": "HS256"
+    //     // }
+    //     //
+    //     // Token claims
+    //     // ------------
+    //     // {
+    //     //   "iat": 1516239022,
+    //     //   "name": "John Doe",
+    //     //   "sub": "abcd"
+    //     // }
+    //     let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
+    //     let credential_provider = CredentialProviderBuilder::from_string(auth_token.to_string())
+    //         .with_cache_endpoint("cache.help.com".to_string())
+    //         .with_control_endpoint("control.help.com".to_string())
+    //         .build()
+    //         .expect("should be able to get credentials");
+    //
+    //     assert_eq!(credential_provider.auth_token, auth_token.to_string());
+    //     assert_eq!(
+    //         credential_provider.control_endpoint,
+    //         "https://control.help.com"
+    //     );
+    //     assert_eq!(credential_provider.cache_endpoint, "https://cache.help.com");
+    // }
 
-        assert_eq!(credential_provider.auth_token, auth_token.to_string());
-        assert_eq!(
-            credential_provider.control_endpoint,
-            "https://control.help.com"
-        );
-        assert_eq!(credential_provider.cache_endpoint, "https://cache.help.com");
-    }
-
-    #[test]
-    fn valid_no_c_cp_claims_jwt_with_momento_endpoint_override() {
-        // Token header
-        // ------------
-        // {
-        //   "typ": "JWT",
-        //   "alg": "HS256"
-        // }
-        //
-        // Token claims
-        // ------------
-        // {
-        //   "iat": 1516239022,
-        //   "name": "John Doe",
-        //   "sub": "abcd"
-        // }
-        let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
-        let credential_provider = CredentialProviderBuilder::from_string(auth_token.to_string())
-            .with_momento_endpoint("help.com".to_string())
-            .build()
-            .expect("should be able to get credentials");
-
-        assert_eq!(credential_provider.auth_token, auth_token.to_string());
-        assert_eq!(
-            credential_provider.control_endpoint,
-            "https://control.help.com"
-        );
-        assert_eq!(credential_provider.cache_endpoint, "https://cache.help.com");
-    }
+    // #[test]
+    // fn valid_no_c_cp_claims_jwt_with_momento_endpoint_override() {
+    //     // Token header
+    //     // ------------
+    //     // {
+    //     //   "typ": "JWT",
+    //     //   "alg": "HS256"
+    //     // }
+    //     //
+    //     // Token claims
+    //     // ------------
+    //     // {
+    //     //   "iat": 1516239022,
+    //     //   "name": "John Doe",
+    //     //   "sub": "abcd"
+    //     // }
+    //     let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
+    //     let credential_provider = CredentialProviderBuilder::from_string(auth_token.to_string())
+    //         .with_momento_endpoint("help.com".to_string())
+    //         .build()
+    //         .expect("should be able to get credentials");
+    //
+    //     assert_eq!(credential_provider.auth_token, auth_token.to_string());
+    //     assert_eq!(
+    //         credential_provider.control_endpoint,
+    //         "https://control.help.com"
+    //     );
+    //     assert_eq!(credential_provider.cache_endpoint, "https://cache.help.com");
+    // }
 
     #[test]
     fn invalid_no_cache_claim_jwt_with_no_endpoint_override() {
@@ -494,40 +516,34 @@ mod tests {
         //   "sub": "abcd"
         // }
         let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
-        let e = CredentialProviderBuilder::from_string(auth_token.to_string())
-            .with_control_endpoint("foo".to_string())
-            .build()
-            .unwrap_err();
+        let e = CredentialProvider::from_string(auth_token.to_string()).unwrap_err();
         let _err_msg =
             "invalid argument: auth token is missing cache endpoint and endpoint override is missing. One or the other must be provided".to_string();
         assert_eq!(e.to_string(), _err_msg);
     }
 
-    #[test]
-    fn invalid_no_control_claim_jwt_with_no_endpoint_override() {
-        // Token header
-        // ------------
-        // {
-        //   "typ": "JWT",
-        //   "alg": "HS256"
-        // }
-        //
-        // Token claims
-        // ------------
-        // {
-        //   "iat": 1516239022,
-        //   "name": "John Doe",
-        //   "sub": "abcd"
-        // }
-        let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
-        let e = CredentialProviderBuilder::from_string(auth_token.to_string())
-            .with_cache_endpoint("foo".to_string())
-            .build()
-            .unwrap_err();
-        let _err_msg =
-        "invalid argument: auth token is missing control endpoint and endpoint override is missing. One or the other must be provided.".to_string();
-        assert_eq!(e.to_string(), _err_msg);
-    }
+    // #[test]
+    // fn invalid_no_control_claim_jwt_with_no_endpoint_override() {
+    //     // Token header
+    //     // ------------
+    //     // {
+    //     //   "typ": "JWT",
+    //     //   "alg": "HS256"
+    //     // }
+    //     //
+    //     // Token claims
+    //     // ------------
+    //     // {
+    //     //   "iat": 1516239022,
+    //     //   "name": "John Doe",
+    //     //   "sub": "abcd"
+    //     // }
+    //     let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
+    //     let e = CredentialProvider::from_string(auth_token.to_string()).unwrap_err();
+    //     let _err_msg =
+    //     "invalid argument: auth token is missing control endpoint and endpoint override is missing. One or the other must be provided.".to_string();
+    //     assert_eq!(e.to_string(), _err_msg);
+    // }
 
     #[test]
     fn valid_v1_token() {
@@ -547,22 +563,22 @@ mod tests {
         assert_eq!("eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0IHN1YmplY3QiLCJ2ZXIiOjEsInAiOiIifQ.hg2wMbWe-wesQVtA7wuJcRULjRphXLQwQTVYfQL3L7c", credential_provider.auth_token);
     }
 
-    #[test]
-    fn v1_token_with_overrides() {
-        let v1_token = "eyJlbmRwb2ludCI6Im1vbWVudG9fZW5kcG9pbnQiLCJhcGlfa2V5IjoiZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKemRXSWlPaUowWlhOMElITjFZbXBsWTNRaUxDSjJaWElpT2pFc0luQWlPaUlpZlEuaGcyd01iV2Utd2VzUVZ0QTd3dUpjUlVMalJwaFhMUXdRVFZZZlFMM0w3YyJ9Cg==".to_string();
-
-        let credential_provider = CredentialProviderBuilder::from_string(v1_token)
-            .with_cache_endpoint("cache.foo.com".to_string())
-            .with_control_endpoint("control.foo.com".to_string())
-            .build()
-            .expect("failed to parse token");
-        assert_eq!("https://cache.foo.com", credential_provider.cache_endpoint);
-        assert_eq!(
-            "https://control.foo.com",
-            credential_provider.control_endpoint
-        );
-        assert_eq!("eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0IHN1YmplY3QiLCJ2ZXIiOjEsInAiOiIifQ.hg2wMbWe-wesQVtA7wuJcRULjRphXLQwQTVYfQL3L7c", credential_provider.auth_token);
-    }
+    // #[test]
+    // fn v1_token_with_overrides() {
+    //     let v1_token = "eyJlbmRwb2ludCI6Im1vbWVudG9fZW5kcG9pbnQiLCJhcGlfa2V5IjoiZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKemRXSWlPaUowWlhOMElITjFZbXBsWTNRaUxDSjJaWElpT2pFc0luQWlPaUlpZlEuaGcyd01iV2Utd2VzUVZ0QTd3dUpjUlVMalJwaFhMUXdRVFZZZlFMM0w3YyJ9Cg==".to_string();
+    //
+    //     let credential_provider = CredentialProviderBuilder::from_string(v1_token)
+    //         .with_cache_endpoint("cache.foo.com".to_string())
+    //         .with_control_endpoint("control.foo.com".to_string())
+    //         .build()
+    //         .expect("failed to parse token");
+    //     assert_eq!("https://cache.foo.com", credential_provider.cache_endpoint);
+    //     assert_eq!(
+    //         "https://control.foo.com",
+    //         credential_provider.control_endpoint
+    //     );
+    //     assert_eq!("eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0IHN1YmplY3QiLCJ2ZXIiOjEsInAiOiIifQ.hg2wMbWe-wesQVtA7wuJcRULjRphXLQwQTVYfQL3L7c", credential_provider.auth_token);
+    // }
 
     #[test]
     fn invalid_v1_token_json() {

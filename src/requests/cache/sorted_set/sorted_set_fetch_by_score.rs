@@ -2,8 +2,8 @@ use momento_protos::cache_client::sorted_set_fetch_request::by_score::Score;
 use momento_protos::cache_client::sorted_set_fetch_request::{by_score, ByScore, Range};
 use momento_protos::cache_client::{SortedSetFetchRequest, Unbounded};
 
-use crate::requests::cache::sorted_set_fetch_by_rank::SortOrder;
-use crate::requests::cache::sorted_set_fetch_by_rank::SortOrder::Ascending;
+use crate::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder;
+use crate::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder::Ascending;
 use crate::requests::cache::MomentoRequest;
 use crate::response::cache::sorted_set_fetch::SortedSetFetch;
 use crate::simple_cache_client::prep_request_with_timeout;
@@ -36,8 +36,8 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// # use std::convert::TryInto;
 /// # use momento_test_util::create_doctest_client;
 /// # tokio_test::block_on(async {
-/// use momento::requests::cache::sorted_set_fetch_by_rank::SortOrder;
-/// use momento::requests::cache::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
+/// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder;
+/// use momento::requests::cache::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
 /// use momento::response::cache::sorted_set_fetch::SortedSetFetch;
 /// # let (cache_client, cache_name) = create_doctest_client();
 /// let sorted_set_name = "sorted_set";

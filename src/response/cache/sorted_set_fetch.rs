@@ -6,6 +6,8 @@ use momento_protos::cache_client::SortedSetFetchResponse;
 
 use crate::{MomentoError, MomentoResult};
 
+// TODO this needs to be moved to the requests directory
+
 #[derive(Debug, PartialEq)]
 pub enum SortedSetFetch {
     Hit { elements: SortedSetElements },
