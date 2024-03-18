@@ -52,7 +52,7 @@ impl CredentialProvider {
         CredentialProviderBuilder::from_environment_variable(env_var_name).build()
     }
 
-    /// Returns a builder to produce a Credential Provider from the provided API key
+    /// Returns a Credential Provider from the provided API key
     ///
     /// # Arguments
     ///
