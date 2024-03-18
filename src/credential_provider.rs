@@ -32,7 +32,7 @@ pub struct CredentialProvider {
 }
 
 impl CredentialProvider {
-    /// Returns a builder to produce a Credential Provider using an API key stored in the specified
+    /// Returns a Credential Provider using an API key stored in the specified
     /// environment variable
     ///
     /// # Arguments
