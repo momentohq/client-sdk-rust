@@ -172,7 +172,6 @@ impl CacheClient {
     /// * `cache_name` - name of cache
     /// * `key` - key of the item whose value we are setting
     /// * `value` - data to stored in the cache item
-    /// * `ttl` - The TTL to use for the
     ///
     /// # Examples
     ///

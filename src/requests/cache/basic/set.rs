@@ -46,9 +46,6 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetRequest<K, V> {
     type Response = Set;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<Set> {
-        // let ttl = self.ttl.unwrap_or_default();
-        // let elements = self.elements.into_iter().map(|e| e.into_bytes()).collect();
-        // let set_name = self.set_name.into_bytes();
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),

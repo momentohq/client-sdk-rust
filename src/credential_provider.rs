@@ -42,9 +42,9 @@ impl CredentialProvider {
     ///
     /// ```
     /// # tokio_test::block_on(async {
-    ///     use momento::CredentialProvider;
-    ///     let credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
-    ///         .expect("MOMENTO_API_KEY must be set");
+    /// use momento::CredentialProvider;
+    /// let credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
+    ///     .expect("MOMENTO_API_KEY must be set");
     /// # })
     /// ```
     ///
@@ -63,16 +63,16 @@ impl CredentialProvider {
     /// # use momento::MomentoResult;
     /// # fn main() -> () {
     /// # tokio_test::block_on(async {
-    ///     use momento::CredentialProvider;
+    /// use momento::CredentialProvider;
     ///
-    ///     let api_key = "YOUR API KEY GOES HERE";
-    ///     let credential_provider = match(CredentialProvider::from_string(api_key.to_string())) {
-    ///        Ok(credential_provider) => credential_provider,
-    ///        Err(e) => {
-    ///             println!("Error while creating credential provider: {}", e);
-    ///             return // probably you will do something else here
-    ///        }
-    ///     };
+    /// let api_key = "YOUR API KEY GOES HERE";
+    /// let credential_provider = match(CredentialProvider::from_string(api_key.to_string())) {
+    ///    Ok(credential_provider) => credential_provider,
+    ///    Err(e) => {
+    ///         println!("Error while creating credential provider: {}", e);
+    ///         return // probably you will do something else here
+    ///    }
+    /// };
     ///
     /// # ()
     /// # })
