@@ -8,7 +8,7 @@ The Momento Rust SDK package is available on `crates.io`: [momento](https://crat
 
 Here is a quickstart you can use in your own project:
 
-```csharp
+```rust
 {% include "./example/src/readme.rs" %}
 ```
 
