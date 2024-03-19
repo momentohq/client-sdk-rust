@@ -8,5 +8,6 @@ edition = "2021"
 [workspace]
 
 [dependencies]
-momento = "0.15.0"
+#momento = "0.15.0"
+momento = { path = "../" }
 tokio = { version = "1.18.2", features = ["full"] }

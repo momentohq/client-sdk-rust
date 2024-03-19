@@ -3,7 +3,7 @@ mod tests {
     use std::{env, time::Duration};
 
     use momento::response::{Get, GetValue};
-    use momento::{CredentialProviderBuilder, SimpleCacheClient};
+    use momento::{CredentialProvider, SimpleCacheClient};
     use momento::{MomentoError, SimpleCacheClientBuilder};
     use serde_json::Value;
     use tokio::time::sleep;
@@ -19,9 +19,7 @@ mod tests {
         auth_token: String,
     ) -> Result<SimpleCacheClientBuilder, MomentoError> {
         SimpleCacheClientBuilder::new_with_explicit_agent_name(
-            CredentialProviderBuilder::from_string(auth_token)
-                .build()
-                .expect("auth token should be valid"),
+            CredentialProvider::from_string(auth_token)?,
             Duration::from_secs(5),
             "integration_test",
         )

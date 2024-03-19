@@ -9,12 +9,11 @@ use crate::{CollectionTtl, IntoBytes, MomentoResult};
 /// # fn main() -> anyhow::Result<()> {
 /// # tokio_test::block_on(async {
 /// use std::time::Duration;
-/// use momento::{CredentialProviderBuilder};
-/// use momento::requests::cache::set_add_elements::SetAddElements;
+/// use momento::{CredentialProvider};
+/// use momento::requests::cache::set::set_add_elements::SetAddElements;
 /// use momento::config::configurations;
 ///
-/// let credential_provider = CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
-///     .build()?;
+/// let credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())?;
 /// let cache_name = "cache";
 ///
 /// let cache_client = momento::CacheClient::new(credential_provider, configurations::laptop::latest(), Duration::from_secs(5))?;

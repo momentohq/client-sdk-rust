@@ -12,7 +12,7 @@ mod grpc;
 mod simple_cache_client;
 mod utils;
 
-pub use crate::credential_provider::{CredentialProvider, CredentialProviderBuilder};
+pub use crate::credential_provider::CredentialProvider;
 pub use crate::response::ErrorSource;
 pub use crate::response::MomentoError;
 pub use crate::simple_cache_client::{

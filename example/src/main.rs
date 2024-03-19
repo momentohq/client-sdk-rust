@@ -5,6 +5,9 @@ use momento::simple_cache_client::SimpleCacheClientBuilder;
 use std::env;
 use std::num::NonZeroU64;
 use std::process;
+use std::time::Duration;
+use momento::{CacheClient, CredentialProvider};
+use momento::config::configurations::laptop;
 
 #[tokio::main]
 async fn main() {

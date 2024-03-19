@@ -5,8 +5,8 @@ use std::time::Duration;
 use uuid::Uuid;
 
 use momento::config::configurations;
+use momento::CredentialProvider;
 use momento::{CacheClient, SimpleCacheClientBuilder};
-use momento::{CredentialProvider, CredentialProviderBuilder};
 
 pub type DoctestResult = anyhow::Result<()>;
 
@@ -29,10 +29,8 @@ where
     let _guard = runtime.enter();
 
     let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
-    let credential_provider =
-        CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
-            .build()
-            .expect("MOMENTO_API_KEY must be set");
+    let credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
+        .expect("MOMENTO_API_KEY must be set");
 
     let mut client =
         SimpleCacheClientBuilder::new(credential_provider.clone(), Duration::from_secs(5))?.build();
@@ -70,7 +68,6 @@ pub fn get_test_cache_name() -> String {
 }
 
 pub fn get_test_credential_provider() -> CredentialProvider {
-    CredentialProviderBuilder::from_environment_variable("MOMENTO_API_KEY".to_string())
-        .build()
+    CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
         .expect("auth token should be valid")
 }
