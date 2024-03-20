@@ -5,6 +5,10 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: write
+  pull-requests: write
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -21,6 +25,59 @@ jobs:
       - name: Lint (rustfmt and clippy)
         run: make lint
 
+  generate_readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.MOMENTO_MACHINE_USER_GITHUB_TOKEN }}
+
+      - name: Generate README
+        uses: momentohq/standards-and-practices/github-actions/generate-and-commit-oss-readme@gh-actions-v2
+        with:
+          project_status: official
+          project_stability: alpha
+          project_type: sdk
+          sdk_language: Rust
+          template_file: ./README.template.md
+          output_file: ./README.md
+          dev_docs_slug: rust
+  
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    needs: [ generate_readme ]
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+    steps:
+      - uses: google-github-actions/release-please-action@v3
+        id: release
+        with:
+          token: ${{ secrets.MOMENTO_MACHINE_USER_GITHUB_TOKEN }}
+          release-type: rust
+          package-name: momento
+          default-branch: main
+          changelog-types: '[{"type":"feat","section":"Features","hidden":false},{"type":"fix","section":"Bug Fixes","hidden":false},{"type":"chore","section":"Miscellaneous","hidden":false}]'
+
+  publish:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    needs: [ release-please ]
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.MOMENTO_MACHINE_USER_GITHUB_TOKEN }}
+
+      - run: |
+          cargo publish
+          --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+    
+
+
+# Previous release process below
 #  release:
 #    runs-on: ubuntu-latest
 #    outputs:
@@ -74,23 +131,3 @@ jobs:
 #
 #      - name: Publish crate
 #        run: cargo publish --allow-dirty
-
-
-  generate_readme:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup repo
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.MOMENTO_MACHINE_USER_GITHUB_TOKEN }}
-
-      - name: Generate README
-        uses: momentohq/standards-and-practices/github-actions/generate-and-commit-oss-readme@gh-actions-v2
-        with:
-          project_status: official
-          project_stability: alpha
-          project_type: sdk
-          sdk_language: Rust
-          template_file: ./README.template.md
-          output_file: ./README.md
-          dev_docs_slug: rust
