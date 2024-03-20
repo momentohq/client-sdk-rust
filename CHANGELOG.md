@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.33.1](https://github.com/momentohq/client-sdk-rust/compare/v0.33.0...v0.33.1) (2024-03-20)
+
+
+### Miscellaneous
+
+* try logging into crates.io before publishing ([#189](https://github.com/momentohq/client-sdk-rust/issues/189)) ([e5679c2](https://github.com/momentohq/client-sdk-rust/commit/e5679c24247f59ec666b1078e874e7d1b1b3c03f))
+
 ## [0.33.0](https://github.com/momentohq/client-sdk-rust/compare/v0.32.1...v0.33.0) (2024-03-20)
 
 
