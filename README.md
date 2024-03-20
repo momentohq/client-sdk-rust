@@ -27,33 +27,42 @@ The Momento Rust SDK package is available on `crates.io`: [momento](https://crat
 
 Here is a quickstart you can use in your own project:
 
-```csharp
-use std::time::Duration;
-use momento::{CacheClient, CredentialProvider};
+```rust
 use momento::config::configurations::laptop;
+use momento::requests::cache::basic::get::Get;
+use momento::{CacheClient, CredentialProvider, MomentoError};
+use std::time::Duration;
 
-const CACHE_NAME: String = "cache";
+const CACHE_NAME: &str = "cache";
 
-pub async fn main() {
+#[tokio::main]
+pub async fn main() -> Result<(), MomentoError> {
     let cache_client = CacheClient::new(
-        CredentialProvider::from_env_var("MOMENTO_API_KEY")?,
+        CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())?,
         laptop::latest(),
-        Duration::from_secs(60)
+        Duration::from_secs(60),
     )?;
 
-    cache_client.create_cache(CACHE_NAME).await?;
-    
-    match(cache_client.set(CACHE_NAME, "mykey", "myvalue").await) {
+    cache_client.create_cache(CACHE_NAME.to_string()).await?;
+
+    match cache_client.set(CACHE_NAME, "mykey", "myvalue").await {
         Ok(_) => println!("Successfully stored key 'mykey' with value 'myvalue'"),
-        Err(e) => println!("Error: {}", e)
+        Err(e) => println!("Error: {}", e),
     }
-    
-    let value = match(cache_client.get(CACHE_NAME, "mykey").await?) {
-        
+
+    let value: String = match cache_client.get(CACHE_NAME, "mykey").await? {
+        Get::Hit { value } => value.try_into().expect("I stored a string!"),
+        Get::Miss => {
+            println!("Cache miss!");
+            return Ok(()); // probably you'll do something else here
+        }
     };
 
+    println!("Successfully retrieved value: {}", value);
 
+    Ok(())
 }
+
 ```
 
 Note that the above code requires an environment variable named MOMENTO_API_KEY which must
