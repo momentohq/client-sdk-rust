@@ -68,6 +68,11 @@ jobs:
     needs: [ release-please ]
     if: ${{ needs.release-please.outputs.release_created == 'true' }}
     steps:
+      - name: Setup repo
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.MOMENTO_MACHINE_USER_GITHUB_TOKEN }}
+          
       - run: |
           cargo publish
           --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
