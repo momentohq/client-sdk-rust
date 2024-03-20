@@ -1,23 +1,14 @@
-mod readme;
-
-use momento::response::MomentoGetStatus;
-use momento::simple_cache_client::SimpleCacheClientBuilder;
-use std::env;
-use std::num::NonZeroU64;
+use momento::response::Get;
+use momento::{CredentialProvider, MomentoError, SimpleCacheClientBuilder};
 use std::process;
 use std::time::Duration;
-use momento::{CacheClient, CredentialProvider};
-use momento::config::configurations::laptop;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), MomentoError> {
     // Initializing Momento
-    let auth_token =
-        env::var("MOMENTO_AUTH_TOKEN").expect("env var MOMENTO_AUTH_TOKEN must be set");
-    let item_default_ttl_seconds = 60;
     let mut cache_client = match SimpleCacheClientBuilder::new(
-        auth_token,
-        NonZeroU64::new(item_default_ttl_seconds).expect("expected a non-zero number"),
+        CredentialProvider::from_env_var("MOMENTO_AUTH_TOKEN".to_string())?,
+        Duration::from_secs(60),
     ) {
         Ok(client) => client,
         Err(err) => {
@@ -38,24 +29,16 @@ async fn main() {
 
     // List the caches
     println!("Listing caches:");
-    let mut next_token: Option<String> = None;
-    loop {
-        next_token = match cache_client.list_caches(next_token).await {
-            Ok(list_cache_result) => {
-                for listed_cache in list_cache_result.caches {
-                    println!("{}", listed_cache.cache_name);
-                }
-                list_cache_result.next_token
+    match cache_client.list_caches().await {
+        Ok(list_cache_result) => {
+            for listed_cache in list_cache_result.caches {
+                println!("{}", listed_cache.cache_name);
             }
-            Err(err) => {
-                eprintln!("{err}");
-                break;
-            }
-        };
-        if next_token.is_none() {
-            break;
         }
-    }
+        Err(err) => {
+            eprintln!("{err}");
+        }
+    };
     println!();
 
     // Sets key with default TTL and get value with that key
@@ -72,10 +55,14 @@ async fn main() {
         }
     };
     match cache_client.get(&cache_name, key.clone()).await {
-        Ok(r) => match r.result {
-            MomentoGetStatus::HIT => println!("cache hit!"),
-            MomentoGetStatus::MISS => println!("cache miss"),
-            _ => println!("error occurred"),
+        Ok(r) => match r {
+            Get::Hit { value } => {
+                let v: String = value.try_into().expect("I stored a string!");
+                println!("Got value: {v}");
+            }
+            Get::Miss => {
+                println!("Cache miss!");
+            }
         },
         Err(err) => {
             eprintln!("{err}");
@@ -90,4 +77,5 @@ async fn main() {
             eprintln!("{err}");
         }
     };
+    Ok(())
 }

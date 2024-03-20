@@ -7,6 +7,7 @@ lint:
 	cargo fmt -- --check
 	cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used
 
+
 .PHONY: build
 ## Build project
 build:
@@ -27,29 +28,13 @@ clean-build: clean build
 
 .PHONY: precommit
 ## Run clean-build and test as a step before committing.
-precommit: clean-build lint test build-examples
+precommit: clean-build lint test
 
-
-.PHONY: test-unit
-test-unit:
-	cargo test --lib
-
-.PHONY: test-doctests
-test-doctests:
-	cargo test --doc
-
-.PHONY: test-integration
-test-integration:
-	cargo test --tests
 
 .PHONY: test
-## Run unit and integration tests
-test: test-unit test-integration test-doctests
+test:
+	cargo test
 
-.PHONY: build-examples
-## Build example code
-build-examples:
-	cd example; make lint; make build
 
 # See <https://gist.github.com/klmr/575726c7e05d8780505a> for explanation.
 .PHONY: help
