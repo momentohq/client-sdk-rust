@@ -59,8 +59,6 @@ jobs:
           package-name: momento
           default-branch: main
           changelog-types: '[{"type":"feat","section":"Features","hidden":false},{"type":"fix","section":"Bug Fixes","hidden":false},{"type":"chore","section":"Miscellaneous","hidden":false}]'
-          extra-files: | 
-            Cargo.toml
 
   publish:
     name: Publish to crates.io
