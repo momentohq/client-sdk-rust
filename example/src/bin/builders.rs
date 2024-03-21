@@ -1,7 +1,7 @@
-use momento::config::configuration::Configuration;
+use momento::config::configuration::{Configuration};
 use momento::config::grpc_configuration::GrpcConfiguration;
 use momento::config::transport_strategy::TransportStrategy;
-use momento::MomentoError;
+use momento::{MomentoError, CredentialProvider};
 use std::time::Duration;
 
 // const CACHE_NAME: &str = "cache";
@@ -20,16 +20,15 @@ pub async fn main() -> Result<(), MomentoError> {
         )
         .build();
     
-    println!("{:?}", config);
+    // Credential Provider builders | this one needs a builder because it will parse the tokens and
+    //                              | stuff when you call 'build'. we can have some factory fns that
+    //                              | skip the exposure to the builder in the common case, or force
+    //                              | people to see the builder for consistency
+    let cred_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())?
+        .base_endpoint("foo.com");
 
-    // // Credential Provider builders | this one needs a builder because it will parse the tokens and
-    // //                              | stuff when you call 'build'. we can have some factory fns that
-    // //                              | skip the exposure to the builder in the common case, or force
-    // //                              | people to see the builder for consistency
-    // let cred_provider = CredentialProvider::builder()
-    //     .from_env_var("MOMENTO_API_KEY".to_string())
-    //     .base_endpoint("foo.com")
-    //     .build()?;
+    println!("{:?}", config);
+    println!("{:?}", cred_provider);
     //
     // // Cache Client builders | this one will need a builder, because the 'build' function gates the
     // //                       | establishment of connections etc. can probably be similar to the config builder
