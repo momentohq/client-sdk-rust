@@ -29,7 +29,6 @@ path = "scripts/test-teardown.rs"
 test = false
 doc = false
 
-exclude = ["example"]
 
 [dependencies]
 momento-protos = { version = "0.84.1" }

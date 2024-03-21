@@ -29,6 +29,7 @@ use crate::config::transport_strategy::TransportStrategy;
 ///                     .build()    
 ///             ).build()
 ///     ).build();
+
 #[derive(Clone, Debug)]
 pub struct Configuration {
     /// Low-level options for network interactions with Momento.

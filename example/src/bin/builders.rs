@@ -1,7 +1,7 @@
-use momento::config::configuration::{Configuration};
+use momento::config::configuration::Configuration;
 use momento::config::grpc_configuration::GrpcConfiguration;
 use momento::config::transport_strategy::TransportStrategy;
-use momento::{MomentoError, CredentialProvider};
+use momento::{CacheClient, CredentialProvider, MomentoError};
 use std::time::Duration;
 
 // const CACHE_NAME: &str = "cache";
@@ -19,31 +19,31 @@ pub async fn main() -> Result<(), MomentoError> {
                 .build(),
         )
         .build();
-    
+
     // Credential Provider builders | this one needs a builder because it will parse the tokens and
     //                              | stuff when you call 'build'. we can have some factory fns that
     //                              | skip the exposure to the builder in the common case, or force
     //                              | people to see the builder for consistency
-    let cred_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())?
-        .base_endpoint("foo.com");
+    let cred_provider =
+        CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())?.base_endpoint("foo.com");
 
-    println!("{:?}", config);
-    println!("{:?}", cred_provider);
-    //
-    // // Cache Client builders | this one will need a builder, because the 'build' function gates the
-    // //                       | establishment of connections etc. can probably be similar to the config builder
-    // let cache_client = CacheClient::builder()
-    //     // kenny's pref was to do a phased builder here. if we do, default_ttl needs to be first, because it's the least likely one
-    //     // to become optional in the future
-    //     .default_ttl(Duration::from_secs(60))
-    //     // I think we would do config next because i don't really care if we ever make it optional, whereas cred provider i would
-    //     // definitely like to make optional
-    //     .config(config)
-    //     // When we have a default credential chain (to look in env vars, config files, etc for creds), this one could become optional. Which
-    //     // would simply mean that we add a `.build` function to the builder from the previous phase, even though it won't have one in the first launch.
-    //     .credential_provider(cred_provider)
-    //     // we won't be able to add required args in the future but we can add optional ones on the phased builder at this level.
-    //     .build()?;
+    // Cache Client builders | this one will need a builder, because the 'build' function gates the
+    //                       | establishment of connections etc. can probably be similar to the config builder
+    let cache_client = CacheClient::builder()
+        // kenny's pref was to do a phased builder here. if we do, default_ttl needs to be first, because it's the least likely one
+        // to become optional in the future
+        .default_ttl(Duration::from_secs(60))
+        // I think we would do config next because i don't really care if we ever make it optional, whereas cred provider i would
+        // definitely like to make optional
+        .configuration(config)
+        // When we have a default credential chain (to look in env vars, config files, etc for creds), this one could become optional. Which
+        // would simply mean that we add a `.build` function to the builder from the previous phase, even though it won't have one in the first launch.
+        .credential_provider(cred_provider)
+        // we won't be able to add required args in the future but we can add optional ones on the phased builder at this level.
+        .build()?;
+
+    println!("{:?}", cache_client);
+
     //
     // // Request builders | these won't really need to have a builder because they don't need a 'build' function,
     // //                  | because there are no resources that need to be initialized on 'build'. but we could
