@@ -43,40 +43,6 @@ impl CacheClient {
     pub fn builder() -> CacheClientBuilder<NeedsDefaultTtl> {
         CacheClientBuilder(NeedsDefaultTtl(()))
     }
-    //     credential_provider: CredentialProvider,
-    //     configuration: Configuration,
-    //     default_ttl: Duration,
-    // ) -> MomentoResult<Self> {
-    //     let agent_value = &user_agent("sdk");
-    //
-    //     let data_channel = utils::connect_channel_lazily_configurable(
-    //         &credential_provider.cache_endpoint,
-    //         configuration.transport_strategy.grpc_configuration.clone(),
-    //     )?;
-    //     let control_channel = utils::connect_channel_lazily_configurable(
-    //         &credential_provider.control_endpoint,
-    //         configuration.transport_strategy.grpc_configuration.clone(),
-    //     )?;
-    //
-    //     let data_interceptor = InterceptedService::new(
-    //         data_channel,
-    //         HeaderInterceptor::new(&credential_provider.auth_token, agent_value),
-    //     );
-    //     let control_interceptor = InterceptedService::new(
-    //         control_channel,
-    //         HeaderInterceptor::new(&credential_provider.auth_token, agent_value),
-    //     );
-    //
-    //     let data_client = ScsClient::new(data_interceptor);
-    //     let control_client = ScsControlClient::new(control_interceptor);
-    //
-    //     Ok(CacheClient {
-    //         data_client,
-    //         control_client,
-    //         configuration,
-    //         item_default_ttl: default_ttl,
-    //     })
-    // }
 
     /* public API */
 
