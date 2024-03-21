@@ -5,7 +5,7 @@ use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder::{
 };
 use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetFetchByRankRequest;
 use momento::requests::cache::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
-use momento::response::cache::sorted_set_fetch::SortedSetFetch;
+use momento::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
 
 use momento_test_util::CACHE_TEST_STATE;
 

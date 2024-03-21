@@ -1,4 +1,3 @@
-pub mod cache;
 mod cache_dictionary_fetch_response;
 mod cache_dictionary_get_response;
 mod cache_dictionary_increment_response;
