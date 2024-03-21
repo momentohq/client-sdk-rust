@@ -19,17 +19,18 @@ pub mod laptop {
     ///
     /// This config is guaranteed not to change in future releases of the Momento Rust SDK.
     pub fn v1() -> Configuration {
-        Configuration::builder(
-            TransportStrategy::builder(
-                GrpcConfiguration::builder(Duration::from_millis(15000))
-                    .with_keep_alive_while_idle(true)
-                    .with_keep_alive_interval(Duration::from_secs(5000))
-                    .with_keep_alive_timeout(Duration::from_secs(1000))
+        Configuration::builder()
+            .transport_strategy(
+                TransportStrategy::builder()
+                    .grpc_configuration(
+                        GrpcConfiguration::builder()
+                            .deadline(Duration::from_millis(15000))
+                            .enable_keep_alives_with_defaults()
+                            .build(),
+                    )
                     .build(),
             )
-            .build(),
-        )
-        .build()
+            .build()
     }
 }
 
@@ -54,17 +55,18 @@ pub mod in_region {
     ///
     /// This config is guaranteed not to change in future releases of the Momento Rust SDK.
     pub fn v1() -> Configuration {
-        Configuration::builder(
-            TransportStrategy::builder(
-                GrpcConfiguration::builder(Duration::from_millis(1100))
-                    .with_keep_alive_while_idle(true)
-                    .with_keep_alive_interval(Duration::from_secs(5000))
-                    .with_keep_alive_timeout(Duration::from_secs(1000))
+        Configuration::builder()
+            .transport_strategy(
+                TransportStrategy::builder()
+                    .grpc_configuration(
+                        GrpcConfiguration::builder()
+                            .deadline(Duration::from_millis(1100))
+                            .enable_keep_alives_with_defaults()
+                            .build(),
+                    )
                     .build(),
             )
-            .build(),
-        )
-        .build()
+            .build()
     }
 }
 
@@ -90,17 +92,18 @@ pub mod low_latency {
     ///
     /// This config is guaranteed not to change in future releases of the Momento Rust SDK.
     pub fn v1() -> Configuration {
-        Configuration::builder(
-            TransportStrategy::builder(
-                GrpcConfiguration::builder(Duration::from_millis(500))
-                    .with_keep_alive_while_idle(true)
-                    .with_keep_alive_interval(Duration::from_secs(5000))
-                    .with_keep_alive_timeout(Duration::from_secs(1000))
+        Configuration::builder()
+            .transport_strategy(
+                TransportStrategy::builder()
+                    .grpc_configuration(
+                        GrpcConfiguration::builder()
+                            .deadline(Duration::from_millis(500))
+                            .enable_keep_alives_with_defaults()
+                            .build(),
+                    )
                     .build(),
             )
-            .build(),
-        )
-        .build()
+            .build()
     }
 }
 
@@ -125,14 +128,16 @@ pub mod lambda {
     ///
     /// This config is guaranteed not to change in future releases of the Momento Rust SDK.
     pub fn v1() -> Configuration {
-        Configuration::builder(
-            TransportStrategy::builder(
-                GrpcConfiguration::builder(Duration::from_millis(1100))
-                    .with_keep_alive_while_idle(false)
+        Configuration::builder()
+            .transport_strategy(
+                TransportStrategy::builder()
+                    .grpc_configuration(
+                        GrpcConfiguration::builder()
+                            .deadline(Duration::from_millis(1100))
+                            .build(),
+                    )
                     .build(),
             )
-            .build(),
-        )
-        .build()
+            .build()
     }
 }

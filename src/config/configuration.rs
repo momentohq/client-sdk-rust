@@ -20,22 +20,24 @@ use crate::config::transport_strategy::TransportStrategy;
 /// use momento::config::grpc_configuration::{GrpcConfiguration, GrpcConfigurationBuilder};
 /// use momento::config::transport_strategy::TransportStrategy;
 ///
-/// let config = Configuration::builder(
-///            TransportStrategy::builder(
-///                GrpcConfiguration::builder(Duration::from_millis(1000)).build(),
-///            )
-///            .build(),
-///        )
-///        .build();
-#[derive(Clone)]
+/// let config = Configuration::builder()
+///     .transport_strategy(
+///         TransportStrategy::builder()
+///             .grpc_configuration(
+///                 GrpcConfiguration::builder()
+///                     .deadline(Duration::from_millis(1000))
+///                     .build()    
+///             ).build()
+///     ).build();
+#[derive(Clone, Debug)]
 pub struct Configuration {
     /// Low-level options for network interactions with Momento.
     pub(crate) transport_strategy: TransportStrategy,
 }
 
 impl Configuration {
-    pub fn builder(transport_strategy: TransportStrategy) -> ConfigurationBuilder {
-        ConfigurationBuilder { transport_strategy }
+    pub fn builder() -> ConfigurationBuilder<NeedsTransportStrategy> {
+        ConfigurationBuilder(NeedsTransportStrategy(()))
     }
 
     /// Returns the duration the client will wait before terminating an RPC with a DeadlineExceeded error.
@@ -44,19 +46,27 @@ impl Configuration {
     }
 }
 
-pub struct ConfigurationBuilder {
+pub struct ConfigurationBuilder<State>(State);
+
+pub struct NeedsTransportStrategy(());
+
+pub struct ReadyToBuild {
     transport_strategy: TransportStrategy,
 }
 
-impl ConfigurationBuilder {
-    pub fn with_transport_strategy(mut self, transport_strategy: TransportStrategy) -> Self {
-        self.transport_strategy = transport_strategy;
-        self
+impl ConfigurationBuilder<NeedsTransportStrategy> {
+    pub fn transport_strategy(
+        self,
+        transport_strategy: TransportStrategy,
+    ) -> ConfigurationBuilder<ReadyToBuild> {
+        ConfigurationBuilder(ReadyToBuild { transport_strategy })
     }
+}
 
+impl ConfigurationBuilder<ReadyToBuild> {
     pub fn build(self) -> Configuration {
         Configuration {
-            transport_strategy: self.transport_strategy,
+            transport_strategy: self.0.transport_strategy,
         }
     }
 }
