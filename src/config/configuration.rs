@@ -11,7 +11,7 @@ use crate::config::transport_strategy::TransportStrategy;
 /// /// Use laptop for local development
 /// let developer_config = configurations::laptop::latest();
 /// /// Use in_region for a typical server environment
-/// let server_config = configurations::in_region::v1();
+/// let server_config = configurations::in_region::latest();
 /// ```
 /// If you have specific requirements, configurations can also be constructed manually:
 /// ```
@@ -26,9 +26,8 @@ use crate::config::transport_strategy::TransportStrategy;
 ///             .grpc_configuration(
 ///                 GrpcConfiguration::builder()
 ///                     .deadline(Duration::from_millis(1000))
-///                     .build()    
-///             ).build()
-///     ).build();
+///             )
+///     );
 
 #[derive(Clone, Debug)]
 pub struct Configuration {
@@ -58,9 +57,11 @@ pub struct ReadyToBuild {
 impl ConfigurationBuilder<NeedsTransportStrategy> {
     pub fn transport_strategy(
         self,
-        transport_strategy: TransportStrategy,
+        transport_strategy: impl Into<TransportStrategy>,
     ) -> ConfigurationBuilder<ReadyToBuild> {
-        ConfigurationBuilder(ReadyToBuild { transport_strategy })
+        ConfigurationBuilder(ReadyToBuild {
+            transport_strategy: transport_strategy.into(),
+        })
     }
 }
 
@@ -69,5 +70,11 @@ impl ConfigurationBuilder<ReadyToBuild> {
         Configuration {
             transport_strategy: self.0.transport_strategy,
         }
+    }
+}
+
+impl From<ConfigurationBuilder<ReadyToBuild>> for Configuration {
+    fn from(builder: ConfigurationBuilder<ReadyToBuild>) -> Configuration {
+        builder.build()
     }
 }

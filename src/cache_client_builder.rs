@@ -35,11 +35,11 @@ impl CacheClientBuilder<NeedsDefaultTtl> {
 impl CacheClientBuilder<NeedsConfiguration> {
     pub fn configuration(
         self,
-        configuration: Configuration,
+        configuration: impl Into<Configuration>,
     ) -> CacheClientBuilder<NeedsCredentialProvider> {
         CacheClientBuilder(NeedsCredentialProvider {
             default_ttl: self.0.default_ttl,
-            configuration,
+            configuration: configuration.into(),
         })
     }
 }

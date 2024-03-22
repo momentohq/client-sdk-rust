@@ -24,9 +24,11 @@ pub struct ReadyToBuild {
 impl TransportStrategyBuilder<NeedsGrpcConfiguration> {
     pub fn grpc_configuration(
         self,
-        grpc_configuration: GrpcConfiguration,
+        grpc_configuration: impl Into<GrpcConfiguration>,
     ) -> TransportStrategyBuilder<ReadyToBuild> {
-        TransportStrategyBuilder(ReadyToBuild { grpc_configuration })
+        TransportStrategyBuilder(ReadyToBuild {
+            grpc_configuration: grpc_configuration.into(),
+        })
     }
 }
 
@@ -35,5 +37,11 @@ impl TransportStrategyBuilder<ReadyToBuild> {
         TransportStrategy {
             grpc_configuration: self.0.grpc_configuration,
         }
+    }
+}
+
+impl From<TransportStrategyBuilder<ReadyToBuild>> for TransportStrategy {
+    fn from(builder: TransportStrategyBuilder<ReadyToBuild>) -> TransportStrategy {
+        builder.build()
     }
 }

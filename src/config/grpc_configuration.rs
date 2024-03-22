@@ -84,3 +84,9 @@ impl GrpcConfigurationBuilder<ReadyToBuild> {
         }
     }
 }
+
+impl From<GrpcConfigurationBuilder<ReadyToBuild>> for GrpcConfiguration {
+    fn from(builder: GrpcConfigurationBuilder<ReadyToBuild>) -> GrpcConfiguration {
+        builder.build()
+    }
+}
