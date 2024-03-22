@@ -35,12 +35,12 @@ impl TestState {
         let barrier = Arc::new(std::sync::Barrier::new(2));
         let thread_barrier = barrier.clone();
         runtime.spawn(async move {
-            let cache_client = CacheClient::new(
-                credential_provider,
-                configurations::laptop::latest(),
-                Duration::from_secs(5),
-            )
-            .expect("Failed to create cache client");
+            let cache_client = CacheClient::builder()
+                .default_ttl(Duration::from_secs(5))
+                .configuration(configurations::laptop::latest())
+                .credential_provider(credential_provider)
+                .build()
+                .expect("Failed to create cache client");
 
             match cache_client.clone().create_cache(thread_cache_name).await {
                 Ok(_) => {}

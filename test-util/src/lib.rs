@@ -53,12 +53,12 @@ pub fn create_doctest_client() -> (CacheClient, String) {
     let cache_name = get_test_cache_name();
     let credential_provider = get_test_credential_provider();
 
-    let cache_client = momento::CacheClient::new(
-        credential_provider,
-        configurations::laptop::latest(),
-        Duration::from_secs(5),
-    )
-    .expect("cache client should be created");
+    let cache_client = momento::CacheClient::builder()
+        .default_ttl(Duration::from_secs(5))
+        .configuration(configurations::laptop::latest())
+        .credential_provider(credential_provider)
+        .build()
+        .expect("cache client should be created");
 
     (cache_client, cache_name)
 }

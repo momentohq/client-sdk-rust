@@ -37,11 +37,13 @@ const CACHE_NAME: &str = "cache";
 
 #[tokio::main]
 pub async fn main() -> Result<(), MomentoError> {
-    let cache_client = CacheClient::new(
-        CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())?,
-        laptop::latest(),
-        Duration::from_secs(60),
-    )?;
+    let cache_client = CacheClient::builder()
+        .default_ttl(Duration::from_secs(60))
+        .configuration(laptop::latest())
+        .credential_provider(CredentialProvider::from_env_var(
+            "MOMENTO_API_KEY".to_string(),
+        )?)
+        .build()?;
 
     cache_client.create_cache(CACHE_NAME.to_string()).await?;
 

@@ -100,18 +100,17 @@ pub(crate) fn connect_channel_lazily_configurable(
     grpc_config: GrpcConfiguration,
 ) -> Result<Channel, ChannelConnectError> {
     let uri = Uri::try_from(uri_string)?;
-    let endpoint = if grpc_config.keep_alive_while_idle {
-        Channel::builder(uri)
-            .keep_alive_while_idle(true)
-            .http2_keep_alive_interval(grpc_config.keep_alive_interval)
-            .keep_alive_timeout(grpc_config.keep_alive_timeout)
-            .tls_config(ClientTlsConfig::default())?
-    } else {
-        Channel::builder(uri)
-            .keep_alive_while_idle(false)
-            .tls_config(ClientTlsConfig::default())?
-    };
-    Ok(endpoint.connect_lazy())
+    let mut channel_builder = Channel::builder(uri).tls_config(ClientTlsConfig::default())?;
+    if let Some(keep_alive_while_idle) = grpc_config.keep_alive_while_idle {
+        channel_builder = channel_builder.keep_alive_while_idle(keep_alive_while_idle);
+    }
+    if let Some(keep_alive_interval) = grpc_config.keep_alive_interval {
+        channel_builder = channel_builder.http2_keep_alive_interval(keep_alive_interval);
+    }
+    if let Some(keep_alive_timeout) = grpc_config.keep_alive_timeout {
+        channel_builder = channel_builder.keep_alive_timeout(keep_alive_timeout);
+    }
+    Ok(channel_builder.connect_lazy())
 }
 
 pub(crate) fn user_agent(user_agent_name: &str) -> String {

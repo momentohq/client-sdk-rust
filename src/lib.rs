@@ -6,6 +6,7 @@ pub mod requests;
 pub mod response;
 
 mod cache_client;
+mod cache_client_builder;
 mod compression_utils;
 mod credential_provider;
 mod grpc;

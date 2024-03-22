@@ -9,12 +9,12 @@ async fn main() {
     let cache_name = get_test_cache_name();
     let credential_provider = get_test_credential_provider();
 
-    let cache_client = CacheClient::new(
-        credential_provider,
-        configurations::laptop::latest(),
-        Duration::from_secs(5),
-    )
-    .expect("cache client cannot be created");
+    let cache_client = CacheClient::builder()
+        .default_ttl(Duration::from_secs(5))
+        .configuration(configurations::laptop::latest())
+        .credential_provider(credential_provider)
+        .build()
+        .expect("cache client cannot be created");
 
     println!("Deleting cache {}", cache_name.clone());
     cache_client
