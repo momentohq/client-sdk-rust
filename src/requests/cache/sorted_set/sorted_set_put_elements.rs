@@ -11,7 +11,7 @@ use crate::{CacheClient, CollectionTtl, IntoBytes, MomentoResult};
 ///
 /// * `cache_name` - The name of the cache containing the sorted set.
 /// * `sorted_set_name` - The name of the sorted set ot add an element to.
-/// * `elements` - The values and scores to add. The values must be able to be converted to a Vec<u8>.
+/// * `elements` - The values and scores to add. The values must be able to be converted to a `Vec<u8>`.
 ///
 /// # Optional Arguments
 ///
