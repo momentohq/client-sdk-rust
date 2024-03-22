@@ -7,14 +7,12 @@ use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetFet
 use momento::requests::cache::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
 use momento::response::cache::sorted_set_fetch::SortedSetFetch;
 
-use crate::cache_test_state::TEST_STATE;
-
-mod cache_test_state;
+use momento_test_util::CACHE_TEST_STATE;
 
 #[tokio::test]
 async fn sorted_set_put_element_happy_path() {
-    let client = TEST_STATE.client.clone();
-    let cache_name = TEST_STATE.cache_name.clone();
+    let client = CACHE_TEST_STATE.client.clone();
+    let cache_name = CACHE_TEST_STATE.cache_name.clone();
     let sorted_set_name = "sorted-set-".to_string() + &Uuid::new_v4().to_string();
     let value = "value";
     let score = 1.0;
@@ -48,7 +46,7 @@ async fn sorted_set_put_element_happy_path() {
 
 #[tokio::test]
 async fn sorted_set_put_element_nonexistent_cache() {
-    let client = TEST_STATE.client.clone();
+    let client = CACHE_TEST_STATE.client.clone();
     let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
     let sorted_set_name = "sorted-set";
 
@@ -63,8 +61,8 @@ async fn sorted_set_put_element_nonexistent_cache() {
 
 #[tokio::test]
 async fn sorted_set_put_elements_happy_path() {
-    let client = TEST_STATE.client.clone();
-    let cache_name = TEST_STATE.cache_name.clone();
+    let client = CACHE_TEST_STATE.client.clone();
+    let cache_name = CACHE_TEST_STATE.cache_name.clone();
     let sorted_set_name = "sorted-set-".to_string() + &Uuid::new_v4().to_string();
     let to_put = vec![("element1".to_string(), 1.0), ("element2".to_string(), 2.0)];
 
@@ -96,7 +94,7 @@ async fn sorted_set_put_elements_happy_path() {
 
 #[tokio::test]
 async fn sorted_set_put_elements_nonexistent_cache() {
-    let client = TEST_STATE.client.clone();
+    let client = CACHE_TEST_STATE.client.clone();
     let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
     let sorted_set_name = "sorted-set";
 
@@ -115,8 +113,8 @@ async fn sorted_set_put_elements_nonexistent_cache() {
 
 #[tokio::test]
 async fn sorted_set_fetch_by_rank_happy_path() {
-    let client = TEST_STATE.client.clone();
-    let cache_name = TEST_STATE.cache_name.clone();
+    let client = CACHE_TEST_STATE.client.clone();
+    let cache_name = CACHE_TEST_STATE.cache_name.clone();
     let sorted_set_name = "sorted-set-".to_string() + &Uuid::new_v4().to_string();
     let to_put = vec![
         ("1".to_string(), 0.0),
@@ -188,7 +186,7 @@ async fn sorted_set_fetch_by_rank_happy_path() {
 
 #[tokio::test]
 async fn sorted_set_fetch_by_rank_nonexistent_cache() {
-    let client = TEST_STATE.client.clone();
+    let client = CACHE_TEST_STATE.client.clone();
     let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
     let sorted_set_name = "sorted-set";
 
@@ -203,8 +201,8 @@ async fn sorted_set_fetch_by_rank_nonexistent_cache() {
 
 #[tokio::test]
 async fn sorted_set_fetch_by_score_happy_path() {
-    let client = TEST_STATE.client.clone();
-    let cache_name = TEST_STATE.cache_name.clone();
+    let client = CACHE_TEST_STATE.client.clone();
+    let cache_name = CACHE_TEST_STATE.cache_name.clone();
     let sorted_set_name = "sorted-set-".to_string() + &Uuid::new_v4().to_string();
     let to_put = vec![
         ("1".to_string(), 0.0),
@@ -299,7 +297,7 @@ async fn sorted_set_fetch_by_score_happy_path() {
 
 #[tokio::test]
 async fn sorted_set_fetch_by_score_nonexistent_cache() {
-    let client = TEST_STATE.client.clone();
+    let client = CACHE_TEST_STATE.client.clone();
     let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
     let sorted_set_name = "sorted-set";
 

@@ -34,12 +34,12 @@ pub enum SortOrder {
 /// ```
 /// # fn main() -> anyhow::Result<()> {
 /// # use std::convert::TryInto;
-/// # use momento_test_util::create_doctest_client;
+/// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder;
 /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetFetchByRankRequest;
 /// use momento::response::cache::sorted_set_fetch::SortedSetFetch;
-/// # let (cache_client, cache_name) = create_doctest_client();
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
 ///
 /// let put_element_response = cache_client.sorted_set_put_elements(

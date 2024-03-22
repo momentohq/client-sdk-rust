@@ -21,12 +21,12 @@ use crate::{CacheClient, CollectionTtl, IntoBytes, MomentoResult};
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
 /// # fn main() -> anyhow::Result<()> {
-/// # use momento_test_util::create_doctest_client;
+/// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use momento::CollectionTtl;
 /// use momento::requests::cache::sorted_set::sorted_set_put_elements::SortedSetPutElements;
 /// use momento::requests::cache::sorted_set::sorted_set_put_elements::SortedSetPutElementsRequest;
-/// # let (cache_client, cache_name) = create_doctest_client();
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
 ///
 /// let put_elements_request = SortedSetPutElementsRequest::new(

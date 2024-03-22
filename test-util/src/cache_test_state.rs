@@ -4,20 +4,21 @@ use std::time::Duration;
 use once_cell::sync::Lazy;
 use tokio::sync::watch::channel;
 
+use crate::{get_test_cache_name, get_test_credential_provider};
 use momento::config::configurations;
 use momento::{CacheClient, MomentoError};
-use momento_test_util::{get_test_cache_name, get_test_credential_provider};
 
-pub static TEST_STATE: Lazy<Arc<TestState>> = Lazy::new(|| Arc::new(TestState::new()));
+pub static CACHE_TEST_STATE: Lazy<Arc<CacheTestState>> =
+    Lazy::new(|| Arc::new(CacheTestState::new()));
 
-pub struct TestState {
+pub struct CacheTestState {
     pub client: Arc<CacheClient>,
     pub cache_name: String,
     #[allow(dead_code)]
     runtime: tokio::runtime::Runtime,
 }
 
-impl TestState {
+impl CacheTestState {
     fn new() -> Self {
         let cache_name = get_test_cache_name();
         println!("Using cache name: {}", cache_name);
@@ -68,7 +69,7 @@ impl TestState {
             .expect("Client should already exist")
             .clone();
 
-        TestState {
+        CacheTestState {
             client: Arc::new(client),
             cache_name,
             runtime,
