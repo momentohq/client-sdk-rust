@@ -14,11 +14,11 @@ use crate::{utils, CacheClient, MomentoResult};
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```no_run
 /// # fn main() -> anyhow::Result<()> {
-/// # use momento_test_util::create_doctest_client;
+/// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use momento::requests::cache::create_cache::CreateCache;
 /// use momento::requests::cache::create_cache::CreateCacheRequest;
-/// # let (cache_client, cache_name) = create_doctest_client();
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
 /// let create_cache_request = CreateCacheRequest::new(cache_name.to_string());
 ///

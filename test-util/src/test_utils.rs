@@ -49,7 +49,7 @@ where
     runtime.block_on(func(cache_name, credential_provider))
 }
 
-pub fn create_doctest_client() -> (CacheClient, String) {
+pub fn create_doctest_cache_client() -> (CacheClient, String) {
     let cache_name = get_test_cache_name();
     let credential_provider = get_test_credential_provider();
 

@@ -6,9 +6,9 @@ use std::time::Duration;
 
 /// ```
 /// # fn main() -> anyhow::Result<()> {
-/// # use momento_test_util::create_doctest_client;
+/// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// # let (cache_client, cache_name) = create_doctest_client();
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// use momento::requests::cache::basic::set::Set;
 ///
 /// let set_response = cache_client.set(&cache_name, "key", "value").await?;
