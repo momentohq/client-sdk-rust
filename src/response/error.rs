@@ -4,108 +4,124 @@ use tonic::codegen::http;
 
 use crate::auth::AuthError;
 
+#[derive(Debug)]
+pub enum MomentoErrorCode {
+    /// Invalid argument passed to Momento client
+    InvalidArgumentError,
+    /// Service returned an unknown response
+    UnknownServiceError,
+    /// Resource with specified name already exists
+    AlreadyExistsError,
+    /// Cache with specified name doesn't exist
+    NotFoundError,
+    /// An unexpected error occurred while trying to fulfill the request
+    InternalServerError,
+    /// Insufficient permissions to perform operation
+    PermissionError,
+    /// Invalid authentication credentials to connect to service
+    AuthenticationError,
+    /// Request was cancelled by the server
+    CancelledError,
+    /// Request rate, bandwidth, or object size exceeded the limits for the account
+    LimitExceededError,
+    /// Request was invalid
+    BadRequestError,
+    /// Client's configured timeout was exceeded
+    TimeoutError,
+    /// Server was unable to handle the request
+    ServerUnavailable,
+    /// A client resource (most likely memory) was exhausted
+    ClientResourceExhausted,
+    /// System is not in a state required for the operation's execution
+    FailedPreconditionError,
+    /// Unknown error has occurred
+    UnknownError,
+}
+
+#[derive(Debug, thiserror::Error)]
+#[error("{details}")]
+pub struct MomentoGrpcErrorDetails {
+    pub code: tonic::Code,
+    pub details: Cow<'static, str>,
+    pub metadata: Option<tonic::metadata::MetadataMap>,
+}
+
+#[derive(Debug, thiserror::Error)]
+#[error("{message}")]
+pub struct SdkError {
+    pub message: Cow<'static, str>,
+    pub error_code: MomentoErrorCode,
+    #[source]
+    pub inner_exception: Option<ErrorSource>,
+    pub details: Option<MomentoGrpcErrorDetails>,
+}
+
 /// Exception type for resulting from invalid interactions with Momento Services.
 #[derive(Debug, thiserror::Error)]
 pub enum MomentoError {
+    /// System is not in a state required for the operation's execution
+    #[error("FailedPreconditionError: {0}")]
+    FailedPrecondition(SdkError),
+
+    /// Server was unable to handle the request
+    #[error("ServerUnavailable: {0}")]
+    ServerUnavailable(SdkError),
+
+    /// Service returned an unknown response
+    #[error("UnknownServiceError: {0}")]
+    UnknownServiceError(SdkError),
+
     /// Momento Service encountered an unexpected exception while trying to fulfill the request.
-    #[error("internal server error: {description}")]
-    InternalServerError {
-        description: Cow<'static, str>,
-        #[source]
-        source: ErrorSource,
-    },
+    #[error("InternalServerError: {0}")]
+    InternalServerError(SdkError),
 
     /// Invalid parameters sent to Momento Services.
-    #[error("bad request: {description}")]
-    BadRequest {
-        description: Cow<'static, str>,
-        #[source]
-        source: Option<ErrorSource>,
-    },
+    #[error("BadRequest: {0}")]
+    BadRequest(SdkError),
 
     /// Insufficient permissions to execute an operation.
-    #[error("permission denied: {description}")]
-    PermissionDenied {
-        description: Cow<'static, str>,
-        #[source]
-        source: ErrorSource,
-    },
+    #[error("PermissionDenied: {0}")]
+    PermissionDenied(SdkError),
 
     /// Authentication token is not provided or is invalid.
-    #[error("the user could not be authenticated: {description}")]
-    Unauthenticated {
-        description: Cow<'static, str>,
-        #[source]
-        source: ErrorSource,
-    },
+    #[error("Unauthenticated: {0}")]
+    Unauthenticated(SdkError),
 
     /// Requested resource or the resource on which an operation was requested doesn't exist.
-    #[error("not found: {description}")]
-    NotFound {
-        description: Cow<'static, str>,
-        #[source]
-        source: ErrorSource,
-    },
+    #[error("NotFound: {0}")]
+    NotFound(SdkError),
 
     /// A resource already exists.
-    #[error("resource already exists: {description}")]
-    AlreadyExists {
-        description: Cow<'static, str>,
-        #[source]
-        source: ErrorSource,
-    },
+    #[error("AlreadyExists: {0}")]
+    AlreadyExists(SdkError),
 
     /// Operation was cancelled.
-    #[error("operation cancelled: {description}")]
-    Cancelled {
-        description: Cow<'static, str>,
-        #[source]
-        source: ErrorSource,
-    },
+    #[error("Cancelled: {0}")]
+    Cancelled(SdkError),
 
     /// Requested operation did not complete in allotted time.
-    #[error("operation timed out: {description}")]
-    Timeout {
-        description: Cow<'static, str>,
-        #[source]
-        source: ErrorSource,
-    },
+    #[error("Timeout: {0}")]
+    Timeout(SdkError),
 
     /// Requested operation couldn't be completed because system limits were hit.
-    #[error("a limit was exceeded: {description}")]
-    LimitExceeded {
-        description: Cow<'static, str>,
-        #[source]
-        source: ErrorSource,
-    },
+    #[error("LimitExceeded: {0}")]
+    LimitExceeded(SdkError),
 
     /// Represents all client side exceptions thrown by the SDK.
-    /// his exception typically implies that the request wasn't sent to the service successfully or if the service responded, the sdk couldn't interpret the response.
+    /// This exception typically implies that the request wasn't sent to the service successfully or if the service responded, the sdk couldn't interpret the response.
     /// An example would be SDK client was unable to convert the user provided data into a valid request that was expected by the service.
-    #[error("client error: {description}")]
-    ClientSdkError {
-        description: Cow<'static, str>,
-        #[source]
-        source: ErrorSource,
-    },
+    #[error("ClientSdkError: {0}")]
+    ClientSdkError(SdkError),
 
     /// SDK client side validation fails.
-    #[error("invalid argument: {description}")]
-    InvalidArgument {
-        description: Cow<'static, str>,
-        #[source]
-        source: Option<ErrorSource>,
-    },
+    #[error("InvalidArgument: {0}")]
+    InvalidArgument(SdkError),
 
     /// Requested operation was interrupted.
     /// This may happen to a Topic subscription, or it may show up due to an HTTP2 GOAWAY graceful reconnection request from the server.
     /// Whatever the case, you can probably retry the request.
-    #[error("operation interrupted: {description}")]
-    Interrupted {
-        description: Cow<'static, str>,
-        #[source]
-        source: ErrorSource,
-    },
+    #[error("Interrupted: {0}")]
+    Interrupted(SdkError),
 
     /// Tried to use a missing result as a present result.
     /// This may happen when you try to convert a GetResponse directly into a String, when you are opinionated that a miss should ?-propagate out.
@@ -147,10 +163,12 @@ pub enum ErrorSource {
 
 impl From<String> for MomentoError {
     fn from(description: String) -> Self {
-        MomentoError::BadRequest {
-            description: description.into(),
-            source: None,
-        }
+        MomentoError::BadRequest(SdkError {
+            message: description.into(),
+            error_code: MomentoErrorCode::BadRequestError,
+            inner_exception: None,
+            details: None,
+        })
     }
 }
 
@@ -163,50 +181,116 @@ impl From<tonic::Status> for MomentoError {
 fn status_to_error(status: tonic::Status) -> MomentoError {
     log::debug!("translating raw status to error: {status:?}");
     match status.code() {
-        tonic::Code::InvalidArgument => MomentoError::BadRequest {
-            description: "invalid argument".into(),
-            source: Some(status.into()),
-        },
-        tonic::Code::Unimplemented => MomentoError::BadRequest {
-            description: "unimplemented".into(),
-            source: Some(status.into()),
-        },
-        tonic::Code::OutOfRange => MomentoError::BadRequest {
-            description: "out of range".into(),
-            source: Some(status.into()),
-        },
-        tonic::Code::FailedPrecondition => MomentoError::BadRequest {
-            description: "failed precondition".into(),
-            source: Some(status.into()),
-        },
-        tonic::Code::Cancelled => MomentoError::Cancelled {
-            description: "cancelled".into(),
-            source: status.into(),
-        },
-        tonic::Code::DeadlineExceeded => MomentoError::Timeout {
-            description: "timed out".into(),
-            source: status.into(),
-        },
-        tonic::Code::PermissionDenied => MomentoError::PermissionDenied {
-            description: "permission denied".into(),
-            source: status.into(),
-        },
-        tonic::Code::Unauthenticated => MomentoError::Unauthenticated {
-            description: "unauthenticated".into(),
-            source: status.into(),
-        },
-        tonic::Code::ResourceExhausted => MomentoError::LimitExceeded {
-            description: "resource exhausted".into(),
-            source: status.into(),
-        },
-        tonic::Code::NotFound => MomentoError::NotFound {
-            description: "not found".into(),
-            source: status.into(),
-        },
-        tonic::Code::AlreadyExists => MomentoError::AlreadyExists {
-            description: "already exists".into(),
-            source: status.into(),
-        },
+        tonic::Code::InvalidArgument => MomentoError::InvalidArgument(SdkError {
+            message: "Invalid argument passed to Momento client".into(),
+            error_code: MomentoErrorCode::InvalidArgumentError,
+            inner_exception: Some(status.clone().into()),
+            details: MomentoGrpcErrorDetails {
+                code: status.code(),
+                details: "invalid argument".into(),
+                metadata: Some(status.metadata().clone())
+            }.into()
+        }),
+        tonic::Code::Unimplemented => MomentoError::BadRequest(SdkError {
+            message: "The request was invalid; please contact us at support@momentohq.com".into(),
+            error_code: MomentoErrorCode::BadRequestError,
+            inner_exception: Some(status.clone().into()),
+            details: MomentoGrpcErrorDetails {
+                code: status.code(),
+                details: "unimplemented".into(),
+                metadata: Some(status.metadata().clone())
+            }.into()
+        }),
+        tonic::Code::OutOfRange => MomentoError::BadRequest(SdkError {
+            message: "The request was invalid; please contact us at support@momentohq.com".into(),
+            error_code: MomentoErrorCode::BadRequestError,
+            inner_exception: Some(status.clone().into()),
+            details: MomentoGrpcErrorDetails {
+                code: status.code(),
+                details: "out of range".into(),
+                metadata: Some(status.metadata().clone())
+            }.into()
+        }),
+        tonic::Code::FailedPrecondition => MomentoError::FailedPrecondition(SdkError {
+            message: "System is not in a state required for the operation's execution".into(),
+            error_code: MomentoErrorCode::FailedPreconditionError,
+            inner_exception: Some(status.clone().into()),
+            details: MomentoGrpcErrorDetails {
+                code: status.code(),
+                details: "failed precondition".into(),
+                metadata: Some(status.metadata().clone())
+            }.into()
+        }),
+        tonic::Code::Cancelled => MomentoError::Cancelled(SdkError {
+            message: "The request was cancelled by the server; please contact us at support@momentohq.com".into(),
+            error_code: MomentoErrorCode::CancelledError,
+            inner_exception: Some(status.clone().into()),
+            details: MomentoGrpcErrorDetails {
+                code: status.code(),
+                details: "cancelled".into(),
+                metadata: Some(status.metadata().clone())
+            }.into()
+        }),
+        tonic::Code::DeadlineExceeded => MomentoError::Timeout(SdkError {
+            message: "The client's configured timeout was exceeded; you may need to use a Configuration with more lenient timeouts".into(),
+            error_code: MomentoErrorCode::TimeoutError,
+            inner_exception: Some(status.clone().into()),
+            details: MomentoGrpcErrorDetails {
+                code: status.code(),
+                details: "timed out".into(),
+                metadata: Some(status.metadata().clone())
+            }.into()
+        }),
+        tonic::Code::PermissionDenied => MomentoError::PermissionDenied(SdkError {
+            message: "Insufficient permissions to perform an operation on a cache".into(),
+            error_code: MomentoErrorCode::PermissionError,
+            inner_exception: Some(status.clone().into()),
+            details: MomentoGrpcErrorDetails {
+                code: status.code(),
+                details: "permission denied".into(),
+                metadata: Some(status.metadata().clone())
+            }.into()
+        }),
+        tonic::Code::Unauthenticated => MomentoError::Unauthenticated(SdkError {
+            message: "Invalid authentication credentials to connect to cache service".into(),
+            error_code: MomentoErrorCode::AuthenticationError,
+            inner_exception: Some(status.clone().into()),
+            details: MomentoGrpcErrorDetails {
+                code: status.code(),
+                details: "unauthenticated".into(),
+                metadata: Some(status.metadata().clone())
+            }.into()
+        }),
+        tonic::Code::ResourceExhausted => MomentoError::LimitExceeded(SdkError {
+            message: "Request rate, bandwidth, or object size exceeded the limits for this account.  To resolve this error, reduce your usage as appropriate or contact us at support@momentohq.com to request a limit increase".into(),
+            error_code: MomentoErrorCode::LimitExceededError,
+            inner_exception: Some(status.clone().into()),
+            details: MomentoGrpcErrorDetails {
+                code: status.code(),
+                details: "resource exhausted".into(),
+                metadata: Some(status.metadata().clone())
+            }.into()
+        }),
+        tonic::Code::NotFound => MomentoError::NotFound(SdkError {
+            message: "A cache with the specified name does not exist.  To resolve this error, make sure you have created the cache before attempting to use it".into(),
+            error_code: MomentoErrorCode::NotFoundError,
+            inner_exception: Some(status.clone().into()),
+            details: MomentoGrpcErrorDetails {
+                code: status.code(),
+                details: "not found".into(),
+                metadata: Some(status.metadata().clone())
+            }.into()
+        }),
+        tonic::Code::AlreadyExists => MomentoError::AlreadyExists(SdkError {
+            message: "A cache with the specified name already exists.  To resolve this error, either delete the existing cache and make a new one, or use a different name".into(),
+            error_code: MomentoErrorCode::AlreadyExistsError,
+            inner_exception: Some(status.clone().into()),
+            details: MomentoGrpcErrorDetails {
+                code: status.code(),
+                details: "already exists".into(),
+                metadata: Some(status.metadata().clone())
+            }.into()
+        }),
         tonic::Code::Unknown => {
             match status
                 .source()
@@ -217,51 +301,102 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
                 Some(h2_detailed_error) => {
                     if Some(h2::Reason::NO_ERROR) == h2_detailed_error.reason() {
                         if h2_detailed_error.is_remote() {
-                            MomentoError::Interrupted {
-                                description:
-                                    "the request was interrupted by the server without an error"
-                                        .into(),
-                                source: status.into(),
-                            }
+                            MomentoError::Interrupted(SdkError {
+                                message: "An unexpected error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
+                                error_code: MomentoErrorCode::InternalServerError,
+                                inner_exception: Some(status.clone().into()),
+                                details: MomentoGrpcErrorDetails {
+                                    code: status.code(),
+                                    details: "the request was interrupted by the server without an error".into(),
+                                    metadata: Some(status.metadata().clone())
+                                }.into()
+                            })
                         } else {
-                            MomentoError::ClientSdkError {
-                                description: "the request was terminated locally without an error"
-                                    .into(),
-                                source: status.into(),
-                            }
+                            MomentoError::ClientSdkError(SdkError {
+                                message: "Unknown error has occurred".into(),
+                                error_code: MomentoErrorCode::UnknownError,
+                                inner_exception: Some(status.clone().into()),
+                                details: MomentoGrpcErrorDetails {
+                                    code: status.code(),
+                                    details: "the request was terminated locally without an error".into(),
+                                    metadata: Some(status.metadata().clone())
+                                }.into()
+                            })
                         }
                     } else {
-                        MomentoError::InternalServerError {
-                            description: "an internal http2 error terminated the request".into(),
-                            source: status.into(),
-                        }
+                        MomentoError::InternalServerError(SdkError {
+                            message: "An unexpected error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
+                            error_code: MomentoErrorCode::InternalServerError,
+                            inner_exception: Some(status.clone().into()),
+                            details: MomentoGrpcErrorDetails {
+                                code: status.code(),
+                                details: "an internal http2 error terminated the request".into(),
+                                metadata: Some(status.metadata().clone())
+                            }.into()
+                        })
                     }
                 }
-                None => MomentoError::InternalServerError {
-                    description: "an unknown error terminated the request".into(),
-                    source: status.into(),
-                },
+                None => MomentoError::InternalServerError(SdkError {
+                    message: "An unexpected error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
+                    error_code: MomentoErrorCode::InternalServerError,
+                    inner_exception: Some(status.clone().into()),
+                    details: MomentoGrpcErrorDetails {
+                        code: status.code(),
+                        details: "an unknown error terminated the request".into(),
+                        metadata: Some(status.metadata().clone())
+                    }.into()
+                })
             }
         }
-        tonic::Code::Aborted => MomentoError::InternalServerError {
-            description: "aborted".into(),
-            source: status.into(),
-        },
-        tonic::Code::Internal => MomentoError::InternalServerError {
-            description: "internal error".into(),
-            source: status.into(),
-        },
-        tonic::Code::Unavailable => MomentoError::InternalServerError {
-            description: "service unavailable".into(),
-            source: status.into(),
-        },
-        tonic::Code::DataLoss => MomentoError::InternalServerError {
-            description: "data loss".into(),
-            source: status.into(),
-        },
-        _ => MomentoError::InternalServerError {
-            description: "unknown error".into(),
-            source: status.into(),
-        },
+        tonic::Code::Aborted => MomentoError::InternalServerError(SdkError {
+            message: "An unexpected error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
+            error_code: MomentoErrorCode::InternalServerError,
+            inner_exception: Some(status.clone().into()),
+            details: MomentoGrpcErrorDetails {
+                code: status.code(),
+                details: "aborted".into(),
+                metadata: Some(status.metadata().clone())
+            }.into()
+        }),
+        tonic::Code::Internal => MomentoError::InternalServerError(SdkError {
+            message: "An unexpected error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
+            error_code: MomentoErrorCode::InternalServerError,
+            inner_exception: Some(status.clone().into()),
+            details: MomentoGrpcErrorDetails {
+                code: status.code(),
+                details: "internal error".into(),
+                metadata: Some(status.metadata().clone())
+            }.into()
+        }),
+        tonic::Code::Unavailable => MomentoError::ServerUnavailable(SdkError {
+            message: "The server was unable to handle the request; consider retrying.  If the error persists, please contact Momento.".into(),
+            error_code: MomentoErrorCode::ServerUnavailable,
+            inner_exception: Some(status.clone().into()),
+            details: MomentoGrpcErrorDetails {
+                code: status.code(),
+                details: "service unavailable".into(),
+                metadata: Some(status.metadata().clone())
+            }.into()
+        }),
+        tonic::Code::DataLoss => MomentoError::InternalServerError(SdkError {
+            message: "An unexpected error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
+            error_code: MomentoErrorCode::InternalServerError,
+            inner_exception: Some(status.clone().into()),
+            details: MomentoGrpcErrorDetails {
+                code: status.code(),
+                details: "data loss".into(),
+                metadata: Some(status.metadata().clone())
+            }.into()
+        }),
+        _ => MomentoError::UnknownServiceError(SdkError {
+            message: "The service returned an unknown response; please contact us at support@momentohq.com".into(),
+            error_code: MomentoErrorCode::UnknownServiceError,
+            inner_exception: Some(status.clone().into()),
+            details: MomentoGrpcErrorDetails {
+                code: status.code(),
+                details: "unknown error".into(),
+                metadata: Some(status.metadata().clone())
+            }.into()
+        }),
     }
 }

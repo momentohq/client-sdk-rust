@@ -4,9 +4,13 @@ use tonic::{
     transport::{Channel, ClientTlsConfig, Uri},
 };
 
-use crate::config::grpc_configuration::GrpcConfiguration;
 use crate::response::MomentoError;
 use crate::MomentoResult;
+use crate::{
+    config::grpc_configuration::GrpcConfiguration,
+    response::{MomentoErrorCode, SdkError},
+    ErrorSource,
+};
 use std::convert::TryFrom;
 use std::time::{self, Duration};
 
@@ -15,35 +19,41 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub(crate) fn is_ttl_valid(ttl: Duration) -> MomentoResult<()> {
     let max_ttl = Duration::from_millis(u64::MAX);
     if ttl > max_ttl {
-        return Err(MomentoError::InvalidArgument {
-            description: format!(
+        return Err(MomentoError::InvalidArgument(SdkError {
+            message: format!(
                 "TTL provided, {}, needs to be less than the maximum TTL {}",
                 ttl.as_secs(),
                 max_ttl.as_secs()
             )
             .into(),
-            source: None,
-        });
+            error_code: MomentoErrorCode::InvalidArgumentError,
+            inner_exception: None,
+            details: None,
+        }));
     }
     Ok(())
 }
 
 pub(crate) fn is_cache_name_valid(cache_name: &str) -> Result<(), MomentoError> {
     if cache_name.trim().is_empty() {
-        return Err(MomentoError::InvalidArgument {
-            description: "Cache name cannot be empty".into(),
-            source: None,
-        });
+        return Err(MomentoError::InvalidArgument(SdkError {
+            message: "Cache name cannot be empty".into(),
+            error_code: MomentoErrorCode::InvalidArgumentError,
+            inner_exception: None,
+            details: None,
+        }));
     }
     Ok(())
 }
 
 pub(crate) fn is_key_id_valid(key_id: &str) -> Result<(), MomentoError> {
     if key_id.trim().is_empty() {
-        return Err(MomentoError::InvalidArgument {
-            description: "Key ID cannot be empty".into(),
-            source: None,
-        });
+        return Err(MomentoError::InvalidArgument(SdkError {
+            message: "Key ID cannot be empty".into(),
+            error_code: MomentoErrorCode::InvalidArgumentError,
+            inner_exception: None,
+            details: None,
+        }));
     }
     Ok(())
 }
@@ -60,14 +70,18 @@ pub(crate) enum ChannelConnectError {
 impl From<ChannelConnectError> for MomentoError {
     fn from(value: ChannelConnectError) -> Self {
         match value {
-            ChannelConnectError::BadUri(err) => MomentoError::InvalidArgument {
-                description: "bad uri".into(),
-                source: Some(err.into()),
-            },
-            ChannelConnectError::Connection(err) => MomentoError::InternalServerError {
-                description: "connection failed".into(),
-                source: err.into(),
-            },
+            ChannelConnectError::BadUri(err) => MomentoError::InvalidArgument(SdkError {
+                message: "bad uri".into(),
+                error_code: MomentoErrorCode::InvalidArgumentError,
+                inner_exception: Some(ErrorSource::InvalidUri(err)),
+                details: None,
+            }),
+            ChannelConnectError::Connection(err) => MomentoError::InternalServerError(SdkError {
+                message: "connection failed".into(),
+                error_code: MomentoErrorCode::InternalServerError,
+                inner_exception: Some(ErrorSource::Unknown(err.into())),
+                details: None,
+            }),
         }
     }
 }

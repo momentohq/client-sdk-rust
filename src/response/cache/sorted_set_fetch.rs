@@ -4,7 +4,10 @@ use momento_protos::cache_client::sorted_set_fetch_response::found::Elements;
 use momento_protos::cache_client::sorted_set_fetch_response::SortedSet;
 use momento_protos::cache_client::SortedSetFetchResponse;
 
-use crate::{MomentoError, MomentoResult};
+use crate::{
+    response::{MomentoErrorCode, SdkError},
+    MomentoError, MomentoResult,
+};
 
 // TODO this needs to be moved to the requests directory
 
@@ -35,16 +38,29 @@ impl SortedSetFetch {
                         })
                     }
                     Elements::Values(_) => {
-                        return Err(MomentoError::ClientSdkError {
-                            description: std::borrow::Cow::Borrowed(
-                                "sorted_set_fetch_by_index response included elements without values"
-                            ),
-                            source: crate::response::ErrorSource::Unknown(
-                                std::io::Error::new(
-                                    std::io::ErrorKind::InvalidData,
-                                    "unexpected response",
-                                ).into()),
-                        });
+                        // return Err(MomentoError::ClientSdkError {
+                        //     description: std::borrow::Cow::Borrowed(
+                        //         "sorted_set_fetch_by_index response included elements without values"
+                        //     ),
+                        //     source: crate::response::ErrorSource::Unknown(
+                        //         std::io::Error::new(
+                        //             std::io::ErrorKind::InvalidData,
+                        //             "unexpected response",
+                        //         ).into()),
+                        // });
+                        return Err(MomentoError::ClientSdkError(SdkError {
+                            message: std::borrow::Cow::Borrowed(
+                                        "sorted_set_fetch_by_index response included elements without values"
+                                    ),
+                            error_code: MomentoErrorCode::UnknownError,
+                            inner_exception: Some(crate::response::ErrorSource::Unknown(
+                                        std::io::Error::new(
+                                            std::io::ErrorKind::InvalidData,
+                                            "unexpected response",
+                                        ).into()),
+                                    ),
+                            details: None
+                        }));
                     }
                 },
             },

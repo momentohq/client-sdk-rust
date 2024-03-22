@@ -16,7 +16,6 @@ use std::ops::RangeBounds;
 use std::time::{Duration, UNIX_EPOCH};
 use tonic::{codegen::InterceptedService, transport::Channel, Request};
 
-use crate::compression_utils::{compress_json, decompress_json};
 use crate::credential_provider::CredentialProvider;
 use crate::response::{
     DictionaryFetch, DictionaryGet, DictionaryPairs, Get, GetValue, ListCacheEntry, MomentoCache,
@@ -28,6 +27,10 @@ use crate::response::{
 };
 use crate::sorted_set;
 use crate::utils;
+use crate::{
+    compression_utils::{compress_json, decompress_json},
+    response::{MomentoErrorCode, SdkError},
+};
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 use crate::{utils::user_agent, MomentoResult};
 
@@ -150,9 +153,13 @@ fn request_meta_data<T>(request: &mut tonic::Request<T>, cache_name: &str) -> Mo
         .map(|value| {
             request.metadata_mut().append("cache", value);
         })
-        .map_err(|e| MomentoError::InvalidArgument {
-            description: format!("Could not treat cache name as a header value: {e}").into(),
-            source: Some(crate::ErrorSource::Unknown(Box::new(e))),
+        .map_err(|e| {
+            MomentoError::InvalidArgument(SdkError {
+                message: format!("Could not treat cache name as a header value: {e}").into(),
+                error_code: MomentoErrorCode::InvalidArgumentError,
+                inner_exception: Some(crate::ErrorSource::Unknown(Box::new(e))),
+                details: None,
+            })
         })
 }
 
@@ -545,10 +552,12 @@ impl SimpleCacheClient {
         let compressed_body = compress_json(&body.into_bytes());
         match compressed_body {
             Ok(compressed) => self.set(cache_name, key, compressed, ttl).await,
-            Err(err) => Err(MomentoError::ClientSdkError {
-                description: "unable to compress json".into(),
-                source: crate::ErrorSource::Unknown(Box::new(err)),
-            }),
+            Err(err) => Err(MomentoError::ClientSdkError(SdkError {
+                message: "unable to compress json".into(),
+                error_code: MomentoErrorCode::UnknownError,
+                inner_exception: Some(crate::ErrorSource::Unknown(Box::new(err))),
+                details: None,
+            })),
         }
     }
 
@@ -649,10 +658,12 @@ impl SimpleCacheClient {
                                 raw_item: decompressed,
                             },
                         }),
-                        Err(err) => Err(MomentoError::ClientSdkError {
-                            description: "unable to decompress json".into(),
-                            source: crate::ErrorSource::Unknown(Box::new(err)),
-                        }),
+                        Err(err) => Err(MomentoError::ClientSdkError(SdkError {
+                            message: "unable to compress json".into(),
+                            error_code: MomentoErrorCode::UnknownError,
+                            inner_exception: Some(crate::ErrorSource::Unknown(Box::new(err))),
+                            details: None,
+                        })),
                     }
                 }
                 Get::Miss => Ok(Get::Miss),
@@ -2111,16 +2122,19 @@ impl SimpleCacheClient {
                         elements: elements.elements,
                     }),
                     Elements::Values(_) => {
-                        return Err(MomentoError::ClientSdkError {
-                            description: std::borrow::Cow::Borrowed(
-                                "sorted_set_fetch_by_index response included elements without values"
-                            ),
-                            source: crate::response::ErrorSource::Unknown(
-                                std::io::Error::new(
-                                    std::io::ErrorKind::InvalidData,
-                                    "unexpected response",
-                                ).into()),
-                        });
+                        return Err(MomentoError::ClientSdkError(SdkError {
+                            message: std::borrow::Cow::Borrowed(
+                                        "sorted_set_fetch_by_index response included elements without values"
+                                    ),
+                            error_code: MomentoErrorCode::UnknownError,
+                            inner_exception: Some(crate::response::ErrorSource::Unknown(
+                                        std::io::Error::new(
+                                            std::io::ErrorKind::InvalidData,
+                                            "unexpected response",
+                                        ).into()),
+                                    ),
+                            details: None
+                        }));
                     }
                 },
                 None => Ok(SortedSetFetch::Hit {
@@ -2296,16 +2310,19 @@ impl SimpleCacheClient {
                         elements: elements.elements,
                     }),
                     Elements::Values(_) => {
-                        return Err(MomentoError::ClientSdkError {
-                            description: std::borrow::Cow::Borrowed(
-                                "sorted_set_fetch_by_index response included elements without values"
-                            ),
-                            source: crate::response::ErrorSource::Unknown(
-                                std::io::Error::new(
-                                    std::io::ErrorKind::InvalidData,
-                                    "unexpected response",
-                                ).into()),
-                        });
+                        return Err(MomentoError::ClientSdkError(SdkError {
+                            message: std::borrow::Cow::Borrowed(
+                                        "sorted_set_fetch_by_index response included elements without values"
+                                    ),
+                            error_code: MomentoErrorCode::UnknownError,
+                            inner_exception: Some(crate::response::ErrorSource::Unknown(
+                                        std::io::Error::new(
+                                            std::io::ErrorKind::InvalidData,
+                                            "unexpected response",
+                                        ).into()),
+                                    ),
+                            details: None
+                        }));
                     }
                 },
                 None => Ok(SortedSetFetch::Hit {

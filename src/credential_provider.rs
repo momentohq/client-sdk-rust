@@ -1,4 +1,5 @@
 use crate::credential_provider::AuthTokenSource::{EnvironmentVariable, LiteralToken};
+use crate::response::{MomentoErrorCode, SdkError};
 use crate::{MomentoError, MomentoResult};
 use base64::Engine;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
@@ -211,18 +212,22 @@ impl CredentialProviderBuilder {
             EnvironmentVariable(env_var_name) => match env::var(&env_var_name) {
                 Ok(auth_token) => auth_token,
                 Err(e) => {
-                    return Err(MomentoError::InvalidArgument {
-                        description: format!("Env var {env_var_name} must be set").into(),
-                        source: Some(crate::ErrorSource::Unknown(Box::new(e))),
-                    })
+                    return Err(MomentoError::InvalidArgument(SdkError {
+                        message: format!("Env var {env_var_name} must be set").into(),
+                        error_code: MomentoErrorCode::InvalidArgumentError,
+                        inner_exception: Some(crate::ErrorSource::Unknown(Box::new(e))),
+                        details: None,
+                    }));
                 }
             },
             LiteralToken(auth_token_string) => {
                 if auth_token_string.is_empty() {
-                    return Err(MomentoError::InvalidArgument {
-                        description: "Auth token string cannot be empty".into(),
-                        source: None,
-                    });
+                    return Err(MomentoError::InvalidArgument(SdkError {
+                        message: "Auth token string cannot be empty".into(),
+                        error_code: MomentoErrorCode::InvalidArgumentError,
+                        inner_exception: None,
+                        details: None,
+                    }));
                 }
                 auth_token_string
             }
@@ -300,20 +305,25 @@ impl CredentialProviderBuilder {
         // If endpoint override is not provided, then `c` and `cp` claims must be present.
         let cache_endpoint = cache_endpoint_override
             .or(token_claims.cache_endpoint)
-            .ok_or_else(|| MomentoError::InvalidArgument {
-                description: "auth token is missing cache endpoint and endpoint override is missing. One or the other must be provided".into(),
-                source: None,
-            })?;
+            .ok_or_else(|| MomentoError::InvalidArgument(SdkError {
+                message: "auth token is missing cache endpoint and endpoint override is missing. One or the other must be provided".into(),
+                error_code: MomentoErrorCode::InvalidArgumentError,
+                inner_exception: None,
+                details: None
+            }));
+
         let control_endpoint = control_endpoint_override
             .or(token_claims.control_endpoint)
-            .ok_or_else(|| MomentoError::InvalidArgument {
-                description: "auth token is missing control endpoint and endpoint override is missing. One or the other must be provided.".into(),
-                source: None,
-            })?;
+            .ok_or_else(|| MomentoError::InvalidArgument(SdkError {
+                message: "auth token is missing control endpoint and endpoint override is missing. One or the other must be provided.".into(),
+                error_code: MomentoErrorCode::InvalidArgumentError,
+                inner_exception: None,
+                details: None
+            }));
         Ok(CredentialProvider {
             auth_token,
-            cache_endpoint: CredentialProviderBuilder::https_endpoint(cache_endpoint),
-            control_endpoint: CredentialProviderBuilder::https_endpoint(control_endpoint),
+            cache_endpoint: CredentialProviderBuilder::https_endpoint(cache_endpoint?),
+            control_endpoint: CredentialProviderBuilder::https_endpoint(control_endpoint?),
         })
     }
 
@@ -331,11 +341,12 @@ impl CredentialProviderBuilder {
 }
 
 fn token_parsing_error(e: Box<dyn std::error::Error + Send + Sync>) -> MomentoError {
-    MomentoError::ClientSdkError {
-        description: "Could not parse token. Please ensure a valid token was entered correctly."
-            .into(),
-        source: crate::ErrorSource::Unknown(e),
-    }
+    MomentoError::ClientSdkError(SdkError {
+        message: "Could not parse token. Please ensure a valid token was entered correctly.".into(),
+        error_code: MomentoErrorCode::InvalidArgumentError,
+        inner_exception: Some(crate::ErrorSource::Unknown(e)),
+        details: None,
+    })
 }
 
 #[cfg(test)]
@@ -369,7 +380,7 @@ mod tests {
     #[test]
     fn env_var_not_set() {
         let env_var_name = "TEST_ENV_VAR_CREDENTIAL_PROVIDER_NOT_SET";
-        let _err_msg = format!("invalid argument: Env var {env_var_name} must be set");
+        let _err_msg = format!("InvalidArgument: Env var {env_var_name} must be set");
         let e = CredentialProviderBuilder::from_environment_variable(env_var_name.to_string())
             .build()
             .unwrap_err();
@@ -381,7 +392,7 @@ mod tests {
     fn env_var_empty_string() {
         let env_var_name = "TEST_ENV_VAR_CREDENTIAL_PROVIDER_EMPTY_STRING";
         env::set_var(env_var_name, "");
-        let _err_msg = "client error: Could not parse token. Please ensure a valid token was entered correctly.";
+        let _err_msg = "ClientSdkError: Could not parse token. Please ensure a valid token was entered correctly.";
         let e = CredentialProviderBuilder::from_environment_variable(env_var_name.to_string())
             .build()
             .unwrap_err();
@@ -424,7 +435,7 @@ mod tests {
         let e = CredentialProviderBuilder::from_string("".to_string())
             .build()
             .unwrap_err();
-        let _err_msg = "invalid argument: Auth token string cannot be empty".to_owned();
+        let _err_msg = "InvalidArgument: Auth token string cannot be empty".to_owned();
         assert_eq!(e.to_string(), _err_msg);
     }
 
@@ -434,7 +445,7 @@ mod tests {
             .build()
             .unwrap_err();
         let _err_msg =
-            "client error: Could not parse token. Please ensure a valid token was entered correctly.".to_owned();
+            "ClientSdkError: Could not parse token. Please ensure a valid token was entered correctly.".to_owned();
         assert_eq!(e.to_string(), _err_msg);
     }
 
@@ -518,7 +529,7 @@ mod tests {
         let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
         let e = CredentialProvider::from_string(auth_token.to_string()).unwrap_err();
         let _err_msg =
-            "invalid argument: auth token is missing cache endpoint and endpoint override is missing. One or the other must be provided".to_string();
+            "InvalidArgument: auth token is missing cache endpoint and endpoint override is missing. One or the other must be provided".to_string();
         assert_eq!(e.to_string(), _err_msg);
     }
 
@@ -587,7 +598,7 @@ mod tests {
             .build()
             .unwrap_err();
         let _err_msg =
-            "client error: Could not parse token. Please ensure a valid token was entered correctly.".to_string();
+            "ClientSdkError: Could not parse token. Please ensure a valid token was entered correctly.".to_string();
         assert_eq!(e.to_string(), _err_msg);
     }
 }
