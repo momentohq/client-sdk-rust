@@ -25,54 +25,23 @@ use crate::requests::cache::sorted_set::sorted_set_put_elements::{
 };
 use crate::requests::cache::MomentoRequest;
 use crate::response::cache::sorted_set_fetch::SortedSetFetch;
-use crate::utils::user_agent;
-use crate::{utils, CredentialProvider, IntoBytes, MomentoResult};
+
+use crate::cache_client_builder::{CacheClientBuilder, NeedsDefaultTtl};
+use crate::{utils, IntoBytes, MomentoResult};
 
 /// Client to perform operations on a Momento cache.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct CacheClient {
     pub(crate) data_client: ScsClient<InterceptedService<Channel, HeaderInterceptor>>,
     pub(crate) control_client: ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>,
     pub(crate) configuration: Configuration,
-    item_default_ttl: Duration,
+    pub(crate) item_default_ttl: Duration,
 }
 
 impl CacheClient {
     /* constructor */
-    pub fn new(
-        credential_provider: CredentialProvider,
-        configuration: Configuration,
-        default_ttl: Duration,
-    ) -> MomentoResult<Self> {
-        let agent_value = &user_agent("sdk");
-
-        let data_channel = utils::connect_channel_lazily_configurable(
-            &credential_provider.cache_endpoint,
-            configuration.transport_strategy.grpc_configuration.clone(),
-        )?;
-        let control_channel = utils::connect_channel_lazily_configurable(
-            &credential_provider.control_endpoint,
-            configuration.transport_strategy.grpc_configuration.clone(),
-        )?;
-
-        let data_interceptor = InterceptedService::new(
-            data_channel,
-            HeaderInterceptor::new(&credential_provider.auth_token, agent_value),
-        );
-        let control_interceptor = InterceptedService::new(
-            control_channel,
-            HeaderInterceptor::new(&credential_provider.auth_token, agent_value),
-        );
-
-        let data_client = ScsClient::new(data_interceptor);
-        let control_client = ScsControlClient::new(control_interceptor);
-
-        Ok(CacheClient {
-            data_client,
-            control_client,
-            configuration,
-            item_default_ttl: default_ttl,
-        })
+    pub fn builder() -> CacheClientBuilder<NeedsDefaultTtl> {
+        CacheClientBuilder(NeedsDefaultTtl(()))
     }
 
     /* public API */
@@ -704,11 +673,11 @@ impl CacheClient {
     /// let cache_name = "cache";
     /// let sorted_set_name = "sorted_set";
     ///
-    /// let cache_client = momento::CacheClient::new(
-    ///    credential_provider,
-    ///    configurations::laptop::latest(),
-    ///    Duration::from_secs(5),
-    ///)?;
+    /// let cache_client = momento::CacheClient::builder()
+    ///    .default_ttl(Duration::from_secs(5))
+    ///    .configuration(configurations::laptop::latest())
+    ///    .credential_provider(credential_provider)
+    ///    .build()?;
     ///
     /// let fetch_request = SortedSetFetchByRankRequest::new(cache_name.to_string(), sorted_set_name)
     ///     .with_order(SortOrder::Ascending)
