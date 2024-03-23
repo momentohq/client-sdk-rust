@@ -65,7 +65,7 @@ MOMENTO_API_KEY=<api key> make
 
 There are three different kinds of tests in this repo:
 
-* Unit tests: these are defined vi the `#[test]` macro, in the same file as the code they are testing. For an example see `credential_provider.rs`.
+* Unit tests: these are defined via the `#[test]` macro, in the same file as the code they are testing. For an example see `credential_provider.rs`.
 * Doc tests: these are defined inside of docstrings. They are intended more for documentation of how users should interact with our SDK than for exhaustive test coverage.
 * Integration tests: these live in the `tests` directory, and this is where the lion's share of our test coverage will be.
 
@@ -107,7 +107,7 @@ Inside of these docstrings you can include code blocks, via `/// \`\`\``.
 
 The code inside of these code blocks will be compiled and executed as part of the doctest execution. This ensures that our docs always have working code; the compile will fail if the docstring code is not valid.j
 
-The resulting docs will be automatically published to https://docs.rs/momento/latest/momento/ . However you may hide certain lines from the published docs by prefixing them with a `#` (`/// #`).
+The resulting docs will be automatically published to https://docs.rs/momento/latest/momento/ . However you may hide certain lines from the published docs by prefixing them with a `#` (`/// #`). Use this liberally to remove extraneous details from the documentation while keeping the code blocks self-contained and syntactically valid.
 
 You can build and examine the docs locally at any time via:
 
