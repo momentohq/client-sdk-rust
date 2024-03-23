@@ -154,7 +154,7 @@ impl TopicClient {
 /// This will run more or less forever and yield items as long as you're
 /// subscribed and someone is publishing.
 ///
-/// A Subscription is a futures::Stream<SubscriptionItem>. It will try to
+/// A Subscription is a `futures::Stream<SubscriptionItem>`. It will try to
 /// stay connected for as long as you try to consume it.
 pub struct Subscription {
     client: PubsubClient<ChannelType>,

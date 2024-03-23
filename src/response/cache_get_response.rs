@@ -42,7 +42,7 @@ use super::parse_string;
 /// let item: MomentoResult<String> = get_response.try_into();
 /// ```
 ///
-/// You can also go straight into a Vec<u8> if you prefer:
+/// You can also go straight into a `Vec<u8>` if you prefer:
 /// ```
 /// # use momento::response::Get;
 /// # use momento::MomentoResult;
