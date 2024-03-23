@@ -26,10 +26,10 @@ pub struct SetAddElementsRequest<S: IntoBytes, E: IntoBytes> {
 }
 
 impl<S: IntoBytes, E: IntoBytes> SetAddElementsRequest<S, E> {
-    pub fn new(cache_name: String, set_name: S, elements: Vec<E>) -> Self {
+    pub fn new(cache_name: impl Into<String>, set_name: S, elements: Vec<E>) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
-            cache_name,
+            cache_name: cache_name.into(),
             set_name,
             elements,
             collection_ttl: Some(collection_ttl),
