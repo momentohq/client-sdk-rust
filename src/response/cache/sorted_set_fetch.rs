@@ -38,20 +38,8 @@ impl SortedSetFetch {
                         })
                     }
                     Elements::Values(_) => {
-                        // return Err(MomentoError::ClientSdkError {
-                        //     description: std::borrow::Cow::Borrowed(
-                        //         "sorted_set_fetch_by_index response included elements without values"
-                        //     ),
-                        //     source: crate::response::ErrorSource::Unknown(
-                        //         std::io::Error::new(
-                        //             std::io::ErrorKind::InvalidData,
-                        //             "unexpected response",
-                        //         ).into()),
-                        // });
-                        return Err(MomentoError::ClientSdkError(SdkError {
-                            message: std::borrow::Cow::Borrowed(
-                                        "sorted_set_fetch_by_index response included elements without values"
-                                    ),
+                        return Err(MomentoError {
+                            message: "sorted_set_fetch_by_index response included elements without values".into(),
                             error_code: MomentoErrorCode::UnknownError,
                             inner_error: Some(crate::response::ErrorSource::Unknown(
                                         std::io::Error::new(
@@ -60,7 +48,7 @@ impl SortedSetFetch {
                                         ).into()),
                                     ),
                             details: None
-                        }));
+                        });
                     }
                 },
             },

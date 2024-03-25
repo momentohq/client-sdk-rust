@@ -7,7 +7,7 @@ use tonic::{
 use crate::MomentoResult;
 use crate::{
     config::grpc_configuration::GrpcConfiguration,
-    requests::{ErrorSource, MomentoError, MomentoErrorCode, SdkError},
+    requests::{ErrorSource, MomentoError, MomentoErrorCode},
 };
 use std::convert::TryFrom;
 use std::time::{self, Duration};
@@ -17,7 +17,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub(crate) fn is_ttl_valid(ttl: Duration) -> MomentoResult<()> {
     let max_ttl = Duration::from_millis(u64::MAX);
     if ttl > max_ttl {
-        return Err(MomentoError::InvalidArgument(SdkError {
+        return Err(MomentoError {
             message: format!(
                 "TTL provided, {}, needs to be less than the maximum TTL {}",
                 ttl.as_secs(),
@@ -26,31 +26,31 @@ pub(crate) fn is_ttl_valid(ttl: Duration) -> MomentoResult<()> {
             error_code: MomentoErrorCode::InvalidArgumentError,
             inner_error: None,
             details: None,
-        }));
+        });
     }
     Ok(())
 }
 
 pub(crate) fn is_cache_name_valid(cache_name: &str) -> Result<(), MomentoError> {
     if cache_name.trim().is_empty() {
-        return Err(MomentoError::InvalidArgument(SdkError {
+        return Err(MomentoError {
             message: "Cache name cannot be empty".into(),
             error_code: MomentoErrorCode::InvalidArgumentError,
             inner_error: None,
             details: None,
-        }));
+        });
     }
     Ok(())
 }
 
 pub(crate) fn is_key_id_valid(key_id: &str) -> Result<(), MomentoError> {
     if key_id.trim().is_empty() {
-        return Err(MomentoError::InvalidArgument(SdkError {
+        return Err(MomentoError {
             message: "Key ID cannot be empty".into(),
             error_code: MomentoErrorCode::InvalidArgumentError,
             inner_error: None,
             details: None,
-        }));
+        });
     }
     Ok(())
 }
@@ -67,18 +67,18 @@ pub(crate) enum ChannelConnectError {
 impl From<ChannelConnectError> for MomentoError {
     fn from(value: ChannelConnectError) -> Self {
         match value {
-            ChannelConnectError::BadUri(err) => MomentoError::InvalidArgument(SdkError {
+            ChannelConnectError::BadUri(err) => MomentoError {
                 message: "bad uri".into(),
                 error_code: MomentoErrorCode::InvalidArgumentError,
                 inner_error: Some(ErrorSource::InvalidUri(err)),
                 details: None,
-            }),
-            ChannelConnectError::Connection(err) => MomentoError::InternalServerError(SdkError {
+            },
+            ChannelConnectError::Connection(err) => MomentoError {
                 message: "connection failed".into(),
                 error_code: MomentoErrorCode::InternalServerError,
                 inner_error: Some(ErrorSource::Unknown(err.into())),
                 details: None,
-            }),
+            },
         }
     }
 }
@@ -115,8 +115,10 @@ pub(crate) fn user_agent(user_agent_name: &str) -> String {
 }
 
 pub(crate) fn parse_string(raw: Vec<u8>) -> MomentoResult<String> {
-    String::from_utf8(raw).map_err(|e| MomentoError::TypeError {
-        description: std::borrow::Cow::Borrowed("item is not a utf-8 string"),
-        source: Box::new(e),
+    String::from_utf8(raw).map_err(|e| MomentoError {
+        message: "item is not a utf-8 string".to_string(),
+        error_code: MomentoErrorCode::TypeError,
+        inner_error: Some(ErrorSource::Unknown(Box::new(e))),
+        details: None,
     })
 }

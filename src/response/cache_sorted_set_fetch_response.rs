@@ -1,5 +1,6 @@
+use crate::requests::MomentoErrorCode;
 use crate::sorted_set::SortedSetElement;
-use crate::MomentoError;
+use crate::{ErrorSource, MomentoError};
 use core::convert::TryFrom;
 
 #[derive(Debug)]
@@ -23,8 +24,11 @@ impl TryFrom<SortedSetFetch> for Vec<(Vec<u8>, f64)> {
                     elements.drain(..).map(|e| (e.value, e.score)).collect();
                 Ok(result)
             }
-            SortedSetFetch::Miss => Err(MomentoError::Miss {
-                description: std::borrow::Cow::Borrowed("sorted set was not found"),
+            SortedSetFetch::Miss => Err(MomentoError {
+                message: "sorted set was not found".to_string(),
+                error_code: MomentoErrorCode::Miss,
+                inner_error: None,
+                details: None,
             }),
         }
     }
@@ -43,19 +47,22 @@ impl TryFrom<SortedSetFetch> for Vec<(String, f64)> {
                             result.push((value, element.score));
                         }
                         Err(e) => {
-                            return Err::<Self, Self::Error>(MomentoError::TypeError {
-                                description: std::borrow::Cow::Borrowed(
-                                    "element value was not a valid utf-8 string",
-                                ),
-                                source: Box::new(e),
+                            return Err::<Self, Self::Error>(MomentoError {
+                                message: "element value was not a valid utf-8 string".to_string(),
+                                error_code: MomentoErrorCode::TypeError,
+                                inner_error: Some(ErrorSource::Unknown(Box::new(e))),
+                                details: None,
                             })
                         }
                     }
                 }
                 Ok(result)
             }
-            SortedSetFetch::Miss => Err(MomentoError::Miss {
-                description: std::borrow::Cow::Borrowed("sorted set was not found"),
+            SortedSetFetch::Miss => Err(MomentoError {
+                message: "sorted set was not found".to_string(),
+                error_code: MomentoErrorCode::Miss,
+                inner_error: None,
+                details: None,
             }),
         }
     }

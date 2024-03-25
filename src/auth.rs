@@ -5,7 +5,7 @@ use thiserror::Error;
 use tonic::{codegen::http::uri::InvalidUri, transport::Channel, Streaming};
 
 use crate::{
-    requests::{MomentoError, MomentoErrorCode, SdkError},
+    requests::{MomentoError, MomentoErrorCode},
     utils::{connect_channel_lazily, ChannelConnectError},
 };
 
@@ -67,42 +67,42 @@ pub enum AuthError {
 impl From<AuthError> for MomentoError {
     fn from(err: AuthError) -> Self {
         match err {
-            AuthError::LoginAborted => MomentoError::Cancelled(SdkError {
+            AuthError::LoginAborted => MomentoError {
                 message: "aborted login".into(),
                 error_code: MomentoErrorCode::CancelledError,
                 inner_error: Some(err.into()),
                 details: None,
-            }),
-            AuthError::LoginFailed(_) => MomentoError::PermissionDenied(SdkError {
+            },
+            AuthError::LoginFailed(_) => MomentoError {
                 message: "login failed".into(),
                 error_code: MomentoErrorCode::PermissionError,
                 inner_error: Some(err.into()),
                 details: None,
-            }),
-            AuthError::BadUri(_) => MomentoError::BadRequest(SdkError {
+            },
+            AuthError::BadUri(_) => MomentoError {
                 message: "bad uri".into(),
                 error_code: MomentoErrorCode::BadRequestError,
                 inner_error: Some(err.into()),
                 details: None,
-            }),
-            AuthError::Connection(_) => MomentoError::InternalServerError(SdkError {
+            },
+            AuthError::Connection(_) => MomentoError {
                 message: "connection failed".into(),
                 error_code: MomentoErrorCode::InternalServerError,
                 inner_error: Some(err.into()),
                 details: None,
-            }),
-            AuthError::ServerError(_) => MomentoError::InternalServerError(SdkError {
+            },
+            AuthError::ServerError(_) => MomentoError {
                 message: "server error".into(),
                 error_code: MomentoErrorCode::InternalServerError,
                 inner_error: Some(err.into()),
                 details: None,
-            }),
-            AuthError::ActionError(_) => MomentoError::ClientSdkError(SdkError {
+            },
+            AuthError::ActionError(_) => MomentoError {
                 message: "login action failed".into(),
                 error_code: MomentoErrorCode::UnknownError,
                 inner_error: Some(err.into()),
                 details: None,
-            }),
+            },
         }
     }
 }

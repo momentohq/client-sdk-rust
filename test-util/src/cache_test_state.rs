@@ -6,7 +6,8 @@ use tokio::sync::watch::channel;
 
 use crate::{get_test_cache_name, get_test_credential_provider};
 use momento::config::configurations;
-use momento::{CacheClient, MomentoError};
+use momento::requests::MomentoErrorCode;
+use momento::CacheClient;
 
 pub static CACHE_TEST_STATE: Lazy<Arc<CacheTestState>> =
     Lazy::new(|| Arc::new(CacheTestState::new()));
@@ -45,8 +46,8 @@ impl CacheTestState {
 
             match cache_client.clone().create_cache(thread_cache_name).await {
                 Ok(_) => {}
-                Err(e) => match e {
-                    MomentoError::AlreadyExists { .. } => {
+                Err(e) => match e.error_code {
+                    MomentoErrorCode::AlreadyExistsError => {
                         println!("Cache already exists.");
                     }
                     _ => {

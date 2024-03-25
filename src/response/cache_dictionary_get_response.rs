@@ -3,7 +3,7 @@ use std::{
     convert::{TryFrom, TryInto},
 };
 
-use crate::MomentoError;
+use crate::{requests::MomentoErrorCode, MomentoError};
 
 use super::DictionaryPairs;
 
@@ -22,8 +22,11 @@ impl TryFrom<DictionaryGet> for HashMap<String, Vec<u8>> {
     fn try_from(value: DictionaryGet) -> Result<Self, Self::Error> {
         match value {
             DictionaryGet::Hit { value } => value.try_into(),
-            DictionaryGet::Miss => Err(MomentoError::Miss {
-                description: std::borrow::Cow::Borrowed("dictionary was not found"),
+            DictionaryGet::Miss => Err(MomentoError {
+                message: "dictionary was not found".into(),
+                error_code: MomentoErrorCode::Miss,
+                inner_error: None,
+                details: None,
             }),
         }
     }
@@ -35,8 +38,11 @@ impl TryFrom<DictionaryGet> for HashMap<String, String> {
     fn try_from(value: DictionaryGet) -> Result<Self, Self::Error> {
         match value {
             DictionaryGet::Hit { value } => value.try_into(),
-            DictionaryGet::Miss => Err(MomentoError::Miss {
-                description: std::borrow::Cow::Borrowed("dictionary was not found"),
+            DictionaryGet::Miss => Err(MomentoError {
+                message: "dictionary was not found".into(),
+                error_code: MomentoErrorCode::Miss,
+                inner_error: None,
+                details: None,
             }),
         }
     }

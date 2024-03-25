@@ -29,7 +29,7 @@ use crate::sorted_set;
 use crate::utils;
 use crate::{
     compression_utils::{compress_json, decompress_json},
-    requests::{ErrorSource, MomentoError, MomentoErrorCode, SdkError},
+    requests::{ErrorSource, MomentoError, MomentoErrorCode},
 };
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 use crate::{utils::user_agent, MomentoResult};
@@ -153,13 +153,11 @@ fn request_meta_data<T>(request: &mut tonic::Request<T>, cache_name: &str) -> Mo
         .map(|value| {
             request.metadata_mut().append("cache", value);
         })
-        .map_err(|e| {
-            MomentoError::InvalidArgument(SdkError {
-                message: format!("Could not treat cache name as a header value: {e}"),
-                error_code: MomentoErrorCode::InvalidArgumentError,
-                inner_error: Some(crate::ErrorSource::Unknown(Box::new(e))),
-                details: None,
-            })
+        .map_err(|e| MomentoError {
+            message: format!("Could not treat cache name as a header value: {e}"),
+            error_code: MomentoErrorCode::InvalidArgumentError,
+            inner_error: Some(crate::ErrorSource::Unknown(Box::new(e))),
+            details: None,
         })
 }
 
@@ -552,12 +550,12 @@ impl SimpleCacheClient {
         let compressed_body = compress_json(&body.into_bytes());
         match compressed_body {
             Ok(compressed) => self.set(cache_name, key, compressed, ttl).await,
-            Err(err) => Err(MomentoError::ClientSdkError(SdkError {
+            Err(err) => Err(MomentoError {
                 message: "unable to compress json".into(),
                 error_code: MomentoErrorCode::UnknownError,
                 inner_error: Some(crate::ErrorSource::Unknown(Box::new(err))),
                 details: None,
-            })),
+            }),
         }
     }
 
@@ -658,12 +656,12 @@ impl SimpleCacheClient {
                                 raw_item: decompressed,
                             },
                         }),
-                        Err(err) => Err(MomentoError::ClientSdkError(SdkError {
+                        Err(err) => Err(MomentoError {
                             message: "unable to compress json".into(),
                             error_code: MomentoErrorCode::UnknownError,
                             inner_error: Some(crate::ErrorSource::Unknown(Box::new(err))),
                             details: None,
-                        })),
+                        }),
                     }
                 }
                 Get::Miss => Ok(Get::Miss),
@@ -2121,7 +2119,7 @@ impl SimpleCacheClient {
                     Elements::ValuesWithScores(elements) => Ok(SortedSetFetch::Hit {
                         elements: elements.elements,
                     }),
-                    Elements::Values(_) => Err(MomentoError::ClientSdkError(SdkError {
+                    Elements::Values(_) => Err(MomentoError {
                         message:
                             "sorted_set_fetch_by_index response included elements without values"
                                 .into(),
@@ -2134,7 +2132,7 @@ impl SimpleCacheClient {
                             .into(),
                         )),
                         details: None,
-                    })),
+                    }),
                 },
                 None => Ok(SortedSetFetch::Hit {
                     elements: Vec::new(),
@@ -2308,7 +2306,7 @@ impl SimpleCacheClient {
                     Elements::ValuesWithScores(elements) => Ok(SortedSetFetch::Hit {
                         elements: elements.elements,
                     }),
-                    Elements::Values(_) => Err(MomentoError::ClientSdkError(SdkError {
+                    Elements::Values(_) => Err(MomentoError {
                         message:
                             "sorted_set_fetch_by_index response included elements without values"
                                 .into(),
@@ -2321,7 +2319,7 @@ impl SimpleCacheClient {
                             .into(),
                         )),
                         details: None,
-                    })),
+                    }),
                 },
                 None => Ok(SortedSetFetch::Hit {
                     elements: Vec::new(),
