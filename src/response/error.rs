@@ -1,4 +1,4 @@
-use std::{borrow::Cow, error::Error, fmt::Debug};
+use std::{borrow::Cow, error::Error, fmt::Debug, str::from_utf8};
 
 use tonic::codegen::http;
 
@@ -176,7 +176,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             inner_error: Some(status.clone().into()),
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
-                details: "invalid argument".into(),
+                details: from_utf8(status.details()).unwrap().into(),
                 metadata: status.metadata().clone()
             }.into()
         }),
@@ -186,7 +186,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             inner_error: Some(status.clone().into()),
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
-                details: "unimplemented".into(),
+                details: from_utf8(status.details()).unwrap().into(),
                 metadata: status.metadata().clone()
             }.into()
         }),
@@ -196,7 +196,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             inner_error: Some(status.clone().into()),
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
-                details: "out of range".into(),
+                details: from_utf8(status.details()).unwrap().into(),
                 metadata: status.metadata().clone()
             }.into()
         }),
@@ -206,7 +206,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             inner_error: Some(status.clone().into()),
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
-                details: "failed precondition".into(),
+                details: from_utf8(status.details()).unwrap().into(),
                 metadata: status.metadata().clone()
             }.into()
         }),
@@ -216,7 +216,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             inner_error: Some(status.clone().into()),
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
-                details: "cancelled".into(),
+                details: from_utf8(status.details()).unwrap().into(),
                 metadata: status.metadata().clone()
             }.into()
         }),
@@ -226,7 +226,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             inner_error: Some(status.clone().into()),
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
-                details: "timed out".into(),
+                details: from_utf8(status.details()).unwrap().into(),
                 metadata: status.metadata().clone()
             }.into()
         }),
@@ -236,7 +236,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             inner_error: Some(status.clone().into()),
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
-                details: "permission denied".into(),
+                details: from_utf8(status.details()).unwrap().into(),
                 metadata: status.metadata().clone()
             }.into()
         }),
@@ -246,7 +246,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             inner_error: Some(status.clone().into()),
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
-                details: "unauthenticated".into(),
+                details: from_utf8(status.details()).unwrap().into(),
                 metadata: status.metadata().clone()
             }.into()
         }),
@@ -256,7 +256,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             inner_error: Some(status.clone().into()),
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
-                details: "resource exhausted".into(),
+                details: from_utf8(status.details()).unwrap().into(),
                 metadata: status.metadata().clone()
             }.into()
         }),
@@ -266,7 +266,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             inner_error: Some(status.clone().into()),
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
-                details: "not found".into(),
+                details: from_utf8(status.details()).unwrap().into(),
                 metadata: status.metadata().clone()
             }.into()
         }),
@@ -276,7 +276,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             inner_error: Some(status.clone().into()),
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
-                details: "already exists".into(),
+                details: from_utf8(status.details()).unwrap().into(),
                 metadata: status.metadata().clone()
             }.into()
         }),
@@ -291,89 +291,89 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
                     if Some(h2::Reason::NO_ERROR) == h2_detailed_error.reason() {
                         if h2_detailed_error.is_remote() {
                             MomentoError::Interrupted(SdkError {
-                                message: "An unexpected error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
+                                message: "An unexpected error occurred while trying to fulfill the request, the request was interrupted by the server without an error; please contact us at support@momentohq.com".into(),
                                 error_code: MomentoErrorCode::InternalServerError,
                                 inner_error: Some(status.clone().into()),
                                 details: MomentoGrpcErrorDetails {
                                     code: status.code(),
-                                    details: "the request was interrupted by the server without an error".into(),
+                                    details: from_utf8(status.details()).unwrap().into(),
                                     metadata: status.metadata().clone()
                                 }.into()
                             })
                         } else {
                             MomentoError::ClientSdkError(SdkError {
-                                message: "Unknown error has occurred".into(),
+                                message: "Unknown error has occurred, the request was terminated locally without an error".into(),
                                 error_code: MomentoErrorCode::UnknownError,
                                 inner_error: Some(status.clone().into()),
                                 details: MomentoGrpcErrorDetails {
                                     code: status.code(),
-                                    details: "the request was terminated locally without an error".into(),
+                                    details: from_utf8(status.details()).unwrap().into(),
                                     metadata: status.metadata().clone()
                                 }.into()
                             })
                         }
                     } else {
                         MomentoError::InternalServerError(SdkError {
-                            message: "An unexpected error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
+                            message: "An unexpected error occurred while trying to fulfill the request, an internal http2 error terminated the request; please contact us at support@momentohq.com".into(),
                             error_code: MomentoErrorCode::InternalServerError,
                             inner_error: Some(status.clone().into()),
                             details: MomentoGrpcErrorDetails {
                                 code: status.code(),
-                                details: "an internal http2 error terminated the request".into(),
+                                details: from_utf8(status.details()).unwrap().into(),
                                 metadata: status.metadata().clone()
                             }.into()
                         })
                     }
                 }
                 None => MomentoError::InternalServerError(SdkError {
-                    message: "An unexpected error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
+                    message: "An unexpected error occurred while trying to fulfill the request, an unknown error terminated the request; please contact us at support@momentohq.com".into(),
                     error_code: MomentoErrorCode::InternalServerError,
                     inner_error: Some(status.clone().into()),
                     details: MomentoGrpcErrorDetails {
                         code: status.code(),
-                        details: "an unknown error terminated the request".into(),
+                        details: from_utf8(status.details()).unwrap().into(),
                         metadata: status.metadata().clone()
                     }.into()
                 })
             }
         }
         tonic::Code::Aborted => MomentoError::InternalServerError(SdkError {
-            message: "An unexpected error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
+            message: "An unexpected error occurred while trying to fulfill the request, request was aborted; please contact us at support@momentohq.com".into(),
             error_code: MomentoErrorCode::InternalServerError,
             inner_error: Some(status.clone().into()),
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
-                details: "aborted".into(),
+                details: from_utf8(status.details()).unwrap().into(),
                 metadata: status.metadata().clone()
             }.into()
         }),
         tonic::Code::Internal => MomentoError::InternalServerError(SdkError {
-            message: "An unexpected error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
+            message: "An unexpected internal error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
             error_code: MomentoErrorCode::InternalServerError,
             inner_error: Some(status.clone().into()),
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
-                details: "internal error".into(),
+                details: from_utf8(status.details()).unwrap().into(),
                 metadata: status.metadata().clone()
             }.into()
         }),
         tonic::Code::Unavailable => MomentoError::ServerUnavailable(SdkError {
-            message: "The server was unable to handle the request; consider retrying.  If the error persists, please contact Momento.".into(),
+            message: "The server was unavailable to handle the request; consider retrying.  If the error persists, please contact Momento.".into(),
             error_code: MomentoErrorCode::ServerUnavailable,
             inner_error: Some(status.clone().into()),
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
-                details: "service unavailable".into(),
+                details: from_utf8(status.details()).unwrap().into(),
                 metadata: status.metadata().clone()
             }.into()
         }),
         tonic::Code::DataLoss => MomentoError::InternalServerError(SdkError {
-            message: "An unexpected error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
+            message: "An unexpected data loss error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
             error_code: MomentoErrorCode::InternalServerError,
             inner_error: Some(status.clone().into()),
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
-                details: "data loss".into(),
+                details: from_utf8(status.details()).unwrap().into(),
                 metadata: status.metadata().clone()
             }.into()
         }),
@@ -383,7 +383,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             inner_error: Some(status.clone().into()),
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
-                details: "unknown error".into(),
+                details: from_utf8(status.details()).unwrap().into(),
                 metadata: status.metadata().clone()
             }.into()
         }),
