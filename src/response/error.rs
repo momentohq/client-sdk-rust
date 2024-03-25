@@ -161,17 +161,6 @@ pub enum ErrorSource {
     InvalidUri(#[from] http::uri::InvalidUri),
 }
 
-impl From<String> for MomentoError {
-    fn from(description: String) -> Self {
-        MomentoError::BadRequest(SdkError {
-            message: description.into(),
-            error_code: MomentoErrorCode::BadRequestError,
-            inner_error: None,
-            details: None,
-        })
-    }
-}
-
 impl From<tonic::Status> for MomentoError {
     fn from(s: tonic::Status) -> Self {
         status_to_error(s)
