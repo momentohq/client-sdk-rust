@@ -8,9 +8,9 @@ use std::convert::{TryFrom, TryInto};
 
 /// ```
 /// # fn main() -> anyhow::Result<()> {
-/// # use momento_test_util::create_doctest_client;
+/// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// # let (cache_client, cache_name) = create_doctest_client();
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// use std::convert::TryInto;
 /// use momento::requests::cache::basic::get::Get;
 ///
@@ -104,7 +104,7 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
 /// let item: MomentoResult<String> = get_response.try_into();
 /// ```
 ///
-/// You can also go straight into a Vec<u8> if you prefer:
+/// You can also go straight into a `Vec<u8>` if you prefer:
 /// ```
 /// # use momento::response::Get;
 /// # use momento::MomentoResult;

@@ -11,7 +11,7 @@ use crate::{CacheClient, CollectionTtl, IntoBytes, MomentoResult};
 ///
 /// * `cache_name` - The name of the cache containing the sorted set.
 /// * `sorted_set_name` - The name of the sorted set ot add an element to.
-/// * `value` - The value of the element to add. Must be able to be converted to a Vec<u8>.
+/// * `value` - The value of the element to add. Must be able to be converted to a `Vec<u8>`.
 /// * `score` - The score of the element to add.
 ///
 /// # Optional Arguments
@@ -22,12 +22,12 @@ use crate::{CacheClient, CollectionTtl, IntoBytes, MomentoResult};
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
 /// # fn main() -> anyhow::Result<()> {
-/// # use momento_test_util::create_doctest_client;
+/// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use momento::CollectionTtl;
 /// use momento::requests::cache::sorted_set::sorted_set_put_element::SortedSetPutElement;
 /// use momento::requests::cache::sorted_set::sorted_set_put_element::SortedSetPutElementRequest;
-/// # let (cache_client, cache_name) = create_doctest_client();
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
 ///
 /// let put_element_request = SortedSetPutElementRequest::new(
