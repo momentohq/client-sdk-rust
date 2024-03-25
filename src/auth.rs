@@ -70,37 +70,37 @@ impl From<AuthError> for MomentoError {
             AuthError::LoginAborted => MomentoError::Cancelled(SdkError {
                 message: "aborted login".into(),
                 error_code: MomentoErrorCode::CancelledError,
-                inner_exception: Some(err.into()),
+                inner_error: Some(err.into()),
                 details: None,
             }),
             AuthError::LoginFailed(_) => MomentoError::PermissionDenied(SdkError {
                 message: "login failed".into(),
                 error_code: MomentoErrorCode::PermissionError,
-                inner_exception: Some(err.into()),
+                inner_error: Some(err.into()),
                 details: None,
             }),
             AuthError::BadUri(_) => MomentoError::BadRequest(SdkError {
                 message: "bad uri".into(),
                 error_code: MomentoErrorCode::BadRequestError,
-                inner_exception: Some(err.into()),
+                inner_error: Some(err.into()),
                 details: None,
             }),
             AuthError::Connection(_) => MomentoError::InternalServerError(SdkError {
                 message: "connection failed".into(),
                 error_code: MomentoErrorCode::InternalServerError,
-                inner_exception: Some(err.into()),
+                inner_error: Some(err.into()),
                 details: None,
             }),
             AuthError::ServerError(_) => MomentoError::InternalServerError(SdkError {
                 message: "server error".into(),
                 error_code: MomentoErrorCode::InternalServerError,
-                inner_exception: Some(err.into()),
+                inner_error: Some(err.into()),
                 details: None,
             }),
             AuthError::ActionError(_) => MomentoError::ClientSdkError(SdkError {
                 message: "login action failed".into(),
                 error_code: MomentoErrorCode::UnknownError,
-                inner_exception: Some(err.into()),
+                inner_error: Some(err.into()),
                 details: None,
             }),
         }

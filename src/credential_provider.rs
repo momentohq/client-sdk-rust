@@ -56,7 +56,7 @@ impl CredentialProvider {
                 return Err(MomentoError::InvalidArgument(SdkError {
                     message: format!("Env var {env_var_name} must be set").into(),
                     error_code: MomentoErrorCode::InvalidArgumentError,
-                    inner_exception: Some(crate::ErrorSource::Unknown(Box::new(e))),
+                    inner_error: Some(crate::ErrorSource::Unknown(Box::new(e))),
                     details: None,
                 }));
             }
@@ -98,7 +98,7 @@ impl CredentialProvider {
                 return Err(MomentoError::InvalidArgument(SdkError {
                     message: "Auth token string cannot be empty".into(),
                     error_code: MomentoErrorCode::InvalidArgumentError,
-                    inner_exception: None,
+                    inner_error: None,
                     details: None,
                 }));
             };
@@ -162,14 +162,14 @@ fn process_jwt_token(auth_token: String) -> MomentoResult<CredentialProvider> {
     .ok_or_else(|| MomentoError::InvalidArgument(SdkError {
         message: "auth token is missing cache endpoint and endpoint override is missing. One or the other must be provided".into(),
         error_code: MomentoErrorCode::InvalidArgumentError,
-        inner_exception: None,
+        inner_error: None,
         details: None
     }))?;
     let control_endpoint = token_claims.control_endpoint
     .ok_or_else(|| MomentoError::InvalidArgument(SdkError {
         message: "auth token is missing control endpoint and endpoint override is missing. One or the other must be provided.".into(),
         error_code: MomentoErrorCode::InvalidArgumentError,
-        inner_exception: None,
+        inner_error: None,
         details: None
     }))?;
     let token_endpoint = cache_endpoint.clone();
@@ -202,7 +202,7 @@ fn token_parsing_error(e: Box<dyn std::error::Error + Send + Sync>) -> MomentoEr
     MomentoError::ClientSdkError(SdkError {
         message: "Could not parse token. Please ensure a valid token was entered correctly.".into(),
         error_code: MomentoErrorCode::InvalidArgumentError,
-        inner_exception: Some(crate::ErrorSource::Unknown(e)),
+        inner_error: Some(crate::ErrorSource::Unknown(e)),
         details: None,
     })
 }

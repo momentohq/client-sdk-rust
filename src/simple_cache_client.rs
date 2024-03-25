@@ -157,7 +157,7 @@ fn request_meta_data<T>(request: &mut tonic::Request<T>, cache_name: &str) -> Mo
             MomentoError::InvalidArgument(SdkError {
                 message: format!("Could not treat cache name as a header value: {e}").into(),
                 error_code: MomentoErrorCode::InvalidArgumentError,
-                inner_exception: Some(crate::ErrorSource::Unknown(Box::new(e))),
+                inner_error: Some(crate::ErrorSource::Unknown(Box::new(e))),
                 details: None,
             })
         })
@@ -555,7 +555,7 @@ impl SimpleCacheClient {
             Err(err) => Err(MomentoError::ClientSdkError(SdkError {
                 message: "unable to compress json".into(),
                 error_code: MomentoErrorCode::UnknownError,
-                inner_exception: Some(crate::ErrorSource::Unknown(Box::new(err))),
+                inner_error: Some(crate::ErrorSource::Unknown(Box::new(err))),
                 details: None,
             })),
         }
@@ -661,7 +661,7 @@ impl SimpleCacheClient {
                         Err(err) => Err(MomentoError::ClientSdkError(SdkError {
                             message: "unable to compress json".into(),
                             error_code: MomentoErrorCode::UnknownError,
-                            inner_exception: Some(crate::ErrorSource::Unknown(Box::new(err))),
+                            inner_error: Some(crate::ErrorSource::Unknown(Box::new(err))),
                             details: None,
                         })),
                     }
@@ -2127,7 +2127,7 @@ impl SimpleCacheClient {
                                         "sorted_set_fetch_by_index response included elements without values"
                                     ),
                             error_code: MomentoErrorCode::UnknownError,
-                            inner_exception: Some(crate::response::ErrorSource::Unknown(
+                            inner_error: Some(crate::response::ErrorSource::Unknown(
                                         std::io::Error::new(
                                             std::io::ErrorKind::InvalidData,
                                             "unexpected response",
@@ -2315,7 +2315,7 @@ impl SimpleCacheClient {
                                         "sorted_set_fetch_by_index response included elements without values"
                                     ),
                             error_code: MomentoErrorCode::UnknownError,
-                            inner_exception: Some(crate::response::ErrorSource::Unknown(
+                            inner_error: Some(crate::response::ErrorSource::Unknown(
                                         std::io::Error::new(
                                             std::io::ErrorKind::InvalidData,
                                             "unexpected response",

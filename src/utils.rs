@@ -27,7 +27,7 @@ pub(crate) fn is_ttl_valid(ttl: Duration) -> MomentoResult<()> {
             )
             .into(),
             error_code: MomentoErrorCode::InvalidArgumentError,
-            inner_exception: None,
+            inner_error: None,
             details: None,
         }));
     }
@@ -39,7 +39,7 @@ pub(crate) fn is_cache_name_valid(cache_name: &str) -> Result<(), MomentoError> 
         return Err(MomentoError::InvalidArgument(SdkError {
             message: "Cache name cannot be empty".into(),
             error_code: MomentoErrorCode::InvalidArgumentError,
-            inner_exception: None,
+            inner_error: None,
             details: None,
         }));
     }
@@ -51,7 +51,7 @@ pub(crate) fn is_key_id_valid(key_id: &str) -> Result<(), MomentoError> {
         return Err(MomentoError::InvalidArgument(SdkError {
             message: "Key ID cannot be empty".into(),
             error_code: MomentoErrorCode::InvalidArgumentError,
-            inner_exception: None,
+            inner_error: None,
             details: None,
         }));
     }
@@ -73,13 +73,13 @@ impl From<ChannelConnectError> for MomentoError {
             ChannelConnectError::BadUri(err) => MomentoError::InvalidArgument(SdkError {
                 message: "bad uri".into(),
                 error_code: MomentoErrorCode::InvalidArgumentError,
-                inner_exception: Some(ErrorSource::InvalidUri(err)),
+                inner_error: Some(ErrorSource::InvalidUri(err)),
                 details: None,
             }),
             ChannelConnectError::Connection(err) => MomentoError::InternalServerError(SdkError {
                 message: "connection failed".into(),
                 error_code: MomentoErrorCode::InternalServerError,
-                inner_exception: Some(ErrorSource::Unknown(err.into())),
+                inner_error: Some(ErrorSource::Unknown(err.into())),
                 details: None,
             }),
         }
