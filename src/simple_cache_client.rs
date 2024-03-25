@@ -2123,9 +2123,7 @@ impl SimpleCacheClient {
                     }),
                     Elements::Values(_) => {
                         return Err(MomentoError::ClientSdkError(SdkError {
-                            message: std::borrow::Cow::Borrowed(
-                                        "sorted_set_fetch_by_index response included elements without values"
-                                    ),
+                            message: "sorted_set_fetch_by_index response included elements without values".into(),
                             error_code: MomentoErrorCode::UnknownError,
                             inner_error: Some(crate::response::ErrorSource::Unknown(
                                         std::io::Error::new(
@@ -2311,9 +2309,7 @@ impl SimpleCacheClient {
                     }),
                     Elements::Values(_) => {
                         return Err(MomentoError::ClientSdkError(SdkError {
-                            message: std::borrow::Cow::Borrowed(
-                                        "sorted_set_fetch_by_index response included elements without values"
-                                    ),
+                            message: "sorted_set_fetch_by_index response included elements without values".into(),
                             error_code: MomentoErrorCode::UnknownError,
                             inner_error: Some(crate::response::ErrorSource::Unknown(
                                         std::io::Error::new(

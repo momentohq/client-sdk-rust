@@ -42,14 +42,14 @@ pub enum MomentoErrorCode {
 #[error("{details}")]
 pub struct MomentoGrpcErrorDetails {
     pub code: tonic::Code,
-    pub details: Cow<'static, str>,
+    pub details: String,
     pub metadata: Option<tonic::metadata::MetadataMap>,
 }
 
 #[derive(Debug, thiserror::Error)]
 #[error("{message}")]
 pub struct SdkError {
-    pub message: Cow<'static, str>,
+    pub message: String,
     pub error_code: MomentoErrorCode,
     #[source]
     pub inner_error: Option<ErrorSource>,
