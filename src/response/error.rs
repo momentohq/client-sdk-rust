@@ -43,7 +43,7 @@ pub enum MomentoErrorCode {
 pub struct MomentoGrpcErrorDetails {
     pub code: tonic::Code,
     pub details: String,
-    pub metadata: Option<tonic::metadata::MetadataMap>,
+    pub metadata: tonic::metadata::MetadataMap,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -177,7 +177,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
                 details: "invalid argument".into(),
-                metadata: Some(status.metadata().clone())
+                metadata: status.metadata().clone()
             }.into()
         }),
         tonic::Code::Unimplemented => MomentoError::BadRequest(SdkError {
@@ -187,7 +187,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
                 details: "unimplemented".into(),
-                metadata: Some(status.metadata().clone())
+                metadata: status.metadata().clone()
             }.into()
         }),
         tonic::Code::OutOfRange => MomentoError::BadRequest(SdkError {
@@ -197,7 +197,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
                 details: "out of range".into(),
-                metadata: Some(status.metadata().clone())
+                metadata: status.metadata().clone()
             }.into()
         }),
         tonic::Code::FailedPrecondition => MomentoError::FailedPrecondition(SdkError {
@@ -207,7 +207,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
                 details: "failed precondition".into(),
-                metadata: Some(status.metadata().clone())
+                metadata: status.metadata().clone()
             }.into()
         }),
         tonic::Code::Cancelled => MomentoError::Cancelled(SdkError {
@@ -217,7 +217,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
                 details: "cancelled".into(),
-                metadata: Some(status.metadata().clone())
+                metadata: status.metadata().clone()
             }.into()
         }),
         tonic::Code::DeadlineExceeded => MomentoError::Timeout(SdkError {
@@ -227,7 +227,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
                 details: "timed out".into(),
-                metadata: Some(status.metadata().clone())
+                metadata: status.metadata().clone()
             }.into()
         }),
         tonic::Code::PermissionDenied => MomentoError::PermissionDenied(SdkError {
@@ -237,7 +237,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
                 details: "permission denied".into(),
-                metadata: Some(status.metadata().clone())
+                metadata: status.metadata().clone()
             }.into()
         }),
         tonic::Code::Unauthenticated => MomentoError::Unauthenticated(SdkError {
@@ -247,7 +247,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
                 details: "unauthenticated".into(),
-                metadata: Some(status.metadata().clone())
+                metadata: status.metadata().clone()
             }.into()
         }),
         tonic::Code::ResourceExhausted => MomentoError::LimitExceeded(SdkError {
@@ -257,7 +257,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
                 details: "resource exhausted".into(),
-                metadata: Some(status.metadata().clone())
+                metadata: status.metadata().clone()
             }.into()
         }),
         tonic::Code::NotFound => MomentoError::NotFound(SdkError {
@@ -267,7 +267,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
                 details: "not found".into(),
-                metadata: Some(status.metadata().clone())
+                metadata: status.metadata().clone()
             }.into()
         }),
         tonic::Code::AlreadyExists => MomentoError::AlreadyExists(SdkError {
@@ -277,7 +277,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
                 details: "already exists".into(),
-                metadata: Some(status.metadata().clone())
+                metadata: status.metadata().clone()
             }.into()
         }),
         tonic::Code::Unknown => {
@@ -297,7 +297,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
                                 details: MomentoGrpcErrorDetails {
                                     code: status.code(),
                                     details: "the request was interrupted by the server without an error".into(),
-                                    metadata: Some(status.metadata().clone())
+                                    metadata: status.metadata().clone()
                                 }.into()
                             })
                         } else {
@@ -308,7 +308,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
                                 details: MomentoGrpcErrorDetails {
                                     code: status.code(),
                                     details: "the request was terminated locally without an error".into(),
-                                    metadata: Some(status.metadata().clone())
+                                    metadata: status.metadata().clone()
                                 }.into()
                             })
                         }
@@ -320,7 +320,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
                             details: MomentoGrpcErrorDetails {
                                 code: status.code(),
                                 details: "an internal http2 error terminated the request".into(),
-                                metadata: Some(status.metadata().clone())
+                                metadata: status.metadata().clone()
                             }.into()
                         })
                     }
@@ -332,7 +332,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
                     details: MomentoGrpcErrorDetails {
                         code: status.code(),
                         details: "an unknown error terminated the request".into(),
-                        metadata: Some(status.metadata().clone())
+                        metadata: status.metadata().clone()
                     }.into()
                 })
             }
@@ -344,7 +344,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
                 details: "aborted".into(),
-                metadata: Some(status.metadata().clone())
+                metadata: status.metadata().clone()
             }.into()
         }),
         tonic::Code::Internal => MomentoError::InternalServerError(SdkError {
@@ -354,7 +354,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
                 details: "internal error".into(),
-                metadata: Some(status.metadata().clone())
+                metadata: status.metadata().clone()
             }.into()
         }),
         tonic::Code::Unavailable => MomentoError::ServerUnavailable(SdkError {
@@ -364,7 +364,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
                 details: "service unavailable".into(),
-                metadata: Some(status.metadata().clone())
+                metadata: status.metadata().clone()
             }.into()
         }),
         tonic::Code::DataLoss => MomentoError::InternalServerError(SdkError {
@@ -374,7 +374,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
                 details: "data loss".into(),
-                metadata: Some(status.metadata().clone())
+                metadata: status.metadata().clone()
             }.into()
         }),
         _ => MomentoError::UnknownServiceError(SdkError {
@@ -384,7 +384,7 @@ fn status_to_error(status: tonic::Status) -> MomentoError {
             details: MomentoGrpcErrorDetails {
                 code: status.code(),
                 details: "unknown error".into(),
-                metadata: Some(status.metadata().clone())
+                metadata: status.metadata().clone()
             }.into()
         }),
     }
