@@ -5,7 +5,7 @@ use thiserror::Error;
 use tonic::{codegen::http::uri::InvalidUri, transport::Channel, Streaming};
 
 use crate::{
-    response::{MomentoError, MomentoErrorCode, SdkError},
+    requests::{MomentoError, MomentoErrorCode, SdkError},
     utils::{connect_channel_lazily, ChannelConnectError},
 };
 

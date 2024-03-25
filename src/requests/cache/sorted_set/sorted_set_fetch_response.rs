@@ -5,8 +5,8 @@ use momento_protos::cache_client::sorted_set_fetch_response::SortedSet;
 use momento_protos::cache_client::SortedSetFetchResponse;
 
 use crate::{
-    response::{MomentoErrorCode, SdkError},
-    MomentoError, MomentoResult,
+    requests::{ErrorSource, MomentoError, MomentoErrorCode, SdkError},
+    MomentoResult,
 };
 
 // TODO this needs to be moved to the requests directory
@@ -37,19 +37,20 @@ impl SortedSetFetch {
                             elements: SortedSetElements::new(elements),
                         })
                     }
-                    Elements::Values(_) => {
-                        return Err(MomentoError::ClientSdkError(SdkError {
-                            message: "sorted_set_fetch_by_index response included elements without values".into(),
-                            error_code: MomentoErrorCode::UnknownError,
-                            inner_error: Some(crate::response::ErrorSource::Unknown(
-                                        std::io::Error::new(
-                                            std::io::ErrorKind::InvalidData,
-                                            "unexpected response",
-                                        ).into()),
-                                    ),
-                            details: None
-                        }));
-                    }
+                    Elements::Values(_) => Err(MomentoError::ClientSdkError(SdkError {
+                        message:
+                            "sorted_set_fetch_by_index response included elements without values"
+                                .into(),
+                        error_code: MomentoErrorCode::UnknownError,
+                        inner_error: Some(ErrorSource::Unknown(
+                            std::io::Error::new(
+                                std::io::ErrorKind::InvalidData,
+                                "unexpected response",
+                            )
+                            .into(),
+                        )),
+                        details: None,
+                    })),
                 },
             },
         }

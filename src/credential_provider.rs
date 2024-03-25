@@ -1,5 +1,5 @@
-use crate::response::{MomentoErrorCode, SdkError};
-use crate::{MomentoError, MomentoResult};
+use crate::requests::{MomentoError, MomentoErrorCode, SdkError};
+use crate::MomentoResult;
 use base64::Engine;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
@@ -54,7 +54,7 @@ impl CredentialProvider {
             Ok(auth_token) => auth_token,
             Err(e) => {
                 return Err(MomentoError::InvalidArgument(SdkError {
-                    message: format!("Env var {env_var_name} must be set").into(),
+                    message: format!("Env var {env_var_name} must be set"),
                     error_code: MomentoErrorCode::InvalidArgumentError,
                     inner_error: Some(crate::ErrorSource::Unknown(Box::new(e))),
                     details: None,

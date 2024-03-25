@@ -51,9 +51,9 @@ impl From<tonic::Status> for MomentoGrpcErrorDetails {
     fn from(status: tonic::Status) -> Self {
         MomentoGrpcErrorDetails {
             code: status.code(),
-            details: from_utf8(status.details()).unwrap().into(),
+            details: from_utf8(status.details()).unwrap_or_default().into(),
             message: status.message().into(),
-            metadata: status.metadata().clone()
+            metadata: status.metadata().clone(),
         }
     }
 }

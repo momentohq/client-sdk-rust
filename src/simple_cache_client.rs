@@ -20,16 +20,16 @@ use crate::credential_provider::CredentialProvider;
 use crate::response::{
     DictionaryFetch, DictionaryGet, DictionaryPairs, Get, GetValue, ListCacheEntry, MomentoCache,
     MomentoCreateSigningKeyResponse, MomentoDeleteResponse, MomentoDictionaryDeleteResponse,
-    MomentoDictionaryIncrementResponse, MomentoDictionarySetResponse, MomentoError,
-    MomentoFlushCacheResponse, MomentoListCacheResponse, MomentoListFetchResponse,
-    MomentoListSigningKeyResult, MomentoSetDifferenceResponse, MomentoSetFetchResponse,
-    MomentoSetResponse, MomentoSigningKey, MomentoSortedSetFetchResponse, SortedSetFetch,
+    MomentoDictionaryIncrementResponse, MomentoDictionarySetResponse, MomentoFlushCacheResponse,
+    MomentoListCacheResponse, MomentoListFetchResponse, MomentoListSigningKeyResult,
+    MomentoSetDifferenceResponse, MomentoSetFetchResponse, MomentoSetResponse, MomentoSigningKey,
+    MomentoSortedSetFetchResponse, SortedSetFetch,
 };
 use crate::sorted_set;
 use crate::utils;
 use crate::{
     compression_utils::{compress_json, decompress_json},
-    response::{MomentoErrorCode, SdkError},
+    requests::{ErrorSource, MomentoError, MomentoErrorCode, SdkError},
 };
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 use crate::{utils::user_agent, MomentoResult};
@@ -155,7 +155,7 @@ fn request_meta_data<T>(request: &mut tonic::Request<T>, cache_name: &str) -> Mo
         })
         .map_err(|e| {
             MomentoError::InvalidArgument(SdkError {
-                message: format!("Could not treat cache name as a header value: {e}").into(),
+                message: format!("Could not treat cache name as a header value: {e}"),
                 error_code: MomentoErrorCode::InvalidArgumentError,
                 inner_error: Some(crate::ErrorSource::Unknown(Box::new(e))),
                 details: None,
@@ -2121,19 +2121,20 @@ impl SimpleCacheClient {
                     Elements::ValuesWithScores(elements) => Ok(SortedSetFetch::Hit {
                         elements: elements.elements,
                     }),
-                    Elements::Values(_) => {
-                        return Err(MomentoError::ClientSdkError(SdkError {
-                            message: "sorted_set_fetch_by_index response included elements without values".into(),
-                            error_code: MomentoErrorCode::UnknownError,
-                            inner_error: Some(crate::response::ErrorSource::Unknown(
-                                        std::io::Error::new(
-                                            std::io::ErrorKind::InvalidData,
-                                            "unexpected response",
-                                        ).into()),
-                                    ),
-                            details: None
-                        }));
-                    }
+                    Elements::Values(_) => Err(MomentoError::ClientSdkError(SdkError {
+                        message:
+                            "sorted_set_fetch_by_index response included elements without values"
+                                .into(),
+                        error_code: MomentoErrorCode::UnknownError,
+                        inner_error: Some(ErrorSource::Unknown(
+                            std::io::Error::new(
+                                std::io::ErrorKind::InvalidData,
+                                "unexpected response",
+                            )
+                            .into(),
+                        )),
+                        details: None,
+                    })),
                 },
                 None => Ok(SortedSetFetch::Hit {
                     elements: Vec::new(),
@@ -2307,19 +2308,20 @@ impl SimpleCacheClient {
                     Elements::ValuesWithScores(elements) => Ok(SortedSetFetch::Hit {
                         elements: elements.elements,
                     }),
-                    Elements::Values(_) => {
-                        return Err(MomentoError::ClientSdkError(SdkError {
-                            message: "sorted_set_fetch_by_index response included elements without values".into(),
-                            error_code: MomentoErrorCode::UnknownError,
-                            inner_error: Some(crate::response::ErrorSource::Unknown(
-                                        std::io::Error::new(
-                                            std::io::ErrorKind::InvalidData,
-                                            "unexpected response",
-                                        ).into()),
-                                    ),
-                            details: None
-                        }));
-                    }
+                    Elements::Values(_) => Err(MomentoError::ClientSdkError(SdkError {
+                        message:
+                            "sorted_set_fetch_by_index response included elements without values"
+                                .into(),
+                        error_code: MomentoErrorCode::UnknownError,
+                        inner_error: Some(ErrorSource::Unknown(
+                            std::io::Error::new(
+                                std::io::ErrorKind::InvalidData,
+                                "unexpected response",
+                            )
+                            .into(),
+                        )),
+                        details: None,
+                    })),
                 },
                 None => Ok(SortedSetFetch::Hit {
                     elements: Vec::new(),

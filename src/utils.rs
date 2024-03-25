@@ -4,12 +4,10 @@ use tonic::{
     transport::{Channel, ClientTlsConfig, Uri},
 };
 
-use crate::response::MomentoError;
 use crate::MomentoResult;
 use crate::{
     config::grpc_configuration::GrpcConfiguration,
-    response::{MomentoErrorCode, SdkError},
-    ErrorSource,
+    requests::{ErrorSource, MomentoError, MomentoErrorCode, SdkError},
 };
 use std::convert::TryFrom;
 use std::time::{self, Duration};
@@ -24,8 +22,7 @@ pub(crate) fn is_ttl_valid(ttl: Duration) -> MomentoResult<()> {
                 "TTL provided, {}, needs to be less than the maximum TTL {}",
                 ttl.as_secs(),
                 max_ttl.as_secs()
-            )
-            .into(),
+            ),
             error_code: MomentoErrorCode::InvalidArgumentError,
             inner_error: None,
             details: None,
