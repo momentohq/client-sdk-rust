@@ -12,8 +12,9 @@ Happy coding :dancer:
 - A modern `cargo` tool chain is required; we love [rustup](https://rustup.rs/)
 - A Momento API key is required. You can generate one using the [Momento Console](https://console.gomomento.com)
 
-<br/>
+> :bulb: **Tip** When installing with `rustup`, which we recommend, ensure no other versions of the Rust toolchain are installed on your system (eg via package managers like homebrew). This can lead to puzzling issues with the `cargo` command. Check `which cargo` to ensure you are using the correct version. Uninstall any other versions of Rust if necessary (`brew uninstall rust`).
 
+<br/>
 
 ### Installing Momento and Running the Example
 
@@ -35,7 +36,7 @@ make build
 make lint
 
 # run all tests (unit, integration, and doctests)
-MOMENTO_API_KEY=<api key> make test 
+MOMENTO_API_KEY=<api key> make test
 
 # shortcut to run all of the targets before committing:
 MOMENTO_API_KEY=<api key> make
@@ -65,9 +66,9 @@ MOMENTO_API_KEY=<api key> make
 
 There are three different kinds of tests in this repo:
 
-* Unit tests: these are defined via the `#[test]` macro, in the same file as the code they are testing. For an example see `credential_provider.rs`.
-* Doc tests: these are defined inside of docstrings. They are intended more for documentation of how users should interact with our SDK than for exhaustive test coverage.
-* Integration tests: these live in the `tests` directory, and this is where the lion's share of our test coverage will be.
+- Unit tests: these are defined via the `#[test]` macro, in the same file as the code they are testing. For an example see `credential_provider.rs`.
+- Doc tests: these are defined inside of docstrings. They are intended more for documentation of how users should interact with our SDK than for exhaustive test coverage.
+- Integration tests: these live in the `tests` directory, and this is where the lion's share of our test coverage will be.
 
 To run all the tests you can do:
 
@@ -119,5 +120,3 @@ The goal of these code snippets is to show users how to use the APIs; they are n
 exhaustive test coverage. You can (and should) add `assert` statements if they will help ensure
 the code is correct, but these `assert` statements should always be excluded from the published docs
 via a `#` comment.
-
-
