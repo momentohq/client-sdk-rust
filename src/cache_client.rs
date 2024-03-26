@@ -149,7 +149,6 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    ///
     /// cache_client.set(&cache_name, "k1", "v1").await?;
     ///
     /// # Ok(())
@@ -159,7 +158,7 @@ impl CacheClient {
     /// You can also use the [send_request](CacheClient::send_request) method to set an item using a [SetRequest]:
     /// ```
     /// # fn main() -> anyhow::Result<()> {
-    /// use momento_test_util::create_doctest_cache_client;
+    /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::time::Duration;
     /// use momento::requests::cache::basic::set::Set;
@@ -212,8 +211,7 @@ impl CacheClient {
     ///     Get::Miss => return Err(anyhow::Error::msg("cache miss")) // probably you'll do something else here
     /// };
     ///
-    /// # assert_eq!(item, "value");
-    ///
+    /// assert_eq!(item, "value");
     /// # Ok(())
     /// # })
     /// # }
@@ -221,9 +219,8 @@ impl CacheClient {
     /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [GetRequest]:
     /// ```
     /// # fn main() -> anyhow::Result<()> {
-    /// use momento_test_util::create_doctest_cache_client;
+    /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use std::time::Duration;
     /// use std::convert::TryInto;
     /// use momento::requests::cache::basic::get::Get;
     /// use momento::requests::cache::basic::get::GetRequest;
@@ -241,8 +238,7 @@ impl CacheClient {
     ///   Get::Miss => return Err(anyhow::Error::msg("cache miss"))  // probably you'll do something else here
     /// };
     ///
-    /// # assert_eq!(item, "value");
-    ///
+    /// assert_eq!(item, "value");
     /// # Ok(())
     /// # })
     /// # }
@@ -661,23 +657,14 @@ impl CacheClient {
     /// ```
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_protos::cache_client::update_ttl_response::Result::Set;
-    /// tokio_test::block_on(async {
-    /// use std::time::Duration;
-    /// use momento::CredentialProvider;
-    /// use momento::config::configurations;
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
     /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetFetchByRankRequest;
     /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder;
     /// use momento::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
-    /// let credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())?;
-    /// let cache_name = "cache";
-    /// let sorted_set_name = "sorted_set";
-    ///
-    /// let cache_client = momento::CacheClient::builder()
-    ///    .default_ttl(Duration::from_secs(5))
-    ///    .configuration(configurations::laptop::latest())
-    ///    .credential_provider(credential_provider)
-    ///    .build()?;
+    /// let sorted_set_name = "a_sorted_set";
     ///
     /// let fetch_request = SortedSetFetchByRankRequest::new(cache_name.to_string(), sorted_set_name)
     ///     .with_order(SortOrder::Ascending)
@@ -688,8 +675,7 @@ impl CacheClient {
     /// assert_eq!(fetch_response, SortedSetFetch::Miss {});
     /// # Ok(())
     /// # })
-    /// #
-    /// }
+    /// # }
     /// ```
     pub async fn send_request<R: MomentoRequest>(&self, request: R) -> MomentoResult<R::Response> {
         request.send(self).await

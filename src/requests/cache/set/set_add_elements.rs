@@ -7,27 +7,16 @@ use crate::{CollectionTtl, IntoBytes, MomentoResult};
 
 /// ```
 /// # fn main() -> anyhow::Result<()> {
+/// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use std::time::Duration;
-/// use momento::{CredentialProvider};
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// use momento::requests::cache::set::set_add_elements::SetAddElements;
-/// use momento::config::configurations;
-///
-/// let credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())?;
-/// let cache_name = "cache";
-///
-/// let cache_client = momento::CacheClient::builder()
-///     .default_ttl(Duration::from_secs(5))
-///     .configuration(configurations::laptop::latest())
-///     .credential_provider(credential_provider)
-///     .build()?;
 ///
 /// let set_add_elements_response = cache_client.set_add_elements(cache_name.to_string(), "set", vec!["element1", "element2"]).await?;
 /// assert_eq!(set_add_elements_response, SetAddElements {});
 /// # Ok(())
 /// # })
-/// #
-/// }
+/// # }
 /// ```
 pub struct SetAddElementsRequest<S: IntoBytes, E: IntoBytes> {
     cache_name: String,

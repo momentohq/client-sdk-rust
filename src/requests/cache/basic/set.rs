@@ -15,8 +15,7 @@ use std::time::Duration;
 /// assert_eq!(set_response, Set {});
 /// # Ok(())
 /// # })
-/// #
-/// }
+/// # }
 /// ```
 pub struct SetRequest<K: IntoBytes, V: IntoBytes> {
     cache_name: String,
