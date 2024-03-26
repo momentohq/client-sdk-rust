@@ -20,11 +20,9 @@ use std::convert::{TryFrom, TryInto};
 ///     Get::Hit { value } => value.try_into().expect("I stored a string!"),
 ///     Get::Miss => return Err(anyhow::Error::msg("cache miss")) // probably you'll do something else here
 /// };
-///
 /// # Ok(())
 /// # })
-/// #
-/// }
+/// # }
 /// ```
 pub struct GetRequest<K: IntoBytes> {
     cache_name: String,

@@ -10,6 +10,7 @@ use crate::config::transport_strategy::TransportStrategy;
 ///
 /// /// Use laptop for local development
 /// let developer_config = configurations::laptop::latest();
+///
 /// /// Use in_region for a typical server environment
 /// let server_config = configurations::in_region::latest();
 /// ```

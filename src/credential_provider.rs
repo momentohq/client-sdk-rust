@@ -83,11 +83,10 @@ impl CredentialProvider {
     ///         return // probably you will do something else here
     ///    }
     /// };
-    ///
     /// # ()
     /// # })
     /// #
-    /// }
+    /// # }
     /// ```
     pub fn from_string(auth_token: String) -> MomentoResult<CredentialProvider> {
         let token_to_process = {
