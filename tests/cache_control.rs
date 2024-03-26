@@ -41,7 +41,7 @@ async fn lists_existing_test_cache() {
 
     let expected_throughput_limit = 10240;
     let expected_item_size_limit = 4883;
-    let expected_throttling_limit = 500;
+    let expected_throttling_limit = 1000;
     let expected_max_ttl = 86400;
     let expected_publish_rate = 100;
     let expected_subscription_count = 100;

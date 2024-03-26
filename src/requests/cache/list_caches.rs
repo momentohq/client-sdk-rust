@@ -66,11 +66,6 @@ pub struct CacheInfo {
     pub topic_limits: TopicLimits,
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct ListCaches {
-    pub caches: Vec<CacheInfo>,
-}
-
 /// Response for a list caches operation.
 ///
 /// You can cast your result directly into a Result<Vec<CacheInfo>, MomentoError> suitable for
@@ -81,6 +76,12 @@ pub struct ListCaches {
 /// # let list_caches_response = ListCaches { caches: vec![] };
 /// let caches: Vec<CacheInfo> = list_caches_response.into();
 /// ```
+#[derive(Debug, PartialEq, Eq)]
+pub struct ListCaches {
+    pub caches: Vec<CacheInfo>,
+}
+
+/// Convert a ListCachesResponse from the server into a ListCaches.
 impl ListCaches {
     pub fn from_response(response: control_client::ListCachesResponse) -> ListCaches {
         let mut caches = Vec::new();
