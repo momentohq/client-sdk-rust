@@ -11,7 +11,6 @@ lint:
 ## Build project
 build:
 	cargo build --verbose
-	cargo check
 
 
 .PHONY: clean
