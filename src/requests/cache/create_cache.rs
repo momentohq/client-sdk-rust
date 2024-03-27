@@ -33,8 +33,10 @@ pub struct CreateCacheRequest {
 }
 
 impl CreateCacheRequest {
-    pub fn new(cache_name: String) -> Self {
-        CreateCacheRequest { cache_name }
+    pub fn new(cache_name: impl Into<String>) -> Self {
+        CreateCacheRequest {
+            cache_name: cache_name.into(),
+        }
     }
 }
 
@@ -42,11 +44,9 @@ impl MomentoRequest for CreateCacheRequest {
     type Response = CreateCache;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<CreateCache> {
-        let cache_name = &self.cache_name;
-
-        utils::is_cache_name_valid(cache_name)?;
+        utils::is_cache_name_valid(&self.cache_name)?;
         let request = Request::new(control_client::CreateCacheRequest {
-            cache_name: cache_name.to_string(),
+            cache_name: self.cache_name,
         });
 
         let _ = cache_client

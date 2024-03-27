@@ -30,8 +30,11 @@ pub struct GetRequest<K: IntoBytes> {
 }
 
 impl<K: IntoBytes> GetRequest<K> {
-    pub fn new(cache_name: String, key: K) -> Self {
-        Self { cache_name, key }
+    pub fn new(cache_name: impl Into<String>, key: K) -> Self {
+        Self {
+            cache_name: cache_name.into(),
+            key,
+        }
     }
 }
 

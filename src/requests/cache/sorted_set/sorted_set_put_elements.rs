@@ -116,7 +116,7 @@ impl<S: IntoBytes, E: IntoSortedSetElements> SortedSetPutElementsRequest<S, E> {
     pub fn new(cache_name: String, sorted_set_name: S, elements: E) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
-            cache_name,
+            cache_name: cache_name.into(),
             sorted_set_name,
             elements,
             collection_ttl: Some(collection_ttl),
