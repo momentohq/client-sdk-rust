@@ -20,7 +20,7 @@ use crate::{utils, CacheClient, MomentoResult};
 /// use momento::requests::cache::flush_cache::FlushCacheRequest;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
-/// match cache_client.flush_cache(cache_name).await {
+/// match cache_client.flush_cache(cache_name.to_string()).await {
 ///     Ok(_) => println!("Flushed cache: {}", cache_name),
 ///     Err(e) => eprintln!("Error flushing cache: {}", e),
 /// }

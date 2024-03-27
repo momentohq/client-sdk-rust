@@ -12,8 +12,8 @@ use crate::requests::cache::basic::get::{Get, GetRequest};
 use crate::requests::cache::basic::set::{Set, SetRequest};
 use crate::requests::cache::create_cache::{CreateCache, CreateCacheRequest};
 use crate::requests::cache::delete_cache::{DeleteCache, DeleteCacheRequest};
-use crate::requests::cache::list_caches::{ListCaches, ListCachesRequest};
 use crate::requests::cache::flush_cache::{FlushCache, FlushCacheRequest};
+use crate::requests::cache::list_caches::{ListCaches, ListCachesRequest};
 use crate::requests::cache::set::set_add_elements::{SetAddElements, SetAddElementsRequest};
 use crate::requests::cache::sorted_set::sorted_set_fetch_by_rank::{
     SortOrder, SortedSetFetchByRankRequest,
@@ -137,7 +137,7 @@ impl CacheClient {
     }
 
     /// Lists all caches in your account.
-    /// 
+    ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
     /// ```
@@ -159,7 +159,7 @@ impl CacheClient {
         let request = ListCachesRequest {};
         request.send(self).await
     }
-    
+
     /// Flushes the cache with the given name.
     ///
     /// # Arguments
@@ -175,7 +175,7 @@ impl CacheClient {
     /// use momento::requests::cache::flush_cache::FlushCache;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
-    /// match cache_client.flush_cache(cache_name).await {
+    /// match cache_client.flush_cache(cache_name.to_string()).await {
     ///     Ok(_) => println!("Flushed cache: {}", cache_name),
     ///     Err(e) => eprintln!("Error flushing cache: {}", e),
     /// }
@@ -192,7 +192,7 @@ impl CacheClient {
     /// use momento::requests::cache::flush_cache::FlushCacheRequest;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
-    /// let flush_cache_request = FlushCacheRequest::new(cache_name);
+    /// let flush_cache_request = FlushCacheRequest::new(cache_name.to_string());
     ///
     /// match cache_client.send_request(flush_cache_request).await {
     ///     Ok(_) => println!("Flushed cache: {}", cache_name),
