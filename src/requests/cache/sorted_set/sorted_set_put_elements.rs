@@ -49,10 +49,10 @@ pub struct SortedSetPutElementsRequest<S: IntoBytes, E: IntoBytes> {
 }
 
 impl<S: IntoBytes, E: IntoBytes> SortedSetPutElementsRequest<S, E> {
-    pub fn new(cache_name: String, sorted_set_name: S, elements: Vec<(E, f64)>) -> Self {
+    pub fn new(cache_name: impl Into<String>, sorted_set_name: S, elements: Vec<(E, f64)>) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
-            cache_name,
+            cache_name: cache_name.into(),
             sorted_set_name,
             elements,
             collection_ttl: Some(collection_ttl),

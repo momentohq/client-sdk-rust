@@ -15,8 +15,7 @@ use std::time::Duration;
 /// assert_eq!(set_response, Set {});
 /// # Ok(())
 /// # })
-/// #
-/// }
+/// # }
 /// ```
 pub struct SetRequest<K: IntoBytes, V: IntoBytes> {
     cache_name: String,
@@ -26,10 +25,10 @@ pub struct SetRequest<K: IntoBytes, V: IntoBytes> {
 }
 
 impl<K: IntoBytes, V: IntoBytes> SetRequest<K, V> {
-    pub fn new(cache_name: String, key: K, value: V) -> Self {
+    pub fn new(cache_name: impl Into<String>, key: K, value: V) -> Self {
         let ttl = None;
         Self {
-            cache_name,
+            cache_name: cache_name.into(),
             key,
             value,
             ttl,
