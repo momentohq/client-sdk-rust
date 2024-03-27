@@ -67,7 +67,7 @@ pub trait IntoSortedSetElements: Send {
 /// #    },
 /// # ]);
 /// ```
-pub fn map_and_collect_sorted_set_elements<I, V>(iter: I) -> Vec<SortedSetElement>
+fn map_and_collect_sorted_set_elements<I, V>(iter: I) -> Vec<SortedSetElement>
 where
     I: Iterator<Item = (V, f64)>,
     V: IntoBytes,
