@@ -52,10 +52,10 @@ pub struct SortedSetPutElementRequest<S: IntoBytes, V: IntoBytes> {
 }
 
 impl<S: IntoBytes, V: IntoBytes> SortedSetPutElementRequest<S, V> {
-    pub fn new(cache_name: String, sorted_set_name: S, value: V, score: f64) -> Self {
+    pub fn new(cache_name: impl Into<String>, sorted_set_name: S, value: V, score: f64) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
-            cache_name,
+            cache_name: cache_name.into(),
             sorted_set_name,
             value,
             score,

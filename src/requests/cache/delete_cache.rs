@@ -33,8 +33,10 @@ pub struct DeleteCacheRequest {
 }
 
 impl DeleteCacheRequest {
-    pub fn new(cache_name: String) -> Self {
-        DeleteCacheRequest { cache_name }
+    pub fn new(cache_name: impl Into<String>) -> Self {
+        DeleteCacheRequest {
+            cache_name: cache_name.into(),
+        }
     }
 }
 
