@@ -2,6 +2,7 @@ use momento_protos::control_client;
 use tonic::Request;
 
 use crate::requests::cache::MomentoRequest;
+use crate::requests::status_to_error;
 use crate::{utils, CacheClient, MomentoResult};
 
 /// Request to create a cache.
@@ -49,14 +50,25 @@ impl MomentoRequest for CreateCacheRequest {
             cache_name: cache_name.to_string(),
         });
 
-        let _ = cache_client
+        let result = cache_client
             .control_client
             .clone()
             .create_cache(request)
-            .await?;
-        Ok(CreateCache {})
+            .await;
+        match result {
+            Ok(_) => Ok(CreateCache::Created {}),
+            Err(e) => {
+                if e.code() == tonic::Code::AlreadyExists {
+                    return Ok(CreateCache::AlreadyExists {});
+                }
+                Err(status_to_error(e))
+            }
+        }
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct CreateCache {}
+pub enum CreateCache {
+    Created,
+    AlreadyExists,
+}

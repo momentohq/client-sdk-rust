@@ -1,12 +1,12 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use momento::requests::cache::create_cache::CreateCache;
 use once_cell::sync::Lazy;
 use tokio::sync::watch::channel;
 
 use crate::{get_test_cache_name, get_test_credential_provider};
 use momento::config::configurations;
-use momento::requests::MomentoErrorCode;
 use momento::CacheClient;
 
 pub static CACHE_TEST_STATE: Lazy<Arc<CacheTestState>> =
@@ -45,15 +45,11 @@ impl CacheTestState {
                 .expect("Failed to create cache client");
 
             match cache_client.clone().create_cache(thread_cache_name).await {
-                Ok(_) => {}
-                Err(e) => match e.error_code {
-                    MomentoErrorCode::AlreadyExistsError => {
-                        println!("Cache already exists.");
-                    }
-                    _ => {
-                        panic!("Failed to create cache: {:?}", e);
-                    }
+                Ok(ok) => match ok {
+                    CreateCache::Created => println!("Cache created."),
+                    CreateCache::AlreadyExists => println!("Cache already exists."),
                 },
+                Err(e) => panic!("Failed to create cache: {:?}", e),
             }
 
             sender

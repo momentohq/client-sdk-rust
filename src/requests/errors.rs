@@ -126,7 +126,7 @@ impl From<tonic::Status> for MomentoError {
     }
 }
 
-fn status_to_error(status: tonic::Status) -> MomentoError {
+pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
     log::debug!("translating raw status to error: {status:?}");
     match status.code() {
         tonic::Code::InvalidArgument => MomentoError {
