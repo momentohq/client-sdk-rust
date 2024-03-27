@@ -30,20 +30,43 @@ pub trait IntoSortedSetElements: Send {
 /// Basic usage with a vector of tuples:
 ///
 /// ```
+/// use momento::requests::cache::sorted_set::sorted_set_put_elements::map_and_collect_sorted_set_elements;
 /// let pairs = vec![("value1", 1.0), ("value2", 2.0)];
 /// let sorted_set_elements = map_and_collect_sorted_set_elements(pairs.into_iter());
 /// // `sorted_set_elements` is now a `Vec<SortedSetElement>` with byte representations of "value1" and "value2"
+/// # assert_eq!(sorted_set_elements, vec![
+/// #    momento_protos::cache_client::SortedSetElement {
+/// #        value: "value1".as_bytes().to_vec(),
+/// #        score: 1.0,
+/// #    },
+/// #    momento_protos::cache_client::SortedSetElement {
+/// #        value: "value2".as_bytes().to_vec(),
+/// #        score: 2.0,
+/// #    },
+/// # ]);
 /// ```
 ///
 /// Usage with a `HashMap`:
 ///
 /// ```
+/// use momento::requests::cache::sorted_set::sorted_set_put_elements::map_and_collect_sorted_set_elements;
 /// use std::collections::HashMap;
 /// let mut map = HashMap::new();
 /// map.insert("value1", 1.0);
 /// map.insert("value2", 2.0);
 /// let sorted_set_elements = map_and_collect_sorted_set_elements(map.into_iter());
 /// // `sorted_set_elements` is similar as above, suitable for sorted set operations
+/// # assert_eq!(sorted_set_elements, vec![
+/// #    momento_protos::cache_client::SortedSetElement {
+/// #        value: "value1".as_bytes().to_vec(),
+/// #        score: 1.0,
+/// #    },
+/// #    momento_protos::cache_client::SortedSetElement {
+/// #        value: "value2".as_bytes().to_vec(),
+/// #        score: 2.0,
+/// #    },
+/// # ]);
+/// ```
 pub fn map_and_collect_sorted_set_elements<I, V>(iter: I) -> Vec<SortedSetElement>
 where
     I: Iterator<Item = (V, f64)>,
