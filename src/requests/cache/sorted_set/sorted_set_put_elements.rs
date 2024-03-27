@@ -30,9 +30,9 @@ pub trait IntoSortedSetElements: Send {
 /// Basic usage with a vector of tuples:
 ///
 /// ```
-/// let pairs = vec![("key1", 1.0), ("key2", 2.0)];
+/// let pairs = vec![("value1", 1.0), ("value2", 2.0)];
 /// let sorted_set_elements = map_and_collect_sorted_set_elements(pairs.into_iter());
-/// // `sorted_set_elements` is now a `Vec<SortedSetElement>` with byte representations of "key1" and "key2"
+/// // `sorted_set_elements` is now a `Vec<SortedSetElement>` with byte representations of "value1" and "value2"
 /// ```
 ///
 /// Usage with a `HashMap`:
@@ -40,8 +40,8 @@ pub trait IntoSortedSetElements: Send {
 /// ```
 /// use std::collections::HashMap;
 /// let mut map = HashMap::new();
-/// map.insert("key1", 1.0);
-/// map.insert("key2", 2.0);
+/// map.insert("value1", 1.0);
+/// map.insert("value2", 2.0);
 /// let sorted_set_elements = map_and_collect_sorted_set_elements(map.into_iter());
 /// // `sorted_set_elements` is similar as above, suitable for sorted set operations
 pub fn map_and_collect_sorted_set_elements<I, V>(iter: I) -> Vec<SortedSetElement>
@@ -75,7 +75,7 @@ impl<V: IntoBytes> IntoSortedSetElements for HashMap<V, f64> {
 ///
 /// * `cache_name` - The name of the cache containing the sorted set.
 /// * `sorted_set_name` - The name of the sorted set ot add an element to.
-/// * `elements` - The values and scores to add. The values must be able to be converted to a `Vec<u8>`.
+/// * `elements` - The values and scores to add.
 ///
 /// # Optional Arguments
 ///
@@ -125,7 +125,7 @@ impl<S: IntoBytes, E: IntoSortedSetElements> SortedSetPutElementsRequest<S, E> {
 
     /// Set the time-to-live for the collection.
     pub fn with_ttl(mut self, collection_ttl: CollectionTtl) -> Self {
-        // TODO don't we want this to return a copy as opposed to mutate?
+        // TODO don't we want this to return a copy as opposed to mutate self?
         self.collection_ttl = Some(collection_ttl);
         self
     }
