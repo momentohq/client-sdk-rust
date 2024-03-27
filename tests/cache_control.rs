@@ -1,3 +1,4 @@
+use momento::requests::cache::create_cache::CreateCache;
 use uuid::Uuid;
 
 use momento_test_util::CACHE_TEST_STATE;
@@ -15,9 +16,8 @@ async fn delete_nonexistent_cache_returns_not_found() {
 async fn create_existing_cache_returns_already_exists() {
     let client = CACHE_TEST_STATE.client.clone();
     let cache_name = CACHE_TEST_STATE.cache_name.clone();
-    let result = client.create_cache(cache_name).await.unwrap_err();
-    let _err_msg = "already exists".to_string();
-    assert!(matches!(result.to_string(), _err_message))
+    let result = client.create_cache(cache_name).await.unwrap();
+    assert_eq!(result, CreateCache::AlreadyExists {});
 }
 
 #[tokio::test]

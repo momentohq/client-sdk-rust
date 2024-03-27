@@ -1,4 +1,5 @@
-use crate::{MomentoError, MomentoResult};
+use crate::requests::{MomentoError, MomentoErrorCode};
+use crate::MomentoResult;
 use base64::Engine;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
@@ -53,10 +54,12 @@ impl CredentialProvider {
         let token_to_process = match env::var(&env_var_name) {
             Ok(auth_token) => auth_token,
             Err(e) => {
-                return Err(MomentoError::InvalidArgument {
-                    description: format!("Env var {env_var_name} must be set").into(),
-                    source: Some(crate::ErrorSource::Unknown(Box::new(e))),
-                })
+                return Err(MomentoError {
+                    message: format!("Env var {env_var_name} must be set"),
+                    error_code: MomentoErrorCode::InvalidArgumentError,
+                    inner_error: Some(crate::ErrorSource::Unknown(Box::new(e))),
+                    details: None,
+                });
             }
         };
 
@@ -93,9 +96,11 @@ impl CredentialProvider {
         let auth_token = auth_token.into();
         let token_to_process = {
             if auth_token.is_empty() {
-                return Err(MomentoError::InvalidArgument {
-                    description: "Auth token string cannot be empty".into(),
-                    source: None,
+                return Err(MomentoError {
+                    message: "Auth token string cannot be empty".into(),
+                    error_code: MomentoErrorCode::InvalidArgumentError,
+                    inner_error: None,
+                    details: None,
                 });
             };
             auth_token
@@ -155,15 +160,19 @@ fn process_jwt_token(auth_token: String) -> MomentoResult<CredentialProvider> {
     let token_claims: JwtClaims = token.claims;
 
     let cache_endpoint = token_claims.cache_endpoint
-            .ok_or_else(|| MomentoError::InvalidArgument {
-                description: "auth token is missing cache endpoint and endpoint override is missing. One or the other must be provided".into(),
-                source: None,
-            })?;
+    .ok_or_else(|| MomentoError {
+        message: "auth token is missing cache endpoint and endpoint override is missing. One or the other must be provided".into(),
+        error_code: MomentoErrorCode::InvalidArgumentError,
+        inner_error: None,
+        details: None
+    })?;
     let control_endpoint = token_claims.control_endpoint
-            .ok_or_else(|| MomentoError::InvalidArgument {
-                description: "auth token is missing control endpoint and endpoint override is missing. One or the other must be provided.".into(),
-                source: None,
-            })?;
+    .ok_or_else(|| MomentoError {
+        message: "auth token is missing control endpoint and endpoint override is missing. One or the other must be provided.".into(),
+        error_code: MomentoErrorCode::InvalidArgumentError,
+        inner_error: None,
+        details: None
+    })?;
     let token_endpoint = cache_endpoint.clone();
 
     Ok(CredentialProvider {
@@ -191,10 +200,11 @@ fn https_endpoint(hostname: String) -> String {
 }
 
 fn token_parsing_error(e: Box<dyn std::error::Error + Send + Sync>) -> MomentoError {
-    MomentoError::ClientSdkError {
-        description: "Could not parse token. Please ensure a valid token was entered correctly."
-            .into(),
-        source: crate::ErrorSource::Unknown(e),
+    MomentoError {
+        message: "Could not parse token. Please ensure a valid token was entered correctly.".into(),
+        error_code: MomentoErrorCode::InvalidArgumentError,
+        inner_error: Some(crate::ErrorSource::Unknown(e)),
+        details: None,
     }
 }
 
@@ -226,7 +236,7 @@ mod tests {
     #[test]
     fn env_var_not_set() {
         let env_var_name = "TEST_ENV_VAR_CREDENTIAL_PROVIDER_NOT_SET";
-        let _err_msg = format!("invalid argument: Env var {env_var_name} must be set");
+        let _err_msg = format!("Env var {env_var_name} must be set");
         let e = CredentialProvider::from_env_var(env_var_name).unwrap_err();
 
         assert_eq!(e.to_string(), _err_msg);
@@ -236,7 +246,7 @@ mod tests {
     fn env_var_empty_string() {
         let env_var_name = "TEST_ENV_VAR_CREDENTIAL_PROVIDER_EMPTY_STRING";
         env::set_var(env_var_name, "");
-        let _err_msg = "client error: Could not parse token. Please ensure a valid token was entered correctly.";
+        let _err_msg = "Could not parse token. Please ensure a valid token was entered correctly.";
         let e = CredentialProvider::from_env_var(env_var_name).unwrap_err();
 
         assert_eq!(e.to_string(), _err_msg);
@@ -274,7 +284,7 @@ mod tests {
     #[test]
     fn empty_token() {
         let e = CredentialProvider::from_string("").unwrap_err();
-        let _err_msg = "invalid argument: Auth token string cannot be empty".to_owned();
+        let _err_msg = "Auth token string cannot be empty".to_owned();
         assert_eq!(e.to_string(), _err_msg);
     }
 
@@ -282,7 +292,7 @@ mod tests {
     fn invalid_token() {
         let e = CredentialProvider::from_string("wfheofhriugheifweif").unwrap_err();
         let _err_msg =
-            "client error: Could not parse token. Please ensure a valid token was entered correctly.".to_owned();
+            "Could not parse token. Please ensure a valid token was entered correctly.".to_owned();
         assert_eq!(e.to_string(), _err_msg);
     }
 
@@ -305,7 +315,7 @@ mod tests {
         let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
         let e = CredentialProvider::from_string(auth_token).unwrap_err();
         let _err_msg =
-            "invalid argument: auth token is missing cache endpoint and endpoint override is missing. One or the other must be provided".to_string();
+            "auth token is missing cache endpoint and endpoint override is missing. One or the other must be provided".to_string();
         assert_eq!(e.to_string(), _err_msg);
     }
 
@@ -348,7 +358,7 @@ mod tests {
         let auth_token = "eyJmb28iOiJiYXIifQo=";
         let e = CredentialProvider::from_string(auth_token).unwrap_err();
         let _err_msg =
-            "client error: Could not parse token. Please ensure a valid token was entered correctly.".to_string();
+            "Could not parse token. Please ensure a valid token was entered correctly.".to_string();
         assert_eq!(e.to_string(), _err_msg);
     }
 }

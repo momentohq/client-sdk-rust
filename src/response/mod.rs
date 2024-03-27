@@ -6,12 +6,14 @@ mod cache_set_fetch_response;
 mod cache_sorted_set_fetch_response;
 mod create_signing_key_response;
 mod dictionary_pairs;
-mod error;
 mod flush_cache_response;
 mod generate_api_token_response;
 mod list_cache_response;
 mod list_signing_keys_response;
 
+use crate::requests::MomentoError;
+use crate::requests::MomentoErrorCode;
+use crate::ErrorSource;
 use crate::MomentoResult;
 
 pub use self::cache_dictionary_fetch_response::*;
@@ -22,7 +24,6 @@ pub use self::cache_set_fetch_response::*;
 pub use self::cache_sorted_set_fetch_response::*;
 pub use self::create_signing_key_response::*;
 pub use self::dictionary_pairs::*;
-pub use self::error::*;
 pub use self::flush_cache_response::*;
 pub use self::generate_api_token_response::*;
 pub use self::list_cache_response::*;
@@ -95,8 +96,10 @@ impl MomentoDeleteResponse {
 }
 
 pub(crate) fn parse_string(raw: Vec<u8>) -> MomentoResult<String> {
-    String::from_utf8(raw).map_err(|e| MomentoError::TypeError {
-        description: std::borrow::Cow::Borrowed("item is not a utf-8 string"),
-        source: Box::new(e),
+    String::from_utf8(raw).map_err(|e| MomentoError {
+        error_code: MomentoErrorCode::TypeError,
+        message: "item is not a utf-8 string".to_string(),
+        inner_error: Some(ErrorSource::Unknown(Box::new(e))),
+        details: None,
     })
 }

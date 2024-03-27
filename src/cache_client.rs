@@ -64,7 +64,7 @@ impl CacheClient {
     ///
     /// let create_cache_response = cache_client.create_cache(cache_name).await?;
     ///
-    /// assert_eq!(create_cache_response, CreateCache {});
+    /// assert_eq!(create_cache_response, CreateCache::AlreadyExists {});
     /// # Ok(())
     /// # })
     /// # }
@@ -82,7 +82,7 @@ impl CacheClient {
     ///
     /// let create_cache_response = cache_client.send_request(create_cache_request).await?;
     ///
-    /// assert_eq!(create_cache_response, CreateCache {});
+    /// assert_eq!(create_cache_response, CreateCache::AlreadyExists {});
     /// # Ok(())
     /// # })
     /// # }
