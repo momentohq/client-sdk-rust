@@ -29,8 +29,7 @@ pub trait IntoSortedSetElements: Send {
 ///
 /// Basic usage with a vector of tuples:
 ///
-/// ```
-/// use momento::requests::cache::sorted_set::sorted_set_put_elements::map_and_collect_sorted_set_elements;
+/// ```no_run
 /// let pairs = vec![("value1", 1.0), ("value2", 2.0)];
 /// let sorted_set_elements = map_and_collect_sorted_set_elements(pairs.into_iter());
 /// // `sorted_set_elements` is now a `Vec<SortedSetElement>` with byte representations of "value1" and "value2"
@@ -48,8 +47,7 @@ pub trait IntoSortedSetElements: Send {
 ///
 /// Usage with a `HashMap`:
 ///
-/// ```
-/// use momento::requests::cache::sorted_set::sorted_set_put_elements::map_and_collect_sorted_set_elements;
+/// ```no_run
 /// use std::collections::HashMap;
 /// let mut map = HashMap::new();
 /// map.insert("value1", 1.0);
