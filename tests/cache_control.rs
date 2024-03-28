@@ -60,15 +60,9 @@ async fn flush_existing_cache_returns_success() -> MomentoResult<()> {
     let cache_name = &CACHE_TEST_STATE.cache_name;
 
     // Insert some elements
-    let set_result1 = client
-        .set(cache_name.to_string(), "key1", "value1")
-        .await
-        .unwrap();
+    let set_result1 = client.set(cache_name.to_string(), "key1", "value1").await?;
     assert_eq!(set_result1, Set {});
-    let set_result2 = client
-        .set(cache_name.to_string(), "key2", "value2")
-        .await
-        .unwrap();
+    let set_result2 = client.set(cache_name.to_string(), "key2", "value2").await?;
     assert_eq!(set_result2, Set {});
 
     // Verify that the elements are in the cache
