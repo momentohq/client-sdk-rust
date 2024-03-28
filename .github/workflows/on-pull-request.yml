@@ -33,7 +33,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: Lint (rustfmt and lippy)
+      - name: Lint (rustfmt and clippy)
         run: make lint
 
   build_rust:
