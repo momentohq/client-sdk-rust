@@ -18,16 +18,23 @@ use crate::{utils, CacheClient, MomentoResult};
 /// # tokio_test::block_on(async {
 /// use momento::requests::cache::delete_cache::DeleteCache;
 /// use momento::requests::cache::delete_cache::DeleteCacheRequest;
+/// use momento::requests::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
-/// let delete_cache_request = DeleteCacheRequest::new(cache_name.to_string());
+/// let delete_cache_request = DeleteCacheRequest::new(&cache_name);
 ///
-/// let delete_cache_response = cache_client.send_request(delete_cache_request).await?;
-///
-/// assert_eq!(delete_cache_response, DeleteCache {});
+/// match cache_client.send_request(delete_cache_request).await {
+///     Ok(_) => println!("Cache deleted: {}", &cache_name),
+///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+///         println!("Cache not found: {}", &cache_name);
+///     } else {
+///         eprintln!("Error deleting cache {}: {}", &cache_name, e);
+///     }
+/// }
 /// # Ok(())
 /// # })
 /// # }
+/// ```
 pub struct DeleteCacheRequest {
     pub cache_name: String,
 }

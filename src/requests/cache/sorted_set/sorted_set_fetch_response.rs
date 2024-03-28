@@ -9,14 +9,13 @@ use crate::{
     MomentoResult,
 };
 
-// TODO this needs to be moved to the requests directory
-
 #[derive(Debug, PartialEq)]
 pub enum SortedSetFetch {
     Hit { elements: SortedSetElements },
     Miss,
 }
 
+/// Response object for a [SortedSetFetchByScoreRequest] or a [SortedSetFetchByRankRequest].
 impl SortedSetFetch {
     pub(crate) fn from_fetch_response(response: SortedSetFetchResponse) -> MomentoResult<Self> {
         match response.sorted_set {

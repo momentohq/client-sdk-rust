@@ -63,30 +63,15 @@ impl CacheClient {
     /// use momento::requests::cache::create_cache::CreateCache;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
-    /// let create_cache_response = cache_client.create_cache(cache_name).await?;
-    ///
-    /// assert_eq!(create_cache_response, CreateCache::AlreadyExists {});
+    /// match cache_client.create_cache(&cache_name).await? {
+    ///     CreateCache::Created => println!("Cache {} created", &cache_name),
+    ///     CreateCache::AlreadyExists => println!("Cache {} already exists", &cache_name),
+    /// }
     /// # Ok(())
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to create a cache using a [CreateCacheRequest]:
-    /// ```no_run
-    /// # fn main() -> anyhow::Result<()> {
-    /// # use momento_test_util::create_doctest_cache_client;
-    /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::create_cache::CreateCache;
-    /// use momento::requests::cache::create_cache::CreateCacheRequest;
-    /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    ///
-    /// let create_cache_request = CreateCacheRequest::new(cache_name);
-    ///
-    /// let create_cache_response = cache_client.send_request(create_cache_request).await?;
-    ///
-    /// assert_eq!(create_cache_response, CreateCache::AlreadyExists {});
-    /// # Ok(())
-    /// # })
-    /// # }
+    /// You can also use the [send_request](CacheClient::send_request) method to create a cache using a [CreateCacheRequest].
     pub async fn create_cache(&self, cache_name: impl Into<String>) -> MomentoResult<CreateCache> {
         let request = CreateCacheRequest::new(cache_name);
         request.send(self).await
@@ -105,32 +90,22 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use momento::requests::cache::delete_cache::DeleteCache;
+    /// use momento::requests::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
-    /// let delete_cache_response = cache_client.delete_cache(cache_name).await?;
-    ///
-    /// assert_eq!(delete_cache_response, DeleteCache {});
+    /// match cache_client.delete_cache(&cache_name).await {
+    ///     Ok(_) => println!("Cache deleted: {}", &cache_name),
+    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///         println!("Cache not found: {}", &cache_name);
+    ///     } else {
+    ///         eprintln!("Error deleting cache {}: {}", &cache_name, e);
+    ///     }
+    /// }
     /// # Ok(())
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to delete a cache using a [DeleteCacheRequest]:
-    /// ```no_run
-    /// # fn main() -> anyhow::Result<()> {
-    /// # use momento_test_util::create_doctest_cache_client;
-    /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::delete_cache::DeleteCache;
-    /// use momento::requests::cache::delete_cache::DeleteCacheRequest;
-    /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    ///
-    /// let delete_cache_request = DeleteCacheRequest::new(cache_name);
-    ///
-    /// let delete_cache_response = cache_client.send_request(delete_cache_request).await?;
-    ///
-    /// assert_eq!(delete_cache_response, DeleteCache {});
-    /// # Ok(())
-    /// # })
-    /// # }
+    /// You can also use the [send_request](CacheClient::send_request) method to delete a cache using a [DeleteCacheRequest].
     pub async fn delete_cache(&self, cache_name: impl Into<String>) -> MomentoResult<DeleteCache> {
         let request = DeleteCacheRequest::new(cache_name);
         request.send(self).await
@@ -155,6 +130,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to list caches using a [ListCachesRequest].
     pub async fn list_caches(&self) -> MomentoResult<ListCaches> {
         let request = ListCachesRequest {};
         request.send(self).await
@@ -204,41 +180,35 @@ impl CacheClient {
     /// * `key` - key of the item whose value we are setting
     /// * `value` - data to stored in the cache item
     ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to set an item using a
+    /// [SetRequest], you can also provide the following optional arguments:
+    ///
+    /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
+    ///
     /// # Examples
-    ///
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
     /// ```
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// cache_client.set(&cache_name, "k1", "v1").await?;
-    ///
-    /// # Ok(())
-    /// # })
-    /// # }
-    /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to set an item using a [SetRequest]:
-    /// ```
-    /// # fn main() -> anyhow::Result<()> {
-    /// # use momento_test_util::create_doctest_cache_client;
-    /// # tokio_test::block_on(async {
-    /// use std::time::Duration;
     /// use momento::requests::cache::basic::set::Set;
-    /// use momento::requests::cache::basic::set::SetRequest;
-    /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    ///
-    /// let set_request = SetRequest::new(
-    ///     cache_name,
-    ///     "key",
-    ///     "value1"
-    /// ).ttl(Duration::from_secs(60));
-    ///
-    /// let set_response = cache_client.send_request(set_request).await?;
-    ///
-    /// assert_eq!(set_response, Set {});
+    /// use momento::requests::MomentoErrorCode;
+    /// 
+    /// match cache_client.set(&cache_name, "k1", "v1").await {
+    ///     Ok(_) => println!("Set successful"),
+    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///         println!("Cache not found: {}", &cache_name);
+    ///     } else {
+    ///         eprintln!("Error setting value in cache {}: {}", &cache_name, e);
+    ///     }
+    /// }
     /// # Ok(())
     /// # })
     /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SetRequest].
     pub async fn set(
         &self,
         cache_name: impl Into<String>,
@@ -257,7 +227,7 @@ impl CacheClient {
     /// * `key` - key of entry within the cache.
     ///
     /// # Examples
-    ///
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
     /// ```
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
@@ -265,45 +235,18 @@ impl CacheClient {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use std::convert::TryInto;
     /// use momento::requests::cache::basic::get::Get;
-    ///
-    /// cache_client.set(&cache_name, "key", "value").await?;
+    /// # cache_client.set(&cache_name, "key", "value").await?;
     ///
     /// let item: String = match(cache_client.get(&cache_name, "key").await?) {
     ///     Get::Hit { value } => value.try_into().expect("I stored a string!"),
-    ///     Get::Miss => return Err(anyhow::Error::msg("cache miss")) // probably you'll do something else here
+    ///     Get::Miss => return Err(anyhow::Error::msg("cache miss"))
     /// };
-    ///
-    /// assert_eq!(item, "value");
+    /// # assert_eq!(item, "value");
     /// # Ok(())
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [GetRequest]:
-    /// ```
-    /// # fn main() -> anyhow::Result<()> {
-    /// # use momento_test_util::create_doctest_cache_client;
-    /// # tokio_test::block_on(async {
-    /// use std::convert::TryInto;
-    /// use momento::requests::cache::basic::get::Get;
-    /// use momento::requests::cache::basic::get::GetRequest;
-    /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    ///
-    /// cache_client.set(&cache_name, "key", "value").await?;
-    ///
-    /// let get_request = GetRequest::new(
-    ///     cache_name,
-    ///     "key"
-    /// );
-    ///
-    /// let item: String = match(cache_client.send_request(get_request).await?) {
-    ///   Get::Hit { value } => value.try_into().expect("I stored a string!"),
-    ///   Get::Miss => return Err(anyhow::Error::msg("cache miss"))  // probably you'll do something else here
-    /// };
-    ///
-    /// assert_eq!(item, "value");
-    /// # Ok(())
-    /// # })
-    /// # }
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [GetRequest].
     pub async fn get(
         &self,
         cache_name: impl Into<String>,
@@ -334,6 +277,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use momento::requests::cache::set::set_add_elements::SetAddElements;
+    /// use momento::requests::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let set_name = "set";
     ///
@@ -341,36 +285,17 @@ impl CacheClient {
     ///     cache_name,
     ///     set_name,
     ///     vec!["value1", "value2"]
-    /// ).await?;
+    /// ).await;
     ///
-    /// assert_eq!(add_elements_response, SetAddElements {});
+    /// match add_elements_response {
+    ///     Ok(_) => println!("Elements added to set"),
+    ///     Err(e) => eprintln!("Error adding elements to set: {}", e),
+    /// }
     /// # Ok(())
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to create a cache using a [SetAddElementsRequest]:
-    /// ```
-    /// # fn main() -> anyhow::Result<()> {
-    /// # use momento_test_util::create_doctest_cache_client;
-    /// # tokio_test::block_on(async {
-    /// use momento::CollectionTtl;
-    /// use momento::requests::cache::set::set_add_elements::SetAddElements;
-    /// use momento::requests::cache::set::set_add_elements::SetAddElementsRequest;
-    /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// let set_name = "set";
-    ///
-    /// let add_elements_request = SetAddElementsRequest::new(
-    ///     cache_name,
-    ///     set_name,
-    ///     vec!["value1", "value2"]
-    /// ).ttl(CollectionTtl::default());
-    ///
-    /// let add_elements_response = cache_client.send_request(add_elements_request).await?;
-    ///
-    /// assert_eq!(add_elements_response, SetAddElements {});
-    /// # Ok(())
-    /// # })
-    /// # }
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SetAddElementsRequest].
     pub async fn set_add_elements<E: IntoBytes>(
         &self,
         cache_name: impl Into<String>,
@@ -412,37 +337,17 @@ impl CacheClient {
     ///     sorted_set_name,
     ///     "value",
     ///     1.0
-    /// ).await?;
+    /// ).await;
     ///
-    /// assert_eq!(put_element_response, SortedSetPutElement {});
+    /// match put_element_response {
+    ///     Ok(_) => println!("Element added to sorted set"),
+    ///     Err(e) => eprintln!("Error adding element to sorted set: {}", e),
+    /// }
     /// # Ok(())
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to create a cache using a [SortedSetPutElementRequest]:
-    /// ```
-    /// # fn main() -> anyhow::Result<()> {
-    /// # use momento_test_util::create_doctest_cache_client;
-    /// # tokio_test::block_on(async {
-    /// use momento::CollectionTtl;
-    /// use momento::requests::cache::sorted_set::sorted_set_put_element::SortedSetPutElement;
-    /// use momento::requests::cache::sorted_set::sorted_set_put_element::SortedSetPutElementRequest;
-    /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// let sorted_set_name = "sorted_set";
-    ///
-    /// let put_element_request = SortedSetPutElementRequest::new(
-    ///     cache_name,
-    ///     sorted_set_name,
-    ///     "value",
-    ///     1.0
-    /// ).ttl(CollectionTtl::default());
-    ///
-    /// let put_element_response = cache_client.send_request(put_element_request).await?;
-    ///
-    /// assert_eq!(put_element_response, SortedSetPutElement {});
-    /// # Ok(())
-    /// # })
-    /// # }
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetPutElementRequest].
     pub async fn sorted_set_put_element(
         &self,
         cache_name: impl Into<String>,
@@ -483,36 +388,17 @@ impl CacheClient {
     ///     cache_name,
     ///     sorted_set_name,
     ///     vec![("value1", 1.0), ("value2", 2.0)]
-    /// ).await?;
+    /// ).await;
     ///
-    /// assert_eq!(put_element_response, SortedSetPutElements {});
+    /// match put_element_response {
+    ///     Ok(_) => println!("Elements added to sorted set"),
+    ///     Err(e) => eprintln!("Error adding elements to sorted set: {}", e),
+    /// }
     /// # Ok(())
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to create a cache using a [SortedSetPutElementsRequest]:
-    /// ```
-    /// # fn main() -> anyhow::Result<()> {
-    /// # use momento_test_util::create_doctest_cache_client;
-    /// # tokio_test::block_on(async {
-    /// use momento::CollectionTtl;
-    /// use momento::requests::cache::sorted_set::sorted_set_put_elements::SortedSetPutElements;
-    /// use momento::requests::cache::sorted_set::sorted_set_put_elements::SortedSetPutElementsRequest;
-    /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// let sorted_set_name = "sorted_set";
-    ///
-    /// let put_elements_request = SortedSetPutElementsRequest::new(
-    ///     cache_name,
-    ///     sorted_set_name,
-    ///     vec![("value1", 1.0), ("value2", 2.0)]
-    /// ).ttl(CollectionTtl::default());
-    ///
-    /// let put_elements_response = cache_client.send_request(put_elements_request).await?;
-    ///
-    /// assert_eq!(put_elements_response, SortedSetPutElements {});
-    /// # Ok(())
-    /// # })
-    /// # }
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetPutElementsRequest].
     pub async fn sorted_set_put_elements<E: IntoBytes>(
         &self,
         cache_name: impl Into<String>,
@@ -565,50 +451,20 @@ impl CacheClient {
     ///     SortedSetFetch::Hit{ elements } => {
     ///         match elements.into_strings() {
     ///             Ok(vec) => {
-    ///                 println!("{:?}", vec);
+    ///                 println!("Fetched elements: {:?}", vec);
     ///             }
     ///             Err(error) => {
     ///                 eprintln!("Error: {}", error);
     ///             }
     ///         }
     ///     }
-    ///     SortedSetFetch::Miss => {}
+    ///     SortedSetFetch::Miss => println!("Cache miss"),
     /// }
     /// # Ok(())
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to create a cache using a [SortedSetFetchByRankRequest]:
-    /// ```
-    /// # fn main() -> anyhow::Result<()> {
-    /// # use std::convert::TryInto;
-    /// # use momento_test_util::create_doctest_cache_client;
-    /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder;
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetFetchByRankRequest;
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
-    /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// let sorted_set_name = "sorted_set";
-    ///
-    /// let put_element_response = cache_client.sorted_set_put_elements(
-    ///     &cache_name,
-    ///     sorted_set_name,
-    ///     vec![("value1", 1.0), ("value2", 2.0), ("value3", 3.0), ("value4", 4.0)]
-    /// ).await?;
-    ///
-    /// let fetch_request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name)
-    ///     .order(SortOrder::Ascending)
-    ///     .start_rank(1)
-    ///     .end_rank(3);
-    ///
-    /// let fetch_response = cache_client.send_request(fetch_request).await?;
-    ///
-    /// let returned_elements: Vec<(String, f64)> = fetch_response.try_into()
-    ///     .expect("elements 2 and 3 should be returned");
-    /// println!("{:?}", returned_elements);
-    /// # Ok(())
-    /// # })
-    /// # }
+    /// You can also use the [send_request](CacheClient::send_request) method to fetch elements using a [SortedSetFetchByRankRequest].
     pub async fn sorted_set_fetch_by_rank(
         &self,
         cache_name: impl Into<String>,
@@ -672,50 +528,20 @@ impl CacheClient {
     ///     SortedSetFetch::Hit{ elements } => {
     ///         match elements.into_strings() {
     ///             Ok(vec) => {
-    ///                 println!("{:?}", vec);
+    ///                 println!("Fetched elements: {:?}", vec);
     ///             }
     ///             Err(error) => {
     ///                 eprintln!("Error: {}", error);
     ///             }
     ///         }
     ///     }
-    ///     SortedSetFetch::Miss => {}
+    ///     SortedSetFetch::Miss => println!("Cache miss"),
     /// }
     /// # Ok(())
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to create a cache using a [SortedSetFetchByScoreRequest]:
-    /// ```
-    /// # fn main() -> anyhow::Result<()> {
-    /// # use std::convert::TryInto;
-    /// # use momento_test_util::create_doctest_cache_client;
-    /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder;
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
-    /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// let sorted_set_name = "sorted_set";
-    ///
-    /// let put_element_response = cache_client.sorted_set_put_elements(
-    ///     &cache_name,
-    ///     sorted_set_name,
-    ///     vec![("value1", 1.0), ("value2", 2.0), ("value3", 3.0), ("value4", 4.0)]
-    /// ).await?;
-    ///
-    /// let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name)
-    ///     .order(SortOrder::Ascending)
-    ///     .min_score(2.0)
-    ///     .max_score(3.0);
-    ///
-    /// let fetch_response = cache_client.send_request(fetch_request).await?;
-    ///
-    /// let returned_elements: Vec<(String, f64)> = fetch_response.try_into()
-    ///     .expect("elements 2 and 3 should be returned");
-    /// println!("{:?}", returned_elements);
-    /// # Ok(())
-    /// # })
-    /// # }
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetFetchByScoreRequest].
     pub async fn sorted_set_fetch_by_score(
         &self,
         cache_name: impl Into<String>,
@@ -730,29 +556,7 @@ impl CacheClient {
     /// you want to set optional fields on a request that are not supported by the short-hand API for
     /// that request type.
     ///
-    /// ```
-    /// # fn main() -> anyhow::Result<()> {
-    /// # use momento_protos::cache_client::update_ttl_response::Result::Set;
-    /// # use momento_test_util::create_doctest_cache_client;
-    /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetFetchByRankRequest;
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder;
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
-    /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    ///
-    /// let sorted_set_name = "a_sorted_set";
-    ///
-    /// let fetch_request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name)
-    ///     .order(SortOrder::Ascending)
-    ///     .start_rank(1)
-    ///     .end_rank(3);
-    ///
-    /// let fetch_response = cache_client.send_request(fetch_request).await?;
-    /// assert_eq!(fetch_response, SortedSetFetch::Miss {});
-    /// # Ok(())
-    /// # })
-    /// # }
-    /// ```
+    /// See [SortedSetFetchByRankRequest] for an example of creating a request with optional fields.
     pub async fn send_request<R: MomentoRequest>(&self, request: R) -> MomentoResult<R::Response> {
         request.send(self).await
     }

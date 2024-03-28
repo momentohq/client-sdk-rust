@@ -61,6 +61,7 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// # Ok(())
 /// # })
 /// # }
+/// ```
 pub struct SortedSetFetchByScoreRequest<S: IntoBytes> {
     cache_name: String,
     sorted_set_name: S,
