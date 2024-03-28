@@ -23,7 +23,7 @@ use crate::requests::cache::sorted_set::sorted_set_put_element::{
     SortedSetPutElement, SortedSetPutElementRequest,
 };
 use crate::requests::cache::sorted_set::sorted_set_put_elements::{
-    SortedSetPutElements, SortedSetPutElementsRequest,
+    IntoSortedSetElements, SortedSetPutElements, SortedSetPutElementsRequest,
 };
 use crate::requests::cache::MomentoRequest;
 
@@ -476,11 +476,11 @@ impl CacheClient {
     /// # Ok(())
     /// # })
     /// # }
-    pub async fn sorted_set_put_elements<E: IntoBytes>(
+    pub async fn sorted_set_put_elements<V: IntoBytes>(
         &self,
         cache_name: impl Into<String>,
         sorted_set_name: impl IntoBytes,
-        elements: Vec<(E, f64)>,
+        elements: impl IntoSortedSetElements<V>,
     ) -> MomentoResult<SortedSetPutElements> {
         let request = SortedSetPutElementsRequest::new(cache_name, sorted_set_name, elements);
         request.send(self).await
