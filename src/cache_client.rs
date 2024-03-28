@@ -12,6 +12,7 @@ use crate::requests::cache::basic::get::{Get, GetRequest};
 use crate::requests::cache::basic::set::{Set, SetRequest};
 use crate::requests::cache::create_cache::{CreateCache, CreateCacheRequest};
 use crate::requests::cache::delete_cache::{DeleteCache, DeleteCacheRequest};
+use crate::requests::cache::flush_cache::{FlushCache, FlushCacheRequest};
 use crate::requests::cache::list_caches::{ListCaches, ListCachesRequest};
 use crate::requests::cache::set::set_add_elements::{SetAddElements, SetAddElementsRequest};
 use crate::requests::cache::sorted_set::sorted_set_fetch_by_rank::{
@@ -156,6 +157,42 @@ impl CacheClient {
     /// ```
     pub async fn list_caches(&self) -> MomentoResult<ListCaches> {
         let request = ListCachesRequest {};
+        request.send(self).await
+    }
+
+    /// Flushes the cache with the given name.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the cache to be flushed of data.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::requests::cache::flush_cache::FlushCache;
+    /// use momento::requests::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    ///
+    /// match cache_client.flush_cache(cache_name.to_string()).await {
+    ///     Ok(_) => println!("Flushed cache: {}", cache_name),
+    ///     Err(e) => {
+    ///         if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///             println!("Cache not found: {}", cache_name);
+    ///         } else {
+    ///            eprintln!("Error flushing cache: {}", e);
+    ///         }
+    ///     }
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to delete a cache using a [FlushCacheRequest].
+    pub async fn flush_cache(&self, cache_name: impl Into<String>) -> MomentoResult<FlushCache> {
+        let request = FlushCacheRequest::new(cache_name);
         request.send(self).await
     }
 
