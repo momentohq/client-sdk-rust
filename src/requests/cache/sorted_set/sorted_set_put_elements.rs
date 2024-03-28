@@ -139,14 +139,15 @@ impl<V: IntoBytes> IntoSortedSetElements<V> for HashMap<V, f64> {
 /// # Ok(())
 /// # })
 /// # }
-pub struct SortedSetPutElementsRequest<S: IntoBytes, E: IntoSortedSetElements<S>> {
+pub struct SortedSetPutElementsRequest<S: IntoBytes, V: IntoBytes, E: IntoSortedSetElements<V>> {
     cache_name: String,
     sorted_set_name: S,
     elements: E,
     collection_ttl: Option<CollectionTtl>,
+    _marker: std::marker::PhantomData<V>,
 }
 
-impl<S: IntoBytes, E: IntoSortedSetElements<S>> SortedSetPutElementsRequest<S, E> {
+impl<S: IntoBytes, V: IntoBytes, E: IntoSortedSetElements<V>> SortedSetPutElementsRequest<S, V, E> {
     pub fn new(cache_name: impl Into<String>, sorted_set_name: S, elements: E) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
@@ -154,6 +155,7 @@ impl<S: IntoBytes, E: IntoSortedSetElements<S>> SortedSetPutElementsRequest<S, E
             sorted_set_name,
             elements,
             collection_ttl: Some(collection_ttl),
+            _marker: std::marker::PhantomData,
         }
     }
 
@@ -165,8 +167,8 @@ impl<S: IntoBytes, E: IntoSortedSetElements<S>> SortedSetPutElementsRequest<S, E
     }
 }
 
-impl<S: IntoBytes, E: IntoSortedSetElements<S>> MomentoRequest
-    for SortedSetPutElementsRequest<S, E>
+impl<S: IntoBytes, V: IntoBytes, E: IntoSortedSetElements<V>> MomentoRequest
+    for SortedSetPutElementsRequest<S, V, E>
 {
     type Response = SortedSetPutElements;
 
