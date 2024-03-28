@@ -5,15 +5,40 @@ use crate::requests::cache::MomentoRequest;
 use crate::simple_cache_client::prep_request_with_timeout;
 use crate::{CollectionTtl, IntoBytes, MomentoResult};
 
+/// Request to add elements to the given set. Creates the set if it does not exist.
+///
+/// # Arguments
+///
+/// * `cache_name` - The name of the cache containing the sorted set.
+/// * `set_name` - The name of the sorted set to add an element to.
+/// * `elements` - The elements to add. Must be able to be converted to a `Vec<u8>`.
+///
+/// # Optional Arguments
+///
+/// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
+///
+/// # Examples
+/// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// # let (cache_client, cache_name) = create_doctest_cache_client();
+/// use momento::CollectionTtl;
 /// use momento::requests::cache::set::set_add_elements::SetAddElements;
+/// use momento::requests::cache::set::set_add_elements::SetAddElementsRequest;
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
+/// let set_name = "set";
 ///
-/// let set_add_elements_response = cache_client.set_add_elements(cache_name.to_string(), "set", vec!["element1", "element2"]).await?;
-/// assert_eq!(set_add_elements_response, SetAddElements {});
+/// let add_elements_request = SetAddElementsRequest::new(
+///     cache_name,
+///     set_name,
+///     vec!["value1", "value2"]
+/// ).with_ttl(CollectionTtl::default());
+///
+/// match cache_client.send_request(add_elements_request).await {
+///     Ok(_) => println!("Elements added to set"),
+///     Err(e) => eprintln!("Error adding elements to set: {}", e),
+/// }
 /// # Ok(())
 /// # })
 /// # }
