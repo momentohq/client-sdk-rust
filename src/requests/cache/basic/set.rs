@@ -4,15 +4,44 @@ use crate::simple_cache_client::prep_request_with_timeout;
 use crate::{IntoBytes, MomentoResult};
 use std::time::Duration;
 
+/// Request to set a value in a cache.
+///
+/// # Arguments
+///
+/// * `cache_name` - The name of the cache to create.
+/// * `key` - key of the item whose value we are setting
+/// * `value` - data to stored in the cache item
+///
+/// # Optional Arguments
+///
+/// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
+///
+/// # Example
+/// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// # let (cache_client, cache_name) = create_doctest_cache_client();
+/// use std::time::Duration;
 /// use momento::requests::cache::basic::set::Set;
+/// use momento::requests::cache::basic::set::SetRequest;
+/// use momento::requests::MomentoErrorCode;
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
-/// let set_response = cache_client.set(&cache_name, "key", "value").await?;
-/// assert_eq!(set_response, Set {});
+/// let set_request = SetRequest::new(
+///     &cache_name,
+///     "key",
+///     "value1"
+/// ).with_ttl(Duration::from_secs(60));
+///
+/// match cache_client.send_request(set_request).await {
+///     Ok(_) => println!("Set successful"),
+///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+///         println!("Cache not found: {}", &cache_name);
+///     } else {
+///         eprintln!("Error setting value in cache {}: {}", &cache_name, e);
+///     }
+/// }
 /// # Ok(())
 /// # })
 /// # }

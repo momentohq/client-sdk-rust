@@ -61,6 +61,7 @@ pub enum SortOrder {
 /// # Ok(())
 /// # })
 /// # }
+/// ```
 pub struct SortedSetFetchByRankRequest<S: IntoBytes> {
     cache_name: String,
     sorted_set_name: S,
