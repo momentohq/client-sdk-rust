@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::marker::PhantomData;
 
 use momento_protos::cache_client::SortedSetElement as ProtoSortedSetElement;
 use momento_protos::cache_client::SortedSetPutRequest;
@@ -144,7 +145,7 @@ pub struct SortedSetPutElementsRequest<S: IntoBytes, V: IntoBytes, E: IntoSorted
     sorted_set_name: S,
     elements: E,
     collection_ttl: Option<CollectionTtl>,
-    _marker: std::marker::PhantomData<V>,
+    _marker: PhantomData<V>,
 }
 
 impl<S: IntoBytes, V: IntoBytes, E: IntoSortedSetElements<V>> SortedSetPutElementsRequest<S, V, E> {
@@ -155,7 +156,7 @@ impl<S: IntoBytes, V: IntoBytes, E: IntoSortedSetElements<V>> SortedSetPutElemen
             sorted_set_name,
             elements,
             collection_ttl: Some(collection_ttl),
-            _marker: std::marker::PhantomData,
+            _marker: PhantomData,
         }
     }
 
