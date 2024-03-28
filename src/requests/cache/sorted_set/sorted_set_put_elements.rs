@@ -1,15 +1,24 @@
 use std::collections::HashMap;
 
-use momento_protos::cache_client::{SortedSetElement, SortedSetPutRequest};
+use momento_protos::cache_client::SortedSetElement as ProtoSortedSetElement;
+use momento_protos::cache_client::SortedSetPutRequest;
 
 use crate::requests::cache::MomentoRequest;
 use crate::simple_cache_client::prep_request_with_timeout;
 use crate::{CacheClient, CollectionTtl, IntoBytes, MomentoResult};
 
 /// This trait defines an interface for converting a type into a vector of `SortedSetElement`s.
-pub trait IntoSortedSetElements: Send {
+pub trait IntoSortedSetElements<V: IntoBytes>: Send {
     /// Converts the type into a vector of `SortedSetElement`s.
-    fn into_sorted_set_elements(self) -> Vec<SortedSetElement>;
+    fn into_sorted_set_elements(self) -> Vec<SortedSetElement<V>>;
+}
+
+// This should be used by the various sorted set fetch methods.
+// That way we have named access to value and score.
+#[derive(Debug, PartialEq)]
+pub struct SortedSetElement<V: IntoBytes> {
+    pub value: V,
+    pub score: f64,
 }
 
 /// Converts an iterator of value-score pairs into a vector of `SortedSetElement`s.
@@ -34,12 +43,12 @@ pub trait IntoSortedSetElements: Send {
 /// let sorted_set_elements = map_and_collect_sorted_set_elements(pairs.into_iter());
 /// // `sorted_set_elements` is now a `Vec<SortedSetElement>` with byte representations of "value1" and "value2"
 /// # assert_eq!(sorted_set_elements, vec![
-/// #    momento_protos::cache_client::SortedSetElement {
-/// #        value: "value1".as_bytes().to_vec(),
+/// #    SortedSetElement {
+/// #        value: "value1",
 /// #        score: 1.0,
 /// #    },
-/// #    momento_protos::cache_client::SortedSetElement {
-/// #        value: "value2".as_bytes().to_vec(),
+/// #    SortedSetElement {
+/// #        value: "value2",
 /// #        score: 2.0,
 /// #    },
 /// # ]);
@@ -55,37 +64,40 @@ pub trait IntoSortedSetElements: Send {
 /// let sorted_set_elements = map_and_collect_sorted_set_elements(map.into_iter());
 /// // `sorted_set_elements` is similar as above, suitable for sorted set operations
 /// # assert_eq!(sorted_set_elements, vec![
-/// #    momento_protos::cache_client::SortedSetElement {
-/// #        value: "value1".as_bytes().to_vec(),
+/// #    SortedSetElement {
+/// #        value: "value1",
 /// #        score: 1.0,
 /// #    },
-/// #    momento_protos::cache_client::SortedSetElement {
-/// #        value: "value2".as_bytes().to_vec(),
+/// #    SortedSetElement {
+/// #        value: "value2",
 /// #        score: 2.0,
 /// #    },
 /// # ]);
 /// ```
 #[cfg(not(doctest))]
-fn map_and_collect_sorted_set_elements<I, V>(iter: I) -> Vec<SortedSetElement>
+fn map_and_collect_sorted_set_elements<I, V>(iter: I) -> Vec<SortedSetElement<V>>
 where
     I: Iterator<Item = (V, f64)>,
     V: IntoBytes,
 {
-    iter.map(|(value, score)| SortedSetElement {
-        value: value.into_bytes(),
-        score,
-    })
-    .collect()
+    iter.map(|(value, score)| SortedSetElement { value, score })
+        .collect()
 }
 
-impl<V: IntoBytes> IntoSortedSetElements for Vec<(V, f64)> {
-    fn into_sorted_set_elements(self) -> Vec<SortedSetElement> {
+impl<V: IntoBytes> IntoSortedSetElements<V> for Vec<(V, f64)> {
+    fn into_sorted_set_elements(self) -> Vec<SortedSetElement<V>> {
         map_and_collect_sorted_set_elements(self.into_iter())
     }
 }
 
-impl<V: IntoBytes> IntoSortedSetElements for HashMap<V, f64> {
-    fn into_sorted_set_elements(self) -> Vec<SortedSetElement> {
+impl<V: IntoBytes> IntoSortedSetElements<V> for Vec<SortedSetElement<V>> {
+    fn into_sorted_set_elements(self) -> Vec<SortedSetElement<V>> {
+        self
+    }
+}
+
+impl<V: IntoBytes> IntoSortedSetElements<V> for HashMap<V, f64> {
+    fn into_sorted_set_elements(self) -> Vec<SortedSetElement<V>> {
         map_and_collect_sorted_set_elements(self.into_iter())
     }
 }
@@ -127,14 +139,14 @@ impl<V: IntoBytes> IntoSortedSetElements for HashMap<V, f64> {
 /// # Ok(())
 /// # })
 /// # }
-pub struct SortedSetPutElementsRequest<S: IntoBytes, E: IntoSortedSetElements> {
+pub struct SortedSetPutElementsRequest<S: IntoBytes, E: IntoSortedSetElements<S>> {
     cache_name: String,
     sorted_set_name: S,
     elements: E,
     collection_ttl: Option<CollectionTtl>,
 }
 
-impl<S: IntoBytes, E: IntoSortedSetElements> SortedSetPutElementsRequest<S, E> {
+impl<S: IntoBytes, E: IntoSortedSetElements<S>> SortedSetPutElementsRequest<S, E> {
     pub fn new(cache_name: impl Into<String>, sorted_set_name: S, elements: E) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
@@ -153,7 +165,9 @@ impl<S: IntoBytes, E: IntoSortedSetElements> SortedSetPutElementsRequest<S, E> {
     }
 }
 
-impl<S: IntoBytes, E: IntoSortedSetElements> MomentoRequest for SortedSetPutElementsRequest<S, E> {
+impl<S: IntoBytes, E: IntoSortedSetElements<S>> MomentoRequest
+    for SortedSetPutElementsRequest<S, E>
+{
     type Response = SortedSetPutElements;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<SortedSetPutElements> {
@@ -166,7 +180,13 @@ impl<S: IntoBytes, E: IntoSortedSetElements> MomentoRequest for SortedSetPutElem
             cache_client.configuration.deadline_millis(),
             SortedSetPutRequest {
                 set_name,
-                elements,
+                elements: elements
+                    .into_iter()
+                    .map(|element| ProtoSortedSetElement {
+                        value: element.value.into_bytes(),
+                        score: element.score,
+                    })
+                    .collect(),
                 ttl_milliseconds: cache_client.expand_ttl_ms(collection_ttl.ttl())?,
                 refresh_ttl: collection_ttl.refresh(),
             },

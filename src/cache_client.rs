@@ -451,11 +451,11 @@ impl CacheClient {
     /// # Ok(())
     /// # })
     /// # }
-    pub async fn sorted_set_put_elements(
+    pub async fn sorted_set_put_elements<T: IntoBytes>(
         &self,
         cache_name: impl Into<String>,
-        sorted_set_name: impl IntoBytes,
-        elements: impl IntoSortedSetElements,
+        sorted_set_name: T,
+        elements: impl IntoSortedSetElements<T>,
     ) -> MomentoResult<SortedSetPutElements> {
         let request = SortedSetPutElementsRequest::new(cache_name, sorted_set_name, elements);
         request.send(self).await
