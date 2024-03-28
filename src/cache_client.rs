@@ -195,7 +195,7 @@ impl CacheClient {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use momento::requests::cache::basic::set::Set;
     /// use momento::requests::MomentoErrorCode;
-    /// 
+    ///
     /// match cache_client.set(&cache_name, "k1", "v1").await {
     ///     Ok(_) => println!("Set successful"),
     ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
