@@ -173,34 +173,24 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use momento::requests::cache::flush_cache::FlushCache;
+    /// use momento::requests::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.flush_cache(cache_name.to_string()).await {
     ///     Ok(_) => println!("Flushed cache: {}", cache_name),
-    ///     Err(e) => eprintln!("Error flushing cache: {}", e),
+    ///     Err(e) => {
+    ///         if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///             println!("Cache not found: {}", cache_name);
+    ///         } else {
+    ///            eprintln!("Error flushing cache: {}", e);
+    ///         }
+    ///     }
     /// }
     /// # Ok(())
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to delete a cache using a [FlushCacheRequest]:
-    /// ```no_run
-    /// # fn main() -> anyhow::Result<()> {
-    /// # use momento_test_util::create_doctest_cache_client;
-    /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::flush_cache::FlushCache;
-    /// use momento::requests::cache::flush_cache::FlushCacheRequest;
-    /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    ///
-    /// let flush_cache_request = FlushCacheRequest::new(cache_name.to_string());
-    ///
-    /// match cache_client.send_request(flush_cache_request).await {
-    ///     Ok(_) => println!("Flushed cache: {}", cache_name),
-    ///     Err(e) => eprintln!("Error flushing cache: {}", e),
-    /// }
-    /// # Ok(())
-    /// # })
-    /// # }
+    /// You can also use the [send_request](CacheClient::send_request) method to delete a cache using a [FlushCacheRequest].
     pub async fn flush_cache(&self, cache_name: impl Into<String>) -> MomentoResult<FlushCache> {
         let request = FlushCacheRequest::new(cache_name);
         request.send(self).await

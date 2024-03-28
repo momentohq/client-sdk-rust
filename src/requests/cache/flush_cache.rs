@@ -18,11 +18,20 @@ use crate::{utils, CacheClient, MomentoResult};
 /// # tokio_test::block_on(async {
 /// use momento::requests::cache::flush_cache::FlushCache;
 /// use momento::requests::cache::flush_cache::FlushCacheRequest;
+/// use momento::requests::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
-/// match cache_client.flush_cache(cache_name.to_string()).await {
+/// let flush_cache_request = FlushCacheRequest::new(cache_name.to_string());
+///
+/// match cache_client.send_request(flush_cache_request).await {
 ///     Ok(_) => println!("Flushed cache: {}", cache_name),
-///     Err(e) => eprintln!("Error flushing cache: {}", e),
+///     Err(e) => {
+///         if let MomentoErrorCode::NotFoundError = e.error_code {
+///             println!("Cache not found: {}", cache_name);
+///         } else {
+///            eprintln!("Error flushing cache: {}", e);
+///         }
+///     }
 /// }
 /// # Ok(())
 /// # })
