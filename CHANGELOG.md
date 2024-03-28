@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.34.1](https://github.com/momentohq/client-sdk-rust/compare/v0.34.0...v0.34.1) (2024-03-28)
+
+
+### Miscellaneous
+
+* fix minor issues in makefile and github actions ([#211](https://github.com/momentohq/client-sdk-rust/issues/211)) ([73f2284](https://github.com/momentohq/client-sdk-rust/commit/73f2284a2bb6fab303581bb7c9d00baa8886ef7b))
+
 ## [0.34.0](https://github.com/momentohq/client-sdk-rust/compare/v0.33.1...v0.34.0) (2024-03-27)
 
 
