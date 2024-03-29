@@ -71,7 +71,7 @@ fn compare_by_first_entry(a: &(String, f64), b: &(String, f64)) -> std::cmp::Ord
 
 #[tokio::test]
 async fn sorted_set_put_elements_happy_path() {
-    async fn put_elements_and_check_sorted_set(
+    async fn test_put_elements_happy_path(
         client: Arc<CacheClient>,
         cache_name: String,
         to_put: impl IntoSortedSetElements<String> + Clone,
@@ -113,16 +113,16 @@ async fn sorted_set_put_elements_happy_path() {
     let cache_name = CACHE_TEST_STATE.cache_name.clone();
 
     let to_put = vec![("element1".to_string(), 1.0), ("element2".to_string(), 2.0)];
-    put_elements_and_check_sorted_set(client.clone(), cache_name.clone(), to_put).await;
+    test_put_elements_happy_path(client.clone(), cache_name.clone(), to_put).await;
 
     let to_put = std::collections::HashMap::from([
         ("element1".to_string(), 1.0),
         ("element2".to_string(), 2.0),
     ]);
-    put_elements_and_check_sorted_set(client.clone(), cache_name.clone(), to_put).await;
+    test_put_elements_happy_path(client.clone(), cache_name.clone(), to_put).await;
 
     let to_put = vec![("element1".to_string(), 1.0), ("element2".to_string(), 2.0)];
-    put_elements_and_check_sorted_set(client.clone(), cache_name.clone(), to_put).await;
+    test_put_elements_happy_path(client.clone(), cache_name.clone(), to_put).await;
 
     let to_put = vec![
         SortedSetElement {
@@ -134,7 +134,7 @@ async fn sorted_set_put_elements_happy_path() {
             score: 2.0,
         },
     ];
-    put_elements_and_check_sorted_set(client.clone(), cache_name.clone(), to_put).await;
+    test_put_elements_happy_path(client.clone(), cache_name.clone(), to_put).await;
 }
 
 #[tokio::test]
