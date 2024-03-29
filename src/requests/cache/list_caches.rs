@@ -68,8 +68,8 @@ pub struct CacheInfo {
 
 /// Response for a list caches operation.
 ///
-/// You can cast your result directly into a Result<Vec<CacheInfo>, MomentoError> suitable for
-/// ?-propagation if you know you are expecting a Vec<CacheInfo> item.
+/// You can cast your result directly into a `Result<Vec<CacheInfo>`, MomentoError> suitable for
+/// ?-propagation if you know you are expecting a `Vec<CacheInfo>` item.
 /// ```
 /// # use momento::requests::cache::list_caches::{CacheInfo, ListCaches};
 /// # use momento::MomentoResult;

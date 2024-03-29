@@ -36,6 +36,9 @@ jobs:
       - name: Lint (rustfmt and clippy)
         run: make lint
 
+      - name: Compile docs
+        run: make docs
+
   build_rust:
     runs-on: macos-latest
     env:
