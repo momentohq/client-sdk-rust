@@ -95,17 +95,16 @@ async fn sorted_set_put_elements_happy_path() {
 
         match result {
             SortedSetFetch::Hit { elements } => {
-                let expected = to_put
+                let mut expected = to_put
                     .into_sorted_set_elements()
                     .into_iter()
                     .map(|e| (e.value, e.score))
-                    .collect::<Vec<_>>()
-                    .sort_by(compare_by_first_entry);
-                let actual = elements
-                    .into_strings()
-                    .unwrap()
-                    .sort_by(compare_by_first_entry);
-                assert_eq!(expected, actual);
+                    .collect::<Vec<_>>();
+                expected.sort_by(compare_by_first_entry);
+
+                let mut actual = elements.into_strings().unwrap();
+                actual.sort_by(compare_by_first_entry);
+                assert_eq!(actual, expected);
             }
             _ => panic!("Expected SortedSetFetch::Hit, but got {:?}", result),
         }
