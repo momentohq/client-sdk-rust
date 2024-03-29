@@ -60,20 +60,20 @@ async fn flush_existing_cache_returns_success() -> MomentoResult<()> {
     let cache_name = &CACHE_TEST_STATE.cache_name;
 
     // Insert some elements
-    let set_result1 = client.set(cache_name.to_string(), "key1", "value1").await?;
+    let set_result1 = client.set(cache_name, "key1", "value1").await?;
     assert_eq!(set_result1, Set {});
-    let set_result2 = client.set(cache_name.to_string(), "key2", "value2").await?;
+    let set_result2 = client.set(cache_name, "key2", "value2").await?;
     assert_eq!(set_result2, Set {});
 
     // Verify that the elements are in the cache
-    let get_result1 = client.get(cache_name.to_string(), "key1").await?;
+    let get_result1 = client.get(cache_name, "key1").await?;
     assert_eq!(
         get_result1,
         Get::Hit {
             value: GetValue::new("value1".into())
         }
     );
-    let get_result2 = client.get(cache_name.to_string(), "key2").await?;
+    let get_result2 = client.get(cache_name, "key2").await?;
     assert_eq!(
         get_result2,
         Get::Hit {
@@ -82,13 +82,13 @@ async fn flush_existing_cache_returns_success() -> MomentoResult<()> {
     );
 
     // Flush the cache
-    let result = client.flush_cache(cache_name.to_string()).await?;
+    let result = client.flush_cache(cache_name).await?;
     assert_eq!(result, FlushCache {});
 
     // Verify that the elements were flushed from the cache
-    let get_result3 = client.get(cache_name.to_string(), "key1").await?;
+    let get_result3 = client.get(cache_name, "key1").await?;
     assert_eq!(get_result3, Get::Miss {});
-    let get_result4 = client.get(cache_name.to_string(), "key2").await?;
+    let get_result4 = client.get(cache_name, "key2").await?;
     assert_eq!(get_result4, Get::Miss {});
 
     Ok(())
