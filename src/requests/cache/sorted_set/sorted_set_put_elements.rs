@@ -145,6 +145,7 @@ pub struct SortedSetPutElementsRequest<S: IntoBytes, V: IntoBytes, E: IntoSorted
     sorted_set_name: S,
     elements: E,
     collection_ttl: Option<CollectionTtl>,
+    // V is only used for the `IntoSortedSetElement`'s generic type parameter.
     _marker: PhantomData<V>,
 }
 
