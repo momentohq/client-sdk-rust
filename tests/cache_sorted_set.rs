@@ -18,7 +18,13 @@ async fn sorted_set_put_element_happy_path() {
     let score = 1.0;
 
     let result = client
-        .sorted_set_fetch_by_rank(cache_name.clone(), sorted_set_name.clone(), Ascending)
+        .sorted_set_fetch_by_rank(
+            cache_name.clone(),
+            sorted_set_name.clone(),
+            Ascending,
+            None,
+            None,
+        )
         .await
         .unwrap();
     assert_eq!(result, SortedSetFetch::Miss);
@@ -29,7 +35,13 @@ async fn sorted_set_put_element_happy_path() {
         .unwrap();
 
     let result = client
-        .sorted_set_fetch_by_rank(cache_name.clone(), sorted_set_name.clone(), Ascending)
+        .sorted_set_fetch_by_rank(
+            cache_name.clone(),
+            sorted_set_name.clone(),
+            Ascending,
+            None,
+            None,
+        )
         .await
         .unwrap();
 
@@ -125,7 +137,13 @@ async fn sorted_set_fetch_by_rank_happy_path() {
     ];
 
     let result = client
-        .sorted_set_fetch_by_rank(cache_name.clone(), sorted_set_name.clone(), Ascending)
+        .sorted_set_fetch_by_rank(
+            cache_name.clone(),
+            sorted_set_name.clone(),
+            Ascending,
+            None,
+            None,
+        )
         .await
         .unwrap();
     assert_eq!(result, SortedSetFetch::Miss);
@@ -191,7 +209,7 @@ async fn sorted_set_fetch_by_rank_nonexistent_cache() {
     let sorted_set_name = "sorted-set";
 
     let result = client
-        .sorted_set_fetch_by_rank(cache_name.clone(), sorted_set_name, Ascending)
+        .sorted_set_fetch_by_rank(cache_name.clone(), sorted_set_name, Ascending, None, None)
         .await
         .unwrap_err();
 
