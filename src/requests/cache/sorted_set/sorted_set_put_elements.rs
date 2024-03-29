@@ -16,7 +16,7 @@ pub trait IntoSortedSetElements<V: IntoBytes>: Send {
 
 // This should be used by the various sorted set fetch methods.
 // That way we have named access to value and score.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct SortedSetElement<V: IntoBytes> {
     pub value: V,
     pub score: f64,

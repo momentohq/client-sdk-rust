@@ -6,6 +6,7 @@ use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder::{
 use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetFetchByRankRequest;
 use momento::requests::cache::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
 use momento::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
+use momento::requests::cache::sorted_set::sorted_set_put_elements::SortedSetElement;
 
 use momento_test_util::CACHE_TEST_STATE;
 
@@ -59,6 +60,10 @@ async fn sorted_set_put_element_nonexistent_cache() {
     assert!(matches!(result.to_string(), _err_message))
 }
 
+fn compare_by_first_entry(a: &(String, f64), b: &(String, f64)) -> std::cmp::Ordering {
+    a.0.cmp(&b.0)
+}
+
 #[tokio::test]
 async fn sorted_set_put_elements_happy_path() {
     let client = CACHE_TEST_STATE.client.clone();
@@ -84,9 +89,103 @@ async fn sorted_set_put_elements_happy_path() {
 
     match result {
         SortedSetFetch::Hit { elements } => {
-            assert_eq!(elements.len(), 2);
-            let string_elements = elements.into_strings().unwrap();
-            assert_eq!(to_put, string_elements)
+            let expected = to_put.clone().sort_by(compare_by_first_entry);
+            let actual = elements
+                .into_strings()
+                .unwrap()
+                .sort_by(compare_by_first_entry);
+            assert_eq!(expected, actual);
+        }
+        _ => panic!("Expected SortedSetFetch::Hit, but got {:?}", result),
+    }
+}
+
+#[tokio::test]
+async fn sorted_set_put_elements_hashmap_happy_path() {
+    let client = CACHE_TEST_STATE.client.clone();
+    let cache_name = CACHE_TEST_STATE.cache_name.clone();
+    let sorted_set_name = "sorted-set-".to_string() + &Uuid::new_v4().to_string();
+
+    let to_put = std::collections::HashMap::from([
+        ("element1".to_string(), 1.0),
+        ("element2".to_string(), 2.0),
+    ]);
+
+    let result = client
+        .sorted_set_fetch_by_score(cache_name.clone(), sorted_set_name.clone(), Ascending)
+        .await
+        .unwrap();
+    assert_eq!(result, SortedSetFetch::Miss);
+
+    client
+        .sorted_set_put_elements(cache_name.clone(), sorted_set_name.clone(), to_put.clone())
+        .await
+        .unwrap();
+
+    let result = client
+        .sorted_set_fetch_by_score(cache_name.clone(), sorted_set_name.clone(), Ascending)
+        .await
+        .unwrap();
+    match result {
+        SortedSetFetch::Hit { elements } => {
+            let expected = to_put
+                .into_iter()
+                .collect::<Vec<_>>()
+                .sort_by(compare_by_first_entry);
+            let actual = elements
+                .into_strings()
+                .unwrap()
+                .sort_by(compare_by_first_entry);
+            assert_eq!(expected, actual);
+        }
+        _ => panic!("Expected SortedSetFetch::Hit, but got {:?}", result),
+    }
+}
+
+#[tokio::test]
+async fn sorted_set_put_elements_vec_sortedsetelement_happy_path() {
+    let client = CACHE_TEST_STATE.client.clone();
+    let cache_name = CACHE_TEST_STATE.cache_name.clone();
+    let sorted_set_name = "sorted-set-".to_string() + &Uuid::new_v4().to_string();
+
+    let to_put = vec![
+        SortedSetElement {
+            value: "element1".to_string(),
+            score: 1.0,
+        },
+        SortedSetElement {
+            value: "element2".to_string(),
+            score: 2.0,
+        },
+    ];
+
+    let result = client
+        .sorted_set_fetch_by_score(cache_name.clone(), sorted_set_name.clone(), Ascending)
+        .await
+        .unwrap();
+    assert_eq!(result, SortedSetFetch::Miss);
+
+    client
+        .sorted_set_put_elements(cache_name.clone(), sorted_set_name.clone(), to_put.clone())
+        .await
+        .unwrap();
+
+    let result = client
+        .sorted_set_fetch_by_score(cache_name.clone(), sorted_set_name.clone(), Ascending)
+        .await
+        .unwrap();
+    match result {
+        SortedSetFetch::Hit { elements } => {
+            let expected = to_put
+                .into_iter()
+                .map(|e| (e.value, e.score))
+                .collect::<Vec<_>>()
+                .sort_by(compare_by_first_entry);
+            let actual = elements
+                .into_strings()
+                .unwrap()
+                .sort_by(compare_by_first_entry);
+            assert_eq!(expected, actual);
         }
         _ => panic!("Expected SortedSetFetch::Hit, but got {:?}", result),
     }
