@@ -420,11 +420,6 @@ impl CacheClient {
     /// * `cache_name` - The name of the cache containing the sorted set.
     /// * `sorted_set_name` - The name of the sorted set to add an element to.
     /// * `order` - The order to sort the elements by. [SortOrder::Ascending] or [SortOrder::Descending].
-    ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to fetch elements using a
-    /// [SortedSetFetchByRankRequest], you can also provide the following optional arguments:
-    ///
     /// * `start_rank` - The rank of the first element to fetch. Defaults to 0. This rank is
     /// inclusive, i.e. the element at this rank will be fetched.
     /// * `end_rank` - The rank of the last element to fetch. This rank is exclusive, i.e. the
@@ -468,8 +463,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to fetch elements using a [SortedSetFetchByRankRequest]
-    /// which will allow you to set [optional arguments](SortedSetFetchByRankRequest#optional-arguments) as well.
+    /// You can also use the [send_request](CacheClient::send_request) method to fetch elements using a [SortedSetFetchByRankRequest]..
     pub async fn sorted_set_fetch_by_rank(
         &self,
         cache_name: impl Into<String>,
