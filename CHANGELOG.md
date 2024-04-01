@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.34.0](https://github.com/momentohq/client-sdk-rust/compare/v0.33.1...v0.34.0) (2024-03-27)
+
+
+### Features
+
+* add ListCaches and initial control client integration tests ([#206](https://github.com/momentohq/client-sdk-rust/issues/206)) ([bec2651](https://github.com/momentohq/client-sdk-rust/commit/bec2651630905fd86a2091e2ccd0bc80a2d9d877))
+* tweaks to builders ([#191](https://github.com/momentohq/client-sdk-rust/issues/191)) ([046d8ee](https://github.com/momentohq/client-sdk-rust/commit/046d8ee379694874d3d5baca000b2f31059e6ad0))
+* use impl Into&lt;String&gt; on most public APIs ([#201](https://github.com/momentohq/client-sdk-rust/issues/201)) ([d5e136c](https://github.com/momentohq/client-sdk-rust/commit/d5e136c9071aedf80c379604d26b0d0654803513))
+
+
+### Bug Fixes
+
+* standardize error messages, add details ([#197](https://github.com/momentohq/client-sdk-rust/issues/197)) ([5fb1a23](https://github.com/momentohq/client-sdk-rust/commit/5fb1a231955606dd29b791ff4aeb142e893246e7))
+
+
+### Miscellaneous
+
+* add vscode recommended extensions ([#203](https://github.com/momentohq/client-sdk-rust/issues/203)) ([3d5da00](https://github.com/momentohq/client-sdk-rust/commit/3d5da000b32b3dc87bec67d7a10c4e6852b82acc))
+* audit doctests for cache client creation ([#204](https://github.com/momentohq/client-sdk-rust/issues/204)) ([2e002ef](https://github.com/momentohq/client-sdk-rust/commit/2e002ef910aff4ef5038fa99906d22d4bfd273f2))
+* fix minor docs warnings ([#198](https://github.com/momentohq/client-sdk-rust/issues/198)) ([1f86c71](https://github.com/momentohq/client-sdk-rust/commit/1f86c7156d67b6f25ae530909b5cfc8e031e5715))
+* minor re-organization of integration tests and utils ([#193](https://github.com/momentohq/client-sdk-rust/issues/193)) ([5acc57d](https://github.com/momentohq/client-sdk-rust/commit/5acc57dc0531d159762f492d2e6504258d811f7f))
+* move new sorted set fetch response type to new requests dir ([#195](https://github.com/momentohq/client-sdk-rust/issues/195)) ([0c8b4dc](https://github.com/momentohq/client-sdk-rust/commit/0c8b4dc4d5ebb6ed0ebcdc7e38d185ddbe6bb1ba))
+* update CONTRIBUTING re: tests ([#196](https://github.com/momentohq/client-sdk-rust/issues/196)) ([75ded10](https://github.com/momentohq/client-sdk-rust/commit/75ded106023c9d32b223bb656ac0416a0a27a2c0))
+
 ## [0.33.1](https://github.com/momentohq/client-sdk-rust/compare/v0.33.0...v0.33.1) (2024-03-20)
 
 

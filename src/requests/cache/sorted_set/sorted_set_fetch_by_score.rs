@@ -49,9 +49,9 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// ).await?;
 ///
 /// let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name)
-///     .with_order(SortOrder::Ascending)
-///     .with_min_score(2.0)
-///     .with_max_score(3.0);
+///     .order(SortOrder::Ascending)
+///     .min_score(2.0)
+///     .max_score(3.0);
 ///
 /// let fetch_response = cache_client.send_request(fetch_request).await?;
 ///
@@ -85,31 +85,31 @@ impl<S: IntoBytes> SortedSetFetchByScoreRequest<S> {
     }
 
     /// Set the minimum score of the request.
-    pub fn with_min_score(mut self, min_score: f64) -> Self {
+    pub fn min_score(mut self, min_score: f64) -> Self {
         self.min_score = Some(min_score);
         self
     }
 
     /// Set the maximum score of the request.
-    pub fn with_max_score(mut self, max_score: f64) -> Self {
+    pub fn max_score(mut self, max_score: f64) -> Self {
         self.max_score = Some(max_score);
         self
     }
 
     /// Set the order of the request.
-    pub fn with_order(mut self, order: SortOrder) -> Self {
+    pub fn order(mut self, order: SortOrder) -> Self {
         self.order = order;
         self
     }
 
     /// Set the offset of the request.
-    pub fn with_offset(mut self, offset: u32) -> Self {
+    pub fn offset(mut self, offset: u32) -> Self {
         self.offset = Some(offset);
         self
     }
 
     /// Set the count of the request.
-    pub fn with_count(mut self, count: i32) -> Self {
+    pub fn count(mut self, count: i32) -> Self {
         self.count = Some(count);
         self
     }

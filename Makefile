@@ -11,19 +11,20 @@ lint:
 ## Build project
 build:
 	cargo build --verbose
-	cargo check
-
 
 .PHONY: clean
 ## Remove build files
 clean:
 	cargo clean
 
-
 .PHONY: clean-build
 ## Build project
 clean-build: clean build
 
+.PHONY: docs
+## Build the docs, fail on warnings
+docs:
+	RUSTDOCFLAGS="-D warnings" cargo doc
 
 .PHONY: precommit
 ## Run clean-build and test as a step before committing.

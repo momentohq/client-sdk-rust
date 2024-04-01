@@ -132,7 +132,7 @@ impl<V: IntoBytes> IntoSortedSetElements<V> for HashMap<V, f64> {
 ///     cache_name.to_string(),
 ///     sorted_set_name.to_string(),
 ///     vec![("value1", 1.0), ("value2", 2.0)]
-/// ).with_ttl(CollectionTtl::default());
+/// ).ttl(CollectionTtl::default());
 ///
 /// let put_elements_response = cache_client.send_request(put_elements_request).await?;
 ///
@@ -162,8 +162,7 @@ impl<S: IntoBytes, V: IntoBytes, E: IntoSortedSetElements<V>> SortedSetPutElemen
     }
 
     /// Set the time-to-live for the collection.
-    pub fn with_ttl(mut self, collection_ttl: CollectionTtl) -> Self {
-        // TODO don't we want this to return a copy as opposed to mutate self?
+    pub fn ttl(mut self, collection_ttl: CollectionTtl) -> Self {
         self.collection_ttl = Some(collection_ttl);
         self
     }

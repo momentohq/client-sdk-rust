@@ -12,6 +12,8 @@ use crate::requests::cache::basic::get::{Get, GetRequest};
 use crate::requests::cache::basic::set::{Set, SetRequest};
 use crate::requests::cache::create_cache::{CreateCache, CreateCacheRequest};
 use crate::requests::cache::delete_cache::{DeleteCache, DeleteCacheRequest};
+use crate::requests::cache::flush_cache::{FlushCache, FlushCacheRequest};
+use crate::requests::cache::list_caches::{ListCaches, ListCachesRequest};
 use crate::requests::cache::set::set_add_elements::{SetAddElements, SetAddElementsRequest};
 use crate::requests::cache::sorted_set::sorted_set_fetch_by_rank::{
     SortOrder, SortedSetFetchByRankRequest,
@@ -63,7 +65,7 @@ impl CacheClient {
     ///
     /// let create_cache_response = cache_client.create_cache(cache_name).await?;
     ///
-    /// assert_eq!(create_cache_response, CreateCache {});
+    /// assert_eq!(create_cache_response, CreateCache::AlreadyExists {});
     /// # Ok(())
     /// # })
     /// # }
@@ -81,7 +83,7 @@ impl CacheClient {
     ///
     /// let create_cache_response = cache_client.send_request(create_cache_request).await?;
     ///
-    /// assert_eq!(create_cache_response, CreateCache {});
+    /// assert_eq!(create_cache_response, CreateCache::AlreadyExists {});
     /// # Ok(())
     /// # })
     /// # }
@@ -134,6 +136,66 @@ impl CacheClient {
         request.send(self).await
     }
 
+    /// Lists all caches in your account.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::requests::cache::list_caches::ListCaches;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    ///
+    /// match cache_client.list_caches().await {
+    ///     Ok(response) => println!("Caches: {:#?}", response.caches),
+    ///     Err(e) => eprintln!("Error listing caches: {}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn list_caches(&self) -> MomentoResult<ListCaches> {
+        let request = ListCachesRequest {};
+        request.send(self).await
+    }
+
+    /// Flushes the cache with the given name.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the cache to be flushed of data.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::requests::cache::flush_cache::FlushCache;
+    /// use momento::requests::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    ///
+    /// match cache_client.flush_cache(cache_name.to_string()).await {
+    ///     Ok(_) => println!("Flushed cache: {}", cache_name),
+    ///     Err(e) => {
+    ///         if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///             println!("Cache not found: {}", cache_name);
+    ///         } else {
+    ///            eprintln!("Error flushing cache: {}", e);
+    ///         }
+    ///     }
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to delete a cache using a [FlushCacheRequest].
+    pub async fn flush_cache(&self, cache_name: impl Into<String>) -> MomentoResult<FlushCache> {
+        let request = FlushCacheRequest::new(cache_name);
+        request.send(self).await
+    }
+
     /// Sets an item in a Momento Cache
     ///
     /// # Arguments
@@ -169,7 +231,7 @@ impl CacheClient {
     ///     cache_name,
     ///     "key",
     ///     "value1"
-    /// ).with_ttl(Duration::from_secs(60));
+    /// ).ttl(Duration::from_secs(60));
     ///
     /// let set_response = cache_client.send_request(set_request).await?;
     ///
@@ -301,7 +363,7 @@ impl CacheClient {
     ///     cache_name,
     ///     set_name,
     ///     vec!["value1", "value2"]
-    /// ).with_ttl(CollectionTtl::default());
+    /// ).ttl(CollectionTtl::default());
     ///
     /// let add_elements_response = cache_client.send_request(add_elements_request).await?;
     ///
@@ -373,7 +435,7 @@ impl CacheClient {
     ///     sorted_set_name,
     ///     "value",
     ///     1.0
-    /// ).with_ttl(CollectionTtl::default());
+    /// ).ttl(CollectionTtl::default());
     ///
     /// let put_element_response = cache_client.send_request(put_element_request).await?;
     ///
@@ -443,7 +505,7 @@ impl CacheClient {
     ///     cache_name,
     ///     sorted_set_name,
     ///     vec![("value1", 1.0), ("value2", 2.0)]
-    /// ).with_ttl(CollectionTtl::default());
+    /// ).ttl(CollectionTtl::default());
     ///
     /// let put_elements_response = cache_client.send_request(put_elements_request).await?;
     ///
@@ -533,9 +595,9 @@ impl CacheClient {
     /// ).await?;
     ///
     /// let fetch_request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name)
-    ///     .with_order(SortOrder::Ascending)
-    ///     .with_start_rank(1)
-    ///     .with_end_rank(3);
+    ///     .order(SortOrder::Ascending)
+    ///     .start_rank(1)
+    ///     .end_rank(3);
     ///
     /// let fetch_response = cache_client.send_request(fetch_request).await?;
     ///
@@ -551,8 +613,7 @@ impl CacheClient {
         sorted_set_name: impl IntoBytes,
         order: SortOrder,
     ) -> MomentoResult<SortedSetFetch> {
-        let request =
-            SortedSetFetchByRankRequest::new(cache_name, sorted_set_name).with_order(order);
+        let request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name).order(order);
         request.send(self).await
     }
 
@@ -631,9 +692,9 @@ impl CacheClient {
     /// ).await?;
     ///
     /// let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name)
-    ///     .with_order(SortOrder::Ascending)
-    ///     .with_min_score(2.0)
-    ///     .with_max_score(3.0);
+    ///     .order(SortOrder::Ascending)
+    ///     .min_score(2.0)
+    ///     .max_score(3.0);
     ///
     /// let fetch_response = cache_client.send_request(fetch_request).await?;
     ///
@@ -649,8 +710,7 @@ impl CacheClient {
         sorted_set_name: impl IntoBytes,
         order: SortOrder,
     ) -> MomentoResult<SortedSetFetch> {
-        let request =
-            SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name).with_order(order);
+        let request = SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name).order(order);
         request.send(self).await
     }
 
@@ -671,9 +731,9 @@ impl CacheClient {
     /// let sorted_set_name = "a_sorted_set";
     ///
     /// let fetch_request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name)
-    ///     .with_order(SortOrder::Ascending)
-    ///     .with_start_rank(1)
-    ///     .with_end_rank(3);
+    ///     .order(SortOrder::Ascending)
+    ///     .start_rank(1)
+    ///     .end_rank(3);
     ///
     /// let fetch_response = cache_client.send_request(fetch_request).await?;
     /// assert_eq!(fetch_response, SortedSetFetch::Miss {});

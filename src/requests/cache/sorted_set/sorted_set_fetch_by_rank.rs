@@ -49,9 +49,9 @@ pub enum SortOrder {
 /// ).await?;
 ///
 /// let fetch_request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name)
-///     .with_order(SortOrder::Ascending)
-///     .with_start_rank(1)
-///     .with_end_rank(3);
+///     .order(SortOrder::Ascending)
+///     .start_rank(1)
+///     .end_rank(3);
 ///
 /// let fetch_response = cache_client.send_request(fetch_request).await?;
 ///
@@ -81,19 +81,19 @@ impl<S: IntoBytes> SortedSetFetchByRankRequest<S> {
     }
 
     /// Set the start rank of the request.
-    pub fn with_start_rank(mut self, start_rank: i32) -> Self {
+    pub fn start_rank(mut self, start_rank: i32) -> Self {
         self.start_rank = Some(start_rank);
         self
     }
 
     /// Set the end rank of the request.
-    pub fn with_end_rank(mut self, end_rank: i32) -> Self {
+    pub fn end_rank(mut self, end_rank: i32) -> Self {
         self.end_rank = Some(end_rank);
         self
     }
 
     /// Set the order of the request.
-    pub fn with_order(mut self, order: SortOrder) -> Self {
+    pub fn order(mut self, order: SortOrder) -> Self {
         self.order = order;
         self
     }

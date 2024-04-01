@@ -4,7 +4,10 @@ use momento_protos::cache_client::sorted_set_fetch_response::found::Elements;
 use momento_protos::cache_client::sorted_set_fetch_response::SortedSet;
 use momento_protos::cache_client::SortedSetFetchResponse;
 
-use crate::{MomentoError, MomentoResult};
+use crate::{
+    requests::{ErrorSource, MomentoError, MomentoErrorCode},
+    MomentoResult,
+};
 
 // TODO this needs to be moved to the requests directory
 
@@ -34,18 +37,20 @@ impl SortedSetFetch {
                             elements: SortedSetElements::new(elements),
                         })
                     }
-                    Elements::Values(_) => {
-                        return Err(MomentoError::ClientSdkError {
-                            description: std::borrow::Cow::Borrowed(
-                                "sorted_set_fetch_by_index response included elements without values"
-                            ),
-                            source: crate::response::ErrorSource::Unknown(
-                                std::io::Error::new(
-                                    std::io::ErrorKind::InvalidData,
-                                    "unexpected response",
-                                ).into()),
-                        });
-                    }
+                    Elements::Values(_) => Err(MomentoError {
+                        message:
+                            "sorted_set_fetch_by_index response included elements without values"
+                                .into(),
+                        error_code: MomentoErrorCode::UnknownError,
+                        inner_error: Some(ErrorSource::Unknown(
+                            std::io::Error::new(
+                                std::io::ErrorKind::InvalidData,
+                                "unexpected response",
+                            )
+                            .into(),
+                        )),
+                        details: None,
+                    }),
                 },
             },
         }
@@ -58,8 +63,11 @@ impl TryFrom<SortedSetFetch> for Vec<(Vec<u8>, f64)> {
     fn try_from(value: SortedSetFetch) -> Result<Self, Self::Error> {
         match value {
             SortedSetFetch::Hit { elements } => Ok(elements.elements),
-            SortedSetFetch::Miss => Err(MomentoError::Miss {
-                description: std::borrow::Cow::Borrowed("sorted set was not found"),
+            SortedSetFetch::Miss => Err(MomentoError {
+                message: "sorted set was not found".into(),
+                error_code: MomentoErrorCode::Miss,
+                inner_error: None,
+                details: None,
             }),
         }
     }
@@ -71,8 +79,11 @@ impl TryFrom<SortedSetFetch> for Vec<(String, f64)> {
     fn try_from(value: SortedSetFetch) -> Result<Self, Self::Error> {
         match value {
             SortedSetFetch::Hit { elements } => elements.into_strings(),
-            SortedSetFetch::Miss => Err(MomentoError::Miss {
-                description: std::borrow::Cow::Borrowed("sorted set was not found"),
+            SortedSetFetch::Miss => Err(MomentoError {
+                message: "sorted set was not found".into(),
+                error_code: MomentoErrorCode::Miss,
+                inner_error: None,
+                details: None,
             }),
         }
     }
@@ -120,11 +131,11 @@ impl TryFrom<SortedSetElements> for Vec<(String, f64)> {
                     result.push((value, element.1));
                 }
                 Err(e) => {
-                    return Err::<Self, Self::Error>(MomentoError::TypeError {
-                        description: std::borrow::Cow::Borrowed(
-                            "element value was not a valid utf-8 string",
-                        ),
-                        source: Box::new(e),
+                    return Err::<Self, Self::Error>(MomentoError {
+                        message: "element value was not a valid utf-8 string".to_string(),
+                        error_code: MomentoErrorCode::TypeError,
+                        inner_error: Some(ErrorSource::Unknown(Box::new(e))),
+                        details: None,
                     });
                 }
             }
