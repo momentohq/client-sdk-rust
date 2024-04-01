@@ -620,11 +620,11 @@ impl CacheClient {
         let mut request =
             SortedSetFetchByRankRequest::new(cache_name, sorted_set_name).order(order);
 
-        if start_rank.is_some() {
-            request = request.start_rank(start_rank.expect("start_rank not specified"));
+        if let Some(start) = start_rank {
+            request = request.start_rank(start);
         }
-        if end_rank.is_some() {
-            request = request.end_rank(end_rank.expect("end_rank not specified"));
+        if let Some(end) = end_rank {
+            request = request.end_rank(end);
         }
         request.send(self).await
     }
