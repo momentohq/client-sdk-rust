@@ -36,6 +36,7 @@ use crate::{utils, CacheClient, MomentoResult};
 /// # Ok(())
 /// # })
 /// # }
+/// ```
 pub struct FlushCacheRequest {
     pub cache_name: String,
 }
