@@ -556,7 +556,9 @@ impl CacheClient {
     /// let fetch_response = cache_client.sorted_set_fetch_by_rank(
     ///     cache_name,
     ///     sorted_set_name,
-    ///     SortOrder::Ascending
+    ///     SortOrder::Ascending,
+    ///     None,
+    ///     None
     /// ).await?;
     ///
     /// match fetch_response {
@@ -612,8 +614,18 @@ impl CacheClient {
         cache_name: impl Into<String>,
         sorted_set_name: impl IntoBytes,
         order: SortOrder,
+        start_rank: Option<i32>,
+        end_rank: Option<i32>,
     ) -> MomentoResult<SortedSetFetch> {
-        let request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name).order(order);
+        let mut request =
+            SortedSetFetchByRankRequest::new(cache_name, sorted_set_name).order(order);
+
+        if let Some(start) = start_rank {
+            request = request.start_rank(start);
+        }
+        if let Some(end) = end_rank {
+            request = request.end_rank(end);
+        }
         request.send(self).await
     }
 
