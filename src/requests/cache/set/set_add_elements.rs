@@ -36,7 +36,7 @@ impl<S: IntoBytes, E: IntoBytes> SetAddElementsRequest<S, E> {
         }
     }
 
-    pub fn with_ttl(mut self, collection_ttl: CollectionTtl) -> Self {
+    pub fn ttl(mut self, collection_ttl: CollectionTtl) -> Self {
         self.collection_ttl = Some(collection_ttl);
         self
     }
