@@ -208,7 +208,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SetRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SetRequest]
+    /// which will allow you to set [optional arguments](SetRequest#optional-arguments) as well.
     pub async fn set(
         &self,
         cache_name: impl Into<String>,
@@ -295,7 +296,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SetAddElementsRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SetAddElementsRequest] 
+    /// which will allow you to set [optional arguments](SetAddElementsRequest#optional-arguments) as well.
     pub async fn set_add_elements<E: IntoBytes>(
         &self,
         cache_name: impl Into<String>,
@@ -347,7 +349,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetPutElementRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetPutElementRequest] 
+    /// which will allow you to set [optional arguments](SortedSetPutElementRequest#optional-arguments) as well.
     pub async fn sorted_set_put_element(
         &self,
         cache_name: impl Into<String>,
@@ -398,7 +401,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetPutElementsRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetPutElementsRequest] 
+    /// which will allow you to set [optional arguments](SortedSetPutElementsRequest#optional-arguments) as well.
     pub async fn sorted_set_put_elements<E: IntoBytes>(
         &self,
         cache_name: impl Into<String>,
@@ -464,7 +468,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to fetch elements using a [SortedSetFetchByRankRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to fetch elements using a [SortedSetFetchByRankRequest] 
+    /// which will allow you to set [optional arguments](SortedSetFetchByRankRequest#optional-arguments) as well.
     pub async fn sorted_set_fetch_by_rank(
         &self,
         cache_name: impl Into<String>,
@@ -541,7 +546,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetFetchByScoreRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetFetchByScoreRequest] 
+    /// which will allow you to set [optional arguments](SortedSetFetchByScoreRequest#optional-arguments) as well.
     pub async fn sorted_set_fetch_by_score(
         &self,
         cache_name: impl Into<String>,
