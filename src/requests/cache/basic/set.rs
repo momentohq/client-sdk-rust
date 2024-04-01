@@ -32,7 +32,7 @@ use std::time::Duration;
 ///     &cache_name,
 ///     "key",
 ///     "value1"
-/// ).with_ttl(Duration::from_secs(60));
+/// ).ttl(Duration::from_secs(60));
 ///
 /// match cache_client.send_request(set_request).await {
 ///     Ok(_) => println!("Set successful"),

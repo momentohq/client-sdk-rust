@@ -33,7 +33,7 @@ use crate::{CollectionTtl, IntoBytes, MomentoResult};
 ///     cache_name,
 ///     set_name,
 ///     vec!["value1", "value2"]
-/// ).with_ttl(CollectionTtl::default());
+/// ).ttl(CollectionTtl::default());
 ///
 /// match cache_client.send_request(add_elements_request).await {
 ///     Ok(_) => println!("Elements added to set"),
