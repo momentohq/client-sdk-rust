@@ -138,9 +138,9 @@ async fn sorted_set_fetch_by_rank_happy_path() {
     // Full set ascending, end index larger than set
     let fetch_request =
         SortedSetFetchByRankRequest::new(cache_name.clone(), sorted_set_name.clone())
-            .with_order(Ascending)
-            .with_start_rank(0)
-            .with_end_rank(6);
+            .order(Ascending)
+            .start_rank(0)
+            .end_rank(6);
 
     let result = client.send_request(fetch_request).await.unwrap();
 
@@ -162,9 +162,9 @@ async fn sorted_set_fetch_by_rank_happy_path() {
     // Partial set descending
     let fetch_request =
         SortedSetFetchByRankRequest::new(cache_name.clone(), sorted_set_name.clone())
-            .with_order(Descending)
-            .with_start_rank(1)
-            .with_end_rank(4);
+            .order(Descending)
+            .start_rank(1)
+            .end_rank(4);
 
     let result = client.send_request(fetch_request).await.unwrap();
 
@@ -226,9 +226,9 @@ async fn sorted_set_fetch_by_score_happy_path() {
     // Full set ascending, end score larger than set
     let fetch_request =
         SortedSetFetchByScoreRequest::new(cache_name.clone(), sorted_set_name.clone())
-            .with_order(Ascending)
-            .with_min_score(0.0)
-            .with_max_score(9.9);
+            .order(Ascending)
+            .min_score(0.0)
+            .max_score(9.9);
 
     let result = client.send_request(fetch_request).await.unwrap();
 
@@ -250,9 +250,9 @@ async fn sorted_set_fetch_by_score_happy_path() {
     // Partial set descending
     let fetch_request =
         SortedSetFetchByScoreRequest::new(cache_name.clone(), sorted_set_name.clone())
-            .with_order(Descending)
-            .with_min_score(0.1)
-            .with_max_score(1.9);
+            .order(Descending)
+            .min_score(0.1)
+            .max_score(1.9);
 
     let result = client.send_request(fetch_request).await.unwrap();
 
@@ -274,8 +274,8 @@ async fn sorted_set_fetch_by_score_happy_path() {
     // Partial set limited by offset and count
     let fetch_request =
         SortedSetFetchByScoreRequest::new(cache_name.clone(), sorted_set_name.clone())
-            .with_offset(1)
-            .with_count(3);
+            .offset(1)
+            .count(3);
 
     let result = client.send_request(fetch_request).await.unwrap();
 

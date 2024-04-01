@@ -231,7 +231,7 @@ impl CacheClient {
     ///     cache_name,
     ///     "key",
     ///     "value1"
-    /// ).with_ttl(Duration::from_secs(60));
+    /// ).ttl(Duration::from_secs(60));
     ///
     /// let set_response = cache_client.send_request(set_request).await?;
     ///
@@ -363,7 +363,7 @@ impl CacheClient {
     ///     cache_name,
     ///     set_name,
     ///     vec!["value1", "value2"]
-    /// ).with_ttl(CollectionTtl::default());
+    /// ).ttl(CollectionTtl::default());
     ///
     /// let add_elements_response = cache_client.send_request(add_elements_request).await?;
     ///
@@ -435,7 +435,7 @@ impl CacheClient {
     ///     sorted_set_name,
     ///     "value",
     ///     1.0
-    /// ).with_ttl(CollectionTtl::default());
+    /// ).ttl(CollectionTtl::default());
     ///
     /// let put_element_response = cache_client.send_request(put_element_request).await?;
     ///
@@ -505,7 +505,7 @@ impl CacheClient {
     ///     cache_name,
     ///     sorted_set_name,
     ///     vec![("value1", 1.0), ("value2", 2.0)]
-    /// ).with_ttl(CollectionTtl::default());
+    /// ).ttl(CollectionTtl::default());
     ///
     /// let put_elements_response = cache_client.send_request(put_elements_request).await?;
     ///
@@ -595,9 +595,9 @@ impl CacheClient {
     /// ).await?;
     ///
     /// let fetch_request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name)
-    ///     .with_order(SortOrder::Ascending)
-    ///     .with_start_rank(1)
-    ///     .with_end_rank(3);
+    ///     .order(SortOrder::Ascending)
+    ///     .start_rank(1)
+    ///     .end_rank(3);
     ///
     /// let fetch_response = cache_client.send_request(fetch_request).await?;
     ///
@@ -613,8 +613,7 @@ impl CacheClient {
         sorted_set_name: impl IntoBytes,
         order: SortOrder,
     ) -> MomentoResult<SortedSetFetch> {
-        let request =
-            SortedSetFetchByRankRequest::new(cache_name, sorted_set_name).with_order(order);
+        let request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name).order(order);
         request.send(self).await
     }
 
@@ -693,9 +692,9 @@ impl CacheClient {
     /// ).await?;
     ///
     /// let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name)
-    ///     .with_order(SortOrder::Ascending)
-    ///     .with_min_score(2.0)
-    ///     .with_max_score(3.0);
+    ///     .order(SortOrder::Ascending)
+    ///     .min_score(2.0)
+    ///     .max_score(3.0);
     ///
     /// let fetch_response = cache_client.send_request(fetch_request).await?;
     ///
@@ -711,8 +710,7 @@ impl CacheClient {
         sorted_set_name: impl IntoBytes,
         order: SortOrder,
     ) -> MomentoResult<SortedSetFetch> {
-        let request =
-            SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name).with_order(order);
+        let request = SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name).order(order);
         request.send(self).await
     }
 
@@ -733,9 +731,9 @@ impl CacheClient {
     /// let sorted_set_name = "a_sorted_set";
     ///
     /// let fetch_request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name)
-    ///     .with_order(SortOrder::Ascending)
-    ///     .with_start_rank(1)
-    ///     .with_end_rank(3);
+    ///     .order(SortOrder::Ascending)
+    ///     .start_rank(1)
+    ///     .end_rank(3);
     ///
     /// let fetch_response = cache_client.send_request(fetch_request).await?;
     /// assert_eq!(fetch_response, SortedSetFetch::Miss {});

@@ -35,7 +35,7 @@ impl<K: IntoBytes, V: IntoBytes> SetRequest<K, V> {
         }
     }
 
-    pub fn with_ttl(mut self, ttl: Duration) -> Self {
+    pub fn ttl(mut self, ttl: Duration) -> Self {
         self.ttl = Some(ttl);
         self
     }

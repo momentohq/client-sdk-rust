@@ -35,7 +35,7 @@ use crate::{CacheClient, CollectionTtl, IntoBytes, MomentoResult};
 ///     sorted_set_name.to_string(),
 ///     "value",
 ///     1.0
-/// ).with_ttl(CollectionTtl::default());
+/// ).ttl(CollectionTtl::default());
 ///
 /// let create_cache_response = cache_client.send_request(put_element_request).await?;
 ///
@@ -64,7 +64,7 @@ impl<S: IntoBytes, V: IntoBytes> SortedSetPutElementRequest<S, V> {
     }
 
     /// Set the time-to-live for the collection.
-    pub fn with_ttl(mut self, collection_ttl: CollectionTtl) -> Self {
+    pub fn ttl(mut self, collection_ttl: CollectionTtl) -> Self {
         self.collection_ttl = Some(collection_ttl);
         self
     }
