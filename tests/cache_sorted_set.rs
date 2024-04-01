@@ -76,20 +76,20 @@ async fn sorted_set_put_elements_happy_path() {
         cache_name: &String,
         to_put: impl IntoSortedSetElements<String> + Clone,
     ) {
-        let sorted_set_name = "sorted-set-".to_string() + &Uuid::new_v4().to_string();
+        let sorted_set_name = format!("sorted-set-{}", Uuid::new_v4());
         let result = client
-            .sorted_set_fetch_by_score(cache_name, sorted_set_name.clone(), Ascending)
+            .sorted_set_fetch_by_score(cache_name, sorted_set_name.as_str(), Ascending)
             .await
             .unwrap();
         assert_eq!(result, SortedSetFetch::Miss);
 
         client
-            .sorted_set_put_elements(cache_name, sorted_set_name.clone(), to_put.clone())
+            .sorted_set_put_elements(cache_name, sorted_set_name.as_str(), to_put.clone())
             .await
             .unwrap();
 
         let result = client
-            .sorted_set_fetch_by_score(cache_name, sorted_set_name.clone(), Ascending)
+            .sorted_set_fetch_by_score(cache_name, sorted_set_name.as_str(), Ascending)
             .await
             .unwrap();
 
@@ -140,7 +140,7 @@ async fn sorted_set_put_elements_happy_path() {
 #[tokio::test]
 async fn sorted_set_put_elements_nonexistent_cache() {
     let client = CACHE_TEST_STATE.client.clone();
-    let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
+    let cache_name = format!("fake-cache-{}", Uuid::new_v4());
     let sorted_set_name = "sorted-set";
 
     let result = client
