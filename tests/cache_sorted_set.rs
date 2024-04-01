@@ -73,23 +73,23 @@ fn compare_by_first_entry(a: &(String, f64), b: &(String, f64)) -> std::cmp::Ord
 async fn sorted_set_put_elements_happy_path() {
     async fn test_put_elements_happy_path(
         client: Arc<CacheClient>,
-        cache_name: String,
+        cache_name: &String,
         to_put: impl IntoSortedSetElements<String> + Clone,
     ) {
         let sorted_set_name = "sorted-set-".to_string() + &Uuid::new_v4().to_string();
         let result = client
-            .sorted_set_fetch_by_score(cache_name.clone(), sorted_set_name.clone(), Ascending)
+            .sorted_set_fetch_by_score(cache_name, sorted_set_name.clone(), Ascending)
             .await
             .unwrap();
         assert_eq!(result, SortedSetFetch::Miss);
 
         client
-            .sorted_set_put_elements(cache_name.clone(), sorted_set_name.clone(), to_put.clone())
+            .sorted_set_put_elements(cache_name, sorted_set_name.clone(), to_put.clone())
             .await
             .unwrap();
 
         let result = client
-            .sorted_set_fetch_by_score(cache_name.clone(), sorted_set_name.clone(), Ascending)
+            .sorted_set_fetch_by_score(cache_name, sorted_set_name.clone(), Ascending)
             .await
             .unwrap();
 
@@ -113,16 +113,16 @@ async fn sorted_set_put_elements_happy_path() {
     let cache_name = CACHE_TEST_STATE.cache_name.clone();
 
     let to_put = vec![("element1".to_string(), 1.0), ("element2".to_string(), 2.0)];
-    test_put_elements_happy_path(client.clone(), cache_name.clone(), to_put).await;
+    test_put_elements_happy_path(client.clone(), &cache_name, to_put).await;
 
     let to_put = std::collections::HashMap::from([
         ("element1".to_string(), 1.0),
         ("element2".to_string(), 2.0),
     ]);
-    test_put_elements_happy_path(client.clone(), cache_name.clone(), to_put).await;
+    test_put_elements_happy_path(client.clone(), &cache_name, to_put).await;
 
     let to_put = vec![("element1".to_string(), 1.0), ("element2".to_string(), 2.0)];
-    test_put_elements_happy_path(client.clone(), cache_name.clone(), to_put).await;
+    test_put_elements_happy_path(client.clone(), &cache_name, to_put).await;
 
     let to_put = vec![
         SortedSetElement {
@@ -134,7 +134,7 @@ async fn sorted_set_put_elements_happy_path() {
             score: 2.0,
         },
     ];
-    test_put_elements_happy_path(client.clone(), cache_name.clone(), to_put).await;
+    test_put_elements_happy_path(client.clone(), &cache_name, to_put).await;
 }
 
 #[tokio::test]
@@ -145,7 +145,7 @@ async fn sorted_set_put_elements_nonexistent_cache() {
 
     let result = client
         .sorted_set_put_elements(
-            cache_name.clone(),
+            cache_name,
             sorted_set_name,
             vec![("element1".to_string(), 1.0), ("element2".to_string(), 2.0)],
         )
