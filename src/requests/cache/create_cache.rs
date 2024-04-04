@@ -21,14 +21,16 @@ use crate::{utils, CacheClient, MomentoResult};
 /// use momento::requests::cache::create_cache::CreateCacheRequest;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
-/// let create_cache_request = CreateCacheRequest::new(cache_name.to_string());
+/// let create_cache_request = CreateCacheRequest::new(&cache_name);
 ///
-/// let create_cache_response = cache_client.send_request(create_cache_request).await?;
-///
-/// assert_eq!(create_cache_response, CreateCache::AlreadyExists {});
+/// match cache_client.send_request(create_cache_request).await? {
+///     CreateCache::Created => println!("Cache {} created", &cache_name),
+///     CreateCache::AlreadyExists => println!("Cache {} already exists", &cache_name),
+/// }
 /// # Ok(())
 /// # })
 /// # }
+/// ```
 pub struct CreateCacheRequest {
     pub cache_name: String,
 }
