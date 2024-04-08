@@ -8,11 +8,7 @@ async fn key_exists_invalid_cache_name() -> MomentoResult<()> {
     let result = client.key_exists("   ", "key").await.unwrap_err();
     let err_msg = "Cache name cannot be empty".to_string();
     assert_eq!(result.message, err_msg);
-    assert!(
-        matches!(result.error_code, MomentoErrorCode::InvalidArgumentError),
-        "Expected InvalidArgumentError, got {:?}",
-        result.error_code
-    );
+    assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
     Ok(())
 }
 
@@ -23,11 +19,7 @@ async fn key_exists_nonexistent_cache() -> MomentoResult<()> {
     let result = client.key_exists(cache_name, "key").await.unwrap_err();
     let err_msg = "A cache with the specified name does not exist.  To resolve this error, make sure you have created the cache before attempting to use it".to_string();
     assert_eq!(result.to_string(), err_msg);
-    assert!(
-        matches!(result.error_code, MomentoErrorCode::NotFoundError),
-        "Expected NotFoundError, got {:?}",
-        result.error_code
-    );
+    assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
     Ok(())
 }
 
@@ -62,11 +54,7 @@ async fn keys_exist_invalid_cache_name() -> MomentoResult<()> {
     let result = client.keys_exist("   ", vec!["key"]).await.unwrap_err();
     let err_msg = "Cache name cannot be empty".to_string();
     assert_eq!(result.message, err_msg);
-    assert!(
-        matches!(result.error_code, MomentoErrorCode::InvalidArgumentError),
-        "Expected InvalidArgumentError, got {:?}",
-        result.error_code
-    );
+    assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
     Ok(())
 }
 
@@ -80,11 +68,7 @@ async fn keys_exist_nonexistent_cache() -> MomentoResult<()> {
         .unwrap_err();
     let err_msg = "A cache with the specified name does not exist.  To resolve this error, make sure you have created the cache before attempting to use it".to_string();
     assert_eq!(result.to_string(), err_msg);
-    assert!(
-        matches!(result.error_code, MomentoErrorCode::NotFoundError),
-        "Expected NotFoundError, got {:?}",
-        result.error_code
-    );
+    assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
     Ok(())
 }
 
