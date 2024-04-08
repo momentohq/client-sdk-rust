@@ -6,12 +6,35 @@ use momento_protos::control_client::scs_control_client::ScsControlClient;
 use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
 
+<<<<<<< HEAD
 use crate::cache::{
     CreateCache, CreateCacheRequest, DeleteCache, DeleteCacheRequest, FlushCache,
     FlushCacheRequest, Get, GetRequest, IntoSortedSetElements, KeyExists, KeyExistsRequest,
     KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, MomentoRequest, Set,
     SetAddElements, SetAddElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
     SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
+=======
+use crate::config::configuration::Configuration;
+use crate::grpc::header_interceptor::HeaderInterceptor;
+use crate::requests::cache::basic::get::{Get, GetRequest};
+use crate::requests::cache::basic::set::{Set, SetRequest};
+use crate::requests::cache::create_cache::{CreateCache, CreateCacheRequest};
+use crate::requests::cache::delete_cache::{DeleteCache, DeleteCacheRequest};
+use crate::requests::cache::flush_cache::{FlushCache, FlushCacheRequest};
+use crate::requests::cache::list_caches::{ListCaches, ListCachesRequest};
+use crate::requests::cache::scalar::key_exists::{KeyExists, KeyExistsRequest};
+use crate::requests::cache::scalar::keys_exist::{KeysExist, KeysExistRequest};
+use crate::requests::cache::set::set_add_elements::{SetAddElements, SetAddElementsRequest};
+use crate::requests::cache::sorted_set::sorted_set_fetch_by_rank::{
+    SortOrder, SortedSetFetchByRankRequest,
+};
+use crate::requests::cache::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
+use crate::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
+use crate::requests::cache::sorted_set::sorted_set_put_element::{
+    SortedSetPutElement, SortedSetPutElementRequest,
+};
+use crate::requests::cache::sorted_set::sorted_set_put_elements::{
+>>>>>>> adcc873 (feat: add keyExists and keysExist)
     SortedSetPutElements, SortedSetPutElementsRequest,
 };
 use crate::config::configuration::Configuration;
@@ -552,7 +575,11 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
+<<<<<<< HEAD
     /// use momento::cache::KeyExists;
+=======
+    /// use momento::requests::cache::scalar::key_exists::KeyExists;
+>>>>>>> adcc873 (feat: add keyExists and keysExist)
     ///
     /// let result = cache_client.key_exists(&cache_name, "key").await?;
     /// if result.exists {
@@ -588,6 +615,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
+<<<<<<< HEAD
     /// use momento::cache::KeysExist;
     /// use std::collections::HashMap;
     ///
@@ -598,6 +626,16 @@ impl CacheClient {
     /// // Or receive results as a Vec
     /// let result_list: Vec<bool> = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?.into();
     /// println!("Expecting all keys to exist: {:#?}", result_list);
+=======
+    /// use momento::requests::cache::scalar::keys_exist::KeysExist;
+    ///
+    /// let result = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?;
+    /// if !result.exists.is_empty() {
+    ///     println!("Processing list of booleans: {:#?}", result.exists);
+    /// } else {
+    ///     println!("Received empty list of booleans!");
+    /// }
+>>>>>>> adcc873 (feat: add keyExists and keysExist)
     /// # Ok(())
     /// # })
     /// # }
