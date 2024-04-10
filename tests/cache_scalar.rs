@@ -108,3 +108,40 @@ async fn keys_exist_happy_path() -> MomentoResult<()> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn increment_invalid_cache_name() -> MomentoResult<()> {
+    let client = &CACHE_TEST_STATE.client;
+    let result = client.increment("   ", "key", 1).await.unwrap_err();
+    assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
+    Ok(())
+}
+
+#[tokio::test]
+async fn increment_in_nonexistent_cache_returns_not_found() -> MomentoResult<()> {
+    let client = &CACHE_TEST_STATE.client;
+    let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
+    let result = client.increment(cache_name, "key", 1).await.unwrap_err();
+    assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+    Ok(())
+}
+
+#[tokio::test]
+async fn increment_happy_path() -> MomentoResult<()> {
+    let client = &CACHE_TEST_STATE.client;
+    let cache_name = &CACHE_TEST_STATE.cache_name;
+
+    // Incrementing a key that doesn't exist should create it
+    let result = client.increment(cache_name, "key", 1).await?;
+    assert_eq!(result.value, 1);
+
+    // Incrementing an existing key should increment it
+    let result = client.increment(cache_name, "key", 1).await?;
+    assert_eq!(result.value, 2);
+
+    // Incrementing by a negative number should decrement the value
+    let result = client.increment(cache_name, "key", -2).await?;
+    assert_eq!(result.value, 0);
+
+    Ok(())
+}

@@ -612,6 +612,53 @@ impl CacheClient {
         request.send(self).await
     }
 
+    /// Adds an integer quantity to a field value.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `field` - the field to increment
+    /// * `amount` - the quantity to add to the value. May be positive, negative, or zero. Defaults to 1.
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to increment a field using an
+    /// [IncrementRequest], you can also provide the following optional arguments:
+    ///
+    /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// use momento::requests::cache::scalar::increment::Increment;
+    /// use momento::requests::MomentoErrorCode;
+    ///
+    /// match cache_client.increment(&cache_name, "key", 1).await {
+    ///     Ok(r) => println!("Incremented value: {}", r.value),
+    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///         println!("Cache not found: {}", &cache_name);
+    ///     } else {
+    ///         eprintln!("Error incrementing value in cache {}: {}", &cache_name, e);
+    ///     }
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using an [IncrementRequest]
+    /// which will allow you to set [optional arguments](IncrementRequest#optional-arguments) as well.
+    pub async fn increment(
+        &self,
+        cache_name: impl Into<String>,
+        key: impl IntoBytes,
+        amount: i64,
+    ) -> MomentoResult<Increment> {
+        let request = IncrementRequest::new(cache_name, key, amount);
+        request.send(self).await
+    }
+
     /// Lower-level API to send any type of MomentoRequest to the server. This is used for cases when
     /// you want to set optional fields on a request that are not supported by the short-hand API for
     /// that request type.
