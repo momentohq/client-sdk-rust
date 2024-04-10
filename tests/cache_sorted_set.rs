@@ -20,13 +20,7 @@ async fn sorted_set_put_element_happy_path() -> MomentoResult<()> {
     let score = 1.0;
 
     let result = client
-        .sorted_set_fetch_by_rank(
-            cache_name,
-            &*sorted_set_name,
-            Ascending,
-            None,
-            None,
-        )
+        .sorted_set_fetch_by_rank(cache_name, &*sorted_set_name, Ascending, None, None)
         .await?;
     assert_eq!(result, SortedSetFetch::Miss);
 
@@ -36,13 +30,7 @@ async fn sorted_set_put_element_happy_path() -> MomentoResult<()> {
         .unwrap();
 
     let result = client
-        .sorted_set_fetch_by_rank(
-            cache_name,
-            &*sorted_set_name,
-            Ascending,
-            None,
-            None,
-        )
+        .sorted_set_fetch_by_rank(cache_name, &*sorted_set_name, Ascending, None, None)
         .await?;
 
     match result {
@@ -136,13 +124,7 @@ async fn sorted_set_fetch_by_rank_happy_path() -> MomentoResult<()> {
     ];
 
     let result = client
-        .sorted_set_fetch_by_rank(
-            cache_name,
-            &*sorted_set_name,
-            Ascending,
-            None,
-            None,
-        )
+        .sorted_set_fetch_by_rank(cache_name, &*sorted_set_name, Ascending, None, None)
         .await?;
     assert_eq!(result, SortedSetFetch::Miss);
 
@@ -151,11 +133,10 @@ async fn sorted_set_fetch_by_rank_happy_path() -> MomentoResult<()> {
         .await?;
 
     // Full set ascending, end index larger than set
-    let fetch_request =
-        SortedSetFetchByRankRequest::new(cache_name, &*sorted_set_name)
-            .order(Ascending)
-            .start_rank(0)
-            .end_rank(6);
+    let fetch_request = SortedSetFetchByRankRequest::new(cache_name, &*sorted_set_name)
+        .order(Ascending)
+        .start_rank(0)
+        .end_rank(6);
 
     let result = client.send_request(fetch_request).await.unwrap();
 
@@ -175,11 +156,10 @@ async fn sorted_set_fetch_by_rank_happy_path() -> MomentoResult<()> {
     }
 
     // Partial set descending
-    let fetch_request =
-        SortedSetFetchByRankRequest::new(cache_name, &*sorted_set_name)
-            .order(Descending)
-            .start_rank(1)
-            .end_rank(4);
+    let fetch_request = SortedSetFetchByRankRequest::new(cache_name, &*sorted_set_name)
+        .order(Descending)
+        .start_rank(1)
+        .end_rank(4);
 
     let result = client.send_request(fetch_request).await.unwrap();
 
@@ -238,11 +218,10 @@ async fn sorted_set_fetch_by_score_happy_path() -> MomentoResult<()> {
         .await?;
 
     // Full set ascending, end score larger than set
-    let fetch_request =
-        SortedSetFetchByScoreRequest::new(cache_name, &*sorted_set_name)
-            .order(Ascending)
-            .min_score(0.0)
-            .max_score(9.9);
+    let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, &*sorted_set_name)
+        .order(Ascending)
+        .min_score(0.0)
+        .max_score(9.9);
 
     let result = client.send_request(fetch_request).await.unwrap();
 
@@ -262,11 +241,10 @@ async fn sorted_set_fetch_by_score_happy_path() -> MomentoResult<()> {
     }
 
     // Partial set descending
-    let fetch_request =
-        SortedSetFetchByScoreRequest::new(cache_name, &*sorted_set_name)
-            .order(Descending)
-            .min_score(0.1)
-            .max_score(1.9);
+    let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, &*sorted_set_name)
+        .order(Descending)
+        .min_score(0.1)
+        .max_score(1.9);
 
     let result = client.send_request(fetch_request).await.unwrap();
 
@@ -286,10 +264,9 @@ async fn sorted_set_fetch_by_score_happy_path() -> MomentoResult<()> {
     }
 
     // Partial set limited by offset and count
-    let fetch_request =
-        SortedSetFetchByScoreRequest::new(cache_name, &*sorted_set_name)
-            .offset(1)
-            .count(3);
+    let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, &*sorted_set_name)
+        .offset(1)
+        .count(3);
 
     let result = client.send_request(fetch_request).await.unwrap();
 

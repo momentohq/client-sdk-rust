@@ -40,7 +40,12 @@ async fn lists_existing_test_cache() -> MomentoResult<()> {
         .iter()
         .map(|cache_info| cache_info.name.clone())
         .collect();
-    assert!(cache_names.contains(cache_name), "Expected {} to be in list of caches: {:#?}", cache_name, cache_names);
+    assert!(
+        cache_names.contains(cache_name),
+        "Expected {} to be in list of caches: {:#?}",
+        cache_name,
+        cache_names
+    );
     Ok(())
 }
 
