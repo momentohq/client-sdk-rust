@@ -1,6 +1,6 @@
 use crate::requests::cache::MomentoRequest;
 use crate::simple_cache_client::prep_request_with_timeout;
-use crate::{utils, CacheClient, IntoBytes, MomentoResult};
+use crate::{CacheClient, IntoBytes, MomentoResult};
 
 /// Request to check if a key exists in a cache.
 ///
@@ -51,7 +51,6 @@ impl<K: IntoBytes> MomentoRequest for KeyExistsRequest<K> {
     type Response = KeyExists;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<KeyExists> {
-        utils::is_cache_name_valid(&self.cache_name)?;
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
