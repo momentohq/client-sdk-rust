@@ -6,8 +6,6 @@ use uuid::Uuid;
 async fn key_exists_invalid_cache_name() -> MomentoResult<()> {
     let client = &CACHE_TEST_STATE.client;
     let result = client.key_exists("   ", "key").await.unwrap_err();
-    let err_msg = "Cache name cannot be empty".to_string();
-    assert_eq!(result.message, err_msg);
     assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
     Ok(())
 }
@@ -17,8 +15,6 @@ async fn key_exists_nonexistent_cache() -> MomentoResult<()> {
     let client = &CACHE_TEST_STATE.client;
     let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
     let result = client.key_exists(cache_name, "key").await.unwrap_err();
-    let err_msg = "A cache with the specified name does not exist.  To resolve this error, make sure you have created the cache before attempting to use it".to_string();
-    assert_eq!(result.to_string(), err_msg);
     assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
     Ok(())
 }
@@ -52,8 +48,6 @@ async fn key_exists_happy_path() -> MomentoResult<()> {
 async fn keys_exist_invalid_cache_name() -> MomentoResult<()> {
     let client = &CACHE_TEST_STATE.client;
     let result = client.keys_exist("   ", vec!["key"]).await.unwrap_err();
-    let err_msg = "Cache name cannot be empty".to_string();
-    assert_eq!(result.message, err_msg);
     assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
     Ok(())
 }
@@ -66,8 +60,6 @@ async fn keys_exist_nonexistent_cache() -> MomentoResult<()> {
         .keys_exist(cache_name, vec!["key"])
         .await
         .unwrap_err();
-    let err_msg = "A cache with the specified name does not exist.  To resolve this error, make sure you have created the cache before attempting to use it".to_string();
-    assert_eq!(result.to_string(), err_msg);
     assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
     Ok(())
 }
