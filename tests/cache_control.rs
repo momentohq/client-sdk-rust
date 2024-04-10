@@ -6,6 +6,7 @@ use momento::requests::cache::{
     },
     flush_cache::FlushCache,
 };
+use momento::requests::MomentoErrorCode;
 use momento::MomentoResult;
 use uuid::Uuid;
 
@@ -16,8 +17,7 @@ async fn delete_nonexistent_cache_returns_not_found() -> MomentoResult<()> {
     let client = &CACHE_TEST_STATE.client;
     let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
     let result = client.delete_cache(cache_name).await.unwrap_err();
-    let _err_msg = "not found".to_string();
-    assert!(matches!(result.to_string(), _err_message));
+    assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
     Ok(())
 }
 
@@ -40,7 +40,7 @@ async fn lists_existing_test_cache() -> MomentoResult<()> {
         .iter()
         .map(|cache_info| cache_info.name.clone())
         .collect();
-    assert!(cache_names.contains(cache_name));
+    assert!(cache_names.contains(cache_name), "Expected {} to be in list of caches: {:#?}", cache_name, cache_names);
     Ok(())
 }
 
@@ -49,8 +49,7 @@ async fn flush_nonexistent_cache_returns_not_found() -> MomentoResult<()> {
     let client = &CACHE_TEST_STATE.client;
     let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
     let result = client.flush_cache(cache_name).await.unwrap_err();
-    let _err_msg = "not found".to_string();
-    assert!(matches!(result.to_string(), _err_message));
+    assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
     Ok(())
 }
 

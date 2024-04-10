@@ -4,7 +4,7 @@ use tonic::codegen::http;
 
 use crate::auth::AuthError;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum MomentoErrorCode {
     /// Invalid argument passed to Momento client
     InvalidArgumentError,
