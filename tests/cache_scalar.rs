@@ -118,7 +118,7 @@ async fn increment_invalid_cache_name() -> MomentoResult<()> {
 }
 
 #[tokio::test]
-async fn increment_in_nonexistent_cache_returns_not_found() -> MomentoResult<()> {
+async fn increment_nonexistent_cache() -> MomentoResult<()> {
     let client = &CACHE_TEST_STATE.client;
     let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
     let result = client.increment(cache_name, "key", 1).await.unwrap_err();
@@ -142,6 +142,133 @@ async fn increment_happy_path() -> MomentoResult<()> {
     // Incrementing by a negative number should decrement the value
     let result = client.increment(cache_name, "key", -2).await?;
     assert_eq!(result.value, 0);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn item_get_type_invalid_cache_name() -> MomentoResult<()> {
+    let client = &CACHE_TEST_STATE.client;
+    let result = client.item_get_type("   ", "key").await.unwrap_err();
+    assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
+    Ok(())
+}
+
+#[tokio::test]
+async fn item_get_type_nonexistent_cache() -> MomentoResult<()> {
+    let client = &CACHE_TEST_STATE.client;
+    let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
+    let result = client.item_get_type(cache_name, "key").await.unwrap_err();
+    assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+    Ok(())
+}
+
+#[tokio::test]
+async fn item_get_type_happy_path() -> MomentoResult<()> {
+    let client = &CACHE_TEST_STATE.client;
+    let cache_name = &CACHE_TEST_STATE.cache_name;
+    let key = &Uuid::new_v4().to_string();
+
+    // Expect miss when key is not set
+    let result = client.item_get_type(cache_name, &**key).await?;
+    assert_eq!(result, ItemGetType::Miss {});
+    client.delete(cache_name, &**key).await?;
+
+    // Expect Scalar after using set
+    client.set(cache_name, &**key, "value").await?;
+    let result = client.item_get_type(cache_name, &**key).await?;
+    match result {
+        ItemGetType::Hit { key_type } => assert_eq!(
+            key_type,
+            ItemType::Scalar,
+            "Expected Scalar, got {:?}",
+            key_type
+        ),
+        _ => panic!("Expected Hit, got {:?}", result),
+    }
+    client.delete(cache_name, &**key).await?;
+
+    // Expect Set after using setAddElements
+    client
+        .set_add_elements(cache_name, &**key, vec!["value1", "value2"])
+        .await?;
+    let result = client.item_get_type(cache_name, &**key).await?;
+    match result {
+        ItemGetType::Hit { key_type } => {
+            assert_eq!(key_type, ItemType::Set, "Expected Set, got {:?}", key_type)
+        }
+        _ => panic!("Expected Hit, got {:?}", result),
+    }
+    client.delete(cache_name, &**key).await?;
+
+    // Expect SortedSet after using sortedSetPutElements
+    client
+        .sorted_set_put_elements(cache_name, &**key, vec![("value1", 1.0), ("value2", 2.0)])
+        .await?;
+    let result = client.item_get_type(cache_name, &**key).await?;
+    match result {
+        ItemGetType::Hit { key_type } => assert_eq!(
+            key_type,
+            ItemType::SortedSet,
+            "Expected SortedSet, got {:?}",
+            key_type
+        ),
+        _ => panic!("Expected Hit, got {:?}", result),
+    }
+    client.delete(cache_name, &**key).await?;
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn delete_invalid_cache_name() -> MomentoResult<()> {
+    let client = &CACHE_TEST_STATE.client;
+    let result = client.delete("   ", "key").await.unwrap_err();
+    assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
+    Ok(())
+}
+
+#[tokio::test]
+async fn delete_nonexistent_cache() -> MomentoResult<()> {
+    let client = &CACHE_TEST_STATE.client;
+    let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
+    let result = client.delete(cache_name, "key").await.unwrap_err();
+    assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+    Ok(())
+}
+
+#[tokio::test]
+async fn delete_happy_path() -> MomentoResult<()> {
+    let client = &CACHE_TEST_STATE.client;
+    let cache_name = &CACHE_TEST_STATE.cache_name;
+    let key = &Uuid::new_v4().to_string();
+
+    // Deleting a key that doesn't exist should not error
+    let result = client.delete(cache_name, &**key).await?;
+    assert_eq!(
+        result,
+        Delete {},
+        "Expected successful Delete of nonexistent key, got {:?}",
+        result
+    );
+
+    // Deleting a key that exists should delete it
+    client.set(cache_name, &**key, "value").await?;
+    let result = client.delete(cache_name, &**key).await?;
+    assert_eq!(
+        result,
+        Delete {},
+        "Expected successful Delete of existing key, got {:?}",
+        result
+    );
+
+    // Key should not exist after deletion
+    let result = client.key_exists(cache_name, &**key).await?;
+    assert!(
+        !result.exists,
+        "Expected key 'key' to not exist in cache {} after deletion, but it does",
+        cache_name
+    );
 
     Ok(())
 }
