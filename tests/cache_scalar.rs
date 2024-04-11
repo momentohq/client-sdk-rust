@@ -25,22 +25,23 @@ async fn key_exists_nonexistent_cache() -> MomentoResult<()> {
 async fn key_exists_happy_path() -> MomentoResult<()> {
     let client = &CACHE_TEST_STATE.client;
     let cache_name = &CACHE_TEST_STATE.cache_name;
+    let key = &Uuid::new_v4().to_string();
 
     // Key should not exist yet
-    let result = client.key_exists(cache_name, "key").await?;
+    let result = client.key_exists(cache_name, &**key).await?;
     assert!(
         !result.exists,
-        "Expected key 'key' to not exist in cache {}, but it does",
-        cache_name
+        "Expected key {} to not exist in cache {}, but it does",
+        &**key, cache_name
     );
 
     // Key should exist after setting a key
-    client.set(cache_name, "key", "value").await?;
-    let result = client.key_exists(cache_name, "key").await?;
+    client.set(cache_name, &**key, "value").await?;
+    let result = client.key_exists(cache_name, &**key).await?;
     assert!(
         result.exists,
-        "Expected key 'key' to exist in cache {}, but it does not",
-        cache_name
+        "Expected key {} to exist in cache {}, but it does not",
+        &**key, cache_name
     );
 
     Ok(())
@@ -130,17 +131,18 @@ async fn increment_nonexistent_cache() -> MomentoResult<()> {
 async fn increment_happy_path() -> MomentoResult<()> {
     let client = &CACHE_TEST_STATE.client;
     let cache_name = &CACHE_TEST_STATE.cache_name;
+    let key = &Uuid::new_v4().to_string();
 
     // Incrementing a key that doesn't exist should create it
-    let result = client.increment(cache_name, "key", 1).await?;
+    let result = client.increment(cache_name, &**key, 1).await?;
     assert_eq!(result.value, 1);
 
     // Incrementing an existing key should increment it
-    let result = client.increment(cache_name, "key", 1).await?;
+    let result = client.increment(cache_name, &**key, 1).await?;
     assert_eq!(result.value, 2);
 
     // Incrementing by a negative number should decrement the value
-    let result = client.increment(cache_name, "key", -2).await?;
+    let result = client.increment(cache_name, &**key, -2).await?;
     assert_eq!(result.value, 0);
 
     Ok(())
