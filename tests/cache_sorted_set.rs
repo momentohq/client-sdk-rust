@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use momento::requests::MomentoErrorCode;
 use momento::MomentoResult;
 use uuid::Uuid;
@@ -8,6 +10,10 @@ use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder::{
 use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetFetchByRankRequest;
 use momento::requests::cache::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
 use momento::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
+use momento::requests::cache::sorted_set::sorted_set_put_elements::{
+    IntoSortedSetElements, SortedSetElement,
+};
+use momento::CacheClient;
 
 use momento_test_util::CACHE_TEST_STATE;
 
@@ -26,8 +32,7 @@ async fn sorted_set_put_element_happy_path() -> MomentoResult<()> {
 
     client
         .sorted_set_put_element(cache_name, &*sorted_set_name, "value", 1.0)
-        .await
-        .unwrap();
+        .await?;
 
     let result = client
         .sorted_set_fetch_by_rank(cache_name, &*sorted_set_name, Ascending, None, None)
@@ -36,7 +41,7 @@ async fn sorted_set_put_element_happy_path() -> MomentoResult<()> {
     match result {
         SortedSetFetch::Hit { elements } => {
             assert_eq!(elements.len(), 1);
-            let string_elements = elements.into_strings().unwrap();
+            let string_elements = elements.into_strings()?;
             assert_eq!(string_elements[0].0, value);
             assert_eq!(string_elements[0].1, score)
         }
@@ -60,41 +65,82 @@ async fn sorted_set_put_element_nonexistent_cache() -> MomentoResult<()> {
     Ok(())
 }
 
+fn compare_by_first_entry(a: &(String, f64), b: &(String, f64)) -> std::cmp::Ordering {
+    a.0.cmp(&b.0)
+}
+
 #[tokio::test]
 async fn sorted_set_put_elements_happy_path() -> MomentoResult<()> {
+    async fn test_put_elements_happy_path(
+        client: &Arc<CacheClient>,
+        cache_name: &String,
+        to_put: impl IntoSortedSetElements<String> + Clone,
+    ) -> MomentoResult<()> {
+        let sorted_set_name = format!("sorted-set-{}", Uuid::new_v4());
+        let result = client
+            .sorted_set_fetch_by_score(cache_name, &*sorted_set_name, Ascending)
+            .await?;
+        assert_eq!(result, SortedSetFetch::Miss);
+
+        client
+            .sorted_set_put_elements(cache_name, &*sorted_set_name, to_put.clone())
+            .await?;
+
+        let result = client
+            .sorted_set_fetch_by_score(cache_name, &*sorted_set_name, Ascending)
+            .await?;
+
+        match result {
+            SortedSetFetch::Hit { elements } => {
+                let mut expected = to_put
+                    .into_sorted_set_elements()
+                    .into_iter()
+                    .map(|e| (e.value, e.score))
+                    .collect::<Vec<_>>();
+                expected.sort_by(compare_by_first_entry);
+
+                let mut actual = elements.into_strings()?;
+                actual.sort_by(compare_by_first_entry);
+                assert_eq!(actual, expected);
+            }
+            _ => panic!("Expected SortedSetFetch::Hit, but got {:?}", result),
+        }
+        Ok(())
+    }
+
     let client = &CACHE_TEST_STATE.client;
     let cache_name = &CACHE_TEST_STATE.cache_name;
-    let sorted_set_name = "sorted-set-".to_string() + &Uuid::new_v4().to_string();
+
     let to_put = vec![("element1".to_string(), 1.0), ("element2".to_string(), 2.0)];
+    test_put_elements_happy_path(client, cache_name, to_put).await?;
 
-    let result = client
-        .sorted_set_fetch_by_score(cache_name, &*sorted_set_name, Ascending)
-        .await?;
-    assert_eq!(result, SortedSetFetch::Miss);
+    let to_put = std::collections::HashMap::from([
+        ("element1".to_string(), 1.0),
+        ("element2".to_string(), 2.0),
+    ]);
+    test_put_elements_happy_path(client, cache_name, to_put).await?;
 
-    client
-        .sorted_set_put_elements(cache_name, &*sorted_set_name, to_put.clone())
-        .await?;
+    let to_put = vec![("element1".to_string(), 1.0), ("element2".to_string(), 2.0)];
+    test_put_elements_happy_path(client, cache_name, to_put).await?;
 
-    let result = client
-        .sorted_set_fetch_by_score(cache_name, &*sorted_set_name, Ascending)
-        .await?;
-
-    match result {
-        SortedSetFetch::Hit { elements } => {
-            assert_eq!(elements.len(), 2);
-            let string_elements = elements.into_strings().unwrap();
-            assert_eq!(to_put, string_elements)
-        }
-        _ => panic!("Expected SortedSetFetch::Hit, but got {:?}", result),
-    }
+    let to_put = vec![
+        SortedSetElement {
+            value: "element1".to_string(),
+            score: 1.0,
+        },
+        SortedSetElement {
+            value: "element2".to_string(),
+            score: 2.0,
+        },
+    ];
+    test_put_elements_happy_path(client, cache_name, to_put).await?;
     Ok(())
 }
 
 #[tokio::test]
 async fn sorted_set_put_elements_nonexistent_cache() -> MomentoResult<()> {
     let client = &CACHE_TEST_STATE.client;
-    let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
+    let cache_name = format!("fake-cache-{}", Uuid::new_v4());
     let sorted_set_name = "sorted-set";
 
     let result = client
@@ -138,17 +184,13 @@ async fn sorted_set_fetch_by_rank_happy_path() -> MomentoResult<()> {
         .start_rank(0)
         .end_rank(6);
 
-    let result = client.send_request(fetch_request).await.unwrap();
+    let result = client.send_request(fetch_request).await?;
 
     match result {
         SortedSetFetch::Hit { elements } => {
             assert_eq!(elements.len(), 5);
-            let string_elements: Vec<String> = elements
-                .into_strings()
-                .unwrap()
-                .into_iter()
-                .map(|e| e.0)
-                .collect();
+            let string_elements: Vec<String> =
+                elements.into_strings()?.into_iter().map(|e| e.0).collect();
 
             assert_eq!(string_elements, vec!["1", "3", "2", "5", "4"])
         }
@@ -161,17 +203,13 @@ async fn sorted_set_fetch_by_rank_happy_path() -> MomentoResult<()> {
         .start_rank(1)
         .end_rank(4);
 
-    let result = client.send_request(fetch_request).await.unwrap();
+    let result = client.send_request(fetch_request).await?;
 
     match result {
         SortedSetFetch::Hit { elements } => {
             assert_eq!(elements.len(), 3);
-            let string_elements: Vec<String> = elements
-                .into_strings()
-                .unwrap()
-                .into_iter()
-                .map(|e| e.0)
-                .collect();
+            let string_elements: Vec<String> =
+                elements.into_strings()?.into_iter().map(|e| e.0).collect();
 
             assert_eq!(string_elements, vec!["5", "2", "3"])
         }
@@ -223,17 +261,13 @@ async fn sorted_set_fetch_by_score_happy_path() -> MomentoResult<()> {
         .min_score(0.0)
         .max_score(9.9);
 
-    let result = client.send_request(fetch_request).await.unwrap();
+    let result = client.send_request(fetch_request).await?;
 
     match result {
         SortedSetFetch::Hit { elements } => {
             assert_eq!(elements.len(), 5);
-            let string_elements: Vec<String> = elements
-                .into_strings()
-                .unwrap()
-                .into_iter()
-                .map(|e| e.0)
-                .collect();
+            let string_elements: Vec<String> =
+                elements.into_strings()?.into_iter().map(|e| e.0).collect();
 
             assert_eq!(string_elements, vec!["1", "3", "2", "5", "4"])
         }
@@ -246,17 +280,13 @@ async fn sorted_set_fetch_by_score_happy_path() -> MomentoResult<()> {
         .min_score(0.1)
         .max_score(1.9);
 
-    let result = client.send_request(fetch_request).await.unwrap();
+    let result = client.send_request(fetch_request).await?;
 
     match result {
         SortedSetFetch::Hit { elements } => {
             assert_eq!(elements.len(), 3);
-            let string_elements: Vec<String> = elements
-                .into_strings()
-                .unwrap()
-                .into_iter()
-                .map(|e| e.0)
-                .collect();
+            let string_elements: Vec<String> =
+                elements.into_strings()?.into_iter().map(|e| e.0).collect();
 
             assert_eq!(string_elements, vec!["5", "2", "3"])
         }
@@ -268,17 +298,13 @@ async fn sorted_set_fetch_by_score_happy_path() -> MomentoResult<()> {
         .offset(1)
         .count(3);
 
-    let result = client.send_request(fetch_request).await.unwrap();
+    let result = client.send_request(fetch_request).await?;
 
     match result {
         SortedSetFetch::Hit { elements } => {
             assert_eq!(elements.len(), 3);
-            let string_elements: Vec<String> = elements
-                .into_strings()
-                .unwrap()
-                .into_iter()
-                .map(|e| e.0)
-                .collect();
+            let string_elements: Vec<String> =
+                elements.into_strings()?.into_iter().map(|e| e.0).collect();
 
             assert_eq!(string_elements, vec!["3", "2", "5"])
         }
