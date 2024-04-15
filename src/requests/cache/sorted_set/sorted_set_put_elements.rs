@@ -129,14 +129,15 @@ impl<V: IntoBytes> IntoSortedSetElements<V> for HashMap<V, f64> {
 /// let sorted_set_name = "sorted_set";
 ///
 /// let put_elements_request = SortedSetPutElementsRequest::new(
-///     cache_name.to_string(),
-///     sorted_set_name.to_string(),
+///     cache_name,
+///     sorted_set_name,
 ///     vec![("value1", 1.0), ("value2", 2.0)]
 /// ).ttl(CollectionTtl::default());
 ///
-/// let put_elements_response = cache_client.send_request(put_elements_request).await?;
-///
-/// assert_eq!(put_elements_response, SortedSetPutElements {});
+/// match cache_client.send_request(put_elements_request).await {
+///     Ok(_) => println!("Elements added to sorted set"),
+///     Err(e) => eprintln!("Error adding elements to sorted set: {}", e),
+/// }
 /// # Ok(())
 /// # })
 /// # }

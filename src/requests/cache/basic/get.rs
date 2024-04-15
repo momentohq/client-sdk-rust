@@ -7,20 +7,35 @@ use crate::{IntoBytes, MomentoError, MomentoResult};
 use momento_protos::cache_client::ECacheResult;
 use std::convert::{TryFrom, TryInto};
 
+/// Request to get an item from a cache
+///
+/// # Arguments
+///
+/// * `cache_name` - name of cache
+/// * `key` - key of entry within the cache.
+///
+/// # Examples
+/// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// use std::convert::TryInto;
 /// use momento::requests::cache::basic::get::Get;
+/// use momento::requests::cache::basic::get::GetRequest;
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
+/// # cache_client.set(&cache_name, "key", "value").await?;
 ///
-/// let get_response = cache_client.get(&cache_name, "key").await?;
+/// let get_request = GetRequest::new(
+///     cache_name,
+///     "key"
+/// );
 ///
-/// let item: String = match get_response {
-///     Get::Hit { value } => value.try_into().expect("I stored a string!"),
-///     Get::Miss => return Err(anyhow::Error::msg("cache miss")) // probably you'll do something else here
+/// let item: String = match(cache_client.send_request(get_request).await?) {
+///   Get::Hit { value } => value.try_into().expect("I stored a string!"),
+///   Get::Miss => return Err(anyhow::Error::msg("cache miss"))
 /// };
+/// # assert_eq!(item, "value");
 /// # Ok(())
 /// # })
 /// # }

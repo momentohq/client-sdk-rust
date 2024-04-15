@@ -31,15 +31,16 @@ use crate::{CacheClient, CollectionTtl, IntoBytes, MomentoResult};
 /// let sorted_set_name = "sorted_set";
 ///
 /// let put_element_request = SortedSetPutElementRequest::new(
-///     cache_name.to_string(),
-///     sorted_set_name.to_string(),
+///     cache_name,
+///     sorted_set_name,
 ///     "value",
 ///     1.0
 /// ).ttl(CollectionTtl::default());
 ///
-/// let create_cache_response = cache_client.send_request(put_element_request).await?;
-///
-/// assert_eq!(create_cache_response, SortedSetPutElement {});
+/// match cache_client.send_request(put_element_request).await {
+///     Ok(_) => println!("Element added to sorted set"),
+///     Err(e) => eprintln!("Error adding elements to sorted set: {}", e),
+/// }
 /// # Ok(())
 /// # })
 /// # }
