@@ -28,10 +28,9 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// );
 ///
 /// let result = cache_client.send_request(request).await?;
-/// if !result.exists.is_empty() {
-///     println!("Processing list of booleans: {:#?}", result.exists);
-/// } else {
-///     println!("Received empty list of booleans!");
+/// println!("Expecting all keys to exist:");
+/// for (key, exists) in result.exists_dictionary() {
+///    println!("Key: {}, Exists: {}", key, exists);
 /// }
 /// # Ok(())
 /// # })
