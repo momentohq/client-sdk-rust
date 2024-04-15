@@ -87,10 +87,18 @@ async fn keys_exist_happy_path() -> MomentoResult<()> {
     client.set(cache_name, &*key3, &*key3).await?;
 
     let result = client
-        .keys_exist(cache_name, vec![key1, key2, key3, key4])
+        .keys_exist(cache_name, vec![&*key1, &*key2, &*key3, &*key4])
         .await?;
     assert_eq!(result.exists.len(), 4);
     assert_eq!(result.exists, [true, false, true, false]);
+
+    // these dictionary entries should be true
+    assert!(result.exists_dictionary[&key1]);
+    assert!(result.exists_dictionary[&key3]);
+
+    // these dictionary entries should be false
+    assert!(!result.exists_dictionary[&key2]);
+    assert!(!result.exists_dictionary[&key4]);
 
     Ok(())
 }

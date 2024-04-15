@@ -1,5 +1,8 @@
+use std::collections::HashMap;
+
 use crate::requests::cache::MomentoRequest;
 use crate::simple_cache_client::prep_request_with_timeout;
+use crate::utils::parse_string;
 use crate::{CacheClient, IntoBytes, MomentoResult};
 
 /// Request to check if the provided keys exist in the cache.
@@ -52,11 +55,20 @@ impl<K: IntoBytes> MomentoRequest for KeysExistRequest<K> {
     type Response = KeysExist;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<KeysExist> {
+        // consume self.keys once to convert all keys to bytes
+        let byte_keys: Vec<Vec<u8>> = self.keys.into_iter().map(|key| key.into_bytes()).collect();
+
+        // convert keys to strings for the response exists_dictionary because HashMap<IntoBytes, bool> is not allowed
+        let string_keys: Vec<String> = byte_keys
+            .iter()
+            .map(|key| parse_string(key.clone()))
+            .collect::<MomentoResult<Vec<String>>>()?;
+
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
             momento_protos::cache_client::KeysExistRequest {
-                cache_keys: self.keys.into_iter().map(|key| key.into_bytes()).collect(),
+                cache_keys: byte_keys,
             },
         )?;
 
@@ -68,18 +80,27 @@ impl<K: IntoBytes> MomentoRequest for KeysExistRequest<K> {
             .into_inner();
 
         Ok(KeysExist {
-            exists: response.exists,
+            exists: response.exists.clone(),
+            exists_dictionary: string_keys
+                .into_iter()
+                .zip(response.exists.clone())
+                .collect(),
         })
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct KeysExist {
     pub exists: Vec<bool>,
+    pub exists_dictionary: HashMap<String, bool>,
 }
 
 impl KeysExist {
     pub fn exists(self) -> Vec<bool> {
         self.exists
+    }
+
+    pub fn exists_dictionary(self) -> HashMap<String, bool> {
+        self.exists_dictionary
     }
 }
