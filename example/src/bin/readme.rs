@@ -1,5 +1,5 @@
-use momento::config::configurations::laptop;
 use momento::cache::Get;
+use momento::config::configurations::laptop;
 use momento::{CacheClient, CredentialProvider, MomentoError};
 use std::time::Duration;
 
