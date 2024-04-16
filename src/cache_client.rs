@@ -6,6 +6,13 @@ use momento_protos::control_client::scs_control_client::ScsControlClient;
 use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
 
+use crate::cache::{
+    CreateCache, CreateCacheRequest, DeleteCache, DeleteCacheRequest, FlushCache,
+    FlushCacheRequest, Get, GetRequest, IntoSortedSetElements, ListCaches, ListCachesRequest,
+    MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetRequest, SortOrder,
+    SortedSetFetch, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetPutElement,
+    SortedSetPutElementRequest, SortedSetPutElements, SortedSetPutElementsRequest,
+};
 use crate::config::configuration::Configuration;
 use crate::grpc::header_interceptor::HeaderInterceptor;
 use crate::requests::cache::basic::get::{Get, GetRequest};

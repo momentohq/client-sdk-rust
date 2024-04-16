@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use momento::requests::cache::create_cache::CreateCache;
+use momento::cache::CreateCache;
 use once_cell::sync::Lazy;
 use tokio::sync::watch::channel;
 

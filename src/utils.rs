@@ -7,7 +7,7 @@ use tonic::{
 use crate::MomentoResult;
 use crate::{
     config::grpc_configuration::GrpcConfiguration,
-    requests::{ErrorSource, MomentoError, MomentoErrorCode},
+    {ErrorSource, MomentoError, MomentoErrorCode},
 };
 use std::convert::TryFrom;
 use std::time::{self, Duration};

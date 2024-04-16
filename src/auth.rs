@@ -5,8 +5,8 @@ use thiserror::Error;
 use tonic::{codegen::http::uri::InvalidUri, transport::Channel, Streaming};
 
 use crate::{
-    requests::{MomentoError, MomentoErrorCode},
     utils::{connect_channel_lazily, ChannelConnectError},
+    {MomentoError, MomentoErrorCode},
 };
 
 pub type EarlyOutActionResult = Option<Result<Credentials, MomentoError>>;

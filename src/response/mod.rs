@@ -11,9 +11,9 @@ mod generate_api_token_response;
 mod list_cache_response;
 mod list_signing_keys_response;
 
-use crate::requests::MomentoError;
-use crate::requests::MomentoErrorCode;
 use crate::ErrorSource;
+use crate::MomentoError;
+use crate::MomentoErrorCode;
 use crate::MomentoResult;
 
 pub use self::cache_dictionary_fetch_response::*;

@@ -1,7 +1,7 @@
 use momento_protos::cache_client::SetUnionRequest;
 
+use crate::cache::requests::MomentoRequest;
 use crate::cache_client::CacheClient;
-use crate::requests::cache::MomentoRequest;
 use crate::simple_cache_client::prep_request_with_timeout;
 use crate::{CollectionTtl, IntoBytes, MomentoResult};
 

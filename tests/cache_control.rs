@@ -1,12 +1,5 @@
-use momento::requests::cache::create_cache::CreateCache;
-use momento::requests::cache::{
-    basic::{
-        get::{Get, GetValue},
-        set::Set,
-    },
-    flush_cache::FlushCache,
-};
-use momento::requests::MomentoErrorCode;
+use momento::cache::{CreateCache, FlushCache, Get, GetValue, Set};
+use momento::MomentoErrorCode;
 use momento::MomentoResult;
 use uuid::Uuid;
 

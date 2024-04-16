@@ -1,5 +1,5 @@
-use crate::requests::{MomentoError, MomentoErrorCode};
 use crate::MomentoResult;
+use crate::{MomentoError, MomentoErrorCode};
 use base64::Engine;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};

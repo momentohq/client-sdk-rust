@@ -1,8 +1,8 @@
 use momento_protos::control_client;
 use tonic::Request;
 
-use crate::requests::cache::MomentoRequest;
-use crate::requests::status_to_error;
+use crate::cache::requests::MomentoRequest;
+use crate::status_to_error;
 use crate::{utils, CacheClient, MomentoResult};
 
 /// Request to create a cache.

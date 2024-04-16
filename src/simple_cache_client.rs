@@ -25,14 +25,16 @@ use crate::response::{
     MomentoSetDifferenceResponse, MomentoSetFetchResponse, MomentoSetResponse, MomentoSigningKey,
     MomentoSortedSetFetchResponse, SortedSetFetch,
 };
-use crate::sorted_set;
 use crate::utils;
 use crate::{
     compression_utils::{compress_json, decompress_json},
-    requests::{ErrorSource, MomentoError, MomentoErrorCode},
+    {ErrorSource, MomentoError, MomentoErrorCode},
 };
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 use crate::{utils::user_agent, MomentoResult};
+use momento_protos::cache_client::sorted_set_fetch_request::{Order, Range};
+use momento_protos::cache_client::sorted_set_fetch_response::found::Elements;
+use momento_protos::cache_client::sorted_set_fetch_response::SortedSet;
 
 pub trait IntoBytes: Send {
     fn into_bytes(self) -> Vec<u8>;
@@ -1957,9 +1959,9 @@ impl SimpleCacheClient {
         &mut self,
         _cache_name: &str,
         _set_name: impl IntoBytes,
-        _order: sorted_set::Order,
+        _order: Order,
         _limit: impl Into<Option<NonZeroU32>>,
-        _range: Option<sorted_set::Range>,
+        _range: Option<Range>,
     ) -> MomentoResult<MomentoSortedSetFetchResponse> {
         todo!("This api was reworked and is pending implementation in the rust sdk: https://github.com/momentohq/client-sdk-rust/issues/135");
     }
@@ -2062,13 +2064,12 @@ impl SimpleCacheClient {
         &mut self,
         cache_name: &str,
         set_name: impl IntoBytes,
-        order: sorted_set::Order,
+        order: Order,
         range: impl RangeBounds<i32>,
     ) -> MomentoResult<SortedSetFetch> {
         use core::ops::Bound;
         use sorted_set_fetch_request::by_index::{End, Start};
-        use sorted_set_fetch_request::{ByIndex, Range};
-        use sorted_set_fetch_response::found::Elements;
+        use sorted_set_fetch_request::ByIndex;
 
         // transforms the Rust `Range` start into a Momento start index. Because
         // the Momento start index is always Inclusive (or Unbounded) we need to
@@ -2114,7 +2115,7 @@ impl SimpleCacheClient {
         // converting the SortedSet enum into the interior collection of
         // elements.
         match response.sorted_set {
-            Some(crate::sorted_set::SortedSet::Found(elements)) => match elements.elements {
+            Some(SortedSet::Found(elements)) => match elements.elements {
                 Some(elements) => match elements {
                     Elements::ValuesWithScores(elements) => Ok(SortedSetFetch::Hit {
                         elements: elements.elements,
@@ -2241,13 +2242,12 @@ impl SimpleCacheClient {
         &mut self,
         cache_name: &str,
         set_name: impl IntoBytes,
-        order: sorted_set::Order,
+        order: Order,
         range: impl RangeBounds<f64>,
     ) -> MomentoResult<SortedSetFetch> {
         use core::ops::Bound;
         use sorted_set_fetch_request::by_score::{Max, Min, Score};
-        use sorted_set_fetch_request::{ByScore, Range};
-        use sorted_set_fetch_response::found::Elements;
+        use sorted_set_fetch_request::ByScore;
 
         // transforms the Rust `Range` start into a Momento min score.
         let min = match range.start_bound() {
@@ -2301,7 +2301,7 @@ impl SimpleCacheClient {
         // converting the SortedSet enum into the interior collection of
         // elements.
         match response.sorted_set {
-            Some(crate::sorted_set::SortedSet::Found(elements)) => match elements.elements {
+            Some(SortedSet::Found(elements)) => match elements.elements {
                 Some(elements) => match elements {
                     Elements::ValuesWithScores(elements) => Ok(SortedSetFetch::Hit {
                         elements: elements.elements,

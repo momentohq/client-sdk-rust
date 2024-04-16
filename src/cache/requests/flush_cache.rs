@@ -1,7 +1,7 @@
 use momento_protos::control_client;
 use tonic::Request;
 
-use crate::requests::cache::MomentoRequest;
+use crate::cache::requests::MomentoRequest;
 use crate::{utils, CacheClient, MomentoResult};
 
 /// Request to flush a cache of its data
