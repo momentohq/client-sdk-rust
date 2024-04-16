@@ -12,8 +12,7 @@ use crate::{CacheClient, MomentoResult};
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::requests::cache::list_caches::ListCaches;
-/// use momento::requests::cache::list_caches::ListCachesRequest;
+/// use momento::cache::{ListCaches, ListCachesRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
 /// let list_caches_request = ListCachesRequest {};
@@ -74,7 +73,7 @@ pub struct CacheInfo {
 /// You can cast your result directly into a `Result<Vec<CacheInfo>, MomentoError>` suitable for
 /// ?-propagation if you know you are expecting a `Vec<CacheInfo>` item.
 /// ```
-/// # use momento::requests::cache::list_caches::{CacheInfo, ListCaches};
+/// # use momento::cache::{CacheInfo, ListCaches};
 /// # use momento::MomentoResult;
 /// # let list_caches_response = ListCaches { caches: vec![] };
 /// let caches: Vec<CacheInfo> = list_caches_response.into();

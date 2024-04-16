@@ -24,8 +24,7 @@ use crate::{CollectionTtl, IntoBytes, MomentoResult};
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use momento::CollectionTtl;
-/// use momento::requests::cache::set::set_add_elements::SetAddElements;
-/// use momento::requests::cache::set::set_add_elements::SetAddElementsRequest;
+/// use momento::cache::{SetAddElements, SetAddElementsRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let set_name = "set";
 ///

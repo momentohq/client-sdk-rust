@@ -36,9 +36,7 @@ pub enum SortedSetOrder {
 /// # use std::convert::TryInto;
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder;
-/// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetFetchByRankRequest;
-/// use momento::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
+/// use momento::cache::{SortedSetOrder, SortedSetFetch, SortedSetFetchByRankRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
 ///

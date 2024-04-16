@@ -23,9 +23,8 @@ use std::time::Duration;
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::time::Duration;
-/// use momento::requests::cache::basic::set::Set;
-/// use momento::requests::cache::basic::set::SetRequest;
-/// use momento::requests::MomentoErrorCode;
+/// use momento::cache::{Set, SetRequest};
+/// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
 /// let set_request = SetRequest::new(

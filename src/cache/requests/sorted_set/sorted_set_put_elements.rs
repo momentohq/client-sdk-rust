@@ -123,8 +123,7 @@ impl<V: IntoBytes> IntoSortedSetElements<V> for HashMap<V, f64> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use momento::CollectionTtl;
-/// use momento::requests::cache::sorted_set::sorted_set_put_elements::SortedSetPutElements;
-/// use momento::requests::cache::sorted_set::sorted_set_put_elements::SortedSetPutElementsRequest;
+/// use momento::cache::{SortedSetPutElements, SortedSetPutElementsRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
 ///

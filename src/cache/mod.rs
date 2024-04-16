@@ -7,7 +7,9 @@ pub use requests::MomentoRequest;
 pub use requests::create_cache::{CreateCache, CreateCacheRequest};
 pub use requests::delete_cache::{DeleteCache, DeleteCacheRequest};
 pub use requests::flush_cache::{FlushCache, FlushCacheRequest};
-pub use requests::list_caches::{ListCaches, ListCachesRequest};
+pub use requests::list_caches::{
+    CacheInfo, CacheLimits, ListCaches, ListCachesRequest, TopicLimits,
+};
 
 pub use requests::scalar::get::{Get, GetRequest, GetValue};
 pub use requests::scalar::set::{Set, SetRequest};

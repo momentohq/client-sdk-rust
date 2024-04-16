@@ -23,8 +23,7 @@ use std::convert::{TryFrom, TryInto};
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::convert::TryInto;
-/// use momento::requests::cache::basic::get::Get;
-/// use momento::requests::cache::basic::get::GetRequest;
+/// use momento::cache::{Get, GetRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// # cache_client.set(&cache_name, "key", "value").await?;
 ///

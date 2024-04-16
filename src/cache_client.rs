@@ -69,7 +69,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::create_cache::CreateCache;
+    /// use momento::cache::CreateCache;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.create_cache(&cache_name).await? {
@@ -98,8 +98,8 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::delete_cache::DeleteCache;
-    /// use momento::requests::MomentoErrorCode;
+    /// use momento::cache::DeleteCache;
+    /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.delete_cache(&cache_name).await {
@@ -128,7 +128,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::list_caches::ListCaches;
+    /// use momento::cache::ListCaches;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.list_caches().await {
@@ -157,8 +157,8 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::flush_cache::FlushCache;
-    /// use momento::requests::MomentoErrorCode;
+    /// use momento::cache::FlushCache;
+    /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.flush_cache(cache_name.to_string()).await {
@@ -202,8 +202,8 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::requests::cache::basic::set::Set;
-    /// use momento::requests::MomentoErrorCode;
+    /// use momento::cache::Set;
+    /// use momento::MomentoErrorCode;
     ///
     /// match cache_client.set(&cache_name, "k1", "v1").await {
     ///     Ok(_) => println!("Set successful"),
@@ -244,7 +244,7 @@ impl CacheClient {
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use std::convert::TryInto;
-    /// use momento::requests::cache::basic::get::Get;
+    /// use momento::cache::Get;
     /// # cache_client.set(&cache_name, "key", "value").await?;
     ///
     /// let item: String = match(cache_client.get(&cache_name, "key").await?) {
@@ -286,8 +286,8 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::set::set_add_elements::SetAddElements;
-    /// use momento::requests::MomentoErrorCode;
+    /// use momento::cache::SetAddElements;
+    /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let set_name = "set";
     ///
@@ -339,7 +339,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::sorted_set::sorted_set_put_element::SortedSetPutElement;
+    /// use momento::cache::SortedSetPutElement;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let sorted_set_name = "sorted_set";
     ///
@@ -392,7 +392,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::sorted_set::sorted_set_put_elements::SortedSetPutElements;
+    /// use momento::cache::{SortedSetPutElements};
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let sorted_set_name = "sorted_set";
     ///
@@ -442,8 +442,7 @@ impl CacheClient {
     /// # use momento::MomentoResult;
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder;
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
+    /// use momento::cache::{SortedSetOrder, SortedSetFetch};
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let sorted_set_name = "sorted_set";
     ///
@@ -521,8 +520,7 @@ impl CacheClient {
     /// # use momento::MomentoResult;
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder;
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
+    /// use momento::cache::{SortedSetOrder, SortedSetFetch};
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let sorted_set_name = "sorted_set";
     ///
