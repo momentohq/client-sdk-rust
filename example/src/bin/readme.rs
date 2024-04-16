@@ -17,6 +17,13 @@ pub async fn main() -> Result<(), MomentoError> {
 
     cache_client.create_cache(CACHE_NAME.to_string()).await?;
 
+    cache_client.flush_cache(CACHE_NAME).await?;
+
+    match cache_client.list_caches().await {
+        Ok(response) => println!("Caches: {:#?}", response.caches),
+        Err(e) => println!("Error listing caches: {}", e),
+    }
+
     match cache_client.set(CACHE_NAME, "mykey", "myvalue").await {
         Ok(_) => println!("Successfully stored key 'mykey' with value 'myvalue'"),
         Err(e) => println!("Error: {}", e),
@@ -78,6 +85,8 @@ pub async fn main() -> Result<(), MomentoError> {
         SortedSetFetch::Hit { elements } => println!("Elements fetched by score from sorted set: {:?}", elements.into_strings()),
         SortedSetFetch::Miss => println!("Cache not found"),
     }
+
+    cache_client.delete_cache(CACHE_NAME).await?;
 
     Ok(())
 }
