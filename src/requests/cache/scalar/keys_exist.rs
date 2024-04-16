@@ -88,10 +88,44 @@ impl<K: IntoBytes> MomentoRequest for KeysExistRequest<K> {
     }
 }
 
+/// Response for a keys exist operation.
+///
+/// You can use `into()` to convert a `KeysExist` response into a `Vec<bool>` or a `HashMap<String, bool>`.
+/// ```
+/// # fn main() -> anyhow::Result<()> {
+/// # use momento_test_util::create_doctest_cache_client;
+/// # tokio_test::block_on(async {
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
+/// use momento::requests::cache::scalar::keys_exist::KeysExist;
+/// use std::collections::HashMap;
+///
+/// let result_list: Vec<bool> = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?.into();
+///
+/// let result_map: HashMap<String, bool> = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?.into();
+/// # Ok(())
+/// # })
+/// # }
+/// ```
+///
+/// Or you can use the `exists()` or `exists_dictionary()` methods to get the results directly.
+/// ```
+/// # fn main() -> anyhow::Result<()> {
+/// # use momento_test_util::create_doctest_cache_client;
+/// # tokio_test::block_on(async {
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
+/// use momento::requests::cache::scalar::keys_exist::KeysExist;
+///
+/// let result_list = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?.exists();
+///
+/// let result_map = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?.exists_dictionary();
+/// # Ok(())
+/// # })
+/// # }
+/// ```
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct KeysExist {
-    pub exists: Vec<bool>,
-    pub exists_dictionary: HashMap<String, bool>,
+    exists: Vec<bool>,
+    exists_dictionary: HashMap<String, bool>,
 }
 
 impl KeysExist {
@@ -101,5 +135,17 @@ impl KeysExist {
 
     pub fn exists_dictionary(self) -> HashMap<String, bool> {
         self.exists_dictionary
+    }
+}
+
+impl From<KeysExist> for Vec<bool> {
+    fn from(response: KeysExist) -> Self {
+        response.exists
+    }
+}
+
+impl From<KeysExist> for HashMap<String, bool> {
+    fn from(response: KeysExist) -> Self {
+        response.exists_dictionary
     }
 }

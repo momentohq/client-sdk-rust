@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use momento::{requests::MomentoErrorCode, MomentoResult};
 use momento_test_util::CACHE_TEST_STATE;
 use uuid::Uuid;
@@ -71,11 +73,11 @@ async fn keys_exist_happy_path() -> MomentoResult<()> {
 
     // Should return empty list if given empty key list
     let empty_vector: Vec<String> = vec![];
-    let result = client.keys_exist(cache_name, empty_vector).await?;
+    let keys_received: Vec<bool> = client.keys_exist(cache_name, empty_vector).await?.into();
     assert!(
-        result.exists.is_empty(),
+        keys_received.is_empty(),
         "Expected empty list of bools given no keys, but received {:#?}",
-        result.exists
+        keys_received
     );
 
     // Key should return true only for keys that exist in the cache
@@ -89,16 +91,20 @@ async fn keys_exist_happy_path() -> MomentoResult<()> {
     let result = client
         .keys_exist(cache_name, vec![&*key1, &*key2, &*key3, &*key4])
         .await?;
-    assert_eq!(result.exists.len(), 4);
-    assert_eq!(result.exists, [true, false, true, false]);
+
+    let keys_list: Vec<bool> = result.clone().into();
+    assert_eq!(keys_list.len(), 4);
+    assert_eq!(keys_list, [true, false, true, false]);
+
+    let keys_dict: HashMap<String, bool> = result.into();
 
     // these dictionary entries should be true
-    assert!(result.exists_dictionary[&key1]);
-    assert!(result.exists_dictionary[&key3]);
+    assert!(keys_dict[&key1]);
+    assert!(keys_dict[&key3]);
 
     // these dictionary entries should be false
-    assert!(!result.exists_dictionary[&key2]);
-    assert!(!result.exists_dictionary[&key4]);
+    assert!(!keys_dict[&key2]);
+    assert!(!keys_dict[&key4]);
 
     Ok(())
 }

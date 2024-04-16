@@ -604,12 +604,11 @@ impl CacheClient {
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use momento::requests::cache::scalar::keys_exist::KeysExist;
+    /// use std::collections::HashMap;
     ///
     /// let result = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?;
-    /// println!("Expecting all keys to exist:");
-    /// for (key, exists) in result.exists_dictionary() {
-    ///    println!("Key: {}, Exists: {}", key, exists);
-    /// }
+    /// let exists_map: HashMap<String, bool> = result.into();
+    /// println!("Expecting all keys to exist: {:#?}", exists_map);
     /// # Ok(())
     /// # })
     /// # }
