@@ -1,5 +1,5 @@
 use momento::config::configurations::laptop;
-use momento::cache::{Get, SortOrder, SortedSetFetch};
+use momento::cache::{Get, SortedSetOrder, SortedSetFetch};
 use momento::{CacheClient, CredentialProvider, MomentoError};
 use std::time::Duration;
 
@@ -69,7 +69,7 @@ pub async fn main() -> Result<(), MomentoError> {
     match cache_client.sorted_set_fetch_by_rank(
         CACHE_NAME,
         "sorted_set_name",
-        SortOrder::Ascending,
+        SortedSetOrder::Ascending,
         Some(1),
         Some(2)
     ).await? {
@@ -80,7 +80,7 @@ pub async fn main() -> Result<(), MomentoError> {
     match cache_client.sorted_set_fetch_by_score(
         CACHE_NAME,
         "sorted_set_name",
-        SortOrder::Ascending,
+        SortedSetOrder::Ascending,
     ).await? {
         SortedSetFetch::Hit { elements } => println!("Elements fetched by score from sorted set: {:?}", elements.into_strings()),
         SortedSetFetch::Miss => println!("Cache not found"),

@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use momento::cache::{
-    IntoSortedSetElements,
-    SortOrder::{Ascending, Descending},
-    SortedSetElement, SortedSetFetch, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest,
+    IntoSortedSetElements, SortedSetElement, SortedSetFetch, SortedSetFetchByRankRequest,
+    SortedSetFetchByScoreRequest,
+    SortedSetOrder::{Ascending, Descending},
 };
 use momento::{CacheClient, MomentoErrorCode, MomentoResult};
 use uuid::Uuid;

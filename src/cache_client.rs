@@ -9,8 +9,8 @@ use tonic::transport::Channel;
 use crate::cache::{
     CreateCache, CreateCacheRequest, DeleteCache, DeleteCacheRequest, FlushCache,
     FlushCacheRequest, Get, GetRequest, IntoSortedSetElements, ListCaches, ListCachesRequest,
-    MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetRequest, SortOrder,
-    SortedSetFetch, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetPutElement,
+    MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetRequest, SortedSetFetch,
+    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement,
     SortedSetPutElementRequest, SortedSetPutElements, SortedSetPutElementsRequest,
 };
 use crate::config::configuration::Configuration;
@@ -428,7 +428,7 @@ impl CacheClient {
     ///
     /// * `cache_name` - The name of the cache containing the sorted set.
     /// * `sorted_set_name` - The name of the sorted set to add an element to.
-    /// * `order` - The order to sort the elements by. [SortOrder::Ascending] or [SortOrder::Descending].
+    /// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
     /// * `start_rank` - The rank of the first element to fetch. Defaults to 0. This rank is
     /// inclusive, i.e. the element at this rank will be fetched.
     /// * `end_rank` - The rank of the last element to fetch. This rank is exclusive, i.e. the
@@ -442,7 +442,7 @@ impl CacheClient {
     /// # use momento::MomentoResult;
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder;
+    /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder;
     /// use momento::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let sorted_set_name = "sorted_set";
@@ -450,7 +450,7 @@ impl CacheClient {
     /// let fetch_response = cache_client.sorted_set_fetch_by_rank(
     ///     cache_name,
     ///     sorted_set_name,
-    ///     SortOrder::Ascending,
+    ///     SortedSetOrder::Ascending,
     ///     None,
     ///     None
     /// ).await?;
@@ -477,7 +477,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         sorted_set_name: impl IntoBytes,
-        order: SortOrder,
+        order: SortedSetOrder,
         start_rank: Option<i32>,
         end_rank: Option<i32>,
     ) -> MomentoResult<SortedSetFetch> {
@@ -499,7 +499,7 @@ impl CacheClient {
     ///
     /// * `cache_name` - The name of the cache containing the sorted set.
     /// * `sorted_set_name` - The name of the sorted set to add an element to.
-    /// * `order` - The order to sort the elements by. [SortOrder::Ascending] or [SortOrder::Descending].
+    /// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
     ///
     /// # Optional Arguments
     /// If you use [send_request](CacheClient::send_request) to fetch elements using a
@@ -521,7 +521,7 @@ impl CacheClient {
     /// # use momento::MomentoResult;
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder;
+    /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder;
     /// use momento::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let sorted_set_name = "sorted_set";
@@ -529,7 +529,7 @@ impl CacheClient {
     /// let fetch_response = cache_client.sorted_set_fetch_by_score(
     ///     cache_name,
     ///     sorted_set_name,
-    ///     SortOrder::Ascending
+    ///     SortedSetOrder::Ascending
     /// ).await?;
     ///
     /// match fetch_response {
@@ -555,7 +555,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         sorted_set_name: impl IntoBytes,
-        order: SortOrder,
+        order: SortedSetOrder,
     ) -> MomentoResult<SortedSetFetch> {
         let request = SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name).order(order);
         request.send(self).await

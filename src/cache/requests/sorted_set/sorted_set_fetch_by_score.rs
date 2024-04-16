@@ -2,8 +2,8 @@ use momento_protos::cache_client::sorted_set_fetch_request::by_score::Score;
 use momento_protos::cache_client::sorted_set_fetch_request::{by_score, ByScore, Range};
 use momento_protos::cache_client::{SortedSetFetchRequest, Unbounded};
 
-use crate::cache::requests::sorted_set::sorted_set_fetch_by_rank::SortOrder;
-use crate::cache::requests::sorted_set::sorted_set_fetch_by_rank::SortOrder::Ascending;
+use crate::cache::requests::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder;
+use crate::cache::requests::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder::Ascending;
 use crate::cache::requests::sorted_set::sorted_set_fetch_response::SortedSetFetch;
 use crate::cache::requests::MomentoRequest;
 use crate::simple_cache_client::prep_request_with_timeout;
@@ -18,7 +18,7 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 ///
 /// # Optional Arguments
 ///
-/// * `order` - The order to sort the elements by. [SortOrder::Ascending] or [SortOrder::Descending].
+/// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
 /// Defaults to Ascending.
 /// * `min_score` - The minimum score (inclusive) of the elements to fetch. Defaults to negative
 /// infinity.
@@ -36,7 +36,7 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// # use std::convert::TryInto;
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder;
+/// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder;
 /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
 /// use momento::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
@@ -49,7 +49,7 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// ).await?;
 ///
 /// let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name)
-///     .order(SortOrder::Ascending)
+///     .order(SortedSetOrder::Ascending)
 ///     .min_score(2.0)
 ///     .max_score(3.0);
 ///
@@ -67,7 +67,7 @@ pub struct SortedSetFetchByScoreRequest<S: IntoBytes> {
     sorted_set_name: S,
     min_score: Option<f64>,
     max_score: Option<f64>,
-    order: SortOrder,
+    order: SortedSetOrder,
     offset: Option<u32>,
     count: Option<i32>,
 }
@@ -98,7 +98,7 @@ impl<S: IntoBytes> SortedSetFetchByScoreRequest<S> {
     }
 
     /// Set the order of the request.
-    pub fn order(mut self, order: SortOrder) -> Self {
+    pub fn order(mut self, order: SortedSetOrder) -> Self {
         self.order = order;
         self
     }

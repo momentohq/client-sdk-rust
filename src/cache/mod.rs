@@ -14,7 +14,9 @@ pub use requests::scalar::set::{Set, SetRequest};
 
 pub use requests::set::set_add_elements::{SetAddElements, SetAddElementsRequest};
 
-pub use requests::sorted_set::sorted_set_fetch_by_rank::{SortOrder, SortedSetFetchByRankRequest};
+pub use requests::sorted_set::sorted_set_fetch_by_rank::{
+    SortedSetFetchByRankRequest, SortedSetOrder,
+};
 pub use requests::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
 pub use requests::sorted_set::sorted_set_fetch_response::{SortedSetElements, SortedSetFetch};
 pub use requests::sorted_set::sorted_set_put_element::{
