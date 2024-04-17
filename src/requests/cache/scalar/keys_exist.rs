@@ -1,0 +1,147 @@
+use std::collections::HashMap;
+
+use crate::requests::cache::MomentoRequest;
+use crate::simple_cache_client::prep_request_with_timeout;
+use crate::utils::parse_string;
+use crate::{CacheClient, IntoBytes, MomentoResult};
+
+/// Request to check if the provided keys exist in the cache.
+/// Returns a list of booleans indicating whether each given key was found in the cache.
+///
+/// # Arguments
+/// * `cache_name` - name of cache
+/// * `keys` - list of keys to look up
+///
+/// # Examples
+/// Assumes that a CacheClient named `cache_client` has been created and is available.
+///
+/// You can receive the results as a `HashMap<String, bool>`:
+/// ```
+/// # fn main() -> anyhow::Result<()> {
+/// # use momento_test_util::create_doctest_cache_client;
+/// # tokio_test::block_on(async {
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
+/// use momento::requests::cache::scalar::keys_exist::KeysExist;
+/// use momento::requests::cache::scalar::keys_exist::KeysExistRequest;
+/// use std::collections::HashMap;
+///
+/// let request = KeysExistRequest::new(
+///     cache_name,
+///     vec!["key1", "key2", "key3"]
+/// );
+///
+/// let result_map: HashMap<String, bool> = cache_client.send_request(request).await?.into();
+/// println!("Expecting all keys to exist: {:#?}", result_map);
+/// # Ok(())
+/// # })
+/// # }
+/// ```
+///
+/// Or you can receive the results as a `Vec<bool>`:
+/// ```
+/// # fn main() -> anyhow::Result<()> {
+/// # use momento_test_util::create_doctest_cache_client;
+/// # tokio_test::block_on(async {
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
+/// use momento::requests::cache::scalar::keys_exist::KeysExist;
+/// use momento::requests::cache::scalar::keys_exist::KeysExistRequest;
+/// use std::collections::HashMap;
+///
+/// let request = KeysExistRequest::new(
+///     cache_name,
+///     vec!["key1", "key2", "key3"]
+/// );
+///
+/// let result_list: Vec<bool> = cache_client.send_request(request).await?.into();
+/// println!("Expecting all keys to exist: {:#?}", result_list);
+/// # Ok(())
+/// # })
+/// # }
+/// ```
+pub struct KeysExistRequest<K: IntoBytes> {
+    cache_name: String,
+    keys: Vec<K>,
+}
+
+impl<K: IntoBytes> KeysExistRequest<K> {
+    pub fn new(cache_name: impl Into<String>, keys: Vec<K>) -> Self {
+        Self {
+            cache_name: cache_name.into(),
+            keys,
+        }
+    }
+}
+
+impl<K: IntoBytes> MomentoRequest for KeysExistRequest<K> {
+    type Response = KeysExist;
+
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<KeysExist> {
+        // consume self.keys once to convert all keys to bytes
+        let byte_keys: Vec<Vec<u8>> = self.keys.into_iter().map(|key| key.into_bytes()).collect();
+
+        // convert keys to strings for the response exists_dictionary because HashMap<IntoBytes, bool> is not allowed
+        let string_keys: Vec<String> = byte_keys
+            .iter()
+            .map(|key| parse_string(key.clone()))
+            .collect::<MomentoResult<Vec<String>>>()?;
+
+        let request = prep_request_with_timeout(
+            &self.cache_name,
+            cache_client.configuration.deadline_millis(),
+            momento_protos::cache_client::KeysExistRequest {
+                cache_keys: byte_keys,
+            },
+        )?;
+
+        let response = cache_client
+            .data_client
+            .clone()
+            .keys_exist(request)
+            .await?
+            .into_inner();
+
+        Ok(KeysExist {
+            exists: response.exists.clone(),
+            exists_dictionary: string_keys
+                .into_iter()
+                .zip(response.exists.clone())
+                .collect(),
+        })
+    }
+}
+
+/// Response for a keys exist operation.
+///
+/// You can use `into()` to convert a `KeysExist` response into a `Vec<bool>` or a `HashMap<String, bool>`.
+/// ```
+/// # fn main() -> anyhow::Result<()> {
+/// # use momento_test_util::create_doctest_cache_client;
+/// # tokio_test::block_on(async {
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
+/// use momento::requests::cache::scalar::keys_exist::KeysExist;
+/// use std::collections::HashMap;
+///
+/// let result_list: Vec<bool> = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?.into();
+///
+/// let result_map: HashMap<String, bool> = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?.into();
+/// # Ok(())
+/// # })
+/// # }
+/// ```
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct KeysExist {
+    exists: Vec<bool>,
+    exists_dictionary: HashMap<String, bool>,
+}
+
+impl From<KeysExist> for Vec<bool> {
+    fn from(response: KeysExist) -> Self {
+        response.exists
+    }
+}
+
+impl From<KeysExist> for HashMap<String, bool> {
+    fn from(response: KeysExist) -> Self {
+        response.exists_dictionary
+    }
+}

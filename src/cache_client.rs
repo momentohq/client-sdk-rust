@@ -14,6 +14,8 @@ use crate::requests::cache::create_cache::{CreateCache, CreateCacheRequest};
 use crate::requests::cache::delete_cache::{DeleteCache, DeleteCacheRequest};
 use crate::requests::cache::flush_cache::{FlushCache, FlushCacheRequest};
 use crate::requests::cache::list_caches::{ListCaches, ListCachesRequest};
+use crate::requests::cache::scalar::key_exists::{KeyExists, KeyExistsRequest};
+use crate::requests::cache::scalar::keys_exist::{KeysExist, KeysExistRequest};
 use crate::requests::cache::set::set_add_elements::{SetAddElements, SetAddElementsRequest};
 use crate::requests::cache::sorted_set::sorted_set_fetch_by_rank::{
     SortOrder, SortedSetFetchByRankRequest,
@@ -549,6 +551,79 @@ impl CacheClient {
         order: SortOrder,
     ) -> MomentoResult<SortedSetFetch> {
         let request = SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name).order(order);
+        request.send(self).await
+    }
+
+    /// Check if the provided key exists in the cache
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `key` - key to check for existence
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// use momento::requests::cache::scalar::key_exists::KeyExists;
+    ///
+    /// let result = cache_client.key_exists(&cache_name, "key").await?;
+    /// if result.exists {
+    ///     println!("Key exists!");
+    /// } else {
+    ///     println!("Key does not exist!");
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [KeyExistsRequest].
+    pub async fn key_exists(
+        &self,
+        cache_name: impl Into<String>,
+        key: impl IntoBytes,
+    ) -> MomentoResult<KeyExists> {
+        let request = KeyExistsRequest::new(cache_name, key);
+        request.send(self).await
+    }
+
+    /// Check if the provided keys exist in the cache.
+    /// Returns a list of booleans indicating whether each given key was found in the cache.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `keys` - list of keys to check for existence
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// use momento::requests::cache::scalar::keys_exist::KeysExist;
+    /// use std::collections::HashMap;
+    ///
+    /// // Receive results as a HashMap
+    /// let result_map: HashMap<String, bool> = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?.into();
+    /// println!("Expecting all keys to exist: {:#?}", result_map);
+    ///
+    /// // Or receive results as a Vec
+    /// let result_list: Vec<bool> = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?.into();
+    /// println!("Expecting all keys to exist: {:#?}", result_list);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [KeysExistRequest].
+    pub async fn keys_exist(
+        &self,
+        cache_name: impl Into<String>,
+        keys: Vec<impl IntoBytes>,
+    ) -> MomentoResult<KeysExist> {
+        let request = KeysExistRequest::new(cache_name, keys);
         request.send(self).await
     }
 

@@ -7,6 +7,7 @@ pub mod flush_cache;
 pub mod list_caches;
 
 pub mod basic;
+pub mod scalar;
 pub mod set;
 pub mod sorted_set;
 

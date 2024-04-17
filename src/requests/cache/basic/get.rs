@@ -1,7 +1,7 @@
 use crate::cache_client::CacheClient;
 use crate::requests::cache::MomentoRequest;
 use crate::requests::MomentoErrorCode;
-use crate::simple_cache_client::prep_request;
+use crate::simple_cache_client::prep_request_with_timeout;
 use crate::utils::parse_string;
 use crate::{IntoBytes, MomentoError, MomentoResult};
 use momento_protos::cache_client::ECacheResult;
@@ -58,8 +58,9 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
     type Response = Get;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<Get> {
-        let request = prep_request(
+        let request = prep_request_with_timeout(
             &self.cache_name,
+            cache_client.configuration.deadline_millis(),
             momento_protos::cache_client::GetRequest {
                 cache_key: self.key.into_bytes(),
             },
