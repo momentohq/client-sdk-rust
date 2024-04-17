@@ -5,8 +5,7 @@ use momento_protos::cache_client::sorted_set_fetch_response::SortedSet;
 use momento_protos::cache_client::SortedSetFetchResponse;
 
 use crate::{
-    requests::{ErrorSource, MomentoError, MomentoErrorCode},
-    MomentoResult,
+    MomentoResult, {ErrorSource, MomentoError, MomentoErrorCode},
 };
 
 #[derive(Debug, PartialEq)]

@@ -1,8 +1,8 @@
 use momento_protos::control_client;
 use tonic::Request;
 
-use crate::requests::cache::MomentoRequest;
-use crate::requests::status_to_error;
+use crate::cache::requests::MomentoRequest;
+use crate::status_to_error;
 use crate::{utils, CacheClient, MomentoResult};
 
 /// Request to create a cache.
@@ -17,8 +17,7 @@ use crate::{utils, CacheClient, MomentoResult};
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::requests::cache::create_cache::CreateCache;
-/// use momento::requests::cache::create_cache::CreateCacheRequest;
+/// use momento::cache::{CreateCache, CreateCacheRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
 /// let create_cache_request = CreateCacheRequest::new(&cache_name);

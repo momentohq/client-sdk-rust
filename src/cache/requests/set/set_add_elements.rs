@@ -1,7 +1,7 @@
 use momento_protos::cache_client::SetUnionRequest;
 
+use crate::cache::requests::MomentoRequest;
 use crate::cache_client::CacheClient;
-use crate::requests::cache::MomentoRequest;
 use crate::simple_cache_client::prep_request_with_timeout;
 use crate::{CollectionTtl, IntoBytes, MomentoResult};
 
@@ -24,8 +24,7 @@ use crate::{CollectionTtl, IntoBytes, MomentoResult};
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use momento::CollectionTtl;
-/// use momento::requests::cache::set::set_add_elements::SetAddElements;
-/// use momento::requests::cache::set::set_add_elements::SetAddElementsRequest;
+/// use momento::cache::{SetAddElements, SetAddElementsRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let set_name = "set";
 ///

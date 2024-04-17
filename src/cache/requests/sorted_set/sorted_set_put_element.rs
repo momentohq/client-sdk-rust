@@ -1,6 +1,6 @@
 use momento_protos::cache_client::{SortedSetElement, SortedSetPutRequest};
 
-use crate::requests::cache::MomentoRequest;
+use crate::cache::requests::MomentoRequest;
 use crate::simple_cache_client::prep_request_with_timeout;
 use crate::{CacheClient, CollectionTtl, IntoBytes, MomentoResult};
 
@@ -25,8 +25,7 @@ use crate::{CacheClient, CollectionTtl, IntoBytes, MomentoResult};
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use momento::CollectionTtl;
-/// use momento::requests::cache::sorted_set::sorted_set_put_element::SortedSetPutElement;
-/// use momento::requests::cache::sorted_set::sorted_set_put_element::SortedSetPutElementRequest;
+/// use momento::cache::{SortedSetPutElement, SortedSetPutElementRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
 ///

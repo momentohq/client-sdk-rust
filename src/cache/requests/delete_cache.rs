@@ -1,7 +1,7 @@
 use momento_protos::control_client;
 use tonic::Request;
 
-use crate::requests::cache::MomentoRequest;
+use crate::cache::requests::MomentoRequest;
 use crate::{utils, CacheClient, MomentoResult};
 
 /// Request to delete a cache
@@ -16,9 +16,8 @@ use crate::{utils, CacheClient, MomentoResult};
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::requests::cache::delete_cache::DeleteCache;
-/// use momento::requests::cache::delete_cache::DeleteCacheRequest;
-/// use momento::requests::MomentoErrorCode;
+/// use momento::cache::{DeleteCache, DeleteCacheRequest};
+/// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
 /// let delete_cache_request = DeleteCacheRequest::new(&cache_name);

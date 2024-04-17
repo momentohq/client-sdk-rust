@@ -1,13 +1,13 @@
 use momento_protos::cache_client::sorted_set_fetch_request::{by_index, ByIndex, Range};
 use momento_protos::cache_client::{SortedSetFetchRequest, Unbounded};
 
-use crate::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
-use crate::requests::cache::MomentoRequest;
+use crate::cache::requests::sorted_set::sorted_set_fetch_response::SortedSetFetch;
+use crate::cache::requests::MomentoRequest;
 use crate::simple_cache_client::prep_request_with_timeout;
 use crate::{CacheClient, IntoBytes, MomentoResult};
 
 #[repr(i32)]
-pub enum SortOrder {
+pub enum SortedSetOrder {
     Ascending = 0,
     Descending = 1,
 }
@@ -21,7 +21,7 @@ pub enum SortOrder {
 ///
 /// # Optional Arguments
 ///
-/// * `order` - The order to sort the elements by. [SortOrder::Ascending] or [SortOrder::Descending].
+/// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
 /// Defaults to Ascending.
 /// * `start_rank` - The rank of the first element to fetch. Defaults to 0. This rank is
 /// inclusive, i.e. the element at this rank will be fetched.
@@ -36,9 +36,7 @@ pub enum SortOrder {
 /// # use std::convert::TryInto;
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder;
-/// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetFetchByRankRequest;
-/// use momento::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
+/// use momento::cache::{SortedSetOrder, SortedSetFetch, SortedSetFetchByRankRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
 ///
@@ -49,7 +47,7 @@ pub enum SortOrder {
 /// ).await?;
 ///
 /// let fetch_request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name)
-///     .order(SortOrder::Ascending)
+///     .order(SortedSetOrder::Ascending)
 ///     .start_rank(1)
 ///     .end_rank(3);
 ///
@@ -67,7 +65,7 @@ pub struct SortedSetFetchByRankRequest<S: IntoBytes> {
     sorted_set_name: S,
     start_rank: Option<i32>,
     end_rank: Option<i32>,
-    order: SortOrder,
+    order: SortedSetOrder,
 }
 
 impl<S: IntoBytes> SortedSetFetchByRankRequest<S> {
@@ -77,7 +75,7 @@ impl<S: IntoBytes> SortedSetFetchByRankRequest<S> {
             sorted_set_name,
             start_rank: None,
             end_rank: None,
-            order: SortOrder::Ascending,
+            order: SortedSetOrder::Ascending,
         }
     }
 
@@ -94,7 +92,7 @@ impl<S: IntoBytes> SortedSetFetchByRankRequest<S> {
     }
 
     /// Set the order of the request.
-    pub fn order(mut self, order: SortOrder) -> Self {
+    pub fn order(mut self, order: SortedSetOrder) -> Self {
         self.order = order;
         self
     }

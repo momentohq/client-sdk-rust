@@ -6,29 +6,16 @@ use momento_protos::control_client::scs_control_client::ScsControlClient;
 use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
 
+use crate::cache::{
+    CreateCache, CreateCacheRequest, DeleteCache, DeleteCacheRequest, FlushCache,
+    FlushCacheRequest, Get, GetRequest, IntoSortedSetElements, KeyExists, KeyExistsRequest,
+    KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, MomentoRequest, Set,
+    SetAddElements, SetAddElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
+    SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
+    SortedSetPutElements, SortedSetPutElementsRequest,
+};
 use crate::config::configuration::Configuration;
 use crate::grpc::header_interceptor::HeaderInterceptor;
-use crate::requests::cache::basic::get::{Get, GetRequest};
-use crate::requests::cache::basic::set::{Set, SetRequest};
-use crate::requests::cache::create_cache::{CreateCache, CreateCacheRequest};
-use crate::requests::cache::delete_cache::{DeleteCache, DeleteCacheRequest};
-use crate::requests::cache::flush_cache::{FlushCache, FlushCacheRequest};
-use crate::requests::cache::list_caches::{ListCaches, ListCachesRequest};
-use crate::requests::cache::scalar::key_exists::{KeyExists, KeyExistsRequest};
-use crate::requests::cache::scalar::keys_exist::{KeysExist, KeysExistRequest};
-use crate::requests::cache::set::set_add_elements::{SetAddElements, SetAddElementsRequest};
-use crate::requests::cache::sorted_set::sorted_set_fetch_by_rank::{
-    SortOrder, SortedSetFetchByRankRequest,
-};
-use crate::requests::cache::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
-use crate::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
-use crate::requests::cache::sorted_set::sorted_set_put_element::{
-    SortedSetPutElement, SortedSetPutElementRequest,
-};
-use crate::requests::cache::sorted_set::sorted_set_put_elements::{
-    IntoSortedSetElements, SortedSetPutElements, SortedSetPutElementsRequest,
-};
-use crate::requests::cache::MomentoRequest;
 
 use crate::cache_client_builder::{CacheClientBuilder, NeedsDefaultTtl};
 use crate::{utils, IntoBytes, MomentoResult};
@@ -62,7 +49,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::create_cache::CreateCache;
+    /// use momento::cache::CreateCache;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.create_cache(&cache_name).await? {
@@ -91,8 +78,8 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::delete_cache::DeleteCache;
-    /// use momento::requests::MomentoErrorCode;
+    /// use momento::cache::DeleteCache;
+    /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.delete_cache(&cache_name).await {
@@ -121,7 +108,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::list_caches::ListCaches;
+    /// use momento::cache::ListCaches;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.list_caches().await {
@@ -150,8 +137,8 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::flush_cache::FlushCache;
-    /// use momento::requests::MomentoErrorCode;
+    /// use momento::cache::FlushCache;
+    /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.flush_cache(cache_name.to_string()).await {
@@ -195,8 +182,8 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::requests::cache::basic::set::Set;
-    /// use momento::requests::MomentoErrorCode;
+    /// use momento::cache::Set;
+    /// use momento::MomentoErrorCode;
     ///
     /// match cache_client.set(&cache_name, "k1", "v1").await {
     ///     Ok(_) => println!("Set successful"),
@@ -237,7 +224,7 @@ impl CacheClient {
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use std::convert::TryInto;
-    /// use momento::requests::cache::basic::get::Get;
+    /// use momento::cache::Get;
     /// # cache_client.set(&cache_name, "key", "value").await?;
     ///
     /// let item: String = match(cache_client.get(&cache_name, "key").await?) {
@@ -279,8 +266,8 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::set::set_add_elements::SetAddElements;
-    /// use momento::requests::MomentoErrorCode;
+    /// use momento::cache::SetAddElements;
+    /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let set_name = "set";
     ///
@@ -332,7 +319,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::sorted_set::sorted_set_put_element::SortedSetPutElement;
+    /// use momento::cache::SortedSetPutElement;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let sorted_set_name = "sorted_set";
     ///
@@ -385,7 +372,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::sorted_set::sorted_set_put_elements::SortedSetPutElements;
+    /// use momento::cache::{SortedSetPutElements};
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let sorted_set_name = "sorted_set";
     ///
@@ -421,7 +408,7 @@ impl CacheClient {
     ///
     /// * `cache_name` - The name of the cache containing the sorted set.
     /// * `sorted_set_name` - The name of the sorted set to add an element to.
-    /// * `order` - The order to sort the elements by. [SortOrder::Ascending] or [SortOrder::Descending].
+    /// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
     /// * `start_rank` - The rank of the first element to fetch. Defaults to 0. This rank is
     /// inclusive, i.e. the element at this rank will be fetched.
     /// * `end_rank` - The rank of the last element to fetch. This rank is exclusive, i.e. the
@@ -435,15 +422,14 @@ impl CacheClient {
     /// # use momento::MomentoResult;
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder;
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
+    /// use momento::cache::{SortedSetOrder, SortedSetFetch};
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let sorted_set_name = "sorted_set";
     ///
     /// let fetch_response = cache_client.sorted_set_fetch_by_rank(
     ///     cache_name,
     ///     sorted_set_name,
-    ///     SortOrder::Ascending,
+    ///     SortedSetOrder::Ascending,
     ///     None,
     ///     None
     /// ).await?;
@@ -470,7 +456,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         sorted_set_name: impl IntoBytes,
-        order: SortOrder,
+        order: SortedSetOrder,
         start_rank: Option<i32>,
         end_rank: Option<i32>,
     ) -> MomentoResult<SortedSetFetch> {
@@ -492,7 +478,7 @@ impl CacheClient {
     ///
     /// * `cache_name` - The name of the cache containing the sorted set.
     /// * `sorted_set_name` - The name of the sorted set to add an element to.
-    /// * `order` - The order to sort the elements by. [SortOrder::Ascending] or [SortOrder::Descending].
+    /// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
     ///
     /// # Optional Arguments
     /// If you use [send_request](CacheClient::send_request) to fetch elements using a
@@ -514,15 +500,14 @@ impl CacheClient {
     /// # use momento::MomentoResult;
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder;
-    /// use momento::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
+    /// use momento::cache::{SortedSetOrder, SortedSetFetch};
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let sorted_set_name = "sorted_set";
     ///
     /// let fetch_response = cache_client.sorted_set_fetch_by_score(
     ///     cache_name,
     ///     sorted_set_name,
-    ///     SortOrder::Ascending
+    ///     SortedSetOrder::Ascending
     /// ).await?;
     ///
     /// match fetch_response {
@@ -548,7 +533,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         sorted_set_name: impl IntoBytes,
-        order: SortOrder,
+        order: SortedSetOrder,
     ) -> MomentoResult<SortedSetFetch> {
         let request = SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name).order(order);
         request.send(self).await
@@ -567,7 +552,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::requests::cache::scalar::key_exists::KeyExists;
+    /// use momento::cache::KeyExists;
     ///
     /// let result = cache_client.key_exists(&cache_name, "key").await?;
     /// if result.exists {
@@ -603,7 +588,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::requests::cache::scalar::keys_exist::KeysExist;
+    /// use momento::cache::KeysExist;
     /// use std::collections::HashMap;
     ///
     /// // Receive results as a HashMap

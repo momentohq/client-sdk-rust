@@ -3,7 +3,7 @@ use std::{
     convert::{TryFrom, TryInto},
 };
 
-use crate::{requests::MomentoErrorCode, MomentoError};
+use crate::{MomentoError, MomentoErrorCode};
 
 use super::DictionaryPairs;
 

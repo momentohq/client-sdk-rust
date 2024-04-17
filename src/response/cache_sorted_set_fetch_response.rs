@@ -1,5 +1,5 @@
-use crate::requests::MomentoErrorCode;
-use crate::sorted_set::SortedSetElement;
+use crate::response::simple_cache_client_sorted_set::SortedSetElement;
+use crate::MomentoErrorCode;
 use crate::{ErrorSource, MomentoError};
 use core::convert::TryFrom;
 

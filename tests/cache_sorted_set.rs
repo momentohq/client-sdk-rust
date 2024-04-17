@@ -1,19 +1,12 @@
 use std::sync::Arc;
 
-use momento::requests::MomentoErrorCode;
-use momento::MomentoResult;
+use momento::cache::{
+    IntoSortedSetElements, SortedSetElement, SortedSetFetch, SortedSetFetchByRankRequest,
+    SortedSetFetchByScoreRequest,
+    SortedSetOrder::{Ascending, Descending},
+};
+use momento::{CacheClient, MomentoErrorCode, MomentoResult};
 use uuid::Uuid;
-
-use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortOrder::{
-    Ascending, Descending,
-};
-use momento::requests::cache::sorted_set::sorted_set_fetch_by_rank::SortedSetFetchByRankRequest;
-use momento::requests::cache::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
-use momento::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
-use momento::requests::cache::sorted_set::sorted_set_put_elements::{
-    IntoSortedSetElements, SortedSetElement,
-};
-use momento::CacheClient;
 
 use momento_test_util::CACHE_TEST_STATE;
 

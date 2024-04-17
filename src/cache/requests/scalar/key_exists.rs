@@ -1,4 +1,4 @@
-use crate::requests::cache::MomentoRequest;
+use crate::cache::MomentoRequest;
 use crate::simple_cache_client::prep_request_with_timeout;
 use crate::{CacheClient, IntoBytes, MomentoResult};
 
@@ -15,8 +15,7 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
-/// use momento::requests::cache::scalar::key_exists::KeyExists;
-/// use momento::requests::cache::scalar::key_exists::KeyExistsRequest;
+/// use momento::cache::{KeyExists, KeyExistsRequest};
 ///
 /// let request = KeyExistsRequest::new(
 ///     cache_name,
