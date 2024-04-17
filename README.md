@@ -28,8 +28,8 @@ The Momento Rust SDK package is available on `crates.io`: [momento](https://crat
 Here is a quickstart you can use in your own project:
 
 ```rust
+use momento::cache::Get;
 use momento::config::configurations::laptop;
-use momento::requests::cache::basic::get::Get;
 use momento::{CacheClient, CredentialProvider, MomentoError};
 use std::time::Duration;
 
@@ -59,7 +59,6 @@ pub async fn main() -> Result<(), MomentoError> {
             return Ok(()); // probably you'll do something else here
         }
     };
-
     println!("Successfully retrieved value: {}", value);
 
     Ok(())
