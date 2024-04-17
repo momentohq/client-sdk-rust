@@ -14,6 +14,8 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 ///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
+///
+/// You can receive the results as a `HashMap<String, bool>`:
 /// ```
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
@@ -28,9 +30,30 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 ///     vec!["key1", "key2", "key3"]
 /// );
 ///
-/// let result = cache_client.send_request(request).await?;
-/// let exists_map: HashMap<String, bool> = result.into();
-/// println!("Expecting all keys to exist: {:#?}", exists_map);
+/// let result_map: HashMap<String, bool> = cache_client.send_request(request).await?.into();
+/// println!("Expecting all keys to exist: {:#?}", result_map);
+/// # Ok(())
+/// # })
+/// # }
+/// ```
+///
+/// Or you can receive the results as a `Vec<bool>``:
+/// ```
+/// # fn main() -> anyhow::Result<()> {
+/// # use momento_test_util::create_doctest_cache_client;
+/// # tokio_test::block_on(async {
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
+/// use momento::requests::cache::scalar::keys_exist::KeysExist;
+/// use momento::requests::cache::scalar::keys_exist::KeysExistRequest;
+/// use std::collections::HashMap;
+///
+/// let request = KeysExistRequest::new(
+///     cache_name,
+///     vec!["key1", "key2", "key3"]
+/// );
+///
+/// let result_list: Vec<bool> = cache_client.send_request(request).await?.into();
+/// println!("Expecting all keys to exist: {:#?}", result_list);
 /// # Ok(())
 /// # })
 /// # }

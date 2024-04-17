@@ -606,9 +606,13 @@ impl CacheClient {
     /// use momento::requests::cache::scalar::keys_exist::KeysExist;
     /// use std::collections::HashMap;
     ///
-    /// let result = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?;
-    /// let exists_map: HashMap<String, bool> = result.into();
-    /// println!("Expecting all keys to exist: {:#?}", exists_map);
+    /// // Receive results as a HashMap
+    /// let result_map: HashMap<String, bool> = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?.into();
+    /// println!("Expecting all keys to exist: {:#?}", result_map);
+    ///
+    /// // Or receive results as a Vec
+    /// let result_list: Vec<bool> = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?.into();
+    /// println!("Expecting all keys to exist: {:#?}", result_list);
     /// # Ok(())
     /// # })
     /// # }
