@@ -1,7 +1,5 @@
 use crate::cache::requests::MomentoRequest;
 use crate::cache_client::CacheClient;
-use crate::requests::cache::MomentoRequest;
-use crate::requests::MomentoErrorCode;
 use crate::simple_cache_client::prep_request_with_timeout;
 use crate::utils::parse_string;
 use crate::MomentoErrorCode;

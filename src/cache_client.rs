@@ -8,34 +8,14 @@ use tonic::transport::Channel;
 
 use crate::cache::{
     CreateCache, CreateCacheRequest, DeleteCache, DeleteCacheRequest, FlushCache,
-    FlushCacheRequest, Get, GetRequest, IntoSortedSetElements, ListCaches, ListCachesRequest,
-    MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetRequest, SortedSetFetch,
-    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement,
-    SortedSetPutElementRequest, SortedSetPutElements, SortedSetPutElementsRequest,
+    FlushCacheRequest, Get, GetRequest, IntoSortedSetElements, KeyExists, KeyExistsRequest,
+    KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, MomentoRequest, Set,
+    SetAddElements, SetAddElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
+    SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
+    SortedSetPutElements, SortedSetPutElementsRequest,
 };
 use crate::config::configuration::Configuration;
 use crate::grpc::header_interceptor::HeaderInterceptor;
-use crate::requests::cache::basic::get::{Get, GetRequest};
-use crate::requests::cache::basic::set::{Set, SetRequest};
-use crate::requests::cache::create_cache::{CreateCache, CreateCacheRequest};
-use crate::requests::cache::delete_cache::{DeleteCache, DeleteCacheRequest};
-use crate::requests::cache::flush_cache::{FlushCache, FlushCacheRequest};
-use crate::requests::cache::list_caches::{ListCaches, ListCachesRequest};
-use crate::requests::cache::scalar::key_exists::{KeyExists, KeyExistsRequest};
-use crate::requests::cache::scalar::keys_exist::{KeysExist, KeysExistRequest};
-use crate::requests::cache::set::set_add_elements::{SetAddElements, SetAddElementsRequest};
-use crate::requests::cache::sorted_set::sorted_set_fetch_by_rank::{
-    SortOrder, SortedSetFetchByRankRequest,
-};
-use crate::requests::cache::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
-use crate::requests::cache::sorted_set::sorted_set_fetch_response::SortedSetFetch;
-use crate::requests::cache::sorted_set::sorted_set_put_element::{
-    SortedSetPutElement, SortedSetPutElementRequest,
-};
-use crate::requests::cache::sorted_set::sorted_set_put_elements::{
-    IntoSortedSetElements, SortedSetPutElements, SortedSetPutElementsRequest,
-};
-use crate::requests::cache::MomentoRequest;
 
 use crate::cache_client_builder::{CacheClientBuilder, NeedsDefaultTtl};
 use crate::{utils, IntoBytes, MomentoResult};
@@ -572,7 +552,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::requests::cache::scalar::key_exists::KeyExists;
+    /// use momento::cache::KeyExists;
     ///
     /// let result = cache_client.key_exists(&cache_name, "key").await?;
     /// if result.exists {
@@ -608,7 +588,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::requests::cache::scalar::keys_exist::KeysExist;
+    /// use momento::cache::KeysExist;
     /// use std::collections::HashMap;
     ///
     /// // Receive results as a HashMap

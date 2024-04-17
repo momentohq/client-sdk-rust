@@ -12,6 +12,8 @@ pub use requests::list_caches::{
 };
 
 pub use requests::scalar::get::{Get, GetRequest, GetValue};
+pub use requests::scalar::key_exists::{KeyExists, KeyExistsRequest};
+pub use requests::scalar::keys_exist::{KeysExist, KeysExistRequest};
 pub use requests::scalar::set::{Set, SetRequest};
 
 pub use requests::set::set_add_elements::{SetAddElements, SetAddElementsRequest};

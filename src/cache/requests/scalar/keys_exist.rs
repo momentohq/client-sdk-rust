@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::requests::cache::MomentoRequest;
+use crate::cache::MomentoRequest;
 use crate::simple_cache_client::prep_request_with_timeout;
 use crate::utils::parse_string;
 use crate::{CacheClient, IntoBytes, MomentoResult};
@@ -21,8 +21,7 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
-/// use momento::requests::cache::scalar::keys_exist::KeysExist;
-/// use momento::requests::cache::scalar::keys_exist::KeysExistRequest;
+/// use momento::cache::{KeysExist, KeysExistRequest};
 /// use std::collections::HashMap;
 ///
 /// let request = KeysExistRequest::new(
@@ -43,8 +42,7 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
-/// use momento::requests::cache::scalar::keys_exist::KeysExist;
-/// use momento::requests::cache::scalar::keys_exist::KeysExistRequest;
+/// use momento::cache::{KeysExist, KeysExistRequest};
 /// use std::collections::HashMap;
 ///
 /// let request = KeysExistRequest::new(
@@ -118,7 +116,7 @@ impl<K: IntoBytes> MomentoRequest for KeysExistRequest<K> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
-/// use momento::requests::cache::scalar::keys_exist::KeysExist;
+/// use momento::cache::KeysExist;
 /// use std::collections::HashMap;
 ///
 /// let result_list: Vec<bool> = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?.into();
