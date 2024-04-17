@@ -7,7 +7,34 @@ use crate::{
     MomentoError, MomentoErrorCode, MomentoResult,
 };
 
-/// TODO
+/// Return the type of the key in the cache.
+///
+/// # Arguments
+/// * `cache_name` - name of cache
+/// * `key` - the key for which type is requested
+///
+/// # Examples
+/// Assumes that a CacheClient named `cache_client` has been created and is available.
+/// ```
+/// # fn main() -> anyhow::Result<()> {
+/// # use momento_test_util::create_doctest_cache_client;
+/// # tokio_test::block_on(async {
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
+/// use std::convert::TryInto;
+/// use momento::cache::{ItemGetType, ItemType};
+/// # cache_client.set(&cache_name, "key1", "value").await?;
+///
+/// let request = momento::cache::ItemGetTypeRequest::new(&cache_name, "key1");
+///
+/// let item: ItemType = match(cache_client.send_request(request).await?) {
+///     ItemGetType::Hit { key_type } => key_type.try_into().expect("Expected an item type!"),
+///     ItemGetType::Miss => return Err(anyhow::Error::msg("cache miss"))
+/// };
+/// # assert_eq!(item, ItemType::Scalar);
+/// # Ok(())
+/// # })
+/// # }
+/// ```
 pub struct ItemGetTypeRequest<K: IntoBytes> {
     cache_name: String,
     key: K,
