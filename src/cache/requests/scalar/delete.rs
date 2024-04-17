@@ -1,6 +1,6 @@
 use crate::{
-    requests::cache::MomentoRequest, simple_cache_client::prep_request_with_timeout, CacheClient,
-    IntoBytes, MomentoResult,
+    cache::MomentoRequest, simple_cache_client::prep_request_with_timeout, CacheClient, IntoBytes,
+    MomentoResult,
 };
 
 /// Deletes an item in a Momento Cache

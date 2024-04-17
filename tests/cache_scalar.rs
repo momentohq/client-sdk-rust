@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 
-use momento::{MomentoErrorCode, MomentoResult};
+use momento::{
+    cache::{Delete, ItemGetType, ItemType},
+    MomentoErrorCode, MomentoResult,
+};
 use momento_test_util::CACHE_TEST_STATE;
 use uuid::Uuid;
 

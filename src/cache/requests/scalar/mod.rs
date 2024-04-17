@@ -1,3 +1,4 @@
+pub mod delete;
 pub mod get;
 pub mod increment;
 pub mod item_get_type;

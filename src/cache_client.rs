@@ -7,10 +7,11 @@ use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
 
 use crate::cache::{
-    CreateCache, CreateCacheRequest, DeleteCache, DeleteCacheRequest, FlushCache,
-    FlushCacheRequest, Get, GetRequest, IntoSortedSetElements, KeyExists, KeyExistsRequest,
-    KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, MomentoRequest, Set,
-    SetAddElements, SetAddElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
+    CreateCache, CreateCacheRequest, Delete, DeleteCache, DeleteCacheRequest, DeleteRequest,
+    FlushCache, FlushCacheRequest, Get, GetRequest, Increment, IncrementRequest,
+    IntoSortedSetElements, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist,
+    KeysExistRequest, ListCaches, ListCachesRequest, MomentoRequest, Set, SetAddElements,
+    SetAddElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
     SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
     SortedSetPutElements, SortedSetPutElementsRequest,
 };
