@@ -37,7 +37,7 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// # }
 /// ```
 ///
-/// Or you can receive the results as a `Vec<bool>``:
+/// Or you can receive the results as a `Vec<bool>`:
 /// ```
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
