@@ -33,10 +33,6 @@ use crate::{
 };
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 use crate::{utils::user_agent, MomentoResult};
-// use momento_protos::cache_client::sorted_set_fetch_request::{Order, Range};
-// use momento_protos::cache_client::sorted_set_fetch_response::found::Elements;
-// use momento_protos::cache_client::sorted_set_fetch_response::SortedSet;
-
 pub trait IntoBytes: Send {
     fn into_bytes(self) -> Vec<u8>;
 }
