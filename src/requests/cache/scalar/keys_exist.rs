@@ -21,6 +21,7 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// use momento::requests::cache::scalar::keys_exist::KeysExist;
 /// use momento::requests::cache::scalar::keys_exist::KeysExistRequest;
+/// use std::collections::HashMap;
 ///
 /// let request = KeysExistRequest::new(
 ///     cache_name,
@@ -28,10 +29,8 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// );
 ///
 /// let result = cache_client.send_request(request).await?;
-/// println!("Expecting all keys to exist:");
-/// for (key, exists) in result.exists_dictionary() {
-///    println!("Key: {}, Exists: {}", key, exists);
-/// }
+/// let exists_map: HashMap<String, bool> = result.into();
+/// println!("Expecting all keys to exist: {:#?}", exists_map);
 /// # Ok(())
 /// # })
 /// # }
@@ -106,36 +105,10 @@ impl<K: IntoBytes> MomentoRequest for KeysExistRequest<K> {
 /// # })
 /// # }
 /// ```
-///
-/// Or you can use the `exists()` or `exists_dictionary()` methods to get the results directly.
-/// ```
-/// # fn main() -> anyhow::Result<()> {
-/// # use momento_test_util::create_doctest_cache_client;
-/// # tokio_test::block_on(async {
-/// # let (cache_client, cache_name) = create_doctest_cache_client();
-/// use momento::requests::cache::scalar::keys_exist::KeysExist;
-///
-/// let result_list = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?.exists();
-///
-/// let result_map = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?.exists_dictionary();
-/// # Ok(())
-/// # })
-/// # }
-/// ```
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct KeysExist {
     exists: Vec<bool>,
     exists_dictionary: HashMap<String, bool>,
-}
-
-impl KeysExist {
-    pub fn exists(self) -> Vec<bool> {
-        self.exists
-    }
-
-    pub fn exists_dictionary(self) -> HashMap<String, bool> {
-        self.exists_dictionary
-    }
 }
 
 impl From<KeysExist> for Vec<bool> {
