@@ -1,5 +1,5 @@
 use crate::cache::MomentoRequest;
-use crate::simple_cache_client::prep_request_with_timeout;
+use crate::utils::prep_request_with_timeout;
 use crate::{CacheClient, IntoBytes, MomentoResult};
 
 /// Request to check if a key exists in a cache.

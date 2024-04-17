@@ -2,6 +2,7 @@ use thiserror::Error;
 use tonic::{
     codegen::http::uri::InvalidUri,
     transport::{Channel, ClientTlsConfig, Uri},
+    Request,
 };
 
 use crate::MomentoResult;
@@ -13,6 +14,35 @@ use std::convert::TryFrom;
 use std::time::{self, Duration};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+pub(crate) fn request_meta_data<T>(
+    request: &mut tonic::Request<T>,
+    cache_name: &str,
+) -> MomentoResult<()> {
+    tonic::metadata::AsciiMetadataValue::try_from(cache_name)
+        .map(|value| {
+            request.metadata_mut().append("cache", value);
+        })
+        .map_err(|e| MomentoError {
+            message: format!("Could not treat cache name as a header value: {e}"),
+            error_code: MomentoErrorCode::InvalidArgumentError,
+            inner_error: Some(crate::ErrorSource::Unknown(Box::new(e))),
+            details: None,
+        })
+}
+
+pub(crate) fn prep_request_with_timeout<R>(
+    cache_name: &str,
+    timeout: Duration,
+    request: R,
+) -> MomentoResult<Request<R>> {
+    is_cache_name_valid(cache_name)?;
+
+    let mut request = Request::new(request);
+    request_meta_data(&mut request, cache_name)?;
+    request.set_timeout(timeout);
+    Ok(request)
+}
 
 pub(crate) fn is_ttl_valid(ttl: Duration) -> MomentoResult<()> {
     let max_ttl = Duration::from_millis(u64::MAX);
