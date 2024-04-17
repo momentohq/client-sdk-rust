@@ -23,10 +23,9 @@ use crate::{
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
-/// use momento::requests::cache::scalar::increment::Increment;
-/// use momento::requests::cache::scalar::increment::IncrementRequest;
+/// use momento::cache::{Increment, IncrementRequest};
 /// use std::time::Duration;
-/// use momento::requests::MomentoErrorCode;
+/// use momento::MomentoErrorCode;
 ///
 /// let increment_request = IncrementRequest::new(
 ///     &cache_name,

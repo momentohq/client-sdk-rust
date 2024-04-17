@@ -261,8 +261,8 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::requests::cache::basic::delete::Delete;
-    /// use momento::requests::MomentoErrorCode;
+    /// use momento::cache::Delete;
+    /// use momento::MomentoErrorCode;
     ///
     /// match cache_client.delete(&cache_name, "key").await {
     ///     Ok(_) => println!("Delete successful"),
@@ -672,8 +672,8 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::requests::cache::scalar::increment::Increment;
-    /// use momento::requests::MomentoErrorCode;
+    /// use momento::cache::Increment;
+    /// use momento::MomentoErrorCode;
     ///
     /// match cache_client.increment(&cache_name, "key", 1).await {
     ///     Ok(r) => println!("Incremented value: {}", r.value),
@@ -713,8 +713,7 @@ impl CacheClient {
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use std::convert::TryInto;
-    /// use momento::requests::cache::scalar::item_get_type::ItemGetType;
-    /// use momento::requests::cache::scalar::item_get_type::ItemType;
+    /// use momento::cache::{ItemGetType, ItemType};
     /// # cache_client.set(&cache_name, "key1", "value").await?;
     ///
     /// let item: ItemType = match(cache_client.item_get_type(&cache_name, "key1").await?) {

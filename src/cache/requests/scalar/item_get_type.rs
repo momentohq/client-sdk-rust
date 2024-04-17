@@ -81,8 +81,7 @@ pub enum ItemType {
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::requests::cache::scalar::item_get_type::ItemGetType;
-/// use momento::requests::cache::scalar::item_get_type::ItemType;
+/// # use momento::cache::{ItemGetType, ItemType};
 /// use std::convert::TryInto;
 /// # let response = ItemGetType::Hit { key_type: ItemType::Scalar };
 /// let item: ItemType = match response {
@@ -98,8 +97,7 @@ pub enum ItemType {
 /// this is what you're after:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::requests::cache::scalar::item_get_type::ItemGetType;
-/// use momento::requests::cache::scalar::item_get_type::ItemType;
+/// # use momento::cache::{ItemGetType, ItemType};
 /// use std::convert::TryInto;
 /// # let response = ItemGetType::Hit { key_type: ItemType::Scalar };
 /// let itemType: MomentoResult<ItemType> = response.try_into();

@@ -17,9 +17,8 @@ use crate::{
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
-/// use momento::requests::cache::basic::delete::Delete;
-/// use momento::requests::cache::basic::delete::DeleteRequest;
-/// use momento::requests::MomentoErrorCode;
+/// use momento::cache::{Delete, DeleteRequest};
+/// use momento::MomentoErrorCode;
 ///
 /// let delete_request = DeleteRequest::new(
 ///     &cache_name,
