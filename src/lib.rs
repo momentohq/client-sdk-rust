@@ -21,6 +21,7 @@ mod utils;
 
 pub use self::errors::*;
 pub use crate::credential_provider::CredentialProvider;
+pub use crate::response::simple_cache_client_sorted_set;
 pub use crate::simple_cache_client::{
     CollectionTtl, Fields, IntoBytes, SimpleCacheClient, SimpleCacheClientBuilder,
 };

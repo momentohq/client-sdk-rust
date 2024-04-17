@@ -1,7 +1,7 @@
+use crate::response::simple_cache_client_sorted_set::SortedSetElement;
 use crate::MomentoErrorCode;
 use crate::{ErrorSource, MomentoError};
 use core::convert::TryFrom;
-use momento_protos::cache_client::SortedSetElement;
 
 #[derive(Debug)]
 #[non_exhaustive]

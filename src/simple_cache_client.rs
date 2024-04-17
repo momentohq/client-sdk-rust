@@ -17,6 +17,7 @@ use std::time::{Duration, UNIX_EPOCH};
 use tonic::{codegen::InterceptedService, transport::Channel, Request};
 
 use crate::credential_provider::CredentialProvider;
+use crate::response::simple_cache_client_sorted_set::{Elements, Order, Range, SortedSet};
 use crate::response::{
     DictionaryFetch, DictionaryGet, DictionaryPairs, Get, GetValue, ListCacheEntry, MomentoCache,
     MomentoCreateSigningKeyResponse, MomentoDeleteResponse, MomentoDictionaryDeleteResponse,
@@ -32,9 +33,9 @@ use crate::{
 };
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 use crate::{utils::user_agent, MomentoResult};
-use momento_protos::cache_client::sorted_set_fetch_request::{Order, Range};
-use momento_protos::cache_client::sorted_set_fetch_response::found::Elements;
-use momento_protos::cache_client::sorted_set_fetch_response::SortedSet;
+// use momento_protos::cache_client::sorted_set_fetch_request::{Order, Range};
+// use momento_protos::cache_client::sorted_set_fetch_response::found::Elements;
+// use momento_protos::cache_client::sorted_set_fetch_response::SortedSet;
 
 pub trait IntoBytes: Send {
     fn into_bytes(self) -> Vec<u8>;
@@ -1986,7 +1987,7 @@ impl SimpleCacheClient {
     /// use std::convert::TryInto;
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
-    /// use momento::sorted_set::{Elements, Order, SortedSetElement};
+    /// use momento::response::simple_cache_client_sorted_set::{Elements, Order, SortedSetElement};
     ///
     /// let ttl = CollectionTtl::default();
     /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
@@ -2164,7 +2165,7 @@ impl SimpleCacheClient {
     /// use std::convert::TryInto;
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
-    /// use momento::sorted_set::{Elements, Order, SortedSetElement};
+    /// use momento::response::simple_cache_client_sorted_set::{Elements, Order, SortedSetElement};
     ///
     /// let ttl = CollectionTtl::default();
     /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
@@ -2352,7 +2353,7 @@ impl SimpleCacheClient {
     /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::SimpleCacheClientBuilder;
-    /// use momento::sorted_set::Order;
+    /// use momento::response::simple_cache_client_sorted_set::Order;
     ///
     /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?
     ///     .build();
@@ -2568,7 +2569,7 @@ impl SimpleCacheClient {
     /// # momento_test_util::doctest(|cache_name, credential_provider| async move {
     /// use std::time::Duration;
     /// use momento::{CollectionTtl, SimpleCacheClientBuilder};
-    /// use momento::sorted_set::SortedSetElement;
+    /// use momento::response::simple_cache_client_sorted_set::SortedSetElement;
     ///
     /// let ttl = CollectionTtl::default();
     /// let mut momento = SimpleCacheClientBuilder::new(credential_provider, Duration::from_secs(30))?

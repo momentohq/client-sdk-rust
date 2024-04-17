@@ -29,6 +29,13 @@ pub use self::generate_api_token_response::*;
 pub use self::list_cache_response::*;
 pub use self::list_signing_keys_response::*;
 
+pub mod simple_cache_client_sorted_set {
+    pub use momento_protos::cache_client::sorted_set_fetch_request::{Order, Range};
+    pub use momento_protos::cache_client::sorted_set_fetch_response::found::Elements;
+    pub use momento_protos::cache_client::sorted_set_fetch_response::SortedSet;
+    pub use momento_protos::cache_client::SortedSetElement;
+}
+
 #[derive(Debug, Clone)]
 pub struct ListCacheEntry {
     value: Vec<Vec<u8>>,
