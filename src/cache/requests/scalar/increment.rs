@@ -1,8 +1,7 @@
 use std::time::Duration;
 
 use crate::{
-    cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes,
-    MomentoResult,
+    cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoResult,
 };
 
 /// Adds an integer quantity to a field value.
