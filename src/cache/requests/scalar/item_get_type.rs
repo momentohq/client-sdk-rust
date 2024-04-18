@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 use momento_protos::cache_client::item_get_type_response::{self};
 
 use crate::{
-    cache::MomentoRequest, simple_cache_client::prep_request_with_timeout, CacheClient, IntoBytes,
+    cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes,
     MomentoError, MomentoErrorCode, MomentoResult,
 };
 

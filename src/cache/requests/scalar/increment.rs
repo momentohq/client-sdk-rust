@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use crate::{
-    cache::MomentoRequest, simple_cache_client::prep_request_with_timeout, CacheClient, IntoBytes,
+    cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes,
     MomentoResult,
 };
 
