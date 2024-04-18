@@ -7,10 +7,11 @@ use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
 
 use crate::cache::{
-    CreateCache, CreateCacheRequest, DeleteCache, DeleteCacheRequest, FlushCache,
-    FlushCacheRequest, Get, GetRequest, IntoSortedSetElements, KeyExists, KeyExistsRequest,
-    KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, MomentoRequest, Set,
-    SetAddElements, SetAddElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
+    CreateCache, CreateCacheRequest, Delete, DeleteCache, DeleteCacheRequest, DeleteRequest,
+    FlushCache, FlushCacheRequest, Get, GetRequest, Increment, IncrementRequest,
+    IntoSortedSetElements, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist,
+    KeysExistRequest, ListCaches, ListCachesRequest, MomentoRequest, Set, SetAddElements,
+    SetAddElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
     SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
     SortedSetPutElements, SortedSetPutElementsRequest,
 };
@@ -243,6 +244,45 @@ impl CacheClient {
         key: impl IntoBytes,
     ) -> MomentoResult<Get> {
         let request = GetRequest::new(cache_name, key);
+        request.send(self).await
+    }
+
+    /// Deletes an item in a Momento Cache
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache
+    /// * `key` - key of the item to delete
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// use momento::cache::Delete;
+    /// use momento::MomentoErrorCode;
+    ///
+    /// match cache_client.delete(&cache_name, "key").await {
+    ///     Ok(_) => println!("Delete successful"),
+    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///         println!("Cache not found: {}", &cache_name);
+    ///     } else {
+    ///         eprintln!("Error deleting value in cache {}: {}", &cache_name, e);
+    ///     }
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to delete an item using a [DeleteRequest].
+    pub async fn delete(
+        &self,
+        cache_name: impl Into<String>,
+        key: impl IntoBytes,
+    ) -> MomentoResult<Delete> {
+        let request = DeleteRequest::new(cache_name, key);
         request.send(self).await
     }
 
@@ -609,6 +649,89 @@ impl CacheClient {
         keys: Vec<impl IntoBytes>,
     ) -> MomentoResult<KeysExist> {
         let request = KeysExistRequest::new(cache_name, keys);
+        request.send(self).await
+    }
+
+    /// Adds an integer quantity to a field value.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `field` - the field to increment
+    /// * `amount` - the quantity to add to the value. May be positive, negative, or zero. Defaults to 1.
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to increment a field using an
+    /// [IncrementRequest], you can also provide the following optional arguments:
+    ///
+    /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// use momento::cache::Increment;
+    /// use momento::MomentoErrorCode;
+    ///
+    /// match cache_client.increment(&cache_name, "key", 1).await {
+    ///     Ok(r) => println!("Incremented value: {}", r.value),
+    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///         println!("Cache not found: {}", &cache_name);
+    ///     } else {
+    ///         eprintln!("Error incrementing value in cache {}: {}", &cache_name, e);
+    ///     }
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using an [IncrementRequest]
+    /// which will allow you to set [optional arguments](IncrementRequest#optional-arguments) as well.
+    pub async fn increment(
+        &self,
+        cache_name: impl Into<String>,
+        key: impl IntoBytes,
+        amount: i64,
+    ) -> MomentoResult<Increment> {
+        let request = IncrementRequest::new(cache_name, key, amount);
+        request.send(self).await
+    }
+
+    /// Return the type of the key in the cache.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `key` - the key for which type is requested
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// use std::convert::TryInto;
+    /// use momento::cache::{ItemGetType, ItemType};
+    /// # cache_client.set(&cache_name, "key1", "value").await?;
+    ///
+    /// let item: ItemType = match(cache_client.item_get_type(&cache_name, "key1").await?) {
+    ///     ItemGetType::Hit { key_type } => key_type.try_into().expect("Expected an item type!"),
+    ///     ItemGetType::Miss => return Err(anyhow::Error::msg("cache miss"))
+    /// };
+    /// # assert_eq!(item, ItemType::Scalar);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item's type using a [ItemGetTypeRequest].
+    pub async fn item_get_type(
+        &self,
+        cache_name: impl Into<String>,
+        key: impl IntoBytes,
+    ) -> MomentoResult<ItemGetType> {
+        let request = ItemGetTypeRequest::new(cache_name, key);
         request.send(self).await
     }
 
