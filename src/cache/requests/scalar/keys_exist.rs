@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use crate::cache::MomentoRequest;
-use crate::simple_cache_client::prep_request_with_timeout;
 use crate::utils::parse_string;
+use crate::utils::prep_request_with_timeout;
 use crate::{CacheClient, IntoBytes, MomentoResult};
 
 /// Request to check if the provided keys exist in the cache.

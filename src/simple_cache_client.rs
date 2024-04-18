@@ -10,13 +10,12 @@ use momento_protos::{
 };
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryInto;
 use std::iter::FromIterator;
 use std::ops::RangeBounds;
 use std::time::{Duration, UNIX_EPOCH};
 use tonic::{codegen::InterceptedService, transport::Channel, Request};
 
-use crate::credential_provider::CredentialProvider;
 use crate::response::simple_cache_client_sorted_set::{Elements, Order, Range, SortedSet};
 use crate::response::{
     DictionaryFetch, DictionaryGet, DictionaryPairs, Get, GetValue, ListCacheEntry, MomentoCache,
@@ -30,6 +29,10 @@ use crate::utils;
 use crate::{
     compression_utils::{compress_json, decompress_json},
     {ErrorSource, MomentoError, MomentoErrorCode},
+};
+use crate::{
+    credential_provider::CredentialProvider,
+    utils::{is_cache_name_valid, request_meta_data},
 };
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
 use crate::{utils::user_agent, MomentoResult};
@@ -145,19 +148,6 @@ pub struct SimpleCacheClientBuilder {
     auth_token: String,
     default_ttl: Duration,
     user_agent_name: String,
-}
-
-fn request_meta_data<T>(request: &mut tonic::Request<T>, cache_name: &str) -> MomentoResult<()> {
-    tonic::metadata::AsciiMetadataValue::try_from(cache_name)
-        .map(|value| {
-            request.metadata_mut().append("cache", value);
-        })
-        .map_err(|e| MomentoError {
-            message: format!("Could not treat cache name as a header value: {e}"),
-            error_code: MomentoErrorCode::InvalidArgumentError,
-            inner_error: Some(crate::ErrorSource::Unknown(Box::new(e))),
-            details: None,
-        })
 }
 
 impl SimpleCacheClientBuilder {
@@ -2712,24 +2702,11 @@ impl SimpleCacheClient {
     }
 }
 
-pub(crate) fn prep_request<R>(cache_name: &str, request: R) -> MomentoResult<tonic::Request<R>> {
-    utils::is_cache_name_valid(cache_name)?;
+fn prep_request<R>(cache_name: &str, request: R) -> MomentoResult<tonic::Request<R>> {
+    is_cache_name_valid(cache_name)?;
 
     let mut request = tonic::Request::new(request);
     request_meta_data(&mut request, cache_name)?;
-    Ok(request)
-}
-
-pub(crate) fn prep_request_with_timeout<R>(
-    cache_name: &str,
-    timeout: Duration,
-    request: R,
-) -> MomentoResult<Request<R>> {
-    utils::is_cache_name_valid(cache_name)?;
-
-    let mut request = Request::new(request);
-    request_meta_data(&mut request, cache_name)?;
-    request.set_timeout(timeout);
     Ok(request)
 }
 

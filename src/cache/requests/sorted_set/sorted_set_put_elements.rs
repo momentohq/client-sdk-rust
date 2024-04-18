@@ -5,7 +5,7 @@ use momento_protos::cache_client::SortedSetElement as ProtoSortedSetElement;
 use momento_protos::cache_client::SortedSetPutRequest;
 
 use crate::cache::requests::MomentoRequest;
-use crate::simple_cache_client::prep_request_with_timeout;
+use crate::utils::prep_request_with_timeout;
 use crate::{CacheClient, CollectionTtl, IntoBytes, MomentoResult};
 
 /// This trait defines an interface for converting a type into a vector of `SortedSetElement`s.

@@ -6,7 +6,7 @@ use crate::cache::requests::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder
 use crate::cache::requests::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder::Ascending;
 use crate::cache::requests::sorted_set::sorted_set_fetch_response::SortedSetFetch;
 use crate::cache::requests::MomentoRequest;
-use crate::simple_cache_client::prep_request_with_timeout;
+use crate::utils::prep_request_with_timeout;
 use crate::{CacheClient, IntoBytes, MomentoResult};
 
 /// Fetch the elements in the given sorted set by their score.

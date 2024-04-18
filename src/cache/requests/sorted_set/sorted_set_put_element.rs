@@ -1,7 +1,7 @@
 use momento_protos::cache_client::{SortedSetElement, SortedSetPutRequest};
 
 use crate::cache::requests::MomentoRequest;
-use crate::simple_cache_client::prep_request_with_timeout;
+use crate::utils::prep_request_with_timeout;
 use crate::{CacheClient, CollectionTtl, IntoBytes, MomentoResult};
 
 /// Request to add an element to a sorted set. If the element already exists, its score is updated.
