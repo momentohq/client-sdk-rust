@@ -8,9 +8,7 @@ pub mod cache;
 pub mod config;
 pub mod errors;
 pub mod response;
-pub mod topics {
-    pub use crate::preview::topics::*;
-}
+pub mod topics;
 /*************************************************************/
 
 mod cache_client;
@@ -18,7 +16,6 @@ mod cache_client_builder;
 mod compression_utils;
 mod credential_provider;
 mod grpc;
-mod preview;
 mod simple_cache_client;
 mod utils;
 

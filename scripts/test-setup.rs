@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use momento::config::configurations;
+use momento::cache::configurations;
 use momento::{CacheClient, MomentoResult};
 use momento_test_util::{get_test_cache_name, get_test_credential_provider};
 

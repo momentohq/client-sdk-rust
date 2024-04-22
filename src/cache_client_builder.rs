@@ -1,4 +1,4 @@
-use crate::config::configuration::Configuration;
+use crate::cache::Configuration;
 use crate::grpc::header_interceptor::HeaderInterceptor;
 use crate::{utils, CacheClient, CredentialProvider, MomentoResult};
 use std::time::Duration;

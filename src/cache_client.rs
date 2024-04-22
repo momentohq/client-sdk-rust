@@ -7,15 +7,14 @@ use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
 
 use crate::cache::{
-    CreateCache, CreateCacheRequest, Delete, DeleteCache, DeleteCacheRequest, DeleteRequest,
-    FlushCache, FlushCacheRequest, Get, GetRequest, Increment, IncrementRequest,
+    Configuration, CreateCache, CreateCacheRequest, Delete, DeleteCache, DeleteCacheRequest,
+    DeleteRequest, FlushCache, FlushCacheRequest, Get, GetRequest, Increment, IncrementRequest,
     IntoSortedSetElements, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist,
     KeysExistRequest, ListCaches, ListCachesRequest, MomentoRequest, Set, SetAddElements,
     SetAddElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
     SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
     SortedSetPutElements, SortedSetPutElementsRequest,
 };
-use crate::config::configuration::Configuration;
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
 use crate::cache_client_builder::{CacheClientBuilder, NeedsDefaultTtl};
