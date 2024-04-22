@@ -23,10 +23,10 @@ use crate::{
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// use std::convert::TryInto;
 /// use std::time::Duration;
-/// use momento::cache::ItemGetTtl;
+/// use momento::cache::{ItemGetTtl, ItemGetTtlRequest};
 /// # cache_client.set(&cache_name, "key1", "value").await?;
 ///
-/// let request = momento::cache::ItemGetTtlRequest::new(&cache_name, "key1");
+/// let request = ItemGetTtlRequest::new(&cache_name, "key1");
 ///
 /// let ttl: Duration = match(cache_client.send_request(request).await?) {
 ///     ItemGetTtl::Hit { remaining_ttl } => remaining_ttl.try_into().expect("Expected an item ttl!"),

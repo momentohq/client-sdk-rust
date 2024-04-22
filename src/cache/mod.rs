@@ -19,6 +19,7 @@ pub use requests::scalar::item_get_type::{ItemGetType, ItemGetTypeRequest, ItemT
 pub use requests::scalar::key_exists::{KeyExists, KeyExistsRequest};
 pub use requests::scalar::keys_exist::{KeysExist, KeysExistRequest};
 pub use requests::scalar::set::{Set, SetRequest};
+pub use requests::scalar::update_ttl::{UpdateTtl, UpdateTtlRequest};
 
 pub use requests::set::set_add_elements::{SetAddElements, SetAddElementsRequest};
 
