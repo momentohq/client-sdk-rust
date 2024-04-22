@@ -7,13 +7,7 @@ use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
 
 use crate::cache::{
-    Configuration, CreateCache, CreateCacheRequest, Delete, DeleteCache, DeleteCacheRequest,
-    DeleteRequest, FlushCache, FlushCacheRequest, Get, GetRequest, Increment, IncrementRequest,
-    IntoSortedSetElements, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist,
-    KeysExistRequest, ListCaches, ListCachesRequest, MomentoRequest, Set, SetAddElements,
-    SetAddElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
-    SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
-    SortedSetPutElements, SortedSetPutElementsRequest,
+    Configuration, CreateCache, CreateCacheRequest, Delete, DeleteCache, DeleteCacheRequest, DeleteRequest, FlushCache, FlushCacheRequest, Get, GetRequest, Increment, IncrementRequest, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements, SortedSetPutElementsRequest
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -731,6 +725,43 @@ impl CacheClient {
         key: impl IntoBytes,
     ) -> MomentoResult<ItemGetType> {
         let request = ItemGetTypeRequest::new(cache_name, key);
+        request.send(self).await
+    }
+
+    /// Return the remaining ttl of the key in the cache
+    /// 
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `key` - the key for which remaining ttl is requested
+    /// 
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// use std::convert::TryInto;
+    /// use momento::cache::ItemGetTtl;
+    /// use std::time::Duration;
+    /// # cache_client.set(&cache_name, "key1", "value").await?;
+    ///
+    /// let ttl: Duration = match(cache_client.item_get_ttl(&cache_name, "key1").await?) {
+    ///     ItemGetTtl::Hit { remaining_ttl } => remaining_ttl.try_into().expect("Expected an item ttl!"),
+    ///     ItemGetTtl::Miss => return Err(anyhow::Error::msg("cache miss"))
+    /// };
+    /// # assert!(ttl <= Duration::from_secs(5));
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item's type using a [ItemGetTypeRequest].
+    pub async fn item_get_ttl(
+        &self,
+        cache_name: impl Into<String>,
+        key: impl IntoBytes,
+    ) -> MomentoResult<ItemGetTtl> {
+        let request = ItemGetTtlRequest::new(cache_name, key);
         request.send(self).await
     }
 
