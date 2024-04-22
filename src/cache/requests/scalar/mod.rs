@@ -1,3 +1,4 @@
+pub mod decrease_ttl;
 pub mod delete;
 pub mod get;
 pub mod increase_ttl;

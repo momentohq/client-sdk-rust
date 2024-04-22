@@ -11,6 +11,7 @@ pub use requests::list_caches::{
     CacheInfo, CacheLimits, ListCaches, ListCachesRequest, TopicLimits,
 };
 
+pub use requests::scalar::decrease_ttl::{DecreaseTtl, DecreaseTtlRequest};
 pub use requests::scalar::delete::{Delete, DeleteRequest};
 pub use requests::scalar::get::{Get, GetRequest, GetValue};
 pub use requests::scalar::increase_ttl::{IncreaseTtl, IncreaseTtlRequest};
