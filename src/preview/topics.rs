@@ -20,7 +20,7 @@ pub struct TopicClient {
 
 /// Work with topics, publishing and subscribing.
 /// ```rust
-/// use momento::preview::topics::TopicClient;
+/// use momento::topics::TopicClient;
 /// use momento::{CredentialProvider};
 /// use futures::StreamExt;
 ///
