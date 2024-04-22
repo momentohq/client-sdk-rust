@@ -1,5 +1,6 @@
 pub mod delete;
 pub mod get;
+pub mod increase_ttl;
 pub mod increment;
 pub mod item_get_ttl;
 pub mod item_get_type;

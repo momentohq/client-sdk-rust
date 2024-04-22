@@ -7,7 +7,7 @@ use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
 
 use crate::cache::{
-    Configuration, CreateCache, CreateCacheRequest, Delete, DeleteCache, DeleteCacheRequest, DeleteRequest, FlushCache, FlushCacheRequest, Get, GetRequest, Increment, IncrementRequest, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements, SortedSetPutElementsRequest, UpdateTtl, UpdateTtlRequest
+    Configuration, CreateCache, CreateCacheRequest, Delete, DeleteCache, DeleteCacheRequest, DeleteRequest, FlushCache, FlushCacheRequest, Get, GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements, SortedSetPutElementsRequest, UpdateTtl, UpdateTtlRequest
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -799,6 +799,43 @@ impl CacheClient {
         ttl: Duration,
     ) -> MomentoResult<UpdateTtl> {
         let request = UpdateTtlRequest::new(cache_name, key, ttl);
+        request.send(self).await
+    }
+
+    /// Increase the ttl of the key in the cache.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `key` - the key for which ttl is requested
+    /// * `ttl` - The time-to-live that should overwrite the current ttl. Should be greater than the current ttl.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// use std::time::Duration;
+    /// use momento::cache::IncreaseTtl;
+    /// # cache_client.set(&cache_name, "key1", "value").await?;
+    ///
+    /// match(cache_client.increase_ttl(&cache_name, "key1", Duration::from_secs(5)).await?) {
+    ///     IncreaseTtl::Set => println!("TTL updated"),
+    ///     IncreaseTtl::Miss => return Err(anyhow::Error::msg("cache miss"))
+    /// };
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item's type using a [IncreaseTtlRequest].
+    pub async fn increase_ttl(
+        &self,
+        cache_name: impl Into<String>,
+        key: impl IntoBytes,
+        ttl: Duration,
+    ) -> MomentoResult<IncreaseTtl> {
+        let request = IncreaseTtlRequest::new(cache_name, key, ttl);
         request.send(self).await
     }
 
