@@ -28,7 +28,7 @@ where
     // The constructor for the cache client needs a tokio runtime to be active.
     let _guard = runtime.enter();
 
-    let cache_name = "rust-sdk-".to_string() + &Uuid::new_v4().to_string();
+    let cache_name = unique_string("rust-sdk");
     let credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
         .expect("MOMENTO_API_KEY must be set");
 
@@ -70,4 +70,8 @@ pub fn get_test_cache_name() -> String {
 pub fn get_test_credential_provider() -> CredentialProvider {
     CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
         .expect("auth token should be valid")
+}
+
+pub fn unique_string(prefix: impl Into<String>) -> String {
+    format!("{}-{}", prefix.into(), Uuid::new_v4())
 }

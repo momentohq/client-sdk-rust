@@ -1,14 +1,13 @@
 use momento::cache::{CreateCache, FlushCache, Get, GetValue, Set};
 use momento::MomentoErrorCode;
 use momento::MomentoResult;
-use uuid::Uuid;
-
+use momento_test_util::unique_string;
 use momento_test_util::CACHE_TEST_STATE;
 
 #[tokio::test]
 async fn delete_nonexistent_cache_returns_not_found() -> MomentoResult<()> {
     let client = &CACHE_TEST_STATE.client;
-    let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
+    let cache_name = unique_string("fake-cache");
     let result = client.delete_cache(cache_name).await.unwrap_err();
     assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
     Ok(())
@@ -45,7 +44,7 @@ async fn lists_existing_test_cache() -> MomentoResult<()> {
 #[tokio::test]
 async fn flush_nonexistent_cache_returns_not_found() -> MomentoResult<()> {
     let client = &CACHE_TEST_STATE.client;
-    let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
+    let cache_name = unique_string("fake-cache");
     let result = client.flush_cache(cache_name).await.unwrap_err();
     assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
     Ok(())

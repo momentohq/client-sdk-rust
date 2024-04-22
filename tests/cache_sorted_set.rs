@@ -8,27 +8,28 @@ use momento::cache::{
 use momento::{CacheClient, MomentoErrorCode, MomentoResult};
 use uuid::Uuid;
 
-use momento_test_util::CACHE_TEST_STATE;
+use momento_test_util::{unique_string, CACHE_TEST_STATE};
 
 #[tokio::test]
 async fn sorted_set_put_element_happy_path() -> MomentoResult<()> {
     let client = &CACHE_TEST_STATE.client;
     let cache_name = &CACHE_TEST_STATE.cache_name;
-    let sorted_set_name = "sorted-set-".to_string() + &Uuid::new_v4().to_string();
+    let unique_sorted_set_name = unique_string("sorted-set");
+    let sorted_set_name = unique_sorted_set_name.as_str();
     let value = "value";
     let score = 1.0;
 
     let result = client
-        .sorted_set_fetch_by_rank(cache_name, &*sorted_set_name, Ascending, None, None)
+        .sorted_set_fetch_by_rank(cache_name, sorted_set_name, Ascending, None, None)
         .await?;
     assert_eq!(result, SortedSetFetch::Miss);
 
     client
-        .sorted_set_put_element(cache_name, &*sorted_set_name, "value", 1.0)
+        .sorted_set_put_element(cache_name, sorted_set_name, "value", 1.0)
         .await?;
 
     let result = client
-        .sorted_set_fetch_by_rank(cache_name, &*sorted_set_name, Ascending, None, None)
+        .sorted_set_fetch_by_rank(cache_name, sorted_set_name, Ascending, None, None)
         .await?;
 
     match result {
@@ -46,7 +47,7 @@ async fn sorted_set_put_element_happy_path() -> MomentoResult<()> {
 #[tokio::test]
 async fn sorted_set_put_element_nonexistent_cache() -> MomentoResult<()> {
     let client = &CACHE_TEST_STATE.client;
-    let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
+    let cache_name = unique_string("fake-cache");
     let sorted_set_name = "sorted-set";
 
     let result = client
@@ -69,18 +70,19 @@ async fn sorted_set_put_elements_happy_path() -> MomentoResult<()> {
         cache_name: &String,
         to_put: impl IntoSortedSetElements<String> + Clone,
     ) -> MomentoResult<()> {
-        let sorted_set_name = format!("sorted-set-{}", Uuid::new_v4());
+        let unique_sorted_set_name = unique_string("sorted-set");
+        let sorted_set_name = unique_sorted_set_name.as_str();
         let result = client
-            .sorted_set_fetch_by_score(cache_name, &*sorted_set_name, Ascending)
+            .sorted_set_fetch_by_score(cache_name, sorted_set_name, Ascending)
             .await?;
         assert_eq!(result, SortedSetFetch::Miss);
 
         client
-            .sorted_set_put_elements(cache_name, &*sorted_set_name, to_put.clone())
+            .sorted_set_put_elements(cache_name, sorted_set_name, to_put.clone())
             .await?;
 
         let result = client
-            .sorted_set_fetch_by_score(cache_name, &*sorted_set_name, Ascending)
+            .sorted_set_fetch_by_score(cache_name, sorted_set_name, Ascending)
             .await?;
 
         match result {
@@ -153,7 +155,8 @@ async fn sorted_set_put_elements_nonexistent_cache() -> MomentoResult<()> {
 async fn sorted_set_fetch_by_rank_happy_path() -> MomentoResult<()> {
     let client = &CACHE_TEST_STATE.client;
     let cache_name = &CACHE_TEST_STATE.cache_name;
-    let sorted_set_name = "sorted-set-".to_string() + &Uuid::new_v4().to_string();
+    let unique_sorted_set_name = unique_string("sorted-set");
+    let sorted_set_name = unique_sorted_set_name.as_str();
     let to_put = vec![
         ("1".to_string(), 0.0),
         ("2".to_string(), 1.0),
@@ -163,16 +166,16 @@ async fn sorted_set_fetch_by_rank_happy_path() -> MomentoResult<()> {
     ];
 
     let result = client
-        .sorted_set_fetch_by_rank(cache_name, &*sorted_set_name, Ascending, None, None)
+        .sorted_set_fetch_by_rank(cache_name, sorted_set_name, Ascending, None, None)
         .await?;
     assert_eq!(result, SortedSetFetch::Miss);
 
     client
-        .sorted_set_put_elements(cache_name, &*sorted_set_name, to_put)
+        .sorted_set_put_elements(cache_name, sorted_set_name, to_put)
         .await?;
 
     // Full set ascending, end index larger than set
-    let fetch_request = SortedSetFetchByRankRequest::new(cache_name, &*sorted_set_name)
+    let fetch_request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name)
         .order(Ascending)
         .start_rank(0)
         .end_rank(6);
@@ -191,7 +194,7 @@ async fn sorted_set_fetch_by_rank_happy_path() -> MomentoResult<()> {
     }
 
     // Partial set descending
-    let fetch_request = SortedSetFetchByRankRequest::new(cache_name, &*sorted_set_name)
+    let fetch_request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name)
         .order(Descending)
         .start_rank(1)
         .end_rank(4);
@@ -214,7 +217,7 @@ async fn sorted_set_fetch_by_rank_happy_path() -> MomentoResult<()> {
 #[tokio::test]
 async fn sorted_set_fetch_by_rank_nonexistent_cache() -> MomentoResult<()> {
     let client = &CACHE_TEST_STATE.client;
-    let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
+    let cache_name = unique_string("fake-cache");
     let sorted_set_name = "sorted-set";
 
     let result = client
@@ -230,7 +233,8 @@ async fn sorted_set_fetch_by_rank_nonexistent_cache() -> MomentoResult<()> {
 async fn sorted_set_fetch_by_score_happy_path() -> MomentoResult<()> {
     let client = &CACHE_TEST_STATE.client;
     let cache_name = &CACHE_TEST_STATE.cache_name;
-    let sorted_set_name = "sorted-set-".to_string() + &Uuid::new_v4().to_string();
+    let unique_sorted_set_name = unique_string("sorted-set");
+    let sorted_set_name = unique_sorted_set_name.as_str();
     let to_put = vec![
         ("1".to_string(), 0.0),
         ("2".to_string(), 1.0),
@@ -240,16 +244,16 @@ async fn sorted_set_fetch_by_score_happy_path() -> MomentoResult<()> {
     ];
 
     let result = client
-        .sorted_set_fetch_by_score(cache_name, &*sorted_set_name, Ascending)
+        .sorted_set_fetch_by_score(cache_name, sorted_set_name, Ascending)
         .await?;
     assert_eq!(result, SortedSetFetch::Miss);
 
     client
-        .sorted_set_put_elements(cache_name, &*sorted_set_name, to_put)
+        .sorted_set_put_elements(cache_name, sorted_set_name, to_put)
         .await?;
 
     // Full set ascending, end score larger than set
-    let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, &*sorted_set_name)
+    let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name)
         .order(Ascending)
         .min_score(0.0)
         .max_score(9.9);
@@ -268,7 +272,7 @@ async fn sorted_set_fetch_by_score_happy_path() -> MomentoResult<()> {
     }
 
     // Partial set descending
-    let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, &*sorted_set_name)
+    let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name)
         .order(Descending)
         .min_score(0.1)
         .max_score(1.9);
@@ -287,7 +291,7 @@ async fn sorted_set_fetch_by_score_happy_path() -> MomentoResult<()> {
     }
 
     // Partial set limited by offset and count
-    let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, &*sorted_set_name)
+    let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name)
         .offset(1)
         .count(3);
 
@@ -309,7 +313,7 @@ async fn sorted_set_fetch_by_score_happy_path() -> MomentoResult<()> {
 #[tokio::test]
 async fn sorted_set_fetch_by_score_nonexistent_cache() -> MomentoResult<()> {
     let client = &CACHE_TEST_STATE.client;
-    let cache_name = "fake-cache-".to_string() + &Uuid::new_v4().to_string();
+    let cache_name = unique_string("fake-cache");
     let sorted_set_name = "sorted-set";
 
     let result = client
