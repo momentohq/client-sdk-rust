@@ -28,11 +28,8 @@ use crate::{
 ///
 /// let request = ItemGetTtlRequest::new(&cache_name, "key1");
 ///
-/// let ttl: Duration = match(cache_client.send_request(request).await?) {
-///     ItemGetTtl::Hit { remaining_ttl } => remaining_ttl.try_into().expect("Expected an item ttl!"),
-///     ItemGetTtl::Miss => return Err(anyhow::Error::msg("cache miss"))
-/// };
-/// # assert!(ttl <= Duration::from_secs(5));
+/// let remaining_ttl: Duration = cache_client.send_request(request).await?.try_into().expect("Expected an item ttl!");
+/// # assert!(remaining_ttl <= Duration::from_secs(5));
 /// # Ok(())
 /// # })
 /// # }

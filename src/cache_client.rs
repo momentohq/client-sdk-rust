@@ -746,11 +746,8 @@ impl CacheClient {
     /// use std::time::Duration;
     /// # cache_client.set(&cache_name, "key1", "value").await?;
     ///
-    /// let ttl: Duration = match(cache_client.item_get_ttl(&cache_name, "key1").await?) {
-    ///     ItemGetTtl::Hit { remaining_ttl } => remaining_ttl.try_into().expect("Expected an item ttl!"),
-    ///     ItemGetTtl::Miss => return Err(anyhow::Error::msg("cache miss"))
-    /// };
-    /// # assert!(ttl <= Duration::from_secs(5));
+    /// let remaining_ttl: Duration = cache_client.item_get_ttl(cache_name, "key1").await?.try_into().expect("Expected an item ttl!");
+    /// # assert!(remaining_ttl <= Duration::from_secs(5));
     /// # Ok(())
     /// # })
     /// # }
