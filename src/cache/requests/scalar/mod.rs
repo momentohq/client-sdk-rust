@@ -9,4 +9,5 @@ pub mod key_exists;
 pub mod keys_exist;
 pub mod set;
 pub mod set_if_absent;
+pub mod set_if_present;
 pub mod update_ttl;
