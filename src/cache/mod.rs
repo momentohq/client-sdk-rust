@@ -44,3 +44,7 @@ mod config;
 
 pub use config::configuration::Configuration;
 pub use config::configurations;
+
+mod collection_ttl;
+
+pub use collection_ttl::CollectionTtl;
