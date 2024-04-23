@@ -29,6 +29,7 @@ use crate::{
 ///
 /// match(cache_client.send_request(request).await?) {
 ///     DecreaseTtl::Set => println!("TTL updated"),
+///     DecreaseTtl::NotSet => println!("unable to decrease TTL"),
 ///     DecreaseTtl::Miss => return Err(anyhow::Error::msg("cache miss"))
 /// };
 /// # Ok(())

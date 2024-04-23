@@ -819,6 +819,7 @@ impl CacheClient {
     ///
     /// match(cache_client.increase_ttl(&cache_name, "key1", Duration::from_secs(5)).await?) {
     ///     IncreaseTtl::Set => println!("TTL updated"),
+    ///     IncreaseTtl::NotSet => println!("unable to increase TTL"),
     ///     IncreaseTtl::Miss => return Err(anyhow::Error::msg("cache miss"))
     /// };
     /// # Ok(())
@@ -856,6 +857,7 @@ impl CacheClient {
     ///
     /// match(cache_client.decrease_ttl(&cache_name, "key1", Duration::from_secs(3)).await?) {
     ///     DecreaseTtl::Set => println!("TTL updated"),
+    ///     DecreaseTtl::NotSet => println!("unable to decrease TTL"),
     ///     DecreaseTtl::Miss => return Err(anyhow::Error::msg("cache miss"))
     /// };
     /// # Ok(())
