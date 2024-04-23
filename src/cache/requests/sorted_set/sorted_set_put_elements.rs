@@ -5,8 +5,9 @@ use momento_protos::cache_client::SortedSetElement as ProtoSortedSetElement;
 use momento_protos::cache_client::SortedSetPutRequest;
 
 use crate::cache::requests::MomentoRequest;
+use crate::cache::CollectionTtl;
 use crate::utils::prep_request_with_timeout;
-use crate::{CacheClient, CollectionTtl, IntoBytes, MomentoResult};
+use crate::{CacheClient, IntoBytes, MomentoResult};
 
 /// This trait defines an interface for converting a type into a vector of `SortedSetElement`s.
 pub trait IntoSortedSetElements<V: IntoBytes>: Send {
@@ -122,8 +123,7 @@ impl<V: IntoBytes> IntoSortedSetElements<V> for HashMap<V, f64> {
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::CollectionTtl;
-/// use momento::cache::{SortedSetPutElements, SortedSetPutElementsRequest};
+/// use momento::cache::{CollectionTtl, SortedSetPutElements, SortedSetPutElementsRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
 ///
