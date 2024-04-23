@@ -7,8 +7,8 @@ pub mod cache;
 /// Configuration structs for the Momento clients.
 pub mod config;
 pub mod errors;
-pub mod preview;
 pub mod response;
+pub mod topics;
 /*************************************************************/
 
 mod cache_client;

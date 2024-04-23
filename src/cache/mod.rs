@@ -32,3 +32,11 @@ pub use requests::sorted_set::sorted_set_put_element::{
 pub use requests::sorted_set::sorted_set_put_elements::{
     IntoSortedSetElements, SortedSetElement, SortedSetPutElements, SortedSetPutElementsRequest,
 };
+
+// Similar re-exporting with config::configuration and config::configurations
+// so import paths can be simpmlified to "momento::cache::Configuration" and
+// "use momento::cache::configurations::laptop"
+mod config;
+
+pub use config::configuration::Configuration;
+pub use config::configurations;

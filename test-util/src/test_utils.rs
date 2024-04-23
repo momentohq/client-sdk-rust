@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use uuid::Uuid;
 
-use momento::config::configurations;
+use momento::cache::configurations;
 use momento::CredentialProvider;
 use momento::{CacheClient, SimpleCacheClientBuilder};
 

@@ -6,7 +6,7 @@ use crate::config::transport_strategy::TransportStrategy;
 ///
 /// Static, versioned configurations are provided for different environments:
 /// ```
-/// use momento::config::configurations;
+/// use momento::cache::configurations;
 ///
 /// /// Use laptop for local development
 /// let developer_config = configurations::laptop::latest();
@@ -17,7 +17,7 @@ use crate::config::transport_strategy::TransportStrategy;
 /// If you have specific requirements, configurations can also be constructed manually:
 /// ```
 /// use std::time::Duration;
-/// use momento::config::configuration::Configuration;
+/// use momento::cache::Configuration;
 /// use momento::config::grpc_configuration::{GrpcConfiguration, GrpcConfigurationBuilder};
 /// use momento::config::transport_strategy::TransportStrategy;
 ///

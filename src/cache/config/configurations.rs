@@ -3,7 +3,7 @@
 pub mod laptop {
     use std::time::Duration;
 
-    use crate::config::configuration::Configuration;
+    use crate::cache::Configuration;
     use crate::config::grpc_configuration::GrpcConfiguration;
     use crate::config::transport_strategy::TransportStrategy;
 
@@ -27,7 +27,7 @@ pub mod laptop {
 pub mod in_region {
     use std::time::Duration;
 
-    use crate::config::configuration::Configuration;
+    use crate::cache::Configuration;
     use crate::config::grpc_configuration::GrpcConfiguration;
     use crate::config::transport_strategy::TransportStrategy;
 
@@ -52,7 +52,7 @@ pub mod in_region {
 pub mod low_latency {
     use std::time::Duration;
 
-    use crate::config::configuration::Configuration;
+    use crate::cache::Configuration;
     use crate::config::grpc_configuration::GrpcConfiguration;
     use crate::config::transport_strategy::TransportStrategy;
 
@@ -76,7 +76,7 @@ pub mod low_latency {
 pub mod lambda {
     use std::time::Duration;
 
-    use crate::config::configuration::Configuration;
+    use crate::cache::Configuration;
     use crate::config::grpc_configuration::GrpcConfiguration;
     use crate::config::transport_strategy::TransportStrategy;
 
