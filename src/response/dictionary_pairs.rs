@@ -5,8 +5,7 @@ use std::{
 };
 
 use crate::{MomentoError, MomentoResult};
-
-use super::parse_string;
+use crate::utils::parse_string;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct DictionaryPairs {
