@@ -91,7 +91,7 @@ mod sorted_set_fetch_by_rank {
     }
 }
 
-pub mod sorted_set_fetch_by_score {
+mod sorted_set_fetch_by_score {
     use super::*;
 
     #[tokio::test]
@@ -191,15 +191,15 @@ pub mod sorted_set_fetch_by_score {
     }
 }
 
-pub mod sorted_set_get_rank {}
+mod sorted_set_get_rank {}
 
-pub mod sorted_set_get_score {}
+mod sorted_set_get_score {}
 
-pub mod sorted_set_get_scores {}
+mod sorted_set_get_scores {}
 
-pub mod sorted_set_increment_score {}
+mod sorted_set_increment_score {}
 
-pub mod sorted_set_remove_element {}
+mod sorted_set_remove_element {}
 
 mod sorted_set_put_element {
     use super::*;
