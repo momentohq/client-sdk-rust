@@ -7,17 +7,18 @@ use momento::cache::{
 };
 use momento::{CacheClient, MomentoErrorCode, MomentoResult};
 
-use momento_test_util::{unique_string, CACHE_TEST_STATE};
+use momento_test_util::{unique_key, CACHE_TEST_STATE};
 
 mod sorted_set_fetch_by_rank {
+    use momento_test_util::unique_cache_name;
+
     use super::*;
 
     #[tokio::test]
     async fn happy_path() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = &CACHE_TEST_STATE.cache_name;
-        let unique_sorted_set_name = unique_string("sorted-set");
-        let sorted_set_name = unique_sorted_set_name.as_str();
+        let sorted_set_name = unique_key();
         let to_put = vec![
             ("1".to_string(), 0.0),
             ("2".to_string(), 1.0),
@@ -27,16 +28,16 @@ mod sorted_set_fetch_by_rank {
         ];
 
         let result = client
-            .sorted_set_fetch_by_rank(cache_name, sorted_set_name, Ascending, None, None)
+            .sorted_set_fetch_by_rank(cache_name, sorted_set_name.clone(), Ascending, None, None)
             .await?;
         assert_eq!(result, SortedSetFetch::Miss);
 
         client
-            .sorted_set_put_elements(cache_name, sorted_set_name, to_put)
+            .sorted_set_put_elements(cache_name, sorted_set_name.clone(), to_put)
             .await?;
 
         // Full set ascending, end index larger than set
-        let fetch_request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name)
+        let fetch_request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name.clone())
             .order(Ascending)
             .start_rank(0)
             .end_rank(6);
@@ -78,11 +79,10 @@ mod sorted_set_fetch_by_rank {
     #[tokio::test]
     async fn nonexistent_cache() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
-        let cache_name = unique_string("fake-cache");
-        let sorted_set_name = "sorted-set";
+        let cache_name = unique_cache_name();
 
         let result = client
-            .sorted_set_fetch_by_rank(cache_name, sorted_set_name, Ascending, None, None)
+            .sorted_set_fetch_by_rank(cache_name, "sorted-set", Ascending, None, None)
             .await
             .unwrap_err();
 
@@ -92,14 +92,16 @@ mod sorted_set_fetch_by_rank {
 }
 
 mod sorted_set_fetch_by_score {
+    use momento_test_util::unique_cache_name;
+
     use super::*;
 
     #[tokio::test]
     async fn happy_path() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = &CACHE_TEST_STATE.cache_name;
-        let unique_sorted_set_name = unique_string("sorted-set");
-        let sorted_set_name = unique_sorted_set_name.as_str();
+        let sorted_set_name = unique_key();
+        let sorted_set_name = sorted_set_name.as_str();
         let to_put = vec![
             ("1".to_string(), 0.0),
             ("2".to_string(), 1.0),
@@ -178,7 +180,7 @@ mod sorted_set_fetch_by_score {
     #[tokio::test]
     async fn nonexistent_cache() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
-        let cache_name = unique_string("fake-cache");
+        let cache_name = unique_cache_name();
         let sorted_set_name = "sorted-set";
 
         let result = client
@@ -202,14 +204,16 @@ mod sorted_set_increment_score {}
 mod sorted_set_remove_element {}
 
 mod sorted_set_put_element {
+    use momento_test_util::unique_cache_name;
+
     use super::*;
 
     #[tokio::test]
     async fn happy_path() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = &CACHE_TEST_STATE.cache_name;
-        let unique_sorted_set_name = unique_string("sorted-set");
-        let sorted_set_name = unique_sorted_set_name.as_str();
+        let sorted_set_name = unique_key();
+        let sorted_set_name = sorted_set_name.as_str();
         let value = "value";
         let score = 1.0;
 
@@ -241,7 +245,7 @@ mod sorted_set_put_element {
     #[tokio::test]
     async fn nonexistent_cache() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
-        let cache_name = unique_string("fake-cache");
+        let cache_name = unique_cache_name();
         let sorted_set_name = "sorted-set";
 
         let result = client
@@ -268,8 +272,8 @@ mod sorted_set_put_elements {
             cache_name: &String,
             to_put: impl IntoSortedSetElements<String> + Clone,
         ) -> MomentoResult<()> {
-            let unique_sorted_set_name = unique_string("sorted-set");
-            let sorted_set_name = unique_sorted_set_name.as_str();
+            let sorted_set_name = unique_key();
+            let sorted_set_name = sorted_set_name.as_str();
             let result = client
                 .sorted_set_fetch_by_score(cache_name, sorted_set_name, Ascending)
                 .await?;
@@ -333,7 +337,7 @@ mod sorted_set_put_elements {
     #[tokio::test]
     async fn nonexistent_cache() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
-        let cache_name = unique_string("fake-cache");
+        let cache_name = unique_key();
         let sorted_set_name = "sorted-set";
 
         let result = client

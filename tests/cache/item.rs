@@ -2,7 +2,7 @@ use momento::{
     cache::{ItemGetType, ItemType},
     MomentoErrorCode, MomentoResult,
 };
-use momento_test_util::{unique_string, CACHE_TEST_STATE};
+use momento_test_util::{unique_cache_name, TestScalar, TestSet, TestSortedSet, CACHE_TEST_STATE};
 
 mod item_get_type {
     use super::*;
@@ -18,27 +18,25 @@ mod item_get_type {
     #[tokio::test]
     async fn nonexistent_cache() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
-        let cache_name = unique_string("fake-cache");
+        let cache_name = unique_cache_name();
         let result = client.item_get_type(cache_name, "key").await.unwrap_err();
         assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
         Ok(())
     }
 
     #[tokio::test]
-    async fn happy_path() -> MomentoResult<()> {
+    async fn happy_path_scalar() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = CACHE_TEST_STATE.cache_name.as_str();
-        let key_uuid = unique_string("key");
-        let key = key_uuid.as_str();
+        let item = TestScalar::new();
 
         // Expect miss when key is not set
-        let result = client.item_get_type(cache_name, key).await?;
+        let result = client.item_get_type(cache_name, item.key()).await?;
         assert_eq!(result, ItemGetType::Miss {});
-        client.delete(cache_name, key).await?;
 
         // Expect Scalar after using set
-        client.set(cache_name, key, "value").await?;
-        let result = client.item_get_type(cache_name, key).await?;
+        client.set(cache_name, item.key(), item.value()).await?;
+        let result = client.item_get_type(cache_name, item.key()).await?;
         match result {
             ItemGetType::Hit { key_type } => assert_eq!(
                 key_type,
@@ -48,26 +46,40 @@ mod item_get_type {
             ),
             _ => panic!("Expected Hit, got {:?}", result),
         }
-        client.delete(cache_name, key).await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn happy_path_set() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = CACHE_TEST_STATE.cache_name.as_str();
 
         // Expect Set after using setAddElements
+        let item = TestSet::new();
         client
-            .set_add_elements(cache_name, key, vec!["value1", "value2"])
+            .set_add_elements(cache_name, item.name(), item.elements())
             .await?;
-        let result = client.item_get_type(cache_name, key).await?;
+        let result = client.item_get_type(cache_name, item.name()).await?;
         match result {
             ItemGetType::Hit { key_type } => {
                 assert_eq!(key_type, ItemType::Set, "Expected Set, got {:?}", key_type)
             }
             _ => panic!("Expected Hit, got {:?}", result),
         }
-        client.delete(cache_name, key).await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn happy_path_sorted_set() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = CACHE_TEST_STATE.cache_name.as_str();
 
         // Expect SortedSet after using sortedSetPutElements
+        let item = TestSortedSet::new();
         client
-            .sorted_set_put_elements(cache_name, key, vec![("value1", 1.0), ("value2", 2.0)])
+            .sorted_set_put_elements(cache_name, item.name(), item.elements())
             .await?;
-        let result = client.item_get_type(cache_name, key).await?;
+        let result = client.item_get_type(cache_name, item.name()).await?;
         match result {
             ItemGetType::Hit { key_type } => assert_eq!(
                 key_type,
@@ -77,8 +89,6 @@ mod item_get_type {
             ),
             _ => panic!("Expected Hit, got {:?}", result),
         }
-        client.delete(cache_name, key).await?;
-
         Ok(())
     }
 }

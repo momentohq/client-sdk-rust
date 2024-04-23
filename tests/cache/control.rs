@@ -1,8 +1,8 @@
 use momento::cache::{CreateCache, FlushCache, Get, GetValue, Set};
 use momento::MomentoErrorCode;
 use momento::MomentoResult;
-use momento_test_util::unique_string;
 use momento_test_util::CACHE_TEST_STATE;
+use momento_test_util::{unique_cache_name, TestScalar};
 
 mod create_delete_list_cache {
     use super::*;
@@ -10,7 +10,7 @@ mod create_delete_list_cache {
     #[tokio::test]
     async fn delete_nonexistent_cache_returns_not_found() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
-        let cache_name = unique_string("fake-cache");
+        let cache_name = unique_cache_name();
         let result = client.delete_cache(cache_name).await.unwrap_err();
         assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
         Ok(())
@@ -51,7 +51,7 @@ mod flush_cache {
     #[tokio::test]
     async fn flush_nonexistent_cache_returns_not_found() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
-        let cache_name = unique_string("fake-cache");
+        let cache_name = unique_cache_name();
         let result = client.flush_cache(cache_name).await.unwrap_err();
         assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
         Ok(())
@@ -63,24 +63,27 @@ mod flush_cache {
         let cache_name = &CACHE_TEST_STATE.cache_name;
 
         // Insert some elements
-        let set_result1 = client.set(cache_name, "key1", "value1").await?;
+        let item1 = TestScalar::new();
+        let set_result1 = client.set(cache_name, item1.key(), item1.value()).await?;
         assert_eq!(set_result1, Set {});
-        let set_result2 = client.set(cache_name, "key2", "value2").await?;
+
+        let item2 = TestScalar::new();
+        let set_result2 = client.set(cache_name, item2.key(), item2.value()).await?;
         assert_eq!(set_result2, Set {});
 
         // Verify that the elements are in the cache
-        let get_result1 = client.get(cache_name, "key1").await?;
+        let get_result1 = client.get(cache_name, item1.key()).await?;
         assert_eq!(
             get_result1,
             Get::Hit {
-                value: GetValue::new("value1".into())
+                value: GetValue::new(item1.value().into())
             }
         );
-        let get_result2 = client.get(cache_name, "key2").await?;
+        let get_result2 = client.get(cache_name, item2.key()).await?;
         assert_eq!(
             get_result2,
             Get::Hit {
-                value: GetValue::new("value2".into())
+                value: GetValue::new(item2.value().into())
             }
         );
 
@@ -89,9 +92,9 @@ mod flush_cache {
         assert_eq!(result, FlushCache {});
 
         // Verify that the elements were flushed from the cache
-        let get_result3 = client.get(cache_name, "key1").await?;
+        let get_result3 = client.get(cache_name, item1.key()).await?;
         assert_eq!(get_result3, Get::Miss {});
-        let get_result4 = client.get(cache_name, "key2").await?;
+        let get_result4 = client.get(cache_name, item2.key()).await?;
         assert_eq!(get_result4, Get::Miss {});
 
         Ok(())

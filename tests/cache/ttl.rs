@@ -7,7 +7,9 @@ use momento::{
     },
     CollectionTtl, MomentoErrorCode, MomentoResult,
 };
-use momento_test_util::{unique_string, CACHE_TEST_STATE};
+use momento_test_util::{
+    unique_cache_name, unique_key, unique_string, TestScalar, TestSortedSet, CACHE_TEST_STATE,
+};
 
 mod item_get_ttl {
     use super::*;
@@ -23,7 +25,7 @@ mod item_get_ttl {
     #[tokio::test]
     async fn nonexistent_cache() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
-        let cache_name = unique_string("fake-cache");
+        let cache_name = unique_cache_name();
         let result = client.item_get_ttl(cache_name, "key").await.unwrap_err();
         assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
         Ok(())
@@ -33,8 +35,7 @@ mod item_get_ttl {
     async fn nonexistent_key() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = CACHE_TEST_STATE.cache_name.as_str();
-        let key_uuid = unique_string("key");
-        let key = key_uuid.as_str();
+        let key = unique_key();
         let result = client.item_get_ttl(cache_name, key).await?;
         assert_eq!(result, ItemGetTtl::Miss {});
         Ok(())
@@ -44,16 +45,17 @@ mod item_get_ttl {
     async fn get_ttl_for_a_scalar() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = CACHE_TEST_STATE.cache_name.as_str();
-        let key_uuid = unique_string("key");
-        let key = key_uuid.as_str();
+        let item = TestScalar::new();
 
         client
-            .send_request(SetRequest::new(cache_name, key, "value").ttl(Duration::from_secs(2)))
+            .send_request(
+                SetRequest::new(cache_name, item.key(), item.value()).ttl(Duration::from_secs(2)),
+            )
             .await?;
 
         // Should get a HIT before ttl expires
         let ttl: Duration = client
-            .item_get_ttl(cache_name, key)
+            .item_get_ttl(cache_name, item.key())
             .await?
             .try_into()
             .expect("Expected an item ttl!");
@@ -63,7 +65,7 @@ mod item_get_ttl {
         tokio::time::sleep(Duration::from_secs(2)).await;
 
         // Should get a MISS after ttl expires
-        let result = client.item_get_ttl(cache_name, key).await?;
+        let result = client.item_get_ttl(cache_name, item.key()).await?;
         assert_eq!(result, ItemGetTtl::Miss {});
         Ok(())
     }
@@ -72,24 +74,19 @@ mod item_get_ttl {
     async fn get_ttl_for_a_sorted_set() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = CACHE_TEST_STATE.cache_name.as_str();
-        let key_uuid = unique_string("key");
-        let key = key_uuid.as_str();
+        let item = TestSortedSet::new();
 
         // Create a sorted set that expires in 2 seconds
         client
             .send_request(
-                SortedSetPutElementsRequest::new(
-                    cache_name,
-                    key,
-                    vec![("abc", 12.3), ("xyz", 32.1)],
-                )
-                .ttl(CollectionTtl::new(Some(Duration::from_secs(2)), true)),
+                SortedSetPutElementsRequest::new(cache_name, item.name(), item.elements())
+                    .ttl(CollectionTtl::new(Some(Duration::from_secs(2)), true)),
             )
             .await?;
 
         // Should get a HIT before ttl expires
         let ttl: Duration = client
-            .item_get_ttl(cache_name, key)
+            .item_get_ttl(cache_name, item.name())
             .await?
             .try_into()
             .expect("Expected an item ttl!");
@@ -99,7 +96,7 @@ mod item_get_ttl {
         tokio::time::sleep(Duration::from_secs(2)).await;
 
         // Should get a MISS after ttl expires
-        let result = client.item_get_ttl(cache_name, key).await?;
+        let result = client.item_get_ttl(cache_name, item.name()).await?;
         assert_eq!(result, ItemGetTtl::Miss {});
         Ok(())
     }
@@ -148,16 +145,17 @@ mod increase_ttl {
     async fn only_increases_ttl_for_existing_key() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = CACHE_TEST_STATE.cache_name.as_str();
-        let key_uuid = unique_string("key");
-        let key = key_uuid.as_str();
+        let item = TestScalar::new();
 
         // Set a low TTL
         client
-            .send_request(SetRequest::new(cache_name, key, "value").ttl(Duration::from_secs(5)))
+            .send_request(
+                SetRequest::new(cache_name, item.key(), item.value()).ttl(Duration::from_secs(5)),
+            )
             .await?;
 
         let ttl_before: Duration = client
-            .item_get_ttl(cache_name, key)
+            .item_get_ttl(cache_name, item.key())
             .await?
             .try_into()
             .expect("Expected an item ttl!");
@@ -165,12 +163,12 @@ mod increase_ttl {
 
         // Set a higher TTL
         let result = client
-            .increase_ttl(cache_name, key, Duration::from_secs(20))
+            .increase_ttl(cache_name, item.key(), Duration::from_secs(20))
             .await?;
         assert_eq!(result, IncreaseTtl::Set {});
 
         let ttl_after: Duration = client
-            .item_get_ttl(cache_name, key)
+            .item_get_ttl(cache_name, item.key())
             .await?
             .try_into()
             .expect("Expected an item ttl!");
@@ -178,12 +176,12 @@ mod increase_ttl {
 
         // Setting TTL lower than current TTL should not change the TTL
         let result = client
-            .increase_ttl(cache_name, key, Duration::from_secs(10))
+            .increase_ttl(cache_name, item.key(), Duration::from_secs(10))
             .await?;
         assert_eq!(result, IncreaseTtl::NotSet {});
 
         let ttl_lower: Duration = client
-            .item_get_ttl(cache_name, key)
+            .item_get_ttl(cache_name, item.key())
             .await?
             .try_into()
             .expect("Expected an item ttl!");
@@ -209,7 +207,7 @@ mod decrease_ttl {
     #[tokio::test]
     async fn nonexistent_cache() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
-        let cache_name = unique_string("fake-cache");
+        let cache_name = unique_cache_name();
         let result = client
             .decrease_ttl(cache_name, "key", Duration::from_secs(5))
             .await
@@ -222,8 +220,7 @@ mod decrease_ttl {
     async fn nonexistent_key() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = CACHE_TEST_STATE.cache_name.as_str();
-        let key_uuid = unique_string("key");
-        let key = key_uuid.as_str();
+        let key = unique_key();
         let result = client
             .decrease_ttl(cache_name, key, Duration::from_secs(1))
             .await?;
@@ -235,16 +232,17 @@ mod decrease_ttl {
     async fn only_decreases_ttl_for_existing_key() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = CACHE_TEST_STATE.cache_name.as_str();
-        let key_uuid = unique_string("key");
-        let key = key_uuid.as_str();
+        let item = TestScalar::new();
 
         // Set a high TTL
         client
-            .send_request(SetRequest::new(cache_name, key, "value").ttl(Duration::from_secs(20)))
+            .send_request(
+                SetRequest::new(cache_name, item.key(), item.value()).ttl(Duration::from_secs(20)),
+            )
             .await?;
 
         let ttl_before: Duration = client
-            .item_get_ttl(cache_name, key)
+            .item_get_ttl(cache_name, item.key())
             .await?
             .try_into()
             .expect("Expected an item ttl!");
@@ -252,12 +250,12 @@ mod decrease_ttl {
 
         // Set a lower TTL
         let result = client
-            .decrease_ttl(cache_name, key, Duration::from_secs(5))
+            .decrease_ttl(cache_name, item.key(), Duration::from_secs(5))
             .await?;
         assert_eq!(result, DecreaseTtl::Set {});
 
         let ttl_after: Duration = client
-            .item_get_ttl(cache_name, key)
+            .item_get_ttl(cache_name, item.key())
             .await?
             .try_into()
             .expect("Expected an item ttl!");
@@ -265,12 +263,12 @@ mod decrease_ttl {
 
         // Setting TTL higher than current TTL should not change the TTL
         let result = client
-            .decrease_ttl(cache_name, key, Duration::from_secs(10))
+            .decrease_ttl(cache_name, item.key(), Duration::from_secs(10))
             .await?;
         assert_eq!(result, DecreaseTtl::NotSet {});
 
         let ttl_lower: Duration = client
-            .item_get_ttl(cache_name, key)
+            .item_get_ttl(cache_name, item.key())
             .await?
             .try_into()
             .expect("Expected an item ttl!");
@@ -296,7 +294,7 @@ mod update_ttl {
     #[tokio::test]
     async fn nonexistent_cache() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
-        let cache_name = unique_string("fake-cache");
+        let cache_name = unique_cache_name();
         let result = client
             .update_ttl(cache_name, "key", Duration::from_secs(5))
             .await
@@ -309,8 +307,7 @@ mod update_ttl {
     async fn nonexistent_key() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = CACHE_TEST_STATE.cache_name.as_str();
-        let key_uuid = unique_string("key");
-        let key = key_uuid.as_str();
+        let key = unique_string("key");
         let result = client
             .update_ttl(cache_name, key, Duration::from_secs(5))
             .await?;
@@ -322,26 +319,27 @@ mod update_ttl {
     async fn overwrites_ttl_for_existing_key() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = CACHE_TEST_STATE.cache_name.as_str();
-        let key_uuid = unique_string("key");
-        let key = key_uuid.as_str();
+        let item = TestScalar::new();
 
         client
-            .send_request(SetRequest::new(cache_name, key, "value").ttl(Duration::from_secs(10)))
+            .send_request(
+                SetRequest::new(cache_name, item.key(), item.value()).ttl(Duration::from_secs(10)),
+            )
             .await?;
 
         let ttl_before: Duration = client
-            .item_get_ttl(cache_name, key)
+            .item_get_ttl(cache_name, item.key())
             .await?
             .try_into()
             .expect("Expected an item ttl!");
         assert!(ttl_before.as_secs() > 0 && ttl_before.as_secs() < 10);
 
         client
-            .update_ttl(cache_name, key, Duration::from_secs(20))
+            .update_ttl(cache_name, item.key(), Duration::from_secs(20))
             .await?;
 
         let ttl_after: Duration = client
-            .item_get_ttl(cache_name, key)
+            .item_get_ttl(cache_name, item.key())
             .await?
             .try_into()
             .expect("Expected an item ttl!");

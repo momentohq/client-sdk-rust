@@ -2,11 +2,11 @@ use std::env;
 use std::future::Future;
 use std::time::Duration;
 
-use uuid::Uuid;
-
 use momento::cache::configurations;
 use momento::CredentialProvider;
 use momento::{CacheClient, SimpleCacheClientBuilder};
+
+use crate::unique_cache_name;
 
 pub type DoctestResult = anyhow::Result<()>;
 
@@ -28,7 +28,7 @@ where
     // The constructor for the cache client needs a tokio runtime to be active.
     let _guard = runtime.enter();
 
-    let cache_name = unique_string("rust-sdk");
+    let cache_name = unique_cache_name();
     let credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
         .expect("MOMENTO_API_KEY must be set");
 
@@ -70,8 +70,4 @@ pub fn get_test_cache_name() -> String {
 pub fn get_test_credential_provider() -> CredentialProvider {
     CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
         .expect("auth token should be valid")
-}
-
-pub fn unique_string(prefix: impl Into<String>) -> String {
-    format!("{}-{}", prefix.into(), Uuid::new_v4())
 }
