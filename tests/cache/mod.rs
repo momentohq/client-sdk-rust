@@ -1,5 +1,5 @@
 mod control;
 mod item;
-mod key_exists;
+mod key_existence;
 mod scalar;
 mod sorted_set;
