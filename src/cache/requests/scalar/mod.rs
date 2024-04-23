@@ -8,4 +8,5 @@ pub mod item_get_type;
 pub mod key_exists;
 pub mod keys_exist;
 pub mod set;
+pub mod set_if_absent;
 pub mod update_ttl;
