@@ -115,7 +115,7 @@ mod keys_exists {
 
         // these dictionary entries should be true
         assert!(keys_dict[&items[0].key()]);
-        assert!(keys_dict[&items[1].key()]);
+        assert!(keys_dict[&items[2].key()]);
 
         // these dictionary entries should be false
         assert!(!keys_dict[&items[1].key()]);
