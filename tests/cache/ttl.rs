@@ -3,9 +3,10 @@ use std::time::Duration;
 
 use momento::{
     cache::{
-        DecreaseTtl, IncreaseTtl, ItemGetTtl, SetRequest, SortedSetPutElementsRequest, UpdateTtl,
+        CollectionTtl, DecreaseTtl, IncreaseTtl, ItemGetTtl, SetRequest,
+        SortedSetPutElementsRequest, UpdateTtl,
     },
-    CollectionTtl, MomentoErrorCode, MomentoResult,
+    MomentoErrorCode, MomentoResult,
 };
 use momento_test_util::{
     unique_cache_name, unique_key, unique_string, TestScalar, TestSortedSet, CACHE_TEST_STATE,

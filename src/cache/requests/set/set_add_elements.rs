@@ -1,9 +1,10 @@
 use momento_protos::cache_client::SetUnionRequest;
 
 use crate::cache::requests::MomentoRequest;
+use crate::cache::CollectionTtl;
 use crate::cache_client::CacheClient;
 use crate::utils::prep_request_with_timeout;
-use crate::{CollectionTtl, IntoBytes, MomentoResult};
+use crate::{IntoBytes, MomentoResult};
 
 /// Request to add elements to the given set. Creates the set if it does not exist.
 ///
@@ -23,8 +24,7 @@ use crate::{CollectionTtl, IntoBytes, MomentoResult};
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::CollectionTtl;
-/// use momento::cache::{SetAddElements, SetAddElementsRequest};
+/// use momento::cache::{CollectionTtl, SetAddElements, SetAddElementsRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let set_name = "set";
 ///

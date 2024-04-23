@@ -1,8 +1,9 @@
 use momento_protos::cache_client::{SortedSetElement, SortedSetPutRequest};
 
 use crate::cache::requests::MomentoRequest;
+use crate::cache::CollectionTtl;
 use crate::utils::prep_request_with_timeout;
-use crate::{CacheClient, CollectionTtl, IntoBytes, MomentoResult};
+use crate::{CacheClient, IntoBytes, MomentoResult};
 
 /// Request to add an element to a sorted set. If the element already exists, its score is updated.
 /// Creates the sorted set if it does not exist.
@@ -24,8 +25,7 @@ use crate::{CacheClient, CollectionTtl, IntoBytes, MomentoResult};
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::CollectionTtl;
-/// use momento::cache::{SortedSetPutElement, SortedSetPutElementRequest};
+/// use momento::cache::{CollectionTtl, SortedSetPutElement, SortedSetPutElementRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
 ///
