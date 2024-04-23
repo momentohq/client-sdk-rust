@@ -1,7 +1,9 @@
 use std::convert::TryInto;
 use std::time::Duration;
 
-use momento::cache::{DecreaseTtl, IncreaseTtl, ItemGetTtl, SetRequest, SortedSetPutElementsRequest, UpdateTtl};
+use momento::cache::{
+    DecreaseTtl, IncreaseTtl, ItemGetTtl, SetRequest, SortedSetPutElementsRequest, UpdateTtl,
+};
 use momento::{CollectionTtl, MomentoErrorCode, MomentoResult};
 use momento_test_util::{unique_string, CACHE_TEST_STATE};
 
@@ -122,7 +124,9 @@ async fn increase_ttl_nonexistent_key() -> MomentoResult<()> {
     let cache_name = CACHE_TEST_STATE.cache_name.as_str();
     let key_uuid = unique_string("key");
     let key = key_uuid.as_str();
-    let result = client.increase_ttl(cache_name, key, Duration::from_secs(10)).await?;
+    let result = client
+        .increase_ttl(cache_name, key, Duration::from_secs(10))
+        .await?;
     assert_eq!(result, IncreaseTtl::Miss {});
     Ok(())
 }
@@ -147,7 +151,9 @@ async fn increase_ttl_only_increases_ttl_for_existing_key() -> MomentoResult<()>
     assert!(ttl_before.as_secs() > 0 && ttl_before.as_secs() < 5);
 
     // Set a higher TTL
-    let result = client.increase_ttl(cache_name, key, Duration::from_secs(20)).await?;
+    let result = client
+        .increase_ttl(cache_name, key, Duration::from_secs(20))
+        .await?;
     assert_eq!(result, IncreaseTtl::Set {});
 
     let ttl_after: Duration = client
@@ -158,7 +164,9 @@ async fn increase_ttl_only_increases_ttl_for_existing_key() -> MomentoResult<()>
     assert!(ttl_after.as_secs() > 15 && ttl_after.as_secs() < 20);
 
     // Setting TTL lower than current TTL should not change the TTL
-    let result = client.increase_ttl(cache_name, key, Duration::from_secs(10)).await?;
+    let result = client
+        .increase_ttl(cache_name, key, Duration::from_secs(10))
+        .await?;
     assert_eq!(result, IncreaseTtl::NotSet {});
 
     let ttl_lower: Duration = client
@@ -199,7 +207,9 @@ async fn decrease_ttl_nonexistent_key() -> MomentoResult<()> {
     let cache_name = CACHE_TEST_STATE.cache_name.as_str();
     let key_uuid = unique_string("key");
     let key = key_uuid.as_str();
-    let result = client.decrease_ttl(cache_name, key, Duration::from_secs(1)).await?;
+    let result = client
+        .decrease_ttl(cache_name, key, Duration::from_secs(1))
+        .await?;
     assert_eq!(result, DecreaseTtl::Miss {});
     Ok(())
 }
@@ -224,7 +234,9 @@ async fn decrease_ttl_only_decreases_ttl_for_existing_key() -> MomentoResult<()>
     assert!(ttl_before.as_secs() > 15 && ttl_before.as_secs() < 20);
 
     // Set a lower TTL
-    let result = client.decrease_ttl(cache_name, key, Duration::from_secs(5)).await?;
+    let result = client
+        .decrease_ttl(cache_name, key, Duration::from_secs(5))
+        .await?;
     assert_eq!(result, DecreaseTtl::Set {});
 
     let ttl_after: Duration = client
@@ -235,7 +247,9 @@ async fn decrease_ttl_only_decreases_ttl_for_existing_key() -> MomentoResult<()>
     assert!(ttl_after.as_secs() > 0 && ttl_after.as_secs() < 5);
 
     // Setting TTL higher than current TTL should not change the TTL
-    let result = client.decrease_ttl(cache_name, key, Duration::from_secs(10)).await?;
+    let result = client
+        .decrease_ttl(cache_name, key, Duration::from_secs(10))
+        .await?;
     assert_eq!(result, DecreaseTtl::NotSet {});
 
     let ttl_lower: Duration = client
@@ -276,7 +290,9 @@ async fn update_ttl_nonexistent_key() -> MomentoResult<()> {
     let cache_name = CACHE_TEST_STATE.cache_name.as_str();
     let key_uuid = unique_string("key");
     let key = key_uuid.as_str();
-    let result = client.update_ttl(cache_name, key, Duration::from_secs(5)).await?;
+    let result = client
+        .update_ttl(cache_name, key, Duration::from_secs(5))
+        .await?;
     assert_eq!(result, UpdateTtl::Miss {});
     Ok(())
 }
@@ -299,7 +315,9 @@ async fn update_ttl_overwrites_ttl_for_existing_key() -> MomentoResult<()> {
         .expect("Expected an item ttl!");
     assert!(ttl_before.as_secs() > 0 && ttl_before.as_secs() < 10);
 
-    client.update_ttl(cache_name, key, Duration::from_secs(20)).await?;
+    client
+        .update_ttl(cache_name, key, Duration::from_secs(20))
+        .await?;
 
     let ttl_after: Duration = client
         .item_get_ttl(cache_name, key)
