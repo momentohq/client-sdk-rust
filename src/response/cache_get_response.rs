@@ -2,7 +2,7 @@ use std::convert::{TryFrom, TryInto};
 
 use crate::{MomentoError, MomentoErrorCode};
 
-use super::parse_string;
+use crate::utils::parse_string;
 
 /// Response for a cache get operation.
 ///
