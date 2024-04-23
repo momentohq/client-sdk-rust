@@ -4,7 +4,6 @@ use crate::{MomentoError, MomentoErrorCode};
 
 use crate::utils::parse_string;
 
-
 /// Response for a cache get operation.
 ///
 /// If you'd like to handle misses you can simply match and handle your response:

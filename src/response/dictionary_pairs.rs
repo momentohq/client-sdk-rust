@@ -4,8 +4,8 @@ use std::{
     iter::FromIterator,
 };
 
-use crate::{MomentoError, MomentoResult};
 use crate::utils::parse_string;
+use crate::{MomentoError, MomentoResult};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct DictionaryPairs {
