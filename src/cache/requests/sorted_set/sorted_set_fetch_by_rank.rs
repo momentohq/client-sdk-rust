@@ -1,5 +1,6 @@
 use momento_protos::cache_client::sorted_set_fetch_request::{by_index, ByIndex, Range};
-use momento_protos::cache_client::{SortedSetFetchRequest, Unbounded};
+use momento_protos::cache_client::SortedSetFetchRequest;
+use momento_protos::common::Unbounded;
 
 use crate::cache::requests::sorted_set::sorted_set_fetch_response::SortedSetFetch;
 use crate::cache::requests::MomentoRequest;

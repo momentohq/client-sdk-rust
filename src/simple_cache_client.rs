@@ -1,7 +1,7 @@
 use core::num::NonZeroU32;
 use momento_protos::{
-    cache_client::scs_client::*,
-    cache_client::*,
+    cache_client::{scs_client::*, *},
+    common::Unbounded,
     control_client::{
         scs_control_client::ScsControlClient, CreateCacheRequest, CreateSigningKeyRequest,
         DeleteCacheRequest, FlushCacheRequest, ListCachesRequest, ListSigningKeysRequest,
