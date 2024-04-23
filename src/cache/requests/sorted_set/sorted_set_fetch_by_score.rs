@@ -1,6 +1,7 @@
 use momento_protos::cache_client::sorted_set_fetch_request::by_score::Score;
 use momento_protos::cache_client::sorted_set_fetch_request::{by_score, ByScore, Range};
-use momento_protos::cache_client::{SortedSetFetchRequest, Unbounded};
+use momento_protos::cache_client::SortedSetFetchRequest;
+use momento_protos::common::Unbounded;
 
 use crate::cache::requests::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder;
 use crate::cache::requests::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder::Ascending;
