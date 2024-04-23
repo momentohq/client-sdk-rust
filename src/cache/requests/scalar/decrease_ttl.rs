@@ -76,6 +76,7 @@ impl<K: IntoBytes> MomentoRequest for DecreaseTtlRequest<K> {
         match response.result {
             Some(update_ttl_response::Result::Missing(_)) => Ok(DecreaseTtl::Miss),
             Some(update_ttl_response::Result::Set(_)) => Ok(DecreaseTtl::Set),
+            Some(update_ttl_response::Result::NotSet(_)) => Ok(DecreaseTtl::NotSet),
             _ => unreachable!(),
         }
     }
@@ -84,5 +85,6 @@ impl<K: IntoBytes> MomentoRequest for DecreaseTtlRequest<K> {
 #[derive(Debug, PartialEq, Eq)]
 pub enum DecreaseTtl {
     Set,
+    NotSet,
     Miss,
 }
