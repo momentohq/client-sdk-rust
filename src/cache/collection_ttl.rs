@@ -67,6 +67,18 @@ impl CollectionTtl {
         Self::new(ttl.into(), self.refresh())
     }
 
+    /// Constructs a CollectionTtl with the specified TTL. The TTL for the collection will be
+    /// refreshed any time the collection is modified.
+    pub fn of(self, ttl: Duration) -> Self {
+        Self::new(Some(ttl), true)
+    }
+
+    /// The default way to handle TTLs for collections. The client's default TTL will be used
+    /// and the TTL for the collection will be refreshed any time the collection is modified.
+    pub fn from_cache_ttl() -> Self {
+        Self::new(None, true)
+    }
+
     /// The [`Duration`] after which the cached collection should be expired from the
     /// cache.
     ///
