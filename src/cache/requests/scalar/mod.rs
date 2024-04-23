@@ -1,7 +1,11 @@
+pub mod decrease_ttl;
 pub mod delete;
 pub mod get;
+pub mod increase_ttl;
 pub mod increment;
+pub mod item_get_ttl;
 pub mod item_get_type;
 pub mod key_exists;
 pub mod keys_exist;
 pub mod set;
+pub mod update_ttl;

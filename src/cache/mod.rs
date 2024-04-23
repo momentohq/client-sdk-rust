@@ -11,13 +11,17 @@ pub use requests::list_caches::{
     CacheInfo, CacheLimits, ListCaches, ListCachesRequest, TopicLimits,
 };
 
+pub use requests::scalar::decrease_ttl::{DecreaseTtl, DecreaseTtlRequest};
 pub use requests::scalar::delete::{Delete, DeleteRequest};
 pub use requests::scalar::get::{Get, GetRequest, GetValue};
+pub use requests::scalar::increase_ttl::{IncreaseTtl, IncreaseTtlRequest};
 pub use requests::scalar::increment::{Increment, IncrementRequest};
+pub use requests::scalar::item_get_ttl::{ItemGetTtl, ItemGetTtlRequest};
 pub use requests::scalar::item_get_type::{ItemGetType, ItemGetTypeRequest, ItemType};
 pub use requests::scalar::key_exists::{KeyExists, KeyExistsRequest};
 pub use requests::scalar::keys_exist::{KeysExist, KeysExistRequest};
 pub use requests::scalar::set::{Set, SetRequest};
+pub use requests::scalar::update_ttl::{UpdateTtl, UpdateTtlRequest};
 
 pub use requests::set::set_add_elements::{SetAddElements, SetAddElementsRequest};
 
