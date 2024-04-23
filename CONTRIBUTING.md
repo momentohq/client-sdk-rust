@@ -106,10 +106,38 @@ We have organized the integration tests, those in the `tests` folder, first by s
 This makes it easier to find the tests you are looking for and to add new tests in the future. We are intentionally
 following the organization model from the [JS repo](https://github.com/momentohq/client-sdk-javascript/packages/common-integration-tests/src).
 
-That is, we have a `tests` folder with a file for each service, and then within each service file we have a module
+```
+tests
+├── cache
+│   ├── control.rs
+│   ├── item.rs
+│   ├── key_existence.rs
+|   ├── scalar.rs
+│   └── sorted_set.rs
+```
+
+That is, we have a `tests` folder with a folder for each service, and then within each service we have a module
 for each command group or broader set of functionality (eg sorted sets, scalars, item metadata). Within each module,
 we have a list of submodules, one for each individual command. Each of these corresponds to a `describe` block in the
 JS tests.
+
+```rust
+// example from sorted_set.rs
+
+mod sorted_set_fetch_by_rank {
+    // tests for the sorted_set_fetch_by_rank command
+}
+
+mod sorted_set_fetch_by_score {
+    // tests for the sorted_set_fetch_by_score command
+}
+
+mod sorted_set_get_rank {
+    // tests for the sorted_set_get_rank command
+}
+
+// etc
+```
 
 By mirroring the JS structure, we can ensure that the tests are consistent across the two SDKs, and that we can easily
 add new tests in the future.
@@ -126,7 +154,7 @@ The resulting docs will be automatically published to https://docs.rs/momento/la
 
 You can build and examine the docs locally at any time via:
 
-```
+```bash
 cargo doc --open
 ```
 
