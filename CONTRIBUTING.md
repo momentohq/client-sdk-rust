@@ -100,6 +100,20 @@ To run a single file of integration tests:
 MOMENTO_API_KEY=<api key> cargo test --test 'cache_sorted_set'
 ```
 
+### How the integration tests are organized
+
+We have organized the integration tests, those in the `tests` folder, first by service and then by functionality.
+This makes it easier to find the tests you are looking for and to add new tests in the future. We are intentionally
+following the organization model from the [JS repo](https://github.com/momentohq/client-sdk-javascript/packages/common-integration-tests/src).
+
+That is, we have a `tests` folder with a file for each service, and then within each service file we have a module
+for each command group or broader set of functionality (eg sorted sets, scalars, item metadata). Within each module,
+we have a list of submodules, one for each individual command. Each of these corresponds to a `describe` block in the
+JS tests.
+
+By mirroring the JS structure, we can ensure that the tests are consistent across the two SDKs, and that we can easily
+add new tests in the future.
+
 ### More details on doctests
 
 Docstring are denoted via `///` comment blocks preceding a function or struct.
