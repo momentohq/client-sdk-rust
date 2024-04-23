@@ -1,10 +1,12 @@
 use std::convert::TryInto;
 use std::time::Duration;
 
-use momento::cache::{
-    DecreaseTtl, IncreaseTtl, ItemGetTtl, SetRequest, SortedSetPutElementsRequest, UpdateTtl,
+use momento::{
+    cache::{
+        DecreaseTtl, IncreaseTtl, ItemGetTtl, SetRequest, SortedSetPutElementsRequest, UpdateTtl,
+    },
+    CollectionTtl, MomentoErrorCode, MomentoResult,
 };
-use momento::{CollectionTtl, MomentoErrorCode, MomentoResult};
 use momento_test_util::{unique_string, CACHE_TEST_STATE};
 
 mod item_get_ttl {

@@ -82,5 +82,3 @@ mod item_get_type {
         Ok(())
     }
 }
-
-mod item_get_ttl {}
