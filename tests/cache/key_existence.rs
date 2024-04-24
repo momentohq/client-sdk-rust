@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 
 use momento::{MomentoErrorCode, MomentoResult};
-use momento_test_util::{unique_string, CACHE_TEST_STATE};
+use momento_test_util::{unique_cache_name, TestScalar, CACHE_TEST_STATE};
 
 mod key_exists {
+    use momento_test_util::{unique_cache_name, TestScalar};
+
     use super::*;
 
     #[tokio::test]
@@ -17,7 +19,7 @@ mod key_exists {
     #[tokio::test]
     async fn nonexistent_cache() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
-        let cache_name = unique_string("fake-cache");
+        let cache_name = unique_cache_name();
         let result = client.key_exists(cache_name, "key").await.unwrap_err();
         assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
         Ok(())
@@ -27,24 +29,25 @@ mod key_exists {
     async fn happy_path() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = CACHE_TEST_STATE.cache_name.as_str();
-        let key_uuid = unique_string("key");
-        let key = key_uuid.as_str();
+        let item = TestScalar::new();
 
         // Key should not exist yet
-        let result = client.key_exists(cache_name, key).await?;
+        let result = client.key_exists(cache_name, item.key()).await?;
         assert!(
             !result.exists,
             "Expected key {} to not exist in cache {}, but it does",
-            key, cache_name
+            item.key(),
+            cache_name
         );
 
         // Key should exist after setting a key
-        client.set(cache_name, key, "value").await?;
-        let result = client.key_exists(cache_name, key).await?;
+        client.set(cache_name, item.key(), item.value()).await?;
+        let result = client.key_exists(cache_name, item.key()).await?;
         assert!(
             result.exists,
             "Expected key {} to exist in cache {}, but it does not",
-            key, cache_name
+            item.key(),
+            cache_name
         );
 
         Ok(())
@@ -65,7 +68,7 @@ mod keys_exists {
     #[tokio::test]
     async fn nonexistent_cache() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
-        let cache_name = unique_string("fake-cache");
+        let cache_name = unique_cache_name();
         let result = client
             .keys_exist(cache_name, vec!["key"])
             .await
@@ -89,23 +92,19 @@ mod keys_exists {
         );
 
         // Key should return true only for keys that exist in the cache
-        let unique_key1 = unique_string("keys-exist");
-        let key1 = unique_key1.as_str();
+        let items = (0..4)
+            .map(|_| TestScalar::new())
+            .collect::<Vec<TestScalar>>();
 
-        let unique_key2 = unique_string("keys-exist");
-        let key2 = unique_key2.as_str();
-
-        let unique_key3 = unique_string("keys-exist");
-        let key3 = unique_key3.as_str();
-
-        let unique_key4 = unique_string("keys-exist");
-        let key4 = unique_key4.as_str();
-
-        client.set(cache_name, key1, key1).await?;
-        client.set(cache_name, key3, key3).await?;
+        client
+            .set(cache_name, items[0].key(), items[0].value())
+            .await?;
+        client
+            .set(cache_name, items[2].key(), items[2].value())
+            .await?;
 
         let result = client
-            .keys_exist(cache_name, vec![key1, key2, key3, key4])
+            .keys_exist(cache_name, items.iter().map(|item| item.key()).collect())
             .await?;
 
         let keys_list: Vec<bool> = result.clone().into();
@@ -115,12 +114,12 @@ mod keys_exists {
         let keys_dict: HashMap<String, bool> = result.into();
 
         // these dictionary entries should be true
-        assert!(keys_dict[key1]);
-        assert!(keys_dict[key3]);
+        assert!(keys_dict[items[0].key()]);
+        assert!(keys_dict[items[2].key()]);
 
         // these dictionary entries should be false
-        assert!(!keys_dict[key2]);
-        assert!(!keys_dict[key4]);
+        assert!(!keys_dict[items[1].key()]);
+        assert!(!keys_dict[items[3].key()]);
 
         Ok(())
     }
