@@ -45,6 +45,8 @@ pub use requests::sorted_set::sorted_set_put_elements::{
     IntoSortedSetElements, SortedSetElement, SortedSetPutElements, SortedSetPutElementsRequest,
 };
 
+pub use requests::list::list_length::{ListLength, ListLengthRequest};
+
 // Similar re-exporting with config::configuration and config::configurations
 // so import paths can be simpmlified to "momento::cache::Configuration" and
 // "use momento::cache::configurations::laptop"
