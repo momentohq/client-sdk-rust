@@ -58,18 +58,18 @@ pub struct SetIfPresentAndNotEqualRequest<K: IntoBytes, V: IntoBytes, E: IntoByt
     cache_name: String,
     key: K,
     value: V,
-    equal: E,
+    not_equal: E,
     ttl: Option<Duration>,
 }
 
 impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> SetIfPresentAndNotEqualRequest<K, V, E> {
-    pub fn new(cache_name: impl Into<String>, key: K, value: V, equal: E) -> Self {
+    pub fn new(cache_name: impl Into<String>, key: K, value: V, not_equal: E) -> Self {
         let ttl = None;
         Self {
             cache_name: cache_name.into(),
             key,
             value,
-            equal,
+            not_equal,
             ttl,
         }
     }
@@ -95,7 +95,7 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest
                 ttl_milliseconds: cache_client.expand_ttl_ms(self.ttl)?,
                 condition: Some(PresentAndNotEqual(
                     momento_protos::common::PresentAndNotEqual {
-                        value_to_check: self.equal.into_bytes(),
+                        value_to_check: self.not_equal.into_bytes(),
                     },
                 )),
             },
