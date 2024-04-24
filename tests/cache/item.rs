@@ -57,7 +57,7 @@ mod item_get_type {
         // Expect Set after using setAddElements
         let item = TestSet::new();
         client
-            .set_add_elements(cache_name, item.name(), item.elements())
+            .set_add_elements(cache_name, item.name(), item.elements().to_vec())
             .await?;
         let result = client.item_get_type(cache_name, item.name()).await?;
         match result {
@@ -77,7 +77,7 @@ mod item_get_type {
         // Expect SortedSet after using sortedSetPutElements
         let item = TestSortedSet::new();
         client
-            .sorted_set_put_elements(cache_name, item.name(), item.elements())
+            .sorted_set_put_elements(cache_name, item.name(), item.elements().to_vec())
             .await?;
         let result = client.item_get_type(cache_name, item.name()).await?;
         match result {

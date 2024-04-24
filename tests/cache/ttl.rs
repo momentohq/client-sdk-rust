@@ -80,7 +80,7 @@ mod item_get_ttl {
         // Create a sorted set that expires in 2 seconds
         client
             .send_request(
-                SortedSetPutElementsRequest::new(cache_name, item.name(), item.elements())
+                SortedSetPutElementsRequest::new(cache_name, item.name(), item.elements().to_vec())
                     .ttl(CollectionTtl::new(Some(Duration::from_secs(2)), true)),
             )
             .await?;
