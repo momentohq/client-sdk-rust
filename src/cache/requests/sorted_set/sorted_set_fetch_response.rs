@@ -87,6 +87,18 @@ impl TryFrom<SortedSetFetch> for Vec<(String, f64)> {
     }
 }
 
+impl Into<SortedSetFetch> for Vec<(String, f64)> {
+    fn into(self) -> SortedSetFetch {
+        SortedSetFetch::Hit {
+            elements: SortedSetElements::new(
+                self.into_iter()
+                    .map(|(element, score)| (element.into_bytes(), score))
+                    .collect(),
+            ),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub struct SortedSetElements {
     pub elements: Vec<(Vec<u8>, f64)>,

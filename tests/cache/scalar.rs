@@ -41,7 +41,7 @@ mod get_set_delete {
         let result = client.get(cache_name, item.key()).await?;
         assert_eq!(
             result,
-            item.to_get_hit(),
+            Get::from(&item),
             "Expected hit for key '{}' in cache {}, got {:?}",
             item.key(),
             cache_name,

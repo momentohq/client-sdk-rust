@@ -1,5 +1,5 @@
 use momento::{
-    cache::{Get, GetValue},
+    cache::{Get, GetValue, SortedSetElements, SortedSetFetch},
     IntoBytes,
 };
 use uuid::Uuid;
@@ -20,6 +20,7 @@ pub fn unique_value() -> String {
     unique_string("value")
 }
 
+#[derive(Debug, PartialEq, Clone)]
 pub struct TestScalar {
     pub key: String,
     pub value: String,
@@ -40,13 +41,6 @@ impl TestScalar {
     pub fn value(&self) -> &str {
         &self.value
     }
-
-    // todo use `into` after getting to sorted sets
-    pub fn to_get_hit(&self) -> Get {
-        Get::Hit {
-            value: GetValue::new(self.value().into_bytes()),
-        }
-    }
 }
 
 impl Default for TestScalar {
@@ -55,6 +49,15 @@ impl Default for TestScalar {
     }
 }
 
+impl From<&TestScalar> for Get {
+    fn from(test_scalar: &TestScalar) -> Self {
+        Get::Hit {
+            value: GetValue::new(test_scalar.value().into_bytes()),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct TestSet {
     pub name: String,
     pub elements: Vec<String>,
@@ -83,6 +86,7 @@ impl Default for TestSet {
     }
 }
 
+#[derive(Debug, PartialEq, Clone)]
 pub struct TestSortedSet {
     pub name: String,
     pub elements: Vec<(String, f64)>,
@@ -108,5 +112,19 @@ impl TestSortedSet {
 impl Default for TestSortedSet {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl From<&TestSortedSet> for SortedSetFetch {
+    fn from(test_sorted_set: &TestSortedSet) -> Self {
+        SortedSetFetch::Hit {
+            elements: SortedSetElements::new(
+                test_sorted_set
+                    .elements()
+                    .iter()
+                    .map(|(element, score)| (element.as_bytes().to_vec(), *score))
+                    .collect(),
+            ),
+        }
     }
 }
