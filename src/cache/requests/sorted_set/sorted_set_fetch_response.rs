@@ -87,11 +87,12 @@ impl TryFrom<SortedSetFetch> for Vec<(String, f64)> {
     }
 }
 
-impl Into<SortedSetFetch> for Vec<(String, f64)> {
-    fn into(self) -> SortedSetFetch {
+impl From<Vec<(String, f64)>> for SortedSetFetch {
+    fn from(elements: Vec<(String, f64)>) -> Self {
         SortedSetFetch::Hit {
             elements: SortedSetElements::new(
-                self.into_iter()
+                elements
+                    .into_iter()
                     .map(|(element, score)| (element.into_bytes(), score))
                     .collect(),
             ),
