@@ -9,6 +9,19 @@ use momento::{CacheClient, MomentoErrorCode, MomentoResult};
 
 use momento_test_util::{unique_cache_name, unique_key, TestSortedSet, CACHE_TEST_STATE};
 
+async fn assert_fetched_sorted_set_eq(
+    sorted_set_fetch_result: SortedSetFetch,
+    expected: Vec<(String, f64)>,
+) -> MomentoResult<()> {
+    let expected: SortedSetFetch = expected.into();
+    assert_eq!(
+        sorted_set_fetch_result, expected,
+        "Expected SortedSetFetch::Hit to be equal to {:?}, but got {:?}",
+        expected, sorted_set_fetch_result
+    );
+    Ok(())
+}
+
 mod sorted_set_fetch_by_rank {
     use super::*;
 
@@ -41,42 +54,58 @@ mod sorted_set_fetch_by_rank {
             .order(Ascending)
             .start_rank(0)
             .end_rank(6);
-
         let result = client.send_request(fetch_request).await?;
+        assert_fetched_sorted_set_eq(
+            result,
+            vec![
+                ("1".to_string(), 0.0),
+                ("3".to_string(), 0.5),
+                ("2".to_string(), 1.0),
+                ("5".to_string(), 1.5),
+                ("4".to_string(), 2.0),
+            ],
+        )
+        .await?;
 
-        let expected: SortedSetFetch = vec![
-            ("1".to_string(), 0.0),
-            ("3".to_string(), 0.5),
-            ("2".to_string(), 1.0),
-            ("5".to_string(), 1.5),
-            ("4".to_string(), 2.0),
-        ]
-        .into();
+        // Up until rank 3
+        let fetch_request = SortedSetFetchByRankRequest::new(cache_name, item.name())
+            .order(Ascending)
+            .end_rank(3);
+        let result = client.send_request(fetch_request).await?;
+        assert_fetched_sorted_set_eq(
+            result,
+            vec![
+                ("1".to_string(), 0.0),
+                ("3".to_string(), 0.5),
+                ("2".to_string(), 1.0),
+            ],
+        )
+        .await?;
 
-        assert_eq!(
-            result, expected,
-            "Expected SortedSetFetch::Hit to be equal to {:?}, but got {:?}",
-            expected, result
-        );
+        // From rank 3
+        let fetch_request = SortedSetFetchByRankRequest::new(cache_name, item.name())
+            .order(Ascending)
+            .start_rank(3);
+        let result = client.send_request(fetch_request).await?;
+        assert_fetched_sorted_set_eq(result, vec![("5".to_string(), 1.5), ("4".to_string(), 2.0)])
+            .await?;
 
         // Partial set descending
         let fetch_request = SortedSetFetchByRankRequest::new(cache_name, item.name())
             .order(Descending)
             .start_rank(1)
             .end_rank(4);
-
         let result = client.send_request(fetch_request).await?;
-        let expected: SortedSetFetch = vec![
-            ("5".to_string(), 1.5),
-            ("2".to_string(), 1.0),
-            ("3".to_string(), 0.5),
-        ]
-        .into();
-        assert_eq!(
-            result, expected,
-            "Expected SortedSetFetch::Hit to be equal to {:?}, but got {:?}",
-            expected, result
-        );
+        assert_fetched_sorted_set_eq(
+            result,
+            vec![
+                ("5".to_string(), 1.5),
+                ("2".to_string(), 1.0),
+                ("3".to_string(), 0.5),
+            ],
+        )
+        .await?;
+
         Ok(())
     }
 
@@ -91,6 +120,7 @@ mod sorted_set_fetch_by_rank {
             .unwrap_err();
 
         assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+
         Ok(())
     }
 }
@@ -127,61 +157,80 @@ mod sorted_set_fetch_by_score {
             .order(Ascending)
             .min_score(0.0)
             .max_score(9.9);
-
         let result = client.send_request(fetch_request).await?;
-        let expected: SortedSetFetch = vec![
-            ("1".to_string(), 0.0),
-            ("3".to_string(), 0.5),
-            ("2".to_string(), 1.0),
-            ("5".to_string(), 1.5),
-            ("4".to_string(), 2.0),
-        ]
-        .into();
+        assert_fetched_sorted_set_eq(
+            result,
+            vec![
+                ("1".to_string(), 0.0),
+                ("3".to_string(), 0.5),
+                ("2".to_string(), 1.0),
+                ("5".to_string(), 1.5),
+                ("4".to_string(), 2.0),
+            ],
+        )
+        .await?;
 
-        assert_eq!(
-            result, expected,
-            "Expected SortedSetFetch::Hit to be equal to {:?}, but got {:?}",
-            expected, result
-        );
+        // Up until score 1.0
+        let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, item.name())
+            .order(Ascending)
+            .max_score(1.0);
+        let result = client.send_request(fetch_request).await?;
+        assert_fetched_sorted_set_eq(
+            result,
+            vec![
+                ("1".to_string(), 0.0),
+                ("3".to_string(), 0.5),
+                ("2".to_string(), 1.0),
+            ],
+        )
+        .await?;
+
+        // From score 1.0
+        let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, item.name())
+            .order(Ascending)
+            .min_score(1.0);
+        let result = client.send_request(fetch_request).await?;
+        assert_fetched_sorted_set_eq(
+            result,
+            vec![
+                ("2".to_string(), 1.0),
+                ("5".to_string(), 1.5),
+                ("4".to_string(), 2.0),
+            ],
+        )
+        .await?;
 
         // Partial set descending
         let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, item.name())
             .order(Descending)
             .min_score(0.1)
             .max_score(1.9);
-
         let result = client.send_request(fetch_request).await?;
-        let expected: SortedSetFetch = vec![
-            ("5".to_string(), 1.5),
-            ("2".to_string(), 1.0),
-            ("3".to_string(), 0.5),
-        ]
-        .into();
-
-        assert_eq!(
-            result, expected,
-            "Expected SortedSetFetch::Hit to be equal to {:?}, but got {:?}",
-            expected, result
-        );
+        assert_fetched_sorted_set_eq(
+            result,
+            vec![
+                ("5".to_string(), 1.5),
+                ("2".to_string(), 1.0),
+                ("3".to_string(), 0.5),
+            ],
+        )
+        .await?;
 
         // Partial set limited by offset and count
         let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, item.name())
             .offset(1)
             .count(3);
-
         let result = client.send_request(fetch_request).await?;
-        let expected: SortedSetFetch = vec![
-            ("3".to_string(), 0.5),
-            ("2".to_string(), 1.0),
-            ("5".to_string(), 1.5),
-        ]
-        .into();
+        assert_fetched_sorted_set_eq(
+            result,
+            vec![
+                ("3".to_string(), 0.5),
+                ("2".to_string(), 1.0),
+                ("5".to_string(), 1.5),
+            ],
+        )
+        .await?;
 
-        assert_eq!(
-            result, expected,
-            "Expected SortedSetFetch::Hit to be equal to {:?}, but got {:?}",
-            expected, result
-        );
         Ok(())
     }
 
@@ -237,12 +286,8 @@ mod sorted_set_put_element {
         let result = client
             .sorted_set_fetch_by_rank(cache_name, item.name(), Ascending, None, None)
             .await?;
-        let expected: SortedSetFetch = vec![item.elements[0].clone()].into();
-        assert_eq!(
-            result, expected,
-            "Expected SortedSetFetch::Hit to be equal to {:?}, but got {:?}",
-            expected, result
-        );
+        assert_fetched_sorted_set_eq(result, vec![item.elements[0].clone()]).await?;
+
         Ok(())
     }
 
@@ -265,10 +310,6 @@ mod sorted_set_put_element {
 mod sorted_set_put_elements {
     use super::*;
 
-    fn compare_by_first_entry(a: &(String, f64), b: &(String, f64)) -> std::cmp::Ordering {
-        a.0.cmp(&b.0)
-    }
-
     #[tokio::test]
     async fn happy_path() -> MomentoResult<()> {
         async fn test_put_elements_happy_path(
@@ -278,10 +319,6 @@ mod sorted_set_put_elements {
         ) -> MomentoResult<()> {
             let sorted_set_name = unique_key();
             let sorted_set_name = sorted_set_name.as_str();
-            let result = client
-                .sorted_set_fetch_by_score(cache_name, sorted_set_name, Ascending)
-                .await?;
-            assert_eq!(result, SortedSetFetch::Miss);
 
             client
                 .sorted_set_put_elements(cache_name, sorted_set_name, to_put.clone())
@@ -290,22 +327,14 @@ mod sorted_set_put_elements {
             let result = client
                 .sorted_set_fetch_by_score(cache_name, sorted_set_name, Ascending)
                 .await?;
+            let expected = to_put
+                .into_sorted_set_elements()
+                .into_iter()
+                .map(|e| (e.value, e.score))
+                .collect::<Vec<_>>();
 
-            match result {
-                SortedSetFetch::Hit { elements } => {
-                    let mut expected = to_put
-                        .into_sorted_set_elements()
-                        .into_iter()
-                        .map(|e| (e.value, e.score))
-                        .collect::<Vec<_>>();
-                    expected.sort_by(compare_by_first_entry);
+            assert_fetched_sorted_set_eq(result, expected).await?;
 
-                    let mut actual = elements.into_strings()?;
-                    actual.sort_by(compare_by_first_entry);
-                    assert_eq!(actual, expected);
-                }
-                _ => panic!("Expected SortedSetFetch::Hit, but got {:?}", result),
-            }
             Ok(())
         }
 
