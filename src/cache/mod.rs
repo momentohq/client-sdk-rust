@@ -22,6 +22,7 @@ pub use requests::scalar::key_exists::{KeyExists, KeyExistsRequest};
 pub use requests::scalar::keys_exist::{KeysExist, KeysExistRequest};
 pub use requests::scalar::set::{Set, SetRequest};
 pub use requests::scalar::set_if_absent::{SetIfAbsent, SetIfAbsentRequest};
+pub use requests::scalar::set_if_absent_or_equal::{SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest};
 pub use requests::scalar::set_if_equal::{SetIfEqual, SetIfEqualRequest};
 pub use requests::scalar::set_if_not_equal::{SetIfNotEqual, SetIfNotEqualRequest};
 pub use requests::scalar::set_if_present::{SetIfPresent, SetIfPresentRequest};
