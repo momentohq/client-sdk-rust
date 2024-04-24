@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use momento::cache::{
-    IntoSortedSetElements, SortedSetElement, SortedSetFetch, SortedSetFetchByRankRequest,
-    SortedSetFetchByScoreRequest,
+    IntoSortedSetElements, SortedSetElement, SortedSetElements, SortedSetFetch,
+    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest,
     SortedSetOrder::{Ascending, Descending},
 };
 use momento::{CacheClient, MomentoErrorCode, MomentoResult};
@@ -26,18 +26,27 @@ async fn assert_fetched_sorted_set_eq_after_sorting(
     sorted_set_fetch_result: SortedSetFetch,
     expected: Vec<(String, f64)>,
 ) -> MomentoResult<()> {
-    let mut sorted_set_fetch_result = sorted_set_fetch_result;
-    match &mut sorted_set_fetch_result {
+    let sort_by_score = |a: &(_, f64), b: &(_, f64)| -> std::cmp::Ordering {
+        a.1.partial_cmp(&b.1)
+            .expect("expected elements to be sortable")
+    };
+
+    let sorted_set_fetch_result = match sorted_set_fetch_result {
         SortedSetFetch::Hit { elements } => {
-            elements
-                .elements
-                .sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+            let mut elements = elements.elements.clone();
+            elements.sort_by(sort_by_score);
+            SortedSetFetch::Hit {
+                elements: SortedSetElements { elements },
+            }
         }
-        _ => {}
-    }
+        _ => sorted_set_fetch_result,
+    };
 
     let mut expected = expected;
-    expected.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+    expected.sort_by(|a, b| {
+        a.1.partial_cmp(&b.1)
+            .expect("expected elements to be sortable")
+    });
     assert_fetched_sorted_set_eq(sorted_set_fetch_result, expected).await
 }
 
