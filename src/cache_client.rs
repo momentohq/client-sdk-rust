@@ -12,10 +12,11 @@ use crate::cache::{
     IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest, IntoSortedSetElements,
     ItemGetTtl, ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest,
     KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, MomentoRequest, Set,
-    SetAddElements, SetAddElementsRequest, SetIfAbsent, SetIfAbsentRequest, SetIfPresent,
-    SetIfPresentRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
-    SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
-    SortedSetPutElements, SortedSetPutElementsRequest, UpdateTtl, UpdateTtlRequest,
+    SetAddElements, SetAddElementsRequest, SetIfAbsent, SetIfAbsentRequest, SetIfEqual,
+    SetIfEqualRequest, SetIfPresent, SetIfPresentRequest, SetRequest, SortedSetFetch,
+    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement,
+    SortedSetPutElementRequest, SortedSetPutElements, SortedSetPutElementsRequest, UpdateTtl,
+    UpdateTtlRequest,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -982,6 +983,60 @@ impl CacheClient {
         value: impl IntoBytes,
     ) -> MomentoResult<SetIfPresent> {
         let request = SetIfPresentRequest::new(cache_name, key, value);
+        request.send(self).await
+    }
+
+    /// Request to set associates the given key with the given value if the key is present
+    /// in the cache and its value is equal to the supplied `equal` value.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - The name of the cache to create.
+    /// * `key` - key of the item whose value we are setting
+    /// * `value` - data to store
+    /// * `equal` - data to compare to the cached value
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to conditionally set a field using an
+    /// [SetIfEqualRequest], you can also provide the following optional arguments:
+    ///
+    /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
+    ///
+    /// # Example
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use std::time::Duration;
+    /// use momento::cache::{SetIfEqual, SetIfEqualRequest};
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    ///
+    /// match cache_client.set_if_equal(&cache_name, "key", "new-value", "cached-value").await {
+    ///     Ok(response) => match response {
+    ///         SetIfEqual::Stored => println!("Value stored"),
+    ///         SetIfEqual::NotStored => println!("Value not stored"),
+    ///     }
+    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///         println!("Cache not found: {}", &cache_name);
+    ///     } else {
+    ///         eprintln!("Error setting value in cache {}: {}", &cache_name, e);
+    ///     }
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to conditionally set an item using a [SetIfEqualRequest].
+    pub async fn set_if_equal(
+        &self,
+        cache_name: impl Into<String>,
+        key: impl IntoBytes,
+        value: impl IntoBytes,
+        equal: impl IntoBytes,
+    ) -> MomentoResult<SetIfEqual> {
+        let request = SetIfEqualRequest::new(cache_name, key, value, equal);
         request.send(self).await
     }
 
