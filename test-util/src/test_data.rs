@@ -1,3 +1,7 @@
+use momento::{
+    cache::{Get, GetValue},
+    IntoBytes,
+};
 use uuid::Uuid;
 
 pub fn unique_string(prefix: impl Into<String>) -> String {
@@ -35,6 +39,13 @@ impl TestScalar {
 
     pub fn value(&self) -> &str {
         &self.value
+    }
+
+    // todo use `into` after getting to sorted sets
+    pub fn to_get_hit(&self) -> Get {
+        Get::Hit {
+            value: GetValue::new(self.value().into_bytes()),
+        }
     }
 }
 
