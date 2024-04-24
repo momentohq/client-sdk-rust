@@ -29,12 +29,12 @@ impl TestScalar {
         }
     }
 
-    pub fn key(&self) -> String {
-        self.key.clone()
+    pub fn key(&self) -> &str {
+        &self.key
     }
 
-    pub fn value(&self) -> String {
-        self.value.clone()
+    pub fn value(&self) -> &str {
+        &self.value
     }
 }
 
@@ -57,12 +57,12 @@ impl TestSet {
         }
     }
 
-    pub fn name(&self) -> String {
-        self.name.clone()
+    pub fn name(&self) -> &str {
+        &self.name
     }
 
-    pub fn elements(&self) -> Vec<String> {
-        self.elements.clone()
+    pub fn elements(&self) -> &Vec<String> {
+        &self.elements
     }
 }
 
@@ -85,12 +85,12 @@ impl TestSortedSet {
         }
     }
 
-    pub fn name(&self) -> String {
-        self.name.clone()
+    pub fn name(&self) -> &str {
+        &self.name
     }
 
-    pub fn elements(&self) -> Vec<(String, f64)> {
-        self.elements.clone()
+    pub fn elements(&self) -> &Vec<(String, f64)> {
+        &self.elements
     }
 }
 
