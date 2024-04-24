@@ -1,7 +1,8 @@
 use momento::cache::{
-    Delete, Get, Set, SetRequest, SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest,
+    Delete, Get, Set, SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest,
     SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest,
     SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest, SetIfPresentRequest,
+    SetRequest,
 };
 use momento::{MomentoErrorCode, MomentoResult};
 use momento_test_util::{
