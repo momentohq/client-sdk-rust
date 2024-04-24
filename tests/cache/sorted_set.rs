@@ -22,6 +22,25 @@ async fn assert_fetched_sorted_set_eq(
     Ok(())
 }
 
+async fn assert_fetched_sorted_set_eq_after_sorting(
+    sorted_set_fetch_result: SortedSetFetch,
+    expected: Vec<(String, f64)>,
+) -> MomentoResult<()> {
+    let mut sorted_set_fetch_result = sorted_set_fetch_result;
+    match &mut sorted_set_fetch_result {
+        SortedSetFetch::Hit { elements } => {
+            elements
+                .elements
+                .sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        }
+        _ => {}
+    }
+
+    let mut expected = expected;
+    expected.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+    assert_fetched_sorted_set_eq(sorted_set_fetch_result, expected).await
+}
+
 mod sorted_set_fetch_by_rank {
     use super::*;
 
@@ -333,7 +352,7 @@ mod sorted_set_put_elements {
                 .map(|e| (e.value, e.score))
                 .collect::<Vec<_>>();
 
-            assert_fetched_sorted_set_eq(result, expected).await?;
+            assert_fetched_sorted_set_eq_after_sorting(result, expected).await?;
 
             Ok(())
         }
