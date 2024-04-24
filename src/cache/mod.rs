@@ -25,6 +25,9 @@ pub use requests::scalar::set_if_absent::{SetIfAbsent, SetIfAbsentRequest};
 pub use requests::scalar::set_if_equal::{SetIfEqual, SetIfEqualRequest};
 pub use requests::scalar::set_if_not_equal::{SetIfNotEqual, SetIfNotEqualRequest};
 pub use requests::scalar::set_if_present::{SetIfPresent, SetIfPresentRequest};
+pub use requests::scalar::set_if_present_and_not_equal::{
+    SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,
+};
 pub use requests::scalar::update_ttl::{UpdateTtl, UpdateTtlRequest};
 
 pub use requests::set::set_add_elements::{SetAddElements, SetAddElementsRequest};
