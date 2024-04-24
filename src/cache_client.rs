@@ -1040,8 +1040,8 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Request to set associates the given key with the given value if the key is present
-    /// in the cache and its value is not equal to the supplied `not_equal` value.
+    /// Associates the given key with the given value if the key does not already exist in the
+    /// cache or the value in the cache is not equal to the value supplied `not_equal` value.
     ///
     /// # Arguments
     ///

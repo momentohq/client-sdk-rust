@@ -7,8 +7,8 @@ use crate::utils::prep_request_with_timeout;
 use crate::{IntoBytes, MomentoResult};
 use std::time::Duration;
 
-/// Request to set associates the given key with the given value if the key is present
-/// in the cache and its value is not equal to the supplied `not_equal` value.
+/// Request to associate the given key with the given value if the key does not already exist
+/// in the cache or the value in the cache is not equal to the value supplied `not_equal` value.
 ///
 /// # Arguments
 ///
