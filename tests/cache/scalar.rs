@@ -1,8 +1,14 @@
-use momento::{
-    cache::{Delete, Get, Set, SetRequest},
-    MomentoErrorCode, MomentoResult,
+use momento::cache::{
+    Delete, Get, Set, SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest,
+    SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest,
+    SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest, SetIfPresentRequest,
+    SetRequest,
 };
-use momento_test_util::{unique_cache_name, unique_key, TestScalar, CACHE_TEST_STATE};
+use momento::{MomentoErrorCode, MomentoResult};
+use momento_test_util::{
+    unique_cache_name, unique_key, unique_string, TestScalar, CACHE_TEST_STATE,
+};
+use std::{convert::TryInto, time::Duration};
 
 mod get_set_delete {
     use std::time::Duration;
@@ -208,18 +214,554 @@ mod increment {
     }
 }
 
-mod set_if_not_exists {}
+mod set_if_absent {
+    use super::*;
 
-mod set_if_absent {}
+    #[tokio::test]
+    async fn invalid_cache_name() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let result = client
+            .set_if_absent("   ", "key", "value")
+            .await
+            .unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
+        Ok(())
+    }
 
-mod set_if_present {}
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_string("fake-cache");
+        let result = client
+            .set_if_absent(cache_name, "key", "value")
+            .await
+            .unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        Ok(())
+    }
 
-mod set_if_equal {}
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = CACHE_TEST_STATE.cache_name.as_str();
+        let item1 = TestScalar::new();
+        let item2 = TestScalar::new();
 
-mod set_if_not_equal {}
+        // Setting a key that doesn't exist should create it
+        let result = client
+            .set_if_absent(cache_name, item1.key(), item1.value())
+            .await?;
+        assert_eq!(result, SetIfAbsent::Stored);
+        let result = client.get(cache_name, item1.key()).await?;
+        assert_eq!(result, Get::from(&item1));
 
-mod set_if_present_and_not_equal {}
+        // Setting a key that exists should not overwrite it
+        let result = client
+            .set_if_absent(cache_name, item1.key(), item2.value())
+            .await?;
+        assert_eq!(result, SetIfAbsent::NotStored);
+        let result = client.get(cache_name, item1.key()).await?;
+        assert_eq!(result, Get::from(&item1));
 
-mod set_if_absent_or_equal {}
+        Ok(())
+    }
+
+    // string key and string value with ttl before and after expiration
+    #[tokio::test]
+    async fn happy_path_with_ttl() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = CACHE_TEST_STATE.cache_name.as_str();
+        let item = TestScalar::new();
+
+        let set_request = SetIfAbsentRequest::new(cache_name, item.key(), item.value())
+            .ttl(Duration::from_secs(2));
+        let result = client.send_request(set_request).await?;
+        assert_eq!(result, SetIfAbsent::Stored);
+
+        // Should have remaining ttl > 0
+        let result_ttl: Duration = client
+            .item_get_ttl(cache_name, item.key())
+            .await?
+            .try_into()?;
+        assert!(result_ttl.as_millis() > 0);
+
+        // Wait for ttl to expire
+        tokio::time::sleep(Duration::from_secs(2)).await;
+
+        // Should get a cache miss
+        let result = client.get(cache_name, item.key()).await?;
+        assert_eq!(result, Get::Miss {});
+
+        Ok(())
+    }
+}
+
+mod set_if_present {
+    use super::*;
+
+    #[tokio::test]
+    async fn invalid_cache_name() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let result = client
+            .set_if_present("   ", "key", "value")
+            .await
+            .unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_string("fake-cache");
+        let result = client
+            .set_if_present(cache_name, "key", "value")
+            .await
+            .unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = CACHE_TEST_STATE.cache_name.as_str();
+        let item1 = TestScalar::new();
+        let item2 = TestScalar::new();
+
+        // Setting a key that doesn't exist should not create it
+        let result = client
+            .set_if_present(cache_name, item1.key(), item1.value())
+            .await?;
+        assert_eq!(result, SetIfPresent::NotStored);
+
+        let result = client.set(cache_name, item1.key(), item1.value()).await?;
+        assert_eq!(result, Set {});
+
+        // Setting a key that exists should overwrite it
+        let result = client
+            .set_if_present(cache_name, item1.key(), item2.value())
+            .await?;
+        assert_eq!(result, SetIfPresent::Stored);
+        let result = client.get(cache_name, item1.key()).await?;
+        assert_eq!(result, Get::from(&item2));
+
+        Ok(())
+    }
+
+    // string key and string value with ttl before and after expiration
+    #[tokio::test]
+    async fn happy_path_with_ttl() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = CACHE_TEST_STATE.cache_name.as_str();
+        let item = TestScalar::new();
+
+        let result = client.set(cache_name, item.key(), item.value()).await?;
+        assert_eq!(result, Set {});
+
+        let set_request = SetIfPresentRequest::new(cache_name, item.key(), "second_value")
+            .ttl(Duration::from_secs(2));
+        let result = client.send_request(set_request).await?;
+        assert_eq!(result, SetIfPresent::Stored);
+
+        // Should have remaining ttl > 0
+        let result_ttl: Duration = client
+            .item_get_ttl(cache_name, item.key())
+            .await?
+            .try_into()?;
+        assert!(result_ttl.as_millis() > 0);
+
+        // Wait for ttl to expire
+        tokio::time::sleep(Duration::from_secs(2)).await;
+
+        // Should get a cache miss
+        let result = client.get(cache_name, item.key()).await?;
+        assert_eq!(result, Get::Miss {});
+
+        Ok(())
+    }
+}
+
+mod set_if_equal {
+    use super::*;
+
+    #[tokio::test]
+    async fn invalid_cache_name() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let result = client
+            .set_if_equal("   ", "key", "value", "equal")
+            .await
+            .unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_string("fake-cache");
+        let result = client
+            .set_if_equal(cache_name, "key", "value", "equal")
+            .await
+            .unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = CACHE_TEST_STATE.cache_name.as_str();
+        let item1 = TestScalar::new();
+        let item2 = TestScalar::new();
+
+        // Setting a key that doesn't exist should not create it
+        let result = client
+            .set_if_equal(cache_name, item1.key(), item1.value(), item1.value())
+            .await?;
+        assert_eq!(result, SetIfEqual::NotStored);
+
+        let result = client.set(cache_name, item1.key(), item1.value()).await?;
+        assert_eq!(result, Set {});
+
+        // Setting a key that exists and equals the value should overwrite it
+        let result = client
+            .set_if_equal(cache_name, item1.key(), item2.value(), item1.value())
+            .await?;
+        assert_eq!(result, SetIfEqual::Stored);
+        let result = client.get(cache_name, item1.key()).await?;
+        assert_eq!(result, Get::from(&item2));
+
+        // Setting a key that exists and does NOT equal the value should NOT overwrite it
+        let result = client
+            .set_if_equal(cache_name, item1.key(), item1.value(), item1.value())
+            .await?;
+        assert_eq!(result, SetIfEqual::NotStored);
+        let result = client.get(cache_name, item1.key()).await?;
+        assert_eq!(result, Get::from(&item2));
+
+        Ok(())
+    }
+
+    // string key and string value with ttl before and after expiration
+    #[tokio::test]
+    async fn happy_path_with_ttl() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = CACHE_TEST_STATE.cache_name.as_str();
+        let key_uuid = unique_string("key");
+        let key = key_uuid.as_str();
+
+        let result = client.set(cache_name, key, "first_value").await?;
+        assert_eq!(result, Set {});
+
+        let set_request = SetIfEqualRequest::new(cache_name, key, "second_value", "first_value")
+            .ttl(Duration::from_secs(2));
+        let result = client.send_request(set_request).await?;
+        assert_eq!(result, SetIfEqual::Stored);
+
+        // Should have remaining ttl > 0
+        let result_ttl: Duration = client
+            .item_get_ttl(cache_name, key)
+            .await?
+            .try_into()
+            .expect("Expected to get an item ttl");
+        assert!(result_ttl.as_millis() > 0);
+
+        // Wait for ttl to expire
+        tokio::time::sleep(Duration::from_secs(2)).await;
+
+        // Should get a cache miss
+        let result = client.get(cache_name, key).await?;
+        assert_eq!(result, Get::Miss {});
+
+        Ok(())
+    }
+}
+
+mod set_if_not_equal {
+    use super::*;
+
+    #[tokio::test]
+    async fn invalid_cache_name() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let result = client
+            .set_if_not_equal("   ", "key", "value", "not-equal")
+            .await
+            .unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_string("fake-cache");
+        let result = client
+            .set_if_not_equal(cache_name, "key", "value", "not-equal")
+            .await
+            .unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = CACHE_TEST_STATE.cache_name.as_str();
+        let item1 = TestScalar::new();
+        let item2 = TestScalar::new();
+
+        // Setting a key that doesn't exist should create it
+        let result = client
+            .set_if_not_equal(cache_name, item1.key(), item1.value(), item1.value())
+            .await?;
+        assert_eq!(result, SetIfNotEqual::Stored);
+
+        let result = client.set(cache_name, item1.key(), item1.value()).await?;
+        assert_eq!(result, Set {});
+
+        // Setting a key that exists and does not equal the value should overwrite it
+        let result = client
+            .set_if_not_equal(cache_name, item1.key(), item2.value(), item2.value())
+            .await?;
+        assert_eq!(result, SetIfNotEqual::Stored);
+        let result = client.get(cache_name, item1.key()).await?;
+        assert_eq!(result, Get::from(&item2));
+
+        // Setting a key that exists and equals the value should NOT overwrite it
+        let result = client
+            .set_if_not_equal(cache_name, item1.key(), item1.value(), item2.value())
+            .await?;
+        assert_eq!(result, SetIfNotEqual::NotStored);
+        let result = client.get(cache_name, item1.key()).await?;
+        assert_eq!(result, Get::from(&item2));
+
+        Ok(())
+    }
+
+    // string key and string value with ttl before and after expiration
+    #[tokio::test]
+    async fn happy_path_with_ttl() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = CACHE_TEST_STATE.cache_name.as_str();
+        let item = TestScalar::new();
+
+        let result = client.set(cache_name, item.key(), item.value()).await?;
+        assert_eq!(result, Set {});
+
+        let set_request =
+            SetIfNotEqualRequest::new(cache_name, item.key(), "second_value", "second_value")
+                .ttl(Duration::from_secs(2));
+        let result = client.send_request(set_request).await?;
+        assert_eq!(result, SetIfNotEqual::Stored);
+
+        // Should have remaining ttl > 0
+        let result_ttl: Duration = client
+            .item_get_ttl(cache_name, item.key())
+            .await?
+            .try_into()?;
+        assert!(result_ttl.as_millis() > 0);
+
+        // Wait for ttl to expire
+        tokio::time::sleep(Duration::from_secs(2)).await;
+
+        // Should get a cache miss
+        let result = client.get(cache_name, item.key()).await?;
+        assert_eq!(result, Get::Miss {});
+
+        Ok(())
+    }
+}
+
+mod set_if_present_and_not_equal {
+    use super::*;
+
+    #[tokio::test]
+    async fn invalid_cache_name() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let result = client
+            .set_if_present_and_not_equal("   ", "key", "value", "not-equal")
+            .await
+            .unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_string("fake-cache");
+        let result = client
+            .set_if_present_and_not_equal(cache_name, "key", "value", "not-equal")
+            .await
+            .unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = CACHE_TEST_STATE.cache_name.as_str();
+        let item1 = TestScalar::new();
+        let item2 = TestScalar::new();
+
+        // Setting a key that doesn't exist should not create it
+        let result = client
+            .set_if_present_and_not_equal(cache_name, item1.key(), item1.value(), item1.value())
+            .await?;
+        assert_eq!(result, SetIfPresentAndNotEqual::NotStored);
+
+        let result = client.set(cache_name, item1.key(), item1.value()).await?;
+        assert_eq!(result, Set {});
+
+        // Setting a key that exists and does not equal the value should overwrite it
+        let result = client
+            .set_if_present_and_not_equal(cache_name, item1.key(), item2.value(), item2.value())
+            .await?;
+        assert_eq!(result, SetIfPresentAndNotEqual::Stored);
+        let result = client.get(cache_name, item1.key()).await?;
+        assert_eq!(result, Get::from(&item2));
+
+        // Setting a key that exists and equals the value should NOT overwrite it
+        let result = client
+            .set_if_present_and_not_equal(cache_name, item1.key(), item1.value(), item2.value())
+            .await?;
+        assert_eq!(result, SetIfPresentAndNotEqual::NotStored);
+        let result = client.get(cache_name, item1.key()).await?;
+        assert_eq!(result, Get::from(&item2));
+
+        Ok(())
+    }
+
+    // string key and string value with ttl before and after expiration
+    #[tokio::test]
+    async fn happy_path_with_ttl() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = CACHE_TEST_STATE.cache_name.as_str();
+        let key_uuid = unique_string("key");
+        let key = key_uuid.as_str();
+
+        let result = client.set(cache_name, key, "first_value").await?;
+        assert_eq!(result, Set {});
+
+        let set_request =
+            SetIfPresentAndNotEqualRequest::new(cache_name, key, "second_value", "second_value")
+                .ttl(Duration::from_secs(2));
+        let result = client.send_request(set_request).await?;
+        assert_eq!(result, SetIfPresentAndNotEqual::Stored);
+
+        // Should have remaining ttl > 0
+        let result_ttl: Duration = client
+            .item_get_ttl(cache_name, key)
+            .await?
+            .try_into()
+            .expect("Expected to get an item ttl");
+        assert!(result_ttl.as_millis() > 0);
+
+        // Wait for ttl to expire
+        tokio::time::sleep(Duration::from_secs(2)).await;
+
+        // Should get a cache miss
+        let result = client.get(cache_name, key).await?;
+        assert_eq!(result, Get::Miss {});
+
+        Ok(())
+    }
+}
+
+mod set_if_absent_or_equal {
+    use super::*;
+
+    #[tokio::test]
+    async fn invalid_cache_name() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let result = client
+            .set_if_absent_or_equal("   ", "key", "value", "equal")
+            .await
+            .unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_string("fake-cache");
+        let result = client
+            .set_if_absent_or_equal(cache_name, "key", "value", "equal")
+            .await
+            .unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = CACHE_TEST_STATE.cache_name.as_str();
+        let item1 = TestScalar::new();
+        let item2 = TestScalar::new();
+
+        // Setting a key that doesn't exist should create it
+        let result = client
+            .set_if_absent_or_equal(cache_name, item1.key(), item1.value(), item1.value())
+            .await?;
+        assert_eq!(result, SetIfAbsentOrEqual::Stored);
+
+        let result = client.set(cache_name, item1.key(), item1.value()).await?;
+        assert_eq!(result, Set {});
+
+        // Setting a key that exists and equals the value should overwrite it
+        let result = client
+            .set_if_absent_or_equal(cache_name, item1.key(), item2.value(), item1.value())
+            .await?;
+        assert_eq!(result, SetIfAbsentOrEqual::Stored);
+        let result = client.get(cache_name, item1.key()).await?;
+        assert_eq!(result, Get::from(&item2));
+
+        // Setting a key that exists and does NOT equal the value should NOT overwrite it
+        let result = client
+            .set_if_absent_or_equal(cache_name, item1.key(), item1.value(), item1.value())
+            .await?;
+        assert_eq!(result, SetIfAbsentOrEqual::NotStored);
+        let result = client.get(cache_name, item1.key()).await?;
+        assert_eq!(result, Get::from(&item2));
+
+        Ok(())
+    }
+
+    // string key and string value with ttl before and after expiration
+    #[tokio::test]
+    async fn happy_path_with_ttl() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = CACHE_TEST_STATE.cache_name.as_str();
+        let key_uuid = unique_string("key");
+        let key = key_uuid.as_str();
+
+        let set_request =
+            SetIfAbsentOrEqualRequest::new(cache_name, key, "first_value", "first_value")
+                .ttl(Duration::from_secs(2));
+        let result = client.send_request(set_request).await?;
+        assert_eq!(result, SetIfAbsentOrEqual::Stored);
+
+        // Should have remaining ttl > 0
+        let result_ttl: Duration = client
+            .item_get_ttl(cache_name, key)
+            .await?
+            .try_into()
+            .expect("Expected to get an item ttl");
+        assert!(result_ttl.as_millis() > 0);
+
+        // Wait for ttl to expire
+        tokio::time::sleep(Duration::from_secs(2)).await;
+
+        // Should get a cache miss
+        let result = client.get(cache_name, key).await?;
+        assert_eq!(result, Get::Miss {});
+
+        Ok(())
+    }
+}
 
 mod when_readconcern_is_specified {}
