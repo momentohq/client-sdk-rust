@@ -11,6 +11,8 @@ pub use requests::list_caches::{
     CacheInfo, CacheLimits, ListCaches, ListCachesRequest, TopicLimits,
 };
 
+pub use requests::dictionary::dictionary_fetch::{DictionaryFetch, DictionaryFetchRequest};
+
 pub use requests::scalar::decrease_ttl::{DecreaseTtl, DecreaseTtlRequest};
 pub use requests::scalar::delete::{Delete, DeleteRequest};
 pub use requests::scalar::get::{Get, GetRequest, GetValue};

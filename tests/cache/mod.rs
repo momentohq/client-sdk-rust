@@ -1,4 +1,5 @@
 mod control;
+mod dictionary;
 mod item;
 mod key_existence;
 mod scalar;
