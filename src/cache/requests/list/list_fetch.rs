@@ -127,7 +127,7 @@ impl<L: IntoBytes> MomentoRequest for ListFetchRequest<L> {
 /// };
 /// ```
 ///
-/// You can cast your result directly into a Result<Vec<String>, MomentoError> suitable for
+/// You can cast your result directly into a `Result<Vec<String>, MomentoError>` suitable for
 /// ?-propagation if you know you are expecting a ListFetch::Hit.
 ///
 /// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
