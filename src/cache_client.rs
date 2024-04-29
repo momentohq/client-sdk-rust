@@ -7,7 +7,19 @@ use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
 
 use crate::cache::{
-    Configuration, CreateCache, CreateCacheRequest, DecreaseTtl, DecreaseTtlRequest, Delete, DeleteCache, DeleteCacheRequest, DeleteRequest, FlushCache, FlushCacheRequest, Get, GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, ListConcatenateBack, ListConcatenateBackRequest, ListConcatenateFront, ListConcatenateFrontRequest, ListFetch, ListFetchRequest, ListLength, ListLengthRequest, MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest, SetIfPresentRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements, SortedSetPutElementsRequest, UpdateTtl, UpdateTtlRequest
+    Configuration, CreateCache, CreateCacheRequest, DecreaseTtl, DecreaseTtlRequest, Delete,
+    DeleteCache, DeleteCacheRequest, DeleteRequest, FlushCache, FlushCacheRequest, Get, GetRequest,
+    IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest, IntoSortedSetElements,
+    ItemGetTtl, ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest,
+    KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, ListConcatenateBack,
+    ListConcatenateBackRequest, ListConcatenateFront, ListConcatenateFrontRequest, ListFetch,
+    ListFetchRequest, ListLength, ListLengthRequest, MomentoRequest, Set, SetAddElements,
+    SetAddElementsRequest, SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest,
+    SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest,
+    SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest, SetIfPresentRequest,
+    SetRequest, SortedSetFetch, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest,
+    SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements,
+    SortedSetPutElementsRequest, UpdateTtl, UpdateTtlRequest,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -1328,7 +1340,7 @@ impl CacheClient {
     }
 
     /// Gets a list item from a cache with optional slices.
-    /// 
+    ///
     /// # Arguments
     /// * `cache_name` - name of cache
     /// * `list_name` - name of the list
@@ -1339,7 +1351,7 @@ impl CacheClient {
     ///
     /// * `start_index` - The starting inclusive element of the list to fetch. Default is 0.
     /// * `end_index` - The ending exclusive element of the list to fetch. Default is end of list.
-    /// 
+    ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
     /// ```

@@ -1,6 +1,12 @@
 use std::convert::TryFrom;
 
-use momento_protos::{cache_client::{list_fetch_request::{EndIndex, StartIndex}, list_fetch_response}, common::Unbounded};
+use momento_protos::{
+    cache_client::{
+        list_fetch_request::{EndIndex, StartIndex},
+        list_fetch_response,
+    },
+    common::Unbounded,
+};
 
 use crate::{
     cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
@@ -17,7 +23,7 @@ use crate::{
 ///
 /// * `start_index` - The starting inclusive element of the list to fetch. Default is 0.
 /// * `end_index` - The ending exclusive element of the list to fetch. Default is end of list.
-/// 
+///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -161,13 +167,24 @@ impl TryFrom<ListFetch> for Vec<String> {
 
     fn try_from(value: ListFetch) -> Result<Self, Self::Error> {
         match value {
-            ListFetch::Hit { values } => Ok(values.into_iter().map(|v| String::from_utf8(v).unwrap()).collect()),
+            ListFetch::Hit { values } => Ok(values
+                .into_iter()
+                .map(|v| String::from_utf8(v).expect("list value was not a valid utf-8 string"))
+                .collect()),
             ListFetch::Miss => Err(MomentoError {
                 message: "sorted set was not found".into(),
                 error_code: MomentoErrorCode::Miss,
                 inner_error: None,
                 details: None,
             }),
+        }
+    }
+}
+
+impl From<Vec<String>> for ListFetch {
+    fn from(values: Vec<String>) -> Self {
+        ListFetch::Hit {
+            values: values.into_iter().map(|v| v.into_bytes()).collect(),
         }
     }
 }
