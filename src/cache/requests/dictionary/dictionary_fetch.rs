@@ -90,12 +90,14 @@ impl TryFrom<DictionaryFetchValue> for HashMap<String, String> {
     }
 }
 
+// TODO: verify comparisons in tests work as expected
 impl From<DictionaryFetchValue> for HashMap<Vec<u8>, Vec<u8>> {
     fn from(value: DictionaryFetchValue) -> Self {
         value.raw_item
     }
 }
 
+// TODO: verify comparisons in tests work as expected
 impl TryFrom<DictionaryFetch> for HashMap<String, String> {
     type Error = MomentoError;
 
