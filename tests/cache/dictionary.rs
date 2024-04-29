@@ -1,6 +1,6 @@
 use momento::cache::DictionaryFetch;
 use momento::{MomentoErrorCode, MomentoResult};
-use momento_test_util::{unique_key, CACHE_TEST_STATE};
+use momento_test_util::{unique_cache_name, unique_key, CACHE_TEST_STATE};
 
 mod dictionary_fetch {
     use super::*;
@@ -18,10 +18,9 @@ mod dictionary_fetch {
     #[tokio::test]
     async fn nonexistent_cache() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
-        let cache_name = unique_key();
-        let dictionary_name = unique_key();
+        let cache_name = unique_cache_name();
         let result = client
-            .dictionary_fetch(cache_name, dictionary_name)
+            .dictionary_fetch(cache_name, "my-dictionary")
             .await
             .unwrap_err();
 
