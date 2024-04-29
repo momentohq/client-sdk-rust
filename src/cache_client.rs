@@ -7,19 +7,7 @@ use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
 
 use crate::cache::{
-    Configuration, CreateCache, CreateCacheRequest, DecreaseTtl, DecreaseTtlRequest, Delete,
-    DeleteCache, DeleteCacheRequest, DeleteRequest, FlushCache, FlushCacheRequest, Get, GetRequest,
-    IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest, IntoSortedSetElements,
-    ItemGetTtl, ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest,
-    KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, ListConcatenateBack,
-    ListConcatenateBackRequest, ListConcatenateFront, ListConcatenateFrontRequest, ListLength,
-    ListLengthRequest, MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetIfAbsent,
-    SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual,
-    SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual,
-    SetIfPresentAndNotEqualRequest, SetIfPresentRequest, SetRequest, SortedSetFetch,
-    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement,
-    SortedSetPutElementRequest, SortedSetPutElements, SortedSetPutElementsRequest, UpdateTtl,
-    UpdateTtlRequest,
+    Configuration, CreateCache, CreateCacheRequest, DecreaseTtl, DecreaseTtlRequest, Delete, DeleteCache, DeleteCacheRequest, DeleteRequest, FlushCache, FlushCacheRequest, Get, GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, ListConcatenateBack, ListConcatenateBackRequest, ListConcatenateFront, ListConcatenateFrontRequest, ListFetch, ListFetchRequest, ListLength, ListLengthRequest, MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest, SetIfPresentRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements, SortedSetPutElementsRequest, UpdateTtl, UpdateTtlRequest
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -1218,7 +1206,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::convert::TryInto;
-    /// use momento::cache::{ListLength, ListLengthRequest};
+    /// use momento::cache::ListLength;
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let list_name = "list-name";
@@ -1259,7 +1247,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::{ListConcatenateFront};
+    /// use momento::cache::ListConcatenateFront;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let list_name = "list-name";
     ///
@@ -1277,7 +1265,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [ListConcatenateFrontRequest]
+    /// You can also use the [send_request](CacheClient::send_request) method to concatenate an item using a [ListConcatenateFrontRequest]
     /// which will allow you to set [optional arguments](ListConcatenateFrontRequest#optional-arguments) as well.
     pub async fn list_concatenate_front(
         &self,
@@ -1309,7 +1297,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::{ListConcatenateBack};
+    /// use momento::cache::ListConcatenateBack;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let list_name = "list-name";
     ///
@@ -1327,7 +1315,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [ListConcatenateBackRequest]
+    /// You can also use the [send_request](CacheClient::send_request) method to concatenate an item using a [ListConcatenateBackRequest]
     /// which will allow you to set [optional arguments](ListConcatenateBackRequest#optional-arguments) as well.
     pub async fn list_concatenate_back(
         &self,
@@ -1336,6 +1324,48 @@ impl CacheClient {
         values: Vec<impl IntoBytes>,
     ) -> MomentoResult<ListConcatenateBack> {
         let request = ListConcatenateBackRequest::new(cache_name, list_name, values);
+        request.send(self).await
+    }
+
+    /// Gets a list item from a cache with optional slices.
+    /// 
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to fetch a list using a [ListFetchRequest],
+    /// you can also provide the following optional arguments:
+    ///
+    /// * `start_index` - The starting inclusive element of the list to fetch. Default is 0.
+    /// * `end_index` - The ending exclusive element of the list to fetch. Default is end of list.
+    /// 
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use std::convert::TryInto;
+    /// use momento::cache::ListFetch;
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    /// # cache_client.list_concatenate_front(&cache_name, list_name, vec!["value1", "value2"]).await;
+    ///
+    /// let fetched_values: Vec<String> = cache_client.list_fetch(cache_name, list_name).await?.try_into().expect("Expected a list fetch!");
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to fetch a list using a [ListFetchRequest]
+    /// which will allow you to set [optional arguments](ListFetchRequest#optional-arguments) as well.
+    pub async fn list_fetch(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+    ) -> MomentoResult<ListFetch> {
+        let request = ListFetchRequest::new(cache_name, list_name);
         request.send(self).await
     }
 

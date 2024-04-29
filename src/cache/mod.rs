@@ -49,6 +49,7 @@ pub use requests::list::list_concatenate_back::{ListConcatenateBack, ListConcate
 pub use requests::list::list_concatenate_front::{
     ListConcatenateFront, ListConcatenateFrontRequest,
 };
+pub use requests::list::list_fetch::{ListFetch, ListFetchRequest};
 pub use requests::list::list_length::{ListLength, ListLengthRequest};
 
 // Similar re-exporting with config::configuration and config::configurations
