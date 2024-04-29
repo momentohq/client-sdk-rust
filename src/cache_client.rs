@@ -11,13 +11,15 @@ use crate::cache::{
     DeleteCache, DeleteCacheRequest, DeleteRequest, FlushCache, FlushCacheRequest, Get, GetRequest,
     IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest, IntoSortedSetElements,
     ItemGetTtl, ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest,
-    KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, MomentoRequest, Set,
-    SetAddElements, SetAddElementsRequest, SetIfAbsent, SetIfAbsentOrEqual,
-    SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual,
-    SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,
-    SetIfPresentRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
-    SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
-    SortedSetPutElements, SortedSetPutElementsRequest, UpdateTtl, UpdateTtlRequest,
+    KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, ListConcatenateBack,
+    ListConcatenateBackRequest, ListConcatenateFront, ListConcatenateFrontRequest, ListLength,
+    ListLengthRequest, MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetIfAbsent,
+    SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual,
+    SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual,
+    SetIfPresentAndNotEqualRequest, SetIfPresentRequest, SetRequest, SortedSetFetch,
+    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement,
+    SortedSetPutElementRequest, SortedSetPutElements, SortedSetPutElementsRequest, UpdateTtl,
+    UpdateTtlRequest,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -433,7 +435,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetPutElementsRequest]
+    /// You can also use the [send_request](CacheClient::send_request) method to put elements using a [SortedSetPutElementsRequest]
     /// which will allow you to set [optional arguments](SortedSetPutElementsRequest#optional-arguments) as well.
     pub async fn sorted_set_put_elements<V: IntoBytes>(
         &self,
@@ -1200,6 +1202,140 @@ impl CacheClient {
         equal: impl IntoBytes,
     ) -> MomentoResult<SetIfAbsentOrEqual> {
         let request = SetIfAbsentOrEqualRequest::new(cache_name, key, value, equal);
+        request.send(self).await
+    }
+
+    /// Gets the number of elements in the given list.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use std::convert::TryInto;
+    /// use momento::cache::{ListLength, ListLengthRequest};
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    /// # cache_client.list_concatenate_front(&cache_name, list_name, vec!["value1", "value2"]).await;
+    ///
+    /// let length: u32 = cache_client.list_length(&cache_name, list_name).await?.try_into().expect("Expected a list length!");
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get a list's length using a [ListLengthRequest].
+    pub async fn list_length(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+    ) -> MomentoResult<ListLength> {
+        let request = ListLengthRequest::new(cache_name, list_name);
+        request.send(self).await
+    }
+
+    /// Adds multiple elements to the front of the given list. Creates the list if it does not already exist.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    /// * `values` - list of values to add to the front of the list
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to add elements to the front of a list using a [ListConcatenateFrontRequest],
+    /// you can also provide the following optional arguments:
+    ///
+    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
+    /// * `truncate_back_to_size` - If the list exceeds this length, remove excess from the back of the list.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{ListConcatenateFront};
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    ///
+    /// let concat_front_response = cache_client.list_concatenate_front(
+    ///     cache_name,
+    ///     list_name,
+    ///     vec!["value1", "value2"]
+    /// ).await;
+    ///
+    /// match concat_front_response {
+    ///     Ok(_) => println!("Elements added to list"),
+    ///     Err(e) => eprintln!("Error adding elements to list: {}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [ListConcatenateFrontRequest]
+    /// which will allow you to set [optional arguments](ListConcatenateFrontRequest#optional-arguments) as well.
+    pub async fn list_concatenate_front(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+        values: Vec<impl IntoBytes>,
+    ) -> MomentoResult<ListConcatenateFront> {
+        let request = ListConcatenateFrontRequest::new(cache_name, list_name, values);
+        request.send(self).await
+    }
+
+    /// Adds multiple elements to the back of the given list. Creates the list if it does not already exist.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    /// * `values` - list of values to add to the back of the list
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to add elements to the back of a list using a [ListConcatenateBackRequest],
+    /// you can also provide the following optional arguments:
+    ///
+    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
+    /// * `truncate_front_to_size` - If the list exceeds this length, remove excess from the front of the list.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{ListConcatenateBack};
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    ///
+    /// let concat_front_response = cache_client.list_concatenate_back(
+    ///     cache_name,
+    ///     list_name,
+    ///     vec!["value1", "value2"]
+    /// ).await;
+    ///
+    /// match concat_front_response {
+    ///     Ok(_) => println!("Elements added to list"),
+    ///     Err(e) => eprintln!("Error adding elements to list: {}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [ListConcatenateBackRequest]
+    /// which will allow you to set [optional arguments](ListConcatenateBackRequest#optional-arguments) as well.
+    pub async fn list_concatenate_back(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+        values: Vec<impl IntoBytes>,
+    ) -> MomentoResult<ListConcatenateBack> {
+        let request = ListConcatenateBackRequest::new(cache_name, list_name, values);
         request.send(self).await
     }
 

@@ -45,6 +45,10 @@ pub use requests::sorted_set::sorted_set_put_elements::{
     IntoSortedSetElements, SortedSetElement, SortedSetPutElements, SortedSetPutElementsRequest,
 };
 
+pub use requests::list::list_concatenate_back::{ListConcatenateBack, ListConcatenateBackRequest};
+pub use requests::list::list_concatenate_front::{
+    ListConcatenateFront, ListConcatenateFrontRequest,
+};
 pub use requests::list::list_length::{ListLength, ListLengthRequest};
 
 // Similar re-exporting with config::configuration and config::configurations
