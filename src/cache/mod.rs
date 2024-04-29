@@ -51,6 +51,9 @@ pub use requests::list::list_concatenate_front::{
 };
 pub use requests::list::list_fetch::{ListFetch, ListFetchRequest};
 pub use requests::list::list_length::{ListLength, ListLengthRequest};
+pub use requests::list::list_pop_back::{ListPopBack, ListPopBackRequest};
+pub use requests::list::list_pop_front::{ListPopFront, ListPopFrontRequest};
+pub use requests::list::list_remove_value::{ListRemoveValue, ListRemoveValueRequest};
 
 // Similar re-exporting with config::configuration and config::configurations
 // so import paths can be simpmlified to "momento::cache::Configuration" and

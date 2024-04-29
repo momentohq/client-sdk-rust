@@ -32,13 +32,13 @@ use crate::{
 /// # })
 /// # }
 /// ```
-pub struct ListLengthRequest<K: IntoBytes> {
+pub struct ListLengthRequest<L: IntoBytes> {
     cache_name: String,
-    list_name: K,
+    list_name: L,
 }
 
-impl<K: IntoBytes> ListLengthRequest<K> {
-    pub fn new(cache_name: impl Into<String>, list_name: K) -> Self {
+impl<L: IntoBytes> ListLengthRequest<L> {
+    pub fn new(cache_name: impl Into<String>, list_name: L) -> Self {
         Self {
             cache_name: cache_name.into(),
             list_name,
@@ -46,7 +46,7 @@ impl<K: IntoBytes> ListLengthRequest<K> {
     }
 }
 
-impl<K: IntoBytes> MomentoRequest for ListLengthRequest<K> {
+impl<L: IntoBytes> MomentoRequest for ListLengthRequest<L> {
     type Response = ListLength;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListLength> {

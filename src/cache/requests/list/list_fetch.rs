@@ -43,15 +43,15 @@ use crate::{
 /// # })
 /// # }
 /// ```
-pub struct ListFetchRequest<K: IntoBytes> {
+pub struct ListFetchRequest<L: IntoBytes> {
     cache_name: String,
-    list_name: K,
+    list_name: L,
     start_index: Option<i32>,
     end_index: Option<i32>,
 }
 
-impl<K: IntoBytes> ListFetchRequest<K> {
-    pub fn new(cache_name: impl Into<String>, list_name: K) -> Self {
+impl<L: IntoBytes> ListFetchRequest<L> {
+    pub fn new(cache_name: impl Into<String>, list_name: L) -> Self {
         Self {
             cache_name: cache_name.into(),
             list_name,
@@ -73,7 +73,7 @@ impl<K: IntoBytes> ListFetchRequest<K> {
     }
 }
 
-impl<K: IntoBytes> MomentoRequest for ListFetchRequest<K> {
+impl<L: IntoBytes> MomentoRequest for ListFetchRequest<L> {
     type Response = ListFetch;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListFetch> {

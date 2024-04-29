@@ -13,13 +13,14 @@ use crate::cache::{
     ItemGetTtl, ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest,
     KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, ListConcatenateBack,
     ListConcatenateBackRequest, ListConcatenateFront, ListConcatenateFrontRequest, ListFetch,
-    ListFetchRequest, ListLength, ListLengthRequest, MomentoRequest, Set, SetAddElements,
-    SetAddElementsRequest, SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest,
-    SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest,
-    SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest, SetIfPresentRequest,
-    SetRequest, SortedSetFetch, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest,
-    SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements,
-    SortedSetPutElementsRequest, UpdateTtl, UpdateTtlRequest,
+    ListFetchRequest, ListLength, ListLengthRequest, ListPopBack, ListPopBackRequest, ListPopFront,
+    ListPopFrontRequest, ListRemoveValue, ListRemoveValueRequest, MomentoRequest, Set,
+    SetAddElements, SetAddElementsRequest, SetIfAbsent, SetIfAbsentOrEqual,
+    SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual,
+    SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,
+    SetIfPresentRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
+    SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
+    SortedSetPutElements, SortedSetPutElementsRequest, UpdateTtl, UpdateTtlRequest,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -1378,6 +1379,112 @@ impl CacheClient {
         list_name: impl IntoBytes,
     ) -> MomentoResult<ListFetch> {
         let request = ListFetchRequest::new(cache_name, list_name);
+        request.send(self).await
+    }
+
+    /// Remove and return the last element from a list item.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use std::convert::TryInto;
+    /// use momento::cache::{ListPopBack, ListPopBackRequest};
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    /// # cache_client.list_concatenate_front(&cache_name, list_name, vec!["value1", "value2"]).await;
+    ///
+    /// let popped_value: String = cache_client.list_pop_back(cache_name, list_name).await?.try_into().expect("Expected a popped list value!");
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to pop a value off the list using a [ListPopBackRequest].
+    pub async fn list_pop_back(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+    ) -> MomentoResult<ListPopBack> {
+        let request = ListPopBackRequest::new(cache_name, list_name);
+        request.send(self).await
+    }
+
+    /// Remove and return the first element from a list item.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use std::convert::TryInto;
+    /// use momento::cache::{ListPopFront, ListPopFrontRequest};
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    /// # cache_client.list_concatenate_front(&cache_name, list_name, vec!["value1", "value2"]).await;
+    ///
+    /// let popped_value: String = cache_client.list_pop_front(cache_name, list_name).await?.try_into().expect("Expected a popped list value!");
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to pop a value off the list using a [ListPopFrontRequest].
+    pub async fn list_pop_front(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+    ) -> MomentoResult<ListPopFront> {
+        let request = ListPopFrontRequest::new(cache_name, list_name);
+        request.send(self).await
+    }
+
+    /// Remove all elements in a list item equal to a particular value.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    /// * `value` - value to remove
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{ListRemoveValue, ListRemoveValueRequest};
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    /// # cache_client.list_concatenate_front(&cache_name, list_name, vec!["value1", "value2"]).await;
+    ///
+    /// match cache_client.list_remove_value(cache_name, list_name, "value1").await {
+    ///     Ok(ListRemoveValue {}) => println!("Successfully removed value"),
+    ///     Err(e) => eprintln!("Error removing value: {:?}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to remove a value from the list using a [ListRemoveValueRequest].
+    pub async fn list_remove_value(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+        value: impl IntoBytes,
+    ) -> MomentoResult<ListRemoveValue> {
+        let request = ListRemoveValueRequest::new(cache_name, list_name, value);
         request.send(self).await
     }
 
