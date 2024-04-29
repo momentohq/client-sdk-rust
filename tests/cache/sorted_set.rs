@@ -9,7 +9,7 @@ use momento::{CacheClient, MomentoErrorCode, MomentoResult};
 
 use momento_test_util::{unique_cache_name, unique_key, TestSortedSet, CACHE_TEST_STATE};
 
-async fn assert_fetched_sorted_set_eq(
+fn assert_fetched_sorted_set_eq(
     sorted_set_fetch_result: SortedSetFetch,
     expected: Vec<(String, f64)>,
 ) -> MomentoResult<()> {
@@ -22,7 +22,7 @@ async fn assert_fetched_sorted_set_eq(
     Ok(())
 }
 
-async fn assert_fetched_sorted_set_eq_after_sorting(
+fn assert_fetched_sorted_set_eq_after_sorting(
     sorted_set_fetch_result: SortedSetFetch,
     expected: Vec<(String, f64)>,
 ) -> MomentoResult<()> {
@@ -47,7 +47,7 @@ async fn assert_fetched_sorted_set_eq_after_sorting(
         a.1.partial_cmp(&b.1)
             .expect("expected elements to be sortable")
     });
-    assert_fetched_sorted_set_eq(sorted_set_fetch_result, expected).await
+    assert_fetched_sorted_set_eq(sorted_set_fetch_result, expected)
 }
 
 mod sorted_set_fetch_by_rank {
@@ -92,8 +92,7 @@ mod sorted_set_fetch_by_rank {
                 ("5".to_string(), 1.5),
                 ("4".to_string(), 2.0),
             ],
-        )
-        .await?;
+        )?;
 
         // Up until rank 3
         let fetch_request = SortedSetFetchByRankRequest::new(cache_name, item.name())
@@ -107,16 +106,14 @@ mod sorted_set_fetch_by_rank {
                 ("3".to_string(), 0.5),
                 ("2".to_string(), 1.0),
             ],
-        )
-        .await?;
+        )?;
 
         // From rank 3
         let fetch_request = SortedSetFetchByRankRequest::new(cache_name, item.name())
             .order(Ascending)
             .start_rank(3);
         let result = client.send_request(fetch_request).await?;
-        assert_fetched_sorted_set_eq(result, vec![("5".to_string(), 1.5), ("4".to_string(), 2.0)])
-            .await?;
+        assert_fetched_sorted_set_eq(result, vec![("5".to_string(), 1.5), ("4".to_string(), 2.0)])?;
 
         // Partial set descending
         let fetch_request = SortedSetFetchByRankRequest::new(cache_name, item.name())
@@ -131,8 +128,7 @@ mod sorted_set_fetch_by_rank {
                 ("2".to_string(), 1.0),
                 ("3".to_string(), 0.5),
             ],
-        )
-        .await?;
+        )?;
 
         Ok(())
     }
@@ -195,8 +191,7 @@ mod sorted_set_fetch_by_score {
                 ("5".to_string(), 1.5),
                 ("4".to_string(), 2.0),
             ],
-        )
-        .await?;
+        )?;
 
         // Up until score 1.0
         let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, item.name())
@@ -210,8 +205,7 @@ mod sorted_set_fetch_by_score {
                 ("3".to_string(), 0.5),
                 ("2".to_string(), 1.0),
             ],
-        )
-        .await?;
+        )?;
 
         // From score 1.0
         let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, item.name())
@@ -225,8 +219,7 @@ mod sorted_set_fetch_by_score {
                 ("5".to_string(), 1.5),
                 ("4".to_string(), 2.0),
             ],
-        )
-        .await?;
+        )?;
 
         // Partial set descending
         let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, item.name())
@@ -241,8 +234,7 @@ mod sorted_set_fetch_by_score {
                 ("2".to_string(), 1.0),
                 ("3".to_string(), 0.5),
             ],
-        )
-        .await?;
+        )?;
 
         // Partial set limited by offset and count
         let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, item.name())
@@ -256,8 +248,7 @@ mod sorted_set_fetch_by_score {
                 ("2".to_string(), 1.0),
                 ("5".to_string(), 1.5),
             ],
-        )
-        .await?;
+        )?;
 
         Ok(())
     }
@@ -314,7 +305,7 @@ mod sorted_set_put_element {
         let result = client
             .sorted_set_fetch_by_rank(cache_name, item.name(), Ascending, None, None)
             .await?;
-        assert_fetched_sorted_set_eq(result, vec![item.elements[0].clone()]).await?;
+        assert_fetched_sorted_set_eq(result, vec![item.elements[0].clone()])?;
 
         Ok(())
     }
@@ -361,7 +352,7 @@ mod sorted_set_put_elements {
                 .map(|e| (e.value, e.score))
                 .collect::<Vec<_>>();
 
-            assert_fetched_sorted_set_eq_after_sorting(result, expected).await?;
+            assert_fetched_sorted_set_eq_after_sorting(result, expected)?;
 
             Ok(())
         }
