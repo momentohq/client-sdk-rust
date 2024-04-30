@@ -1,5 +1,5 @@
 use momento::{
-    cache::{Get, GetValue, SortedSetElements, SortedSetFetch},
+    cache::{Get, GetValue, ListFetch, ListFetchValue, SortedSetElements, SortedSetFetch},
     IntoBytes,
 };
 use uuid::Uuid;
@@ -123,6 +123,49 @@ impl From<&TestSortedSet> for SortedSetFetch {
                     .elements()
                     .iter()
                     .map(|(element, score)| (element.as_bytes().to_vec(), *score))
+                    .collect(),
+            ),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct TestList {
+    pub name: String,
+    pub values: Vec<String>,
+}
+
+impl TestList {
+    pub fn new() -> Self {
+        Self {
+            name: unique_key(),
+            values: vec![unique_value(), unique_value()],
+        }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn values(&self) -> &Vec<String> {
+        &self.values
+    }
+}
+
+impl Default for TestList {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl From<&TestList> for ListFetch {
+    fn from(test_list: &TestList) -> Self {
+        ListFetch::Hit {
+            values: ListFetchValue::new(
+                test_list
+                    .values()
+                    .iter()
+                    .map(|v| v.as_bytes().to_vec())
                     .collect(),
             ),
         }
