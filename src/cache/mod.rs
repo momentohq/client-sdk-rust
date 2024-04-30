@@ -49,10 +49,10 @@ pub use requests::list::list_concatenate_back::{ListConcatenateBack, ListConcate
 pub use requests::list::list_concatenate_front::{
     ListConcatenateFront, ListConcatenateFrontRequest,
 };
-pub use requests::list::list_fetch::{ListFetch, ListFetchRequest};
+pub use requests::list::list_fetch::{ListFetch, ListFetchRequest, ListFetchValue};
 pub use requests::list::list_length::{ListLength, ListLengthRequest};
-pub use requests::list::list_pop_back::{ListPopBack, ListPopBackRequest};
-pub use requests::list::list_pop_front::{ListPopFront, ListPopFrontRequest};
+pub use requests::list::list_pop_back::{ListPopBack, ListPopBackRequest, ListPopBackValue};
+pub use requests::list::list_pop_front::{ListPopFront, ListPopFrontRequest, ListPopFrontValue};
 pub use requests::list::list_remove_value::{ListRemoveValue, ListRemoveValueRequest};
 
 // Similar re-exporting with config::configuration and config::configurations

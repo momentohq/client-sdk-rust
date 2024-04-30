@@ -1,10 +1,11 @@
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 
 use momento_protos::cache_client::list_pop_front_response;
 
 use crate::{
-    cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
-    MomentoErrorCode, MomentoResult,
+    cache::MomentoRequest,
+    utils::{parse_string, prep_request_with_timeout},
+    CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult,
 };
 
 /// Remove and return the first element from a list item.
@@ -67,9 +68,9 @@ impl<L: IntoBytes> MomentoRequest for ListPopFrontRequest<L> {
 
         match response.list {
             Some(list_pop_front_response::List::Missing(_)) => Ok(ListPopFront::Miss),
-            Some(list_pop_front_response::List::Found(found)) => {
-                Ok(ListPopFront::Hit { value: found.front })
-            }
+            Some(list_pop_front_response::List::Found(found)) => Ok(ListPopFront::Hit {
+                value: ListPopFrontValue::new(found.front),
+            }),
             _ => unreachable!(),
         }
     }
@@ -80,11 +81,12 @@ impl<L: IntoBytes> MomentoRequest for ListPopFrontRequest<L> {
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::cache::ListPopFront;
+/// # use momento::cache::ListPopFrontValue;
+/// use momento::cache::ListPopFront;
 /// use std::convert::TryInto;
-/// # let response = ListPopFront::Hit { value: "hi".into() };
+/// # let response = ListPopFront::Hit { value: ListPopFrontValue::new("hi".into()) };
 /// let popped_value: String = match response {
-///     ListPopFront::Hit { value } => String::from_utf8(value).expect("Expected a valid UTF-8 string"),
+///     ListPopFront::Hit { value } => value.try_into().expect("Expected a valid UTF-8 string"),
 ///     ListPopFront::Miss => return // probably you'll do something else here
 /// };
 /// ```
@@ -96,15 +98,43 @@ impl<L: IntoBytes> MomentoRequest for ListPopFrontRequest<L> {
 /// this is what you're after:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::cache::ListPopFront;
+/// # use momento::cache::ListPopFrontValue;
+/// use momento::cache::ListPopFront;
 /// use std::convert::TryInto;
-/// # let response = ListPopFront::Hit { value: "hi".into() };
+/// # let response = ListPopFront::Hit { value: ListPopFrontValue::new("hi".into()) };
 /// let popped_value: MomentoResult<String> = response.try_into();
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum ListPopFront {
-    Hit { value: Vec<u8> },
+    Hit { value: ListPopFrontValue },
     Miss,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ListPopFrontValue {
+    pub(crate) raw_item: Vec<u8>,
+}
+
+impl ListPopFrontValue {
+    pub fn new(raw_item: Vec<u8>) -> Self {
+        Self { raw_item }
+    }
+}
+
+impl TryFrom<ListPopFrontValue> for Vec<u8> {
+    type Error = MomentoError;
+
+    fn try_from(value: ListPopFrontValue) -> Result<Self, Self::Error> {
+        Ok(value.raw_item)
+    }
+}
+
+impl TryFrom<ListPopFrontValue> for String {
+    type Error = MomentoError;
+
+    fn try_from(value: ListPopFrontValue) -> Result<Self, Self::Error> {
+        Ok(parse_string(value.raw_item).expect("expected a valid UTF-8 string"))
+    }
 }
 
 impl TryFrom<ListPopFront> for Vec<u8> {
@@ -112,7 +142,7 @@ impl TryFrom<ListPopFront> for Vec<u8> {
 
     fn try_from(value: ListPopFront) -> Result<Self, Self::Error> {
         match value {
-            ListPopFront::Hit { value } => Ok(value),
+            ListPopFront::Hit { value } => Ok(value.try_into()?),
             ListPopFront::Miss => Err(MomentoError {
                 message: "list length response was a miss".into(),
                 error_code: MomentoErrorCode::Miss,
@@ -128,9 +158,7 @@ impl TryFrom<ListPopFront> for String {
 
     fn try_from(value: ListPopFront) -> Result<Self, Self::Error> {
         match value {
-            ListPopFront::Hit { value } => {
-                Ok(String::from_utf8(value).expect("Expected a valid UTF-8 string"))
-            }
+            ListPopFront::Hit { value } => Ok(value.try_into()?),
             ListPopFront::Miss => Err(MomentoError {
                 message: "list length response was a miss".into(),
                 error_code: MomentoErrorCode::Miss,

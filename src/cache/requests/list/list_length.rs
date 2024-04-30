@@ -80,7 +80,7 @@ impl<L: IntoBytes> MomentoRequest for ListLengthRequest<L> {
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::cache::ListLength;
+/// use momento::cache::ListLength;
 /// use std::convert::TryInto;
 /// # let response = ListLength::Hit { length: 5 };
 /// let length: u32 = match response {
@@ -96,7 +96,7 @@ impl<L: IntoBytes> MomentoRequest for ListLengthRequest<L> {
 /// this is what you're after:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::cache::ListLength;
+/// use momento::cache::ListLength;
 /// use std::convert::TryInto;
 /// # let response = ListLength::Hit { length: 5 };
 /// let length: MomentoResult<u32> = response.try_into();

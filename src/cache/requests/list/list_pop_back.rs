@@ -1,10 +1,11 @@
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 
 use momento_protos::cache_client::list_pop_back_response;
 
 use crate::{
-    cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
-    MomentoErrorCode, MomentoResult,
+    cache::MomentoRequest,
+    utils::{parse_string, prep_request_with_timeout},
+    CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult,
 };
 
 /// Remove and return the last element from a list item.
@@ -67,9 +68,9 @@ impl<L: IntoBytes> MomentoRequest for ListPopBackRequest<L> {
 
         match response.list {
             Some(list_pop_back_response::List::Missing(_)) => Ok(ListPopBack::Miss),
-            Some(list_pop_back_response::List::Found(found)) => {
-                Ok(ListPopBack::Hit { value: found.back })
-            }
+            Some(list_pop_back_response::List::Found(found)) => Ok(ListPopBack::Hit {
+                value: ListPopBackValue::new(found.back),
+            }),
             _ => unreachable!(),
         }
     }
@@ -80,11 +81,12 @@ impl<L: IntoBytes> MomentoRequest for ListPopBackRequest<L> {
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::cache::ListPopBack;
+/// # use momento::cache::ListPopBackValue;
+/// use momento::cache::ListPopBack;
 /// use std::convert::TryInto;
-/// # let response = ListPopBack::Hit { value: "hi".into() };
+/// # let response = ListPopBack::Hit { value: ListPopBackValue::new("hi".into()) };
 /// let popped_value: String = match response {
-///     ListPopBack::Hit { value } => String::from_utf8(value).expect("Expected a valid UTF-8 string"),
+///     ListPopBack::Hit { value } => value.try_into().expect("Expected a popped list value!"),
 ///     ListPopBack::Miss => return // probably you'll do something else here
 /// };
 /// ```
@@ -96,15 +98,43 @@ impl<L: IntoBytes> MomentoRequest for ListPopBackRequest<L> {
 /// this is what you're after:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::cache::ListPopBack;
+/// # use momento::cache::ListPopBackValue;
+/// use momento::cache::ListPopBack;
 /// use std::convert::TryInto;
-/// # let response = ListPopBack::Hit { value: "hi".into() };
+/// # let response = ListPopBack::Hit { value: ListPopBackValue::new("hi".into()) };
 /// let popped_value: MomentoResult<String> = response.try_into();
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum ListPopBack {
-    Hit { value: Vec<u8> },
+    Hit { value: ListPopBackValue },
     Miss,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ListPopBackValue {
+    pub(crate) raw_item: Vec<u8>,
+}
+
+impl ListPopBackValue {
+    pub fn new(raw_item: Vec<u8>) -> Self {
+        Self { raw_item }
+    }
+}
+
+impl TryFrom<ListPopBackValue> for Vec<u8> {
+    type Error = MomentoError;
+
+    fn try_from(value: ListPopBackValue) -> Result<Self, Self::Error> {
+        Ok(value.raw_item)
+    }
+}
+
+impl TryFrom<ListPopBackValue> for String {
+    type Error = MomentoError;
+
+    fn try_from(value: ListPopBackValue) -> Result<Self, Self::Error> {
+        Ok(parse_string(value.raw_item).expect("expected a valid UTF-8 string"))
+    }
 }
 
 impl TryFrom<ListPopBack> for Vec<u8> {
@@ -112,7 +142,7 @@ impl TryFrom<ListPopBack> for Vec<u8> {
 
     fn try_from(value: ListPopBack) -> Result<Self, Self::Error> {
         match value {
-            ListPopBack::Hit { value } => Ok(value),
+            ListPopBack::Hit { value } => Ok(value.try_into()?),
             ListPopBack::Miss => Err(MomentoError {
                 message: "list length response was a miss".into(),
                 error_code: MomentoErrorCode::Miss,
@@ -128,9 +158,7 @@ impl TryFrom<ListPopBack> for String {
 
     fn try_from(value: ListPopBack) -> Result<Self, Self::Error> {
         match value {
-            ListPopBack::Hit { value } => {
-                Ok(String::from_utf8(value).expect("Expected a valid UTF-8 string"))
-            }
+            ListPopBack::Hit { value } => Ok(value.try_into()?),
             ListPopBack::Miss => Err(MomentoError {
                 message: "list length response was a miss".into(),
                 error_code: MomentoErrorCode::Miss,

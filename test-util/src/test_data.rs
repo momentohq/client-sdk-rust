@@ -1,5 +1,5 @@
 use momento::{
-    cache::{Get, GetValue, ListFetch, SortedSetElements, SortedSetFetch},
+    cache::{Get, GetValue, ListFetch, ListFetchValue, SortedSetElements, SortedSetFetch},
     IntoBytes,
 };
 use uuid::Uuid;
@@ -161,11 +161,13 @@ impl Default for TestList {
 impl From<&TestList> for ListFetch {
     fn from(test_list: &TestList) -> Self {
         ListFetch::Hit {
-            values: test_list
-                .values()
-                .iter()
-                .map(|v| v.as_bytes().to_vec())
-                .collect(),
+            values: ListFetchValue::new(
+                test_list
+                    .values()
+                    .iter()
+                    .map(|v| v.as_bytes().to_vec())
+                    .collect(),
+            ),
         }
     }
 }
