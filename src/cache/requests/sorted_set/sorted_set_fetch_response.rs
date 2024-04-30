@@ -8,13 +8,62 @@ use crate::{
     MomentoResult, {ErrorSource, MomentoError, MomentoErrorCode},
 };
 
+/// Response object for a [SortedSetFetchByScoreRequest](crate::cache::SortedSetFetchByScoreRequest) or a [SortedSetFetchByRankRequest](crate::cache::SortedSetFetchByRankRequest).
+///
+/// If you'd like to handle misses you can simply match and handle your response:
+/// ```
+/// fn main() -> anyhow::Result<()> {
+/// # use momento::cache::{SortedSetFetch, SortedSetElements};
+/// # use momento::MomentoResult;
+/// # let fetch_response = SortedSetFetch::Hit { value: SortedSetElements::default() };
+/// use std::convert::TryInto;
+/// let item: Vec<(String, f64)> = match fetch_response {
+///   SortedSetFetch::Hit { value } => value.try_into().expect("I stored strings!"),
+///   SortedSetFetch::Miss => panic!("I expected a hit!"),
+/// };
+/// # Ok(())
+/// }
+/// ```
+///
+/// Or, if you're storing raw bytes you can get at them simply:
+/// ```
+/// # use momento::cache::{SortedSetFetch, SortedSetElements};
+/// # use momento::MomentoResult;
+/// # let fetch_response = SortedSetFetch::Hit { value: SortedSetElements::default() };
+/// use std::convert::TryInto;
+/// let item: Vec<(Vec<u8>, f64)> = match fetch_response {
+///  SortedSetFetch::Hit { value } => value.into(),
+///  SortedSetFetch::Miss => panic!("I expected a hit!"),
+/// };
+/// ```
+///
+/// You can cast your result directly into a Result<Vec<(String, f64)>, MomentoError> suitable for
+/// ?-propagation if you know you are expecting a Vec<(String, f64)> item.
+///
+/// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
+/// this is what you're after:
+/// ```
+/// # use momento::cache::{SortedSetFetch, SortedSetElements};
+/// # use momento::MomentoResult;
+/// # let fetch_response = SortedSetFetch::Hit { value: SortedSetElements::default() };
+/// use std::convert::TryInto;
+/// let item: MomentoResult<Vec<(String, f64)>> = fetch_response.try_into();
+/// ```
+///
+/// You can also go straight into a `Vec<(Vec<u8>, f64)>` if you prefer:
+/// ```
+/// # use momento::cache::{SortedSetFetch, SortedSetElements};
+/// # use momento::MomentoResult;
+/// # let fetch_response = SortedSetFetch::Hit { value: SortedSetElements::default() };
+/// use std::convert::TryInto;
+/// let item: MomentoResult<Vec<(Vec<u8>, f64)>> = fetch_response.try_into();
+/// ```
 #[derive(Debug, PartialEq)]
 pub enum SortedSetFetch {
-    Hit { elements: SortedSetElements },
+    Hit { value: SortedSetElements },
     Miss,
 }
 
-/// Response object for a [SortedSetFetchByScoreRequest] or a [SortedSetFetchByRankRequest].
 impl SortedSetFetch {
     pub(crate) fn from_fetch_response(response: SortedSetFetchResponse) -> MomentoResult<Self> {
         match response.sorted_set {
@@ -22,7 +71,7 @@ impl SortedSetFetch {
             Some(SortedSet::Missing(_)) => Ok(SortedSetFetch::Miss),
             Some(SortedSet::Found(elements)) => match elements.elements {
                 None => Ok(SortedSetFetch::Hit {
-                    elements: SortedSetElements::new(Vec::new()),
+                    value: SortedSetElements::new(Vec::new()),
                 }),
                 Some(elements) => match elements {
                     Elements::ValuesWithScores(values_with_scores) => {
@@ -32,7 +81,7 @@ impl SortedSetFetch {
                             .map(|element| (element.value, element.score))
                             .collect();
                         Ok(SortedSetFetch::Hit {
-                            elements: SortedSetElements::new(elements),
+                            value: SortedSetElements::new(elements),
                         })
                     }
                     Elements::Values(_) => Err(MomentoError {
@@ -60,7 +109,7 @@ impl TryFrom<SortedSetFetch> for Vec<(Vec<u8>, f64)> {
 
     fn try_from(value: SortedSetFetch) -> Result<Self, Self::Error> {
         match value {
-            SortedSetFetch::Hit { elements } => Ok(elements.elements),
+            SortedSetFetch::Hit { value: elements } => Ok(elements.elements),
             SortedSetFetch::Miss => Err(MomentoError {
                 message: "sorted set was not found".into(),
                 error_code: MomentoErrorCode::Miss,
@@ -76,7 +125,7 @@ impl TryFrom<SortedSetFetch> for Vec<(String, f64)> {
 
     fn try_from(value: SortedSetFetch) -> Result<Self, Self::Error> {
         match value {
-            SortedSetFetch::Hit { elements } => elements.into_strings(),
+            SortedSetFetch::Hit { value: elements } => elements.into_strings(),
             SortedSetFetch::Miss => Err(MomentoError {
                 message: "sorted set was not found".into(),
                 error_code: MomentoErrorCode::Miss,
@@ -90,7 +139,7 @@ impl TryFrom<SortedSetFetch> for Vec<(String, f64)> {
 impl From<Vec<(String, f64)>> for SortedSetFetch {
     fn from(elements: Vec<(String, f64)>) -> Self {
         SortedSetFetch::Hit {
-            elements: SortedSetElements::new(
+            value: SortedSetElements::new(
                 elements
                     .into_iter()
                     .map(|(element, score)| (element.into_bytes(), score))
@@ -100,7 +149,7 @@ impl From<Vec<(String, f64)>> for SortedSetFetch {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Default)]
 pub struct SortedSetElements {
     pub elements: Vec<(Vec<u8>, f64)>,
 }
@@ -123,11 +172,9 @@ impl SortedSetElements {
     }
 }
 
-impl TryFrom<SortedSetElements> for Vec<(Vec<u8>, f64)> {
-    type Error = MomentoError;
-
-    fn try_from(value: SortedSetElements) -> Result<Self, Self::Error> {
-        Ok(value.elements)
+impl From<SortedSetElements> for Vec<(Vec<u8>, f64)> {
+    fn from(value: SortedSetElements) -> Self {
+        value.elements
     }
 }
 

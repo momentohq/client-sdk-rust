@@ -592,8 +592,8 @@ impl CacheClient {
     /// ).await?;
     ///
     /// match fetch_response {
-    ///     SortedSetFetch::Hit{ elements } => {
-    ///         match elements.into_strings() {
+    ///     SortedSetFetch::Hit{ value } => {
+    ///         match value.into_strings() {
     ///             Ok(vec) => {
     ///                 println!("Fetched elements: {:?}", vec);
     ///             }
@@ -668,8 +668,8 @@ impl CacheClient {
     /// ).await?;
     ///
     /// match fetch_response {
-    ///     SortedSetFetch::Hit{ elements } => {
-    ///         match elements.into_strings() {
+    ///     SortedSetFetch::Hit{ value } => {
+    ///         match value.into_strings() {
     ///             Ok(vec) => {
     ///                 println!("Fetched elements: {:?}", vec);
     ///             }
