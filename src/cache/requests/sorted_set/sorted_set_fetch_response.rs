@@ -8,7 +8,7 @@ use crate::{
     MomentoResult, {ErrorSource, MomentoError, MomentoErrorCode},
 };
 
-/// Response object for a [SortedSetFetchByScoreRequest] or a [SortedSetFetchByRankRequest].
+/// Response object for a SortedSetFetchByScoreRequest or a SortedSetFetchByRankRequest.
 ///
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
