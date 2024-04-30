@@ -4,9 +4,8 @@ use std::time::Duration;
 use momento_protos::cache_client::item_get_ttl_response::{self};
 
 use crate::{
-    cache::MomentoRequest,
-    utils::prep_request_with_timeout,
-    CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult,
+    cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
+    MomentoErrorCode, MomentoResult,
 };
 
 /// Return the remaining ttl of the key in the cache.

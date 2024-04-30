@@ -3,9 +3,8 @@ use std::convert::TryFrom;
 use momento_protos::cache_client::list_length_response;
 
 use crate::{
-    cache::MomentoRequest,
-    utils::prep_request_with_timeout,
-    CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult,
+    cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
+    MomentoErrorCode, MomentoResult,
 };
 
 /// Gets the number of elements in the given list.
