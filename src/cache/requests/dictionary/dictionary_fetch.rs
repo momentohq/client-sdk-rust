@@ -156,7 +156,7 @@ pub enum DictionaryFetch {
     Miss,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Default)]
 pub struct DictionaryFetchValue {
     pub(crate) raw_item: HashMap<Vec<u8>, Vec<u8>>,
 }
@@ -167,15 +167,6 @@ impl DictionaryFetchValue {
     }
 }
 
-impl Default for DictionaryFetchValue {
-    fn default() -> Self {
-        Self {
-            raw_item: HashMap::new(),
-        }
-    }
-}
-
-// Various TryFroms
 impl TryFrom<DictionaryFetchValue> for HashMap<String, String> {
     type Error = MomentoError;
 
