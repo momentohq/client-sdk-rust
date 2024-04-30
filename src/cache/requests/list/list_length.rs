@@ -70,7 +70,12 @@ impl<L: IntoBytes> MomentoRequest for ListLengthRequest<L> {
             Some(list_length_response::List::Found(found)) => Ok(ListLength::Hit {
                 length: found.length,
             }),
-            _ => unreachable!(),
+            _ => Err(MomentoError {
+                message: "Unknown error has occurred, unable to parse list_fetch_response".into(),
+                error_code: MomentoErrorCode::UnknownError,
+                inner_error: None,
+                details: None,
+            }),
         }
     }
 }
