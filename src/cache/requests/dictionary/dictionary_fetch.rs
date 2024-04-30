@@ -8,6 +8,43 @@ use momento_protos::cache_client::{
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 
+/// Request to fetch a dictionary from a cache.
+///
+/// # Arguments
+///
+/// * `cache_name` - The name of the cache containing the dictionary.
+/// * `dictionary_name` - The name of the dictionary to fetch.
+///
+/// # Examples
+/// Assumes that a CacheClient named `cache_client` has been created and is available.
+/// ```
+/// # fn main() -> anyhow::Result<()> {
+/// # use std::collections::HashMap;
+/// # use std::convert::TryInto;
+/// # use momento_test_util::create_doctest_cache_client;
+/// # tokio_test::block_on(async {
+/// use momento::cache::{DictionaryFetchRequest, DictionaryFetch};
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
+/// let dictionary_name = "dictionary";
+///
+/// let set_response = cache_client.dictionary_set_field(
+///    cache_name.to_string(),
+///    dictionary_name.to_string(),
+///    "field1".to_string(),
+///    "value1".to_string()
+/// ).await?;
+///
+/// let fetch_request = DictionaryFetchRequest::new(cache_name, dictionary_name);
+///
+/// let fetch_response = cache_client.send_request(fetch_request).await?;
+///
+/// let returned_dictionary: HashMap<String, String> = fetch_response.try_into()
+///    .expect("dictionary should be returned");
+/// println!("{:?}", returned_dictionary);
+/// # Ok(())
+/// # })
+/// # }
+/// ```
 pub struct DictionaryFetchRequest<D: IntoBytes> {
     cache_name: String,
     dictionary_name: D,

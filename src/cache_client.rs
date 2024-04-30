@@ -290,7 +290,45 @@ impl CacheClient {
         request.send(self).await
     }
 
-    // TODO: document
+    /// Fetches a dictionary from a cache.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - The name of the cache containing the dictionary.
+    /// * `dictionary_name` - The name of the dictionary to fetch.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use std::collections::HashMap;
+    /// # use std::convert::TryInto;
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{DictionaryFetchRequest, DictionaryFetch};
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let dictionary_name = "dictionary";
+    ///
+    /// let set_response = cache_client.dictionary_set_field(
+    ///   cache_name.to_string(),
+    ///   dictionary_name.to_string(),
+    ///   "field1".to_string(),
+    ///   "value1".to_string()
+    /// ).await?;
+    ///
+    /// let fetch_response = cache_client.dictionary_fetch(cache_name, dictionary_name).await?;
+    ///
+    /// match fetch_response {
+    ///    DictionaryFetch::Hit{ value } => {
+    ///       let dictionary: HashMap<String, String> = value.try_into().expect("I stored a dictionary!");
+    ///       println!("Fetched dictionary: {:?}", dictionary);
+    ///    }
+    ///    DictionaryFetch::Miss => println!("Cache miss"),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
     pub async fn dictionary_fetch(
         &self,
         cache_name: impl Into<String>,
