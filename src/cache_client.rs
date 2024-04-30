@@ -9,16 +9,16 @@ use tonic::transport::Channel;
 use crate::cache::{
     Configuration, CreateCache, CreateCacheRequest, DecreaseTtl, DecreaseTtlRequest, Delete,
     DeleteCache, DeleteCacheRequest, DeleteRequest, DictionaryFetch, DictionaryFetchRequest,
-    FlushCache, FlushCacheRequest, Get, GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment,
-    IncrementRequest, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest, ItemGetType,
-    ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest, ListCaches,
-    ListCachesRequest, MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetIfAbsent,
-    SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual,
-    SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual,
-    SetIfPresentAndNotEqualRequest, SetIfPresentRequest, SetRequest, SortedSetFetch,
-    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement,
-    SortedSetPutElementRequest, SortedSetPutElements, SortedSetPutElementsRequest, UpdateTtl,
-    UpdateTtlRequest,
+    DictionarySetField, DictionarySetFieldRequest, FlushCache, FlushCacheRequest, Get, GetRequest,
+    IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest, IntoSortedSetElements,
+    ItemGetTtl, ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest,
+    KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, MomentoRequest, Set,
+    SetAddElements, SetAddElementsRequest, SetIfAbsent, SetIfAbsentOrEqual,
+    SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual,
+    SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,
+    SetIfPresentRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
+    SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
+    SortedSetPutElements, SortedSetPutElementsRequest, UpdateTtl, UpdateTtlRequest,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -290,7 +290,7 @@ impl CacheClient {
         request.send(self).await
     }
 
-    // dictionary_fetch - first
+    // TODO: document
     pub async fn dictionary_fetch(
         &self,
         cache_name: impl Into<String>,
@@ -305,7 +305,19 @@ impl CacheClient {
     // dictionary_length
     // dictionary_remove_field
     // dictionary_remove_fields
-    // dictionary_set_field - first
+
+    // TODO document
+    pub async fn dictionary_set_field(
+        &self,
+        cache_name: impl Into<String>,
+        dictionary_name: impl IntoBytes,
+        field: impl IntoBytes,
+        value: impl IntoBytes,
+    ) -> MomentoResult<DictionarySetField> {
+        let request = DictionarySetFieldRequest::new(cache_name, dictionary_name, field, value);
+        request.send(self).await
+    }
+
     // dictionary_set_fields
 
     /// Adds elements to the given set. Creates the set if it does not exist.

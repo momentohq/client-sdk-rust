@@ -2,6 +2,7 @@ use momento::{
     cache::{Get, GetValue, SortedSetElements, SortedSetFetch},
     IntoBytes,
 };
+use std::collections::HashMap;
 use uuid::Uuid;
 
 pub fn unique_string(prefix: impl Into<String>) -> String {
@@ -54,6 +55,34 @@ impl From<&TestScalar> for Get {
         Get::Hit {
             value: GetValue::new(test_scalar.value().into_bytes()),
         }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct TestDictionary {
+    pub name: String,
+    pub elements: HashMap<String, String>,
+}
+
+impl TestDictionary {
+    pub fn new() -> Self {
+        Self {
+            name: unique_key(),
+            elements: vec![
+                (unique_key(), unique_value()),
+                (unique_key(), unique_value()),
+            ]
+            .into_iter()
+            .collect(),
+        }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn elements(&self) -> &HashMap<String, String> {
+        &self.elements
     }
 }
 

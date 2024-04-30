@@ -12,6 +12,9 @@ pub use requests::list_caches::{
 };
 
 pub use requests::dictionary::dictionary_fetch::{DictionaryFetch, DictionaryFetchRequest};
+pub use requests::dictionary::dictionary_set_field::{
+    DictionarySetField, DictionarySetFieldRequest,
+};
 
 pub use requests::scalar::decrease_ttl::{DecreaseTtl, DecreaseTtlRequest};
 pub use requests::scalar::delete::{Delete, DeleteRequest};
