@@ -109,7 +109,6 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
 ///    DictionaryFetch::Hit { value } => value.try_into().expect("I stored strings!"),
 ///   DictionaryFetch::Miss => panic!("I expected a hit!"),
 /// };
-///
 /// # Ok(())
 /// }
 /// ```
