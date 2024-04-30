@@ -92,6 +92,12 @@ impl Default for TestDictionary {
     }
 }
 
+impl Default for TestDictionary {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct TestSet {
     pub name: String,
