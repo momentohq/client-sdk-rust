@@ -59,7 +59,7 @@ mod sorted_set_fetch_by_rank {
         let cache_name = &CACHE_TEST_STATE.cache_name;
         let item = TestSortedSet {
             name: unique_key(),
-            elements: vec![
+            value: vec![
                 ("1".to_string(), 0.0),
                 ("2".to_string(), 1.0),
                 ("3".to_string(), 0.5),
@@ -74,7 +74,7 @@ mod sorted_set_fetch_by_rank {
         assert_eq!(result, SortedSetFetch::Miss);
 
         client
-            .sorted_set_put_elements(cache_name, item.name(), item.elements().to_vec())
+            .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
             .await?;
 
         // Full set ascending, end index larger than set
@@ -158,7 +158,7 @@ mod sorted_set_fetch_by_score {
         let cache_name = &CACHE_TEST_STATE.cache_name;
         let item = TestSortedSet {
             name: unique_key(),
-            elements: vec![
+            value: vec![
                 ("1".to_string(), 0.0),
                 ("2".to_string(), 1.0),
                 ("3".to_string(), 0.5),
@@ -173,7 +173,7 @@ mod sorted_set_fetch_by_score {
         assert_eq!(result, SortedSetFetch::Miss);
 
         client
-            .sorted_set_put_elements(cache_name, item.name(), item.elements().to_vec())
+            .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
             .await?;
 
         // Full set ascending, end score larger than set
@@ -297,15 +297,15 @@ mod sorted_set_put_element {
             .sorted_set_put_element(
                 cache_name,
                 item.name(),
-                item.elements[0].0.clone(),
-                item.elements[0].1,
+                item.value[0].0.clone(),
+                item.value[0].1,
             )
             .await?;
 
         let result = client
             .sorted_set_fetch_by_rank(cache_name, item.name(), Ascending, None, None)
             .await?;
-        assert_fetched_sorted_set_eq(result, vec![item.elements[0].clone()])?;
+        assert_fetched_sorted_set_eq(result, vec![item.value[0].clone()])?;
 
         Ok(())
     }

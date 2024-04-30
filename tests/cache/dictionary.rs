@@ -11,7 +11,7 @@ fn assert_fetched_dictionary_equals_test_data(
     expected: &TestDictionary,
 ) -> Result<(), MomentoError> {
     let actual: HashMap<String, String> = dictionary_fetch_result.try_into()?;
-    assert_eq!(actual, *expected.elements());
+    assert_eq!(actual, *expected.value());
     Ok(())
 }
 
@@ -30,7 +30,7 @@ mod dictionary_fetch {
 
         // Test a hit
         let item = TestDictionary::new();
-        for (field, value) in item.elements.iter() {
+        for (field, value) in item.value.iter() {
             let dictionary_set_response = client
                 .dictionary_set_field(cache_name, item.name(), field.clone(), value.clone())
                 .await?;
@@ -84,7 +84,7 @@ mod dictionary_set_field {
         let pair = (unique_key(), unique_value());
         let item = TestDictionary {
             name: unique_key(),
-            elements: HashMap::from([pair.clone()]),
+            value: HashMap::from([pair.clone()]),
         };
 
         let response = client
