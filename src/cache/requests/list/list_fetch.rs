@@ -23,7 +23,7 @@ use crate::{
 /// # Optional Arguments
 ///
 /// * `start_index` - The starting inclusive element of the list to fetch. Default is 0.
-/// * `end_index` - The ending exclusive element of the list to fetch. Default is end of list.
+/// * `end_index` - The ending exclusive element of the list to fetch. Default is up to and including end of list.
 ///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
