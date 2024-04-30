@@ -52,6 +52,16 @@ pub use requests::sorted_set::sorted_set_put_elements::{
     IntoSortedSetElements, SortedSetElement, SortedSetPutElements, SortedSetPutElementsRequest,
 };
 
+pub use requests::list::list_concatenate_back::{ListConcatenateBack, ListConcatenateBackRequest};
+pub use requests::list::list_concatenate_front::{
+    ListConcatenateFront, ListConcatenateFrontRequest,
+};
+pub use requests::list::list_fetch::{ListFetch, ListFetchRequest, ListFetchValue};
+pub use requests::list::list_length::{ListLength, ListLengthRequest};
+pub use requests::list::list_pop_back::{ListPopBack, ListPopBackRequest, ListPopBackValue};
+pub use requests::list::list_pop_front::{ListPopFront, ListPopFrontRequest, ListPopFrontValue};
+pub use requests::list::list_remove_value::{ListRemoveValue, ListRemoveValueRequest};
+
 // Similar re-exporting with config::configuration and config::configurations
 // so import paths can be simpmlified to "momento::cache::Configuration" and
 // "use momento::cache::configurations::laptop"

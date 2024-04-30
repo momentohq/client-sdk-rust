@@ -12,7 +12,10 @@ use crate::cache::{
     DictionarySetField, DictionarySetFieldRequest, FlushCache, FlushCacheRequest, Get, GetRequest,
     IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest, IntoSortedSetElements,
     ItemGetTtl, ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest,
-    KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, MomentoRequest, Set,
+    KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, ListConcatenateBack,
+    ListConcatenateBackRequest, ListConcatenateFront, ListConcatenateFrontRequest, ListFetch,
+    ListFetchRequest, ListLength, ListLengthRequest, ListPopBack, ListPopBackRequest, ListPopFront,
+    ListPopFrontRequest, ListRemoveValue, ListRemoveValueRequest, MomentoRequest, Set,
     SetAddElements, SetAddElementsRequest, SetIfAbsent, SetIfAbsentOrEqual,
     SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual,
     SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,
@@ -544,7 +547,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetPutElementsRequest]
+    /// You can also use the [send_request](CacheClient::send_request) method to put elements using a [SortedSetPutElementsRequest]
     /// which will allow you to set [optional arguments](SortedSetPutElementsRequest#optional-arguments) as well.
     pub async fn sorted_set_put_elements<V: IntoBytes>(
         &self,
@@ -1311,6 +1314,288 @@ impl CacheClient {
         equal: impl IntoBytes,
     ) -> MomentoResult<SetIfAbsentOrEqual> {
         let request = SetIfAbsentOrEqualRequest::new(cache_name, key, value, equal);
+        request.send(self).await
+    }
+
+    /// Gets the number of elements in the given list.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use std::convert::TryInto;
+    /// use momento::cache::ListLength;
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    /// # cache_client.list_concatenate_front(&cache_name, list_name, vec!["value1", "value2"]).await;
+    ///
+    /// let length: u32 = cache_client.list_length(&cache_name, list_name).await?.try_into().expect("Expected a list length!");
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get a list's length using a [ListLengthRequest].
+    pub async fn list_length(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+    ) -> MomentoResult<ListLength> {
+        let request = ListLengthRequest::new(cache_name, list_name);
+        request.send(self).await
+    }
+
+    /// Adds multiple elements to the front of the given list. Creates the list if it does not already exist.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    /// * `values` - list of values to add to the front of the list
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to add elements to the front of a list using a [ListConcatenateFrontRequest],
+    /// you can also provide the following optional arguments:
+    ///
+    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
+    /// * `truncate_back_to_size` - If the list exceeds this length, remove excess from the back of the list.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::ListConcatenateFront;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    ///
+    /// let concat_front_response = cache_client.list_concatenate_front(
+    ///     cache_name,
+    ///     list_name,
+    ///     vec!["value1", "value2"]
+    /// ).await;
+    ///
+    /// match concat_front_response {
+    ///     Ok(_) => println!("Elements added to list"),
+    ///     Err(e) => eprintln!("Error adding elements to list: {}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to concatenate an item using a [ListConcatenateFrontRequest]
+    /// which will allow you to set [optional arguments](ListConcatenateFrontRequest#optional-arguments) as well.
+    pub async fn list_concatenate_front(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+        values: Vec<impl IntoBytes>,
+    ) -> MomentoResult<ListConcatenateFront> {
+        let request = ListConcatenateFrontRequest::new(cache_name, list_name, values);
+        request.send(self).await
+    }
+
+    /// Adds multiple elements to the back of the given list. Creates the list if it does not already exist.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    /// * `values` - list of values to add to the back of the list
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to add elements to the back of a list using a [ListConcatenateBackRequest],
+    /// you can also provide the following optional arguments:
+    ///
+    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
+    /// * `truncate_front_to_size` - If the list exceeds this length, remove excess from the front of the list.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::ListConcatenateBack;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    ///
+    /// let concat_front_response = cache_client.list_concatenate_back(
+    ///     cache_name,
+    ///     list_name,
+    ///     vec!["value1", "value2"]
+    /// ).await;
+    ///
+    /// match concat_front_response {
+    ///     Ok(_) => println!("Elements added to list"),
+    ///     Err(e) => eprintln!("Error adding elements to list: {}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to concatenate an item using a [ListConcatenateBackRequest]
+    /// which will allow you to set [optional arguments](ListConcatenateBackRequest#optional-arguments) as well.
+    pub async fn list_concatenate_back(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+        values: Vec<impl IntoBytes>,
+    ) -> MomentoResult<ListConcatenateBack> {
+        let request = ListConcatenateBackRequest::new(cache_name, list_name, values);
+        request.send(self).await
+    }
+
+    /// Gets a list item from a cache with optional slices.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to fetch a list using a [ListFetchRequest],
+    /// you can also provide the following optional arguments:
+    ///
+    /// * `start_index` - The starting inclusive element of the list to fetch. Default is 0.
+    /// * `end_index` - The ending exclusive element of the list to fetch. Default is end of list.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use std::convert::TryInto;
+    /// use momento::cache::ListFetch;
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    /// # cache_client.list_concatenate_front(&cache_name, list_name, vec!["value1", "value2"]).await;
+    ///
+    /// let fetched_values: Vec<String> = cache_client.list_fetch(cache_name, list_name).await?.try_into().expect("Expected a list fetch!");
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to fetch a list using a [ListFetchRequest]
+    /// which will allow you to set [optional arguments](ListFetchRequest#optional-arguments) as well.
+    pub async fn list_fetch(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+    ) -> MomentoResult<ListFetch> {
+        let request = ListFetchRequest::new(cache_name, list_name);
+        request.send(self).await
+    }
+
+    /// Remove and return the last element from a list item.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use std::convert::TryInto;
+    /// use momento::cache::{ListPopBack, ListPopBackRequest};
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    /// # cache_client.list_concatenate_front(&cache_name, list_name, vec!["value1", "value2"]).await;
+    ///
+    /// let popped_value: String = cache_client.list_pop_back(cache_name, list_name).await?.try_into().expect("Expected a popped list value!");
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to pop a value off the list using a [ListPopBackRequest].
+    pub async fn list_pop_back(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+    ) -> MomentoResult<ListPopBack> {
+        let request = ListPopBackRequest::new(cache_name, list_name);
+        request.send(self).await
+    }
+
+    /// Remove and return the first element from a list item.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use std::convert::TryInto;
+    /// use momento::cache::{ListPopFront, ListPopFrontRequest};
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    /// # cache_client.list_concatenate_front(&cache_name, list_name, vec!["value1", "value2"]).await;
+    ///
+    /// let popped_value: String = cache_client.list_pop_front(cache_name, list_name).await?.try_into().expect("Expected a popped list value!");
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to pop a value off the list using a [ListPopFrontRequest].
+    pub async fn list_pop_front(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+    ) -> MomentoResult<ListPopFront> {
+        let request = ListPopFrontRequest::new(cache_name, list_name);
+        request.send(self).await
+    }
+
+    /// Remove all elements in a list item equal to a particular value.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    /// * `value` - value to remove
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{ListRemoveValue, ListRemoveValueRequest};
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    /// # cache_client.list_concatenate_front(&cache_name, list_name, vec!["value1", "value2"]).await;
+    ///
+    /// match cache_client.list_remove_value(cache_name, list_name, "value1").await {
+    ///     Ok(ListRemoveValue {}) => println!("Successfully removed value"),
+    ///     Err(e) => eprintln!("Error removing value: {:?}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to remove a value from the list using a [ListRemoveValueRequest].
+    pub async fn list_remove_value(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+        value: impl IntoBytes,
+    ) -> MomentoResult<ListRemoveValue> {
+        let request = ListRemoveValueRequest::new(cache_name, list_name, value);
         request.send(self).await
     }
 
