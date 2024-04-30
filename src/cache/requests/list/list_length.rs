@@ -4,7 +4,7 @@ use momento_protos::cache_client::list_length_response;
 
 use crate::{
     cache::MomentoRequest,
-    utils::{prep_request_with_timeout, return_unknown_error},
+    utils::prep_request_with_timeout,
     CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult,
 };
 
@@ -71,7 +71,7 @@ impl<L: IntoBytes> MomentoRequest for ListLengthRequest<L> {
             Some(list_length_response::List::Found(found)) => Ok(ListLength::Hit {
                 length: found.length,
             }),
-            _ => Err(return_unknown_error(
+            _ => Err(MomentoError::unknown_error(
                 "ListLength",
                 Some(format!("{:#?}", response)),
             )),

@@ -3,7 +3,7 @@ use std::time::Duration;
 use momento_protos::cache_client::update_ttl_request::UpdateTtl::DecreaseToMilliseconds;
 use momento_protos::cache_client::update_ttl_response::{self};
 
-use crate::utils::return_unknown_error;
+use crate::MomentoError;
 use crate::{
     cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoResult,
 };
@@ -79,7 +79,7 @@ impl<K: IntoBytes> MomentoRequest for DecreaseTtlRequest<K> {
             Some(update_ttl_response::Result::Missing(_)) => Ok(DecreaseTtl::Miss),
             Some(update_ttl_response::Result::Set(_)) => Ok(DecreaseTtl::Set),
             Some(update_ttl_response::Result::NotSet(_)) => Ok(DecreaseTtl::NotSet),
-            _ => Err(return_unknown_error(
+            _ => Err(MomentoError::unknown_error(
                 "DecreaseTtl",
                 Some(format!("{:#?}", response)),
             )),

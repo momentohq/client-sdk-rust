@@ -1,5 +1,5 @@
 use crate::cache::requests::MomentoRequest;
-use crate::utils::{parse_string, prep_request_with_timeout, return_unknown_error};
+use crate::utils::{parse_string, prep_request_with_timeout};
 use crate::{CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult};
 use momento_protos::cache_client::{
     dictionary_fetch_response::Dictionary as DictionaryProto,
@@ -90,7 +90,7 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
                     value: DictionaryFetchValue::new(raw_item),
                 })
             }
-            _ => Err(return_unknown_error(
+            _ => Err(MomentoError::unknown_error(
                 "DictionaryFetch",
                 Some(format!("{:#?}", response)),
             )),

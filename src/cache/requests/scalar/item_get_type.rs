@@ -4,7 +4,7 @@ use momento_protos::cache_client::item_get_type_response::{self};
 
 use crate::{
     cache::MomentoRequest,
-    utils::{prep_request_with_timeout, return_unknown_error},
+    utils::prep_request_with_timeout,
     CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult,
 };
 
@@ -90,7 +90,7 @@ impl<K: IntoBytes> MomentoRequest for ItemGetTypeRequest<K> {
                     }
                 },
             }),
-            _ => Err(return_unknown_error(
+            _ => Err(MomentoError::unknown_error(
                 "ItemGetType",
                 Some(format!("{:#?}", response)),
             )),

@@ -4,9 +4,7 @@ use momento_protos::cache_client::sorted_set_fetch_response::found::Elements;
 use momento_protos::cache_client::sorted_set_fetch_response::SortedSet;
 use momento_protos::cache_client::SortedSetFetchResponse;
 
-use crate::{
-    utils::return_unknown_error, ErrorSource, MomentoError, MomentoErrorCode, MomentoResult,
-};
+use crate::{ErrorSource, MomentoError, MomentoErrorCode, MomentoResult};
 
 #[derive(Debug, PartialEq)]
 pub enum SortedSetFetch {
@@ -50,7 +48,7 @@ impl SortedSetFetch {
                     }),
                 },
             },
-            _ => Err(return_unknown_error(
+            _ => Err(MomentoError::unknown_error(
                 "SortedSetFetch",
                 Some(format!("{:#?}", response)),
             )),

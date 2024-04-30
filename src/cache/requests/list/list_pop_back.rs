@@ -4,7 +4,7 @@ use momento_protos::cache_client::list_pop_back_response;
 
 use crate::{
     cache::MomentoRequest,
-    utils::{parse_string, prep_request_with_timeout, return_unknown_error},
+    utils::{parse_string, prep_request_with_timeout},
     CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult,
 };
 
@@ -71,7 +71,7 @@ impl<L: IntoBytes> MomentoRequest for ListPopBackRequest<L> {
             Some(list_pop_back_response::List::Found(found)) => Ok(ListPopBack::Hit {
                 value: ListPopBackValue::new(found.back),
             }),
-            _ => Err(return_unknown_error(
+            _ => Err(MomentoError::unknown_error(
                 "ListPopBack",
                 Some(format!("{:#?}", response)),
             )),
