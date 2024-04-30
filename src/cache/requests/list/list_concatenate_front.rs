@@ -6,6 +6,9 @@ use crate::{
 
 /// Adds multiple elements to the front of the given list. Creates the list if it does not already exist.
 ///
+/// Prepends the supplied list to the front of an existing list. For example, if you have a list [1, 2, 3]
+/// and listConcatenateFront [4, 5, 6], you will create [4, 5, 6, 1, 2, 3].
+///
 /// # Arguments
 /// * `cache_name` - name of cache
 /// * `list_name` - name of the list

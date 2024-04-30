@@ -6,6 +6,9 @@ use crate::{
 
 /// Adds multiple elements to the back of the given list. Creates the list if it does not already exist.
 ///
+/// Appends the supplied list to the end of an existing list. For example, if you have a list [1, 2, 3]
+/// and listConcatenateBack [4, 5, 6], you will create [1, 2, 3, 4, 5, 6].
+///
 /// # Arguments
 /// * `cache_name` - name of cache
 /// * `list_name` - name of the list
