@@ -4,7 +4,7 @@ use momento_protos::cache_client::list_pop_front_response;
 
 use crate::{
     cache::MomentoRequest,
-    utils::{parse_string, prep_request_with_timeout},
+    utils::{parse_string, prep_request_with_timeout, return_unknown_error},
     CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult,
 };
 
@@ -71,12 +71,10 @@ impl<L: IntoBytes> MomentoRequest for ListPopFrontRequest<L> {
             Some(list_pop_front_response::List::Found(found)) => Ok(ListPopFront::Hit {
                 value: ListPopFrontValue::new(found.front),
             }),
-            _ => Err(MomentoError {
-                message: "Unknown error has occurred, unable to parse list_fetch_response".into(),
-                error_code: MomentoErrorCode::UnknownError,
-                inner_error: None,
-                details: None,
-            }),
+            _ => Err(return_unknown_error(
+                "ListPopFront",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }

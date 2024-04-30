@@ -10,7 +10,7 @@ use momento_protos::{
 
 use crate::{
     cache::MomentoRequest,
-    utils::{parse_string, prep_request_with_timeout},
+    utils::{parse_string, prep_request_with_timeout, return_unknown_error},
     CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult,
 };
 
@@ -110,12 +110,10 @@ impl<L: IntoBytes> MomentoRequest for ListFetchRequest<L> {
                     raw_item: found.values,
                 },
             }),
-            _ => Err(MomentoError {
-                message: "Unknown error has occurred, unable to parse list_fetch_response".into(),
-                error_code: MomentoErrorCode::UnknownError,
-                inner_error: None,
-                details: None,
-            }),
+            _ => Err(return_unknown_error(
+                "ListFetch",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }

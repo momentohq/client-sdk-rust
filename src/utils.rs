@@ -152,3 +152,15 @@ pub(crate) fn parse_string(raw: Vec<u8>) -> MomentoResult<String> {
         details: None,
     })
 }
+
+pub(crate) fn return_unknown_error(method_name: &str, details: Option<String>) -> MomentoError {
+    MomentoError {
+        message: "Unknown error has occurred, unable to parse ".to_string()
+            + method_name
+            + " : "
+            + details.as_deref().unwrap_or(""),
+        error_code: MomentoErrorCode::UnknownError,
+        inner_error: None,
+        details: None,
+    }
+}

@@ -2,6 +2,7 @@ use crate::cache::requests::MomentoRequest;
 use crate::cache_client::CacheClient;
 use crate::utils::parse_string;
 use crate::utils::prep_request_with_timeout;
+use crate::utils::return_unknown_error;
 use crate::MomentoErrorCode;
 use crate::{IntoBytes, MomentoError, MomentoResult};
 use momento_protos::cache_client::ECacheResult;
@@ -78,7 +79,10 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
                 },
             }),
             ECacheResult::Miss => Ok(Get::Miss),
-            _ => unreachable!(),
+            _ => Err(return_unknown_error(
+                "Get",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }

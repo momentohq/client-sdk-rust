@@ -3,7 +3,7 @@ use momento_protos::cache_client::set_if_response;
 
 use crate::cache::requests::MomentoRequest;
 use crate::cache_client::CacheClient;
-use crate::utils::prep_request_with_timeout;
+use crate::utils::{prep_request_with_timeout, return_unknown_error};
 use crate::{IntoBytes, MomentoResult};
 use std::time::Duration;
 
@@ -99,7 +99,10 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfAbsentRequest<K, V> {
         match response.result {
             Some(set_if_response::Result::Stored(_)) => Ok(SetIfAbsent::Stored),
             Some(set_if_response::Result::NotStored(_)) => Ok(SetIfAbsent::NotStored),
-            _ => unreachable!(),
+            _ => Err(return_unknown_error(
+                "SetIfAbsent",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }

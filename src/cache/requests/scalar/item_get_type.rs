@@ -3,8 +3,9 @@ use std::convert::TryFrom;
 use momento_protos::cache_client::item_get_type_response::{self};
 
 use crate::{
-    cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
-    MomentoErrorCode, MomentoResult,
+    cache::MomentoRequest,
+    utils::{prep_request_with_timeout, return_unknown_error},
+    CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult,
 };
 
 /// Return the type of the key in the cache.
@@ -89,7 +90,10 @@ impl<K: IntoBytes> MomentoRequest for ItemGetTypeRequest<K> {
                     }
                 },
             }),
-            _ => unreachable!(),
+            _ => Err(return_unknown_error(
+                "ItemGetType",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }

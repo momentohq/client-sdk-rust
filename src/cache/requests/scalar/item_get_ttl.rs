@@ -4,8 +4,9 @@ use std::time::Duration;
 use momento_protos::cache_client::item_get_ttl_response::{self};
 
 use crate::{
-    cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
-    MomentoErrorCode, MomentoResult,
+    cache::MomentoRequest,
+    utils::{prep_request_with_timeout, return_unknown_error},
+    CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult,
 };
 
 /// Return the remaining ttl of the key in the cache.
@@ -72,7 +73,10 @@ impl<K: IntoBytes> MomentoRequest for ItemGetTtlRequest<K> {
             Some(item_get_ttl_response::Result::Found(found)) => Ok(ItemGetTtl::Hit {
                 remaining_ttl: Duration::from_millis(found.remaining_ttl_millis),
             }),
-            _ => unreachable!(),
+            _ => Err(return_unknown_error(
+                "ItemGetTtl",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }

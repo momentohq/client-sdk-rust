@@ -5,7 +5,7 @@ use momento_protos::cache_client::sorted_set_fetch_response::SortedSet;
 use momento_protos::cache_client::SortedSetFetchResponse;
 
 use crate::{
-    MomentoResult, {ErrorSource, MomentoError, MomentoErrorCode},
+    utils::return_unknown_error, ErrorSource, MomentoError, MomentoErrorCode, MomentoResult,
 };
 
 #[derive(Debug, PartialEq)]
@@ -18,7 +18,6 @@ pub enum SortedSetFetch {
 impl SortedSetFetch {
     pub(crate) fn from_fetch_response(response: SortedSetFetchResponse) -> MomentoResult<Self> {
         match response.sorted_set {
-            None => Ok(SortedSetFetch::Miss),
             Some(SortedSet::Missing(_)) => Ok(SortedSetFetch::Miss),
             Some(SortedSet::Found(elements)) => match elements.elements {
                 None => Ok(SortedSetFetch::Hit {
@@ -51,6 +50,10 @@ impl SortedSetFetch {
                     }),
                 },
             },
+            _ => Err(return_unknown_error(
+                "SortedSetFetch",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }

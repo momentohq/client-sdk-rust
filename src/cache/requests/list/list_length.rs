@@ -3,8 +3,9 @@ use std::convert::TryFrom;
 use momento_protos::cache_client::list_length_response;
 
 use crate::{
-    cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
-    MomentoErrorCode, MomentoResult,
+    cache::MomentoRequest,
+    utils::{prep_request_with_timeout, return_unknown_error},
+    CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult,
 };
 
 /// Gets the number of elements in the given list.
@@ -70,12 +71,10 @@ impl<L: IntoBytes> MomentoRequest for ListLengthRequest<L> {
             Some(list_length_response::List::Found(found)) => Ok(ListLength::Hit {
                 length: found.length,
             }),
-            _ => Err(MomentoError {
-                message: "Unknown error has occurred, unable to parse list_fetch_response".into(),
-                error_code: MomentoErrorCode::UnknownError,
-                inner_error: None,
-                details: None,
-            }),
+            _ => Err(return_unknown_error(
+                "ListLength",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }
