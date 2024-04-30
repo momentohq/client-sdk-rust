@@ -2,6 +2,7 @@ use momento::{
     cache::{Get, GetValue, ListFetch, ListFetchValue, SortedSetElements, SortedSetFetch},
     IntoBytes,
 };
+use std::collections::HashMap;
 use uuid::Uuid;
 
 pub fn unique_string(prefix: impl Into<String>) -> String {
@@ -58,16 +59,21 @@ impl From<&TestScalar> for Get {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct TestSet {
+pub struct TestDictionary {
     pub name: String,
-    pub elements: Vec<String>,
+    pub value: HashMap<String, String>,
 }
 
-impl TestSet {
+impl TestDictionary {
     pub fn new() -> Self {
         Self {
             name: unique_key(),
-            elements: vec![unique_value(), unique_value()],
+            value: vec![
+                (unique_key(), unique_value()),
+                (unique_key(), unique_value()),
+            ]
+            .into_iter()
+            .collect(),
         }
     }
 
@@ -75,8 +81,37 @@ impl TestSet {
         &self.name
     }
 
-    pub fn elements(&self) -> &Vec<String> {
-        &self.elements
+    pub fn value(&self) -> &HashMap<String, String> {
+        &self.value
+    }
+}
+
+impl Default for TestDictionary {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct TestSet {
+    pub name: String,
+    pub value: Vec<String>,
+}
+
+impl TestSet {
+    pub fn new() -> Self {
+        Self {
+            name: unique_key(),
+            value: vec![unique_value(), unique_value()],
+        }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn value(&self) -> &Vec<String> {
+        &self.value
     }
 }
 
@@ -89,14 +124,14 @@ impl Default for TestSet {
 #[derive(Debug, PartialEq, Clone)]
 pub struct TestSortedSet {
     pub name: String,
-    pub elements: Vec<(String, f64)>,
+    pub value: Vec<(String, f64)>,
 }
 
 impl TestSortedSet {
     pub fn new() -> Self {
         Self {
             name: unique_key(),
-            elements: vec![(unique_value(), 1.0), (unique_value(), 2.0)],
+            value: vec![(unique_value(), 1.0), (unique_value(), 2.0)],
         }
     }
 
@@ -104,8 +139,8 @@ impl TestSortedSet {
         &self.name
     }
 
-    pub fn elements(&self) -> &Vec<(String, f64)> {
-        &self.elements
+    pub fn value(&self) -> &Vec<(String, f64)> {
+        &self.value
     }
 }
 
@@ -120,7 +155,7 @@ impl From<&TestSortedSet> for SortedSetFetch {
         SortedSetFetch::Hit {
             elements: SortedSetElements::new(
                 test_sorted_set
-                    .elements()
+                    .value()
                     .iter()
                     .map(|(element, score)| (element.as_bytes().to_vec(), *score))
                     .collect(),

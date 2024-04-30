@@ -3,6 +3,7 @@ pub mod delete_cache;
 pub mod flush_cache;
 pub mod list_caches;
 
+pub mod dictionary;
 pub mod list;
 pub mod scalar;
 pub mod set;
