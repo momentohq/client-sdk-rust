@@ -2,12 +2,16 @@ use std::sync::Arc;
 
 use momento::cache::{
     IntoSortedSetElements, SortedSetElement, SortedSetElements, SortedSetFetch,
-    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest,
+    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetGetRank, SortedSetGetScore,
+    SortedSetLength,
     SortedSetOrder::{Ascending, Descending},
+    SortedSetPutElements, SortedSetRemoveElements,
 };
 use momento::{CacheClient, MomentoErrorCode, MomentoResult};
 
-use momento_test_util::{unique_cache_name, unique_key, TestSortedSet, CACHE_TEST_STATE};
+use momento_test_util::{
+    unique_cache_name, unique_key, unique_value, TestSortedSet, CACHE_TEST_STATE,
+};
 
 fn assert_fetched_sorted_set_eq(
     sorted_set_fetch_result: SortedSetFetch,
@@ -269,15 +273,203 @@ mod sorted_set_fetch_by_score {
     }
 }
 
-mod sorted_set_get_rank {}
+mod sorted_set_get_rank {
+    use super::*;
 
-mod sorted_set_get_score {}
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let item = TestSortedSet::new();
+
+        let result = client
+            .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
+            .await?;
+        assert_eq!(result, SortedSetPutElements {});
+
+        // Hit for existing value
+        let result = client
+            .sorted_set_get_rank(cache_name, item.name(), item.value[0].0.as_str())
+            .await?;
+        assert_eq!(result, SortedSetGetRank::Hit { rank: 0 });
+
+        // Miss for nonexistent value
+        let result = client
+            .sorted_set_get_rank(cache_name, item.name(), "nonexistent")
+            .await?;
+        assert_eq!(result, SortedSetGetRank::Miss);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_key();
+        let sorted_set_name = "sorted-set";
+
+        let result = client
+            .sorted_set_get_rank(cache_name, sorted_set_name, "element1")
+            .await
+            .unwrap_err();
+
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_sorted_set() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let sorted_set_name = unique_key();
+
+        let result = client
+            .sorted_set_get_rank(cache_name, sorted_set_name, "element1")
+            .await?;
+        assert_eq!(result, SortedSetGetRank::Miss);
+        Ok(())
+    }
+}
+
+mod sorted_set_get_score {
+    use super::*;
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let item = TestSortedSet::new();
+
+        let result = client
+            .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
+            .await?;
+        assert_eq!(result, SortedSetPutElements {});
+
+        // Hit for existing value
+        let result = client
+            .sorted_set_get_score(cache_name, item.name(), item.value[0].0.as_str())
+            .await?;
+        assert_eq!(result, SortedSetGetScore::Hit { score: 1.0 });
+
+        // Miss for nonexistent value
+        let result = client
+            .sorted_set_get_score(cache_name, item.name(), unique_value())
+            .await?;
+        assert_eq!(result, SortedSetGetScore::Miss);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_key();
+        let sorted_set_name = "sorted-set";
+
+        let result = client
+            .sorted_set_get_score(cache_name, sorted_set_name, "element1")
+            .await
+            .unwrap_err();
+
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_sorted_set() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let sorted_set_name = unique_key();
+
+        let result = client
+            .sorted_set_get_score(cache_name, sorted_set_name, "element1")
+            .await?;
+        assert_eq!(result, SortedSetGetScore::Miss);
+        Ok(())
+    }
+}
 
 mod sorted_set_get_scores {}
 
 mod sorted_set_increment_score {}
 
 mod sorted_set_remove_element {}
+
+mod sorted_set_remove_elements {
+    use super::*;
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let item = TestSortedSet::new();
+
+        // put some values
+        let result = client
+            .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
+            .await?;
+        assert_eq!(result, SortedSetPutElements {});
+
+        // does nothing for nonexistent values
+        let result = client
+            .sorted_set_remove_elements(
+                cache_name,
+                item.name(),
+                vec![unique_value(), unique_value()],
+            )
+            .await?;
+        assert_eq!(result, SortedSetRemoveElements {});
+        assert_fetched_sorted_set_eq(
+            client
+                .sorted_set_fetch_by_score(cache_name, item.name(), Ascending)
+                .await?,
+            item.value().to_vec(),
+        )?;
+
+        // removes existing values
+        let values = vec![item.value[0].0.to_string()];
+        let result = client
+            .sorted_set_remove_elements(cache_name, item.name(), values)
+            .await?;
+        assert_eq!(result, SortedSetRemoveElements {});
+        assert_fetched_sorted_set_eq(
+            client
+                .sorted_set_fetch_by_score(cache_name, item.name(), Ascending)
+                .await?,
+            vec![item.value()[1].clone()],
+        )?;
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_key();
+        let sorted_set_name = "sorted-set";
+
+        let result = client
+            .sorted_set_remove_elements(cache_name, sorted_set_name, vec!["element1", "element2"])
+            .await
+            .unwrap_err();
+
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_sorted_set() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let sorted_set_name = unique_key();
+
+        let result = client
+            .sorted_set_remove_elements(cache_name, sorted_set_name, vec!["element1", "element2"])
+            .await?;
+        assert_eq!(result, SortedSetRemoveElements {});
+        Ok(())
+    }
+}
 
 mod sorted_set_put_element {
     use super::*;
@@ -409,7 +601,46 @@ mod sorted_set_put_elements {
     }
 }
 
-mod sorted_set_length {}
+mod sorted_set_length {
+    use super::*;
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let item = TestSortedSet::new();
+
+        // Miss before sorted set exists
+        let result = client.sorted_set_length(cache_name, item.name()).await?;
+        assert_eq!(result, SortedSetLength::Miss);
+
+        let result = client
+            .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
+            .await?;
+        assert_eq!(result, SortedSetPutElements {});
+
+        // Nonzero length after sorted set exists
+        let result = client.sorted_set_length(cache_name, item.name()).await?;
+        assert_eq!(result, SortedSetLength::Hit { length: 2 });
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_key();
+        let sorted_set_name = "sorted-set";
+
+        let result = client
+            .sorted_set_length(cache_name, sorted_set_name)
+            .await
+            .unwrap_err();
+
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        Ok(())
+    }
+}
 
 mod sorted_set_length_by_score {}
 

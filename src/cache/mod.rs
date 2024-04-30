@@ -49,11 +49,17 @@ pub use requests::sorted_set::sorted_set_fetch_by_rank::{
 };
 pub use requests::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
 pub use requests::sorted_set::sorted_set_fetch_response::{SortedSetElements, SortedSetFetch};
+pub use requests::sorted_set::sorted_set_get_rank::{SortedSetGetRank, SortedSetGetRankRequest};
+pub use requests::sorted_set::sorted_set_get_score::{SortedSetGetScore, SortedSetGetScoreRequest};
+pub use requests::sorted_set::sorted_set_length::{SortedSetLength, SortedSetLengthRequest};
 pub use requests::sorted_set::sorted_set_put_element::{
     SortedSetPutElement, SortedSetPutElementRequest,
 };
 pub use requests::sorted_set::sorted_set_put_elements::{
     IntoSortedSetElements, SortedSetElement, SortedSetPutElements, SortedSetPutElementsRequest,
+};
+pub use requests::sorted_set::sorted_set_remove_elements::{
+    SortedSetRemoveElements, SortedSetRemoveElementsRequest,
 };
 
 pub use requests::list::list_concatenate_back::{ListConcatenateBack, ListConcatenateBackRequest};

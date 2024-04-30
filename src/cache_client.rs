@@ -21,8 +21,11 @@ use crate::cache::{
     SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual,
     SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,
     SetIfPresentRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
-    SortedSetFetchByScoreRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
-    SortedSetPutElements, SortedSetPutElementsRequest, UpdateTtl, UpdateTtlRequest,
+    SortedSetFetchByScoreRequest, SortedSetGetRank, SortedSetGetRankRequest, SortedSetGetScore,
+    SortedSetGetScoreRequest, SortedSetLength, SortedSetLengthRequest, SortedSetOrder,
+    SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements,
+    SortedSetPutElementsRequest, SortedSetRemoveElements, SortedSetRemoveElementsRequest,
+    UpdateTtl, UpdateTtlRequest,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -740,6 +743,161 @@ impl CacheClient {
         order: SortedSetOrder,
     ) -> MomentoResult<SortedSetFetch> {
         let request = SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name).order(order);
+        request.send(self).await
+    }
+
+    /// Remove multiple elements from the sorted set.
+    ///
+    /// # Arguments
+    /// * `cache_name` - The name of the cache containing the sorted set.
+    /// * `sorted_set_name` - The name of the sorted set to remove elements from.
+    /// * `values` - The values to remove. Must be able to be converted to a `Vec<u8>`.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::SortedSetRemoveElements;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let sorted_set_name = "sorted_set";
+    ///
+    /// let remove_elements_response = cache_client.sorted_set_remove_elements(
+    ///     cache_name,
+    ///     sorted_set_name,
+    ///     vec!["value1", "value2"]
+    /// ).await;
+    ///
+    /// match remove_elements_response {
+    ///     Ok(_) => println!("Elements removed from sorted set"),
+    ///     Err(e) => eprintln!("Error removing elements from sorted set: {}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to remove elements using a [SortedSetRemoveElementsRequest].
+    pub async fn sorted_set_remove_elements(
+        &self,
+        cache_name: impl Into<String>,
+        sorted_set_name: impl IntoBytes,
+        values: Vec<impl IntoBytes>,
+    ) -> MomentoResult<SortedSetRemoveElements> {
+        let request = SortedSetRemoveElementsRequest::new(cache_name, sorted_set_name, values);
+        request.send(self).await
+    }
+
+    /// Get the number of entries in a sorted set collection.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `sorted_set_name` - name of the sorted set
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use std::convert::TryInto;
+    /// use momento::cache::{SortedSetLength, SortedSetLengthRequest};
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let sorted_set_name = "sorted_set";
+    ///
+    /// # cache_client.sorted_set_put_elements(&cache_name, sorted_set_name.to_string(), vec![("value1", 1.0), ("value2", 2.0)]).await;
+    ///
+    /// let length: u32 = cache_client.sorted_set_length(cache_name, sorted_set_name).await?.try_into().expect("Expected a list length!");
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get sorted set length using a [SortedSetLengthRequest].
+    pub async fn sorted_set_length(
+        &self,
+        cache_name: impl Into<String>,
+        sorted_set_name: impl IntoBytes,
+    ) -> MomentoResult<SortedSetLength> {
+        let request = SortedSetLengthRequest::new(cache_name, sorted_set_name);
+        request.send(self).await
+    }
+
+    /// Get the rank (position) of a specific element in a sorted set.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `sorted_set_name` - name of the sorted set
+    /// * `value` - the sorted set value to get the rank of
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use std::convert::TryInto;
+    /// use momento::cache::{SortedSetGetRank, SortedSetGetRankRequest};
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let sorted_set_name = "sorted_set";
+    ///
+    /// # cache_client.sorted_set_put_elements(&cache_name, sorted_set_name.to_string(), vec![("value1", 1.0), ("value2", 2.0)]).await;
+    ///
+    /// let get_rank_request = SortedSetGetRankRequest::new(cache_name, sorted_set_name, "value1");
+    /// let rank: u64 = cache_client.send_request(get_rank_request).await?.try_into().expect("Expected a rank!");
+    /// # assert_eq!(rank, 0);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get the rank of an element using a [SortedSetGetRankRequest].
+    pub async fn sorted_set_get_rank(
+        &self,
+        cache_name: impl Into<String>,
+        sorted_set_name: impl IntoBytes,
+        value: impl IntoBytes,
+    ) -> MomentoResult<SortedSetGetRank> {
+        let request = SortedSetGetRankRequest::new(cache_name, sorted_set_name, value);
+        request.send(self).await
+    }
+
+    /// Get the score of a specific element in a sorted set.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `sorted_set_name` - name of the sorted set
+    /// * `value` - the sorted set value to get the score of
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use std::convert::TryInto;
+    /// use momento::cache::{SortedSetGetScore, SortedSetGetScoreRequest};
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let sorted_set_name = "sorted_set";
+    ///
+    /// # cache_client.sorted_set_put_elements(&cache_name, sorted_set_name.to_string(), vec![("value1", 1.0), ("value2", 2.0)]).await;
+    ///
+    /// let get_score_request = SortedSetGetScoreRequest::new(cache_name, sorted_set_name, "value1");
+    /// let score: f64 = cache_client.send_request(get_score_request).await?.try_into().expect("Expected a score!");
+    /// # assert_eq!(score, 1.0);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get the rank of an element using a [SortedSetGetScoreRequest].
+    pub async fn sorted_set_get_score(
+        &self,
+        cache_name: impl Into<String>,
+        sorted_set_name: impl IntoBytes,
+        value: impl IntoBytes,
+    ) -> MomentoResult<SortedSetGetScore> {
+        let request = SortedSetGetScoreRequest::new(cache_name, sorted_set_name, value);
         request.send(self).await
     }
 
