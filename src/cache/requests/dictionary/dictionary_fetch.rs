@@ -95,6 +95,61 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
     }
 }
 
+/// Response to a dictionary fetch request.
+///
+/// If you'd like to handle misses you can simply match and handle your response:
+/// ```
+/// fn main() -> anyhow::Result<()> {
+/// # use std::collections::HashMap;
+/// # use momento::cache::{DictionaryFetch, DictionaryFetchValue};
+/// # use momento::MomentoResult;
+/// # let fetch_response = DictionaryFetch::Hit { value: DictionaryFetchValue::default() };
+/// use std::convert::TryInto;
+/// let item: HashMap<String, String> = match fetch_response {
+///    DictionaryFetch::Hit { value } => value.try_into().expect("I stored strings!"),
+///   DictionaryFetch::Miss => panic!("I expected a hit!"),
+/// };
+///
+/// # Ok(())
+/// }
+/// ```
+///
+/// Or, if you're storing raw bytes you can get at them simply:
+/// ```
+/// # use std::collections::HashMap;
+/// # use momento::cache::{DictionaryFetch, DictionaryFetchValue};
+/// # use momento::MomentoResult;
+/// # let fetch_response = DictionaryFetch::Hit { value: DictionaryFetchValue::default() };
+/// use std::convert::TryInto;
+/// let item: HashMap<Vec<u8>, Vec<u8>> = match fetch_response {
+///   DictionaryFetch::Hit { value } => value.into(),
+///   DictionaryFetch::Miss => panic!("I expected a hit!"),
+/// };
+/// ```
+///
+/// You can cast your result directly into a Result<HashMap<String, String>, MomentoError> suitable for
+/// ?-propagation if you know you are expecting a HashMap<String, String> item.
+///
+/// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
+/// this is what you're after:
+/// ```
+/// # use std::collections::HashMap;
+/// # use momento::cache::{DictionaryFetch, DictionaryFetchValue};
+/// # use momento::MomentoResult;
+/// # let fetch_response = DictionaryFetch::Hit { value: DictionaryFetchValue::default() };
+/// use std::convert::TryInto;
+/// let item: MomentoResult<HashMap<String, String>> = fetch_response.try_into();
+/// ```
+///
+/// You can also go straight into a `HashMap<Vec<u8>, Vec<u8>>` if you prefer:
+/// ```
+/// # use std::collections::HashMap;
+/// # use momento::cache::{DictionaryFetch, DictionaryFetchValue};
+/// # use momento::MomentoResult;
+/// # let fetch_response = DictionaryFetch::Hit { value: DictionaryFetchValue::default() };
+/// use std::convert::TryInto;
+/// let item: MomentoResult<HashMap<Vec<u8>, Vec<u8>>> = fetch_response.try_into();
+/// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum DictionaryFetch {
     Hit { value: DictionaryFetchValue },
@@ -109,6 +164,14 @@ pub struct DictionaryFetchValue {
 impl DictionaryFetchValue {
     pub fn new(raw_item: HashMap<Vec<u8>, Vec<u8>>) -> Self {
         Self { raw_item }
+    }
+}
+
+impl Default for DictionaryFetchValue {
+    fn default() -> Self {
+        Self {
+            raw_item: HashMap::new(),
+        }
     }
 }
 
@@ -127,14 +190,28 @@ impl TryFrom<DictionaryFetchValue> for HashMap<String, String> {
     }
 }
 
-// TODO: verify comparisons in tests work as expected
 impl From<DictionaryFetchValue> for HashMap<Vec<u8>, Vec<u8>> {
     fn from(value: DictionaryFetchValue) -> Self {
         value.raw_item
     }
 }
 
-// TODO: verify comparisons in tests work as expected
+impl TryFrom<DictionaryFetch> for HashMap<Vec<u8>, Vec<u8>> {
+    type Error = MomentoError;
+
+    fn try_from(value: DictionaryFetch) -> Result<Self, Self::Error> {
+        match value {
+            DictionaryFetch::Hit { value } => Ok(value.into()),
+            DictionaryFetch::Miss => Err(MomentoError {
+                message: "dictionary fetch response was a miss".into(),
+                error_code: MomentoErrorCode::Miss,
+                inner_error: None,
+                details: None,
+            }),
+        }
+    }
+}
+
 impl TryFrom<DictionaryFetch> for HashMap<String, String> {
     type Error = MomentoError;
 
