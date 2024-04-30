@@ -32,7 +32,7 @@ use crate::{
 /// # let fetch_response = SortedSetFetch::Hit { value: SortedSetElements::default() };
 /// use std::convert::TryInto;
 /// let item: Vec<(Vec<u8>, f64)> = match fetch_response {
-///  SortedSetFetch::Hit { value } => value.try_into().expect("I stored bytes!"),
+///  SortedSetFetch::Hit { value } => value.into(),
 ///  SortedSetFetch::Miss => panic!("I expected a hit!"),
 /// };
 /// ```
@@ -64,7 +64,6 @@ pub enum SortedSetFetch {
     Miss,
 }
 
-/// Response object for a [SortedSetFetchByScoreRequest] or a [SortedSetFetchByRankRequest].
 impl SortedSetFetch {
     pub(crate) fn from_fetch_response(response: SortedSetFetchResponse) -> MomentoResult<Self> {
         match response.sorted_set {
@@ -173,11 +172,9 @@ impl SortedSetElements {
     }
 }
 
-impl TryFrom<SortedSetElements> for Vec<(Vec<u8>, f64)> {
-    type Error = MomentoError;
-
-    fn try_from(value: SortedSetElements) -> Result<Self, Self::Error> {
-        Ok(value.elements)
+impl From<SortedSetElements> for Vec<(Vec<u8>, f64)> {
+    fn from(value: SortedSetElements) -> Self {
+        value.elements
     }
 }
 
