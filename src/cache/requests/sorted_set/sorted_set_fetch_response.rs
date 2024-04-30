@@ -10,7 +10,7 @@ use crate::{
 
 #[derive(Debug, PartialEq)]
 pub enum SortedSetFetch {
-    Hit { elements: SortedSetElements },
+    Hit { value: SortedSetElements },
     Miss,
 }
 
@@ -22,7 +22,7 @@ impl SortedSetFetch {
             Some(SortedSet::Missing(_)) => Ok(SortedSetFetch::Miss),
             Some(SortedSet::Found(elements)) => match elements.elements {
                 None => Ok(SortedSetFetch::Hit {
-                    elements: SortedSetElements::new(Vec::new()),
+                    value: SortedSetElements::new(Vec::new()),
                 }),
                 Some(elements) => match elements {
                     Elements::ValuesWithScores(values_with_scores) => {
@@ -32,7 +32,7 @@ impl SortedSetFetch {
                             .map(|element| (element.value, element.score))
                             .collect();
                         Ok(SortedSetFetch::Hit {
-                            elements: SortedSetElements::new(elements),
+                            value: SortedSetElements::new(elements),
                         })
                     }
                     Elements::Values(_) => Err(MomentoError {
@@ -60,7 +60,7 @@ impl TryFrom<SortedSetFetch> for Vec<(Vec<u8>, f64)> {
 
     fn try_from(value: SortedSetFetch) -> Result<Self, Self::Error> {
         match value {
-            SortedSetFetch::Hit { elements } => Ok(elements.elements),
+            SortedSetFetch::Hit { value: elements } => Ok(elements.elements),
             SortedSetFetch::Miss => Err(MomentoError {
                 message: "sorted set was not found".into(),
                 error_code: MomentoErrorCode::Miss,
@@ -76,7 +76,7 @@ impl TryFrom<SortedSetFetch> for Vec<(String, f64)> {
 
     fn try_from(value: SortedSetFetch) -> Result<Self, Self::Error> {
         match value {
-            SortedSetFetch::Hit { elements } => elements.into_strings(),
+            SortedSetFetch::Hit { value: elements } => elements.into_strings(),
             SortedSetFetch::Miss => Err(MomentoError {
                 message: "sorted set was not found".into(),
                 error_code: MomentoErrorCode::Miss,
@@ -90,7 +90,7 @@ impl TryFrom<SortedSetFetch> for Vec<(String, f64)> {
 impl From<Vec<(String, f64)>> for SortedSetFetch {
     fn from(elements: Vec<(String, f64)>) -> Self {
         SortedSetFetch::Hit {
-            elements: SortedSetElements::new(
+            value: SortedSetElements::new(
                 elements
                     .into_iter()
                     .map(|(element, score)| (element.into_bytes(), score))

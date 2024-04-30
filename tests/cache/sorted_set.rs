@@ -32,11 +32,11 @@ fn assert_fetched_sorted_set_eq_after_sorting(
     };
 
     let sorted_set_fetch_result = match sorted_set_fetch_result {
-        SortedSetFetch::Hit { elements } => {
-            let mut elements = elements.elements.clone();
+        SortedSetFetch::Hit { value } => {
+            let mut elements = value.elements.clone();
             elements.sort_by(sort_by_score);
             SortedSetFetch::Hit {
-                elements: SortedSetElements { elements },
+                value: SortedSetElements { elements },
             }
         }
         _ => sorted_set_fetch_result,

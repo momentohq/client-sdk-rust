@@ -159,7 +159,7 @@ impl Default for TestSortedSet {
 impl From<&TestSortedSet> for SortedSetFetch {
     fn from(test_sorted_set: &TestSortedSet) -> Self {
         SortedSetFetch::Hit {
-            elements: SortedSetElements::new(
+            value: SortedSetElements::new(
                 test_sorted_set
                     .value()
                     .iter()
