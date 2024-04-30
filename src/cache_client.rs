@@ -311,9 +311,9 @@ impl CacheClient {
     ///
     /// let set_response = cache_client.dictionary_set_field(
     ///   cache_name.to_string(),
-    ///   dictionary_name.to_string(),
-    ///   "field1".to_string(),
-    ///   "value1".to_string()
+    ///   dictionary_name,
+    ///   "field1",
+    ///   "value1"
     /// ).await?;
     ///
     /// let fetch_response = cache_client.dictionary_fetch(cache_name, dictionary_name).await?;
@@ -329,6 +329,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to fetch a dictionary using a [DictionaryFetchRequest].
     pub async fn dictionary_fetch(
         &self,
         cache_name: impl Into<String>,
@@ -344,7 +345,48 @@ impl CacheClient {
     // dictionary_remove_field
     // dictionary_remove_fields
 
-    // TODO document
+    /// Sets a field in a dictionary. If the field already exists, its value is updated.
+    /// Creates the dictionary if it does not exist.
+    ///
+    /// # Arguments
+    /// * `cache_name` - The name of the cache containing the dictionary.
+    /// * `dictionary_name` - The name of the dictionary to set.
+    /// * `field` - The field to set.
+    /// * `value` - The value to set.
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to set a field using a
+    /// [DictionarySetFieldRequest], you can also provide the following optional arguments:
+    ///
+    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{CollectionTtl, DictionarySetField, DictionarySetFieldRequest};
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let dictionary_name = "dictionary";
+    ///
+    /// let set_field_response = cache_client.dictionary_set_field(
+    ///    cache_name.to_string(),
+    ///    dictionary_name,
+    ///    "field",
+    ///    "value"
+    /// ).await;
+    ///
+    /// match set_field_response {
+    ///   Ok(_) => println!("Field set in dictionary"),
+    ///   Err(e) => eprintln!("Error setting field in dictionary: {}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to set a field using a [DictionarySetFieldRequest]
+    /// which will allow you to set [optional arguments](DictionarySetFieldRequest#optional-arguments) as well.
     pub async fn dictionary_set_field(
         &self,
         cache_name: impl Into<String>,

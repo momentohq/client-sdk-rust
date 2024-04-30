@@ -29,9 +29,9 @@ use std::convert::{TryFrom, TryInto};
 ///
 /// let set_response = cache_client.dictionary_set_field(
 ///    cache_name.to_string(),
-///    dictionary_name.to_string(),
-///    "field1".to_string(),
-///    "value1".to_string()
+///    dictionary_name,
+///    "field1",
+///    "value1"
 /// ).await?;
 ///
 /// let fetch_request = DictionaryFetchRequest::new(cache_name, dictionary_name);
