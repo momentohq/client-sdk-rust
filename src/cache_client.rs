@@ -9,10 +9,11 @@ use tonic::transport::Channel;
 use crate::cache::{
     Configuration, CreateCache, CreateCacheRequest, DecreaseTtl, DecreaseTtlRequest, Delete,
     DeleteCache, DeleteCacheRequest, DeleteRequest, DictionaryFetch, DictionaryFetchRequest,
-    DictionarySetField, DictionarySetFieldRequest, FlushCache, FlushCacheRequest, Get, GetRequest,
-    IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest, IntoSortedSetElements,
-    ItemGetTtl, ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest,
-    KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, ListConcatenateBack,
+    DictionarySetField, DictionarySetFieldRequest, DictionarySetFields, DictionarySetFieldsRequest,
+    FlushCache, FlushCacheRequest, Get, GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment,
+    IncrementRequest, IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl,
+    ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist,
+    KeysExistRequest, ListCaches, ListCachesRequest, ListConcatenateBack,
     ListConcatenateBackRequest, ListConcatenateFront, ListConcatenateFrontRequest, ListFetch,
     ListFetchRequest, ListLength, ListLengthRequest, ListPopBack, ListPopBackRequest, ListPopFront,
     ListPopFrontRequest, ListRemoveValue, ListRemoveValueRequest, MomentoRequest, Set,
@@ -342,11 +343,11 @@ impl CacheClient {
         request.send(self).await
     }
     // dictionary_get_field
-    // dictionary_get_fields
+    // dictionary_get_fields - todo
     // dictionary_increment
-    // dictionary_length
+    // dictionary_length - todo
     // dictionary_remove_field
-    // dictionary_remove_fields
+    // dictionary_remove_fields - todo
 
     /// Sets a field in a dictionary. If the field already exists, its value is updated.
     /// Creates the dictionary if it does not exist.
@@ -401,7 +402,16 @@ impl CacheClient {
         request.send(self).await
     }
 
-    // dictionary_set_fields
+    // dictionary_set_fields - todo
+    pub async fn dictionary_set_fields<F: IntoBytes, V: IntoBytes>(
+        &self,
+        cache_name: impl Into<String>,
+        dictionary_name: impl IntoBytes,
+        elements: impl IntoDictionaryFieldValuePairs<F, V>,
+    ) -> MomentoResult<DictionarySetFields> {
+        let request = DictionarySetFieldsRequest::new(cache_name, dictionary_name, elements);
+        request.send(self).await
+    }
 
     /// Adds elements to the given set. Creates the set if it does not exist.
     ///
