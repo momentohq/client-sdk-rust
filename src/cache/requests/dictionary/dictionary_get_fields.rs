@@ -222,12 +222,7 @@ impl<F: IntoBytes> TryFrom<DictionaryGetFields<F>> for HashMap<String, String> {
                 Ok(result)
             }
             // In other SDKs we do not convert a `Miss` into an empty HashMap
-            DictionaryGetFields::Miss => Err(MomentoError {
-                message: "dictionary get fields response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            DictionaryGetFields::Miss => Err(MomentoError::miss("DictionaryGetFields")),
         }
     }
 }
