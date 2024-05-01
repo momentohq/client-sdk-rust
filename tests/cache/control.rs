@@ -58,6 +58,7 @@ mod flush_cache {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn flush_existing_cache_returns_success() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = &CACHE_TEST_STATE.cache_name;

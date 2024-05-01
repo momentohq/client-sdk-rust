@@ -41,8 +41,9 @@ test-doctests:
 
 .PHONY: test-integration
 test-integration:
-	cargo test --tests -- --test-threads=2
-
+	cargo test --tests -- --ignored
+	cargo test --tests
+	
 .PHONY: test
 ## Run unit and integration tests
 test: test-unit test-integration test-doctests
