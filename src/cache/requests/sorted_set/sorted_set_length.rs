@@ -118,7 +118,7 @@ impl TryFrom<SortedSetLength> for u32 {
         match value {
             SortedSetLength::Hit { length } => Ok(length),
             SortedSetLength::Miss => Err(MomentoError {
-                message: "list length response was a miss".into(),
+                message: "sorted set length response was a miss".into(),
                 error_code: MomentoErrorCode::Miss,
                 inner_error: None,
                 details: None,

@@ -86,28 +86,6 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetRankRequest<L, V
                 Some(format!("{:#?}", response)),
             )),
         }
-
-        // match response.sorted_set {
-        //     Some(sorted_set_found) => match sorted_set_found {
-        //         sorted_set_get_score_response::SortedSet::Found(found) => {
-        //             let found_element = found.elements.get(0).expect("Expected to receive one element");
-        //             if found_element.result == ECacheResult::Hit as i32 {
-        //                 Ok(SortedSetGetScore::Hit {
-        //                     score: found_element.score,
-        //                 })
-        //             } else {
-        //                 Ok(SortedSetGetScore::Miss)
-        //             }
-        //         }
-        //         sorted_set_get_score_response::SortedSet::Missing(_) => Ok(SortedSetGetScore::Miss),
-        //     }
-        //     _ => Err(MomentoError {
-        //         message: "Unknown error has occurred, unable to parse sorted_set_get_score_response".into(),
-        //         error_code: MomentoErrorCode::UnknownError,
-        //         inner_error: None,
-        //         details: None,
-        //     }),
-        // }
     }
 }
 
@@ -150,7 +128,7 @@ impl TryFrom<SortedSetGetRank> for u64 {
         match value {
             SortedSetGetRank::Hit { rank } => Ok(rank),
             SortedSetGetRank::Miss => Err(MomentoError {
-                message: "list length response was a miss".into(),
+                message: "sorted set get rank response was a miss".into(),
                 error_code: MomentoErrorCode::Miss,
                 inner_error: None,
                 details: None,

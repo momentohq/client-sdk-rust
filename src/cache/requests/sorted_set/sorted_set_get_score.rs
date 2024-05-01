@@ -135,7 +135,7 @@ impl TryFrom<SortedSetGetScore> for f64 {
         match value {
             SortedSetGetScore::Hit { score } => Ok(score),
             SortedSetGetScore::Miss => Err(MomentoError {
-                message: "list length response was a miss".into(),
+                message: "sorted set get score response was a miss".into(),
                 error_code: MomentoErrorCode::Miss,
                 inner_error: None,
                 details: None,
