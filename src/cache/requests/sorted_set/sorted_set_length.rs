@@ -4,7 +4,7 @@ use momento_protos::cache_client::sorted_set_length_response;
 
 use crate::{
     cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
-    MomentoErrorCode, MomentoResult,
+    MomentoResult,
 };
 
 /// Get the number of entries in a sorted set collection.
@@ -117,12 +117,7 @@ impl TryFrom<SortedSetLength> for u32 {
     fn try_from(value: SortedSetLength) -> Result<Self, Self::Error> {
         match value {
             SortedSetLength::Hit { length } => Ok(length),
-            SortedSetLength::Miss => Err(MomentoError {
-                message: "sorted set length response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            SortedSetLength::Miss => Err(MomentoError::miss("SortedSetLength")),
         }
     }
 }

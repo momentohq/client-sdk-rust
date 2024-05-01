@@ -111,12 +111,7 @@ impl TryFrom<SortedSetFetch> for Vec<(Vec<u8>, f64)> {
     fn try_from(value: SortedSetFetch) -> Result<Self, Self::Error> {
         match value {
             SortedSetFetch::Hit { value: elements } => Ok(elements.elements),
-            SortedSetFetch::Miss => Err(MomentoError {
-                message: "sorted set was not found".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            SortedSetFetch::Miss => Err(MomentoError::miss("SortedSetFetch")),
         }
     }
 }
@@ -127,12 +122,7 @@ impl TryFrom<SortedSetFetch> for Vec<(String, f64)> {
     fn try_from(value: SortedSetFetch) -> Result<Self, Self::Error> {
         match value {
             SortedSetFetch::Hit { value: elements } => elements.into_strings(),
-            SortedSetFetch::Miss => Err(MomentoError {
-                message: "sorted set was not found".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            SortedSetFetch::Miss => Err(MomentoError::miss("SortedSetFetch")),
         }
     }
 }

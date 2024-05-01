@@ -4,7 +4,7 @@ use momento_protos::cache_client::{sorted_set_get_score_response, ECacheResult};
 
 use crate::{
     cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
-    MomentoErrorCode, MomentoResult,
+    MomentoResult,
 };
 
 /// Get the score of a specific element in a sorted set.
@@ -134,12 +134,7 @@ impl TryFrom<SortedSetGetScore> for f64 {
     fn try_from(value: SortedSetGetScore) -> Result<Self, Self::Error> {
         match value {
             SortedSetGetScore::Hit { score } => Ok(score),
-            SortedSetGetScore::Miss => Err(MomentoError {
-                message: "sorted set get score response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            SortedSetGetScore::Miss => Err(MomentoError::miss("SortedSetGetScore")),
         }
     }
 }

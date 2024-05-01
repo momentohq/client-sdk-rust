@@ -5,7 +5,7 @@ use momento_protos::cache_client::list_pop_front_response;
 use crate::{
     cache::MomentoRequest,
     utils::{parse_string, prep_request_with_timeout},
-    CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult,
+    CacheClient, IntoBytes, MomentoError, MomentoResult,
 };
 
 /// Remove and return the first element from a list item.
@@ -146,12 +146,7 @@ impl TryFrom<ListPopFront> for Vec<u8> {
     fn try_from(value: ListPopFront) -> Result<Self, Self::Error> {
         match value {
             ListPopFront::Hit { value } => Ok(value.try_into()?),
-            ListPopFront::Miss => Err(MomentoError {
-                message: "list length response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            ListPopFront::Miss => Err(MomentoError::miss("ListPopFront")),
         }
     }
 }
@@ -162,12 +157,7 @@ impl TryFrom<ListPopFront> for String {
     fn try_from(value: ListPopFront) -> Result<Self, Self::Error> {
         match value {
             ListPopFront::Hit { value } => Ok(value.try_into()?),
-            ListPopFront::Miss => Err(MomentoError {
-                message: "list length response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            ListPopFront::Miss => Err(MomentoError::miss("ListPopFront")),
         }
     }
 }

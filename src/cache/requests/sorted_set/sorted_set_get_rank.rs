@@ -4,7 +4,7 @@ use momento_protos::cache_client::{sorted_set_get_rank_response::Rank, ECacheRes
 
 use crate::{
     cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
-    MomentoErrorCode, MomentoResult,
+    MomentoResult,
 };
 
 /// Get the rank (position) of a specific element in a sorted set.
@@ -127,12 +127,7 @@ impl TryFrom<SortedSetGetRank> for u64 {
     fn try_from(value: SortedSetGetRank) -> Result<Self, Self::Error> {
         match value {
             SortedSetGetRank::Hit { rank } => Ok(rank),
-            SortedSetGetRank::Miss => Err(MomentoError {
-                message: "sorted set get rank response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            SortedSetGetRank::Miss => Err(MomentoError::miss("SortedSetGetRank")),
         }
     }
 }

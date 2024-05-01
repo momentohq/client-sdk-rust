@@ -5,7 +5,7 @@ use momento_protos::cache_client::item_get_ttl_response::{self};
 
 use crate::{
     cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
-    MomentoErrorCode, MomentoResult,
+    MomentoResult,
 };
 
 /// Return the remaining ttl of the key in the cache.
@@ -120,12 +120,7 @@ impl TryFrom<ItemGetTtl> for Duration {
     fn try_from(value: ItemGetTtl) -> Result<Self, Self::Error> {
         match value {
             ItemGetTtl::Hit { remaining_ttl } => Ok(remaining_ttl),
-            ItemGetTtl::Miss => Err(MomentoError {
-                message: "item get ttl response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            ItemGetTtl::Miss => Err(MomentoError::miss("ItemGetTtl")),
         }
     }
 }
