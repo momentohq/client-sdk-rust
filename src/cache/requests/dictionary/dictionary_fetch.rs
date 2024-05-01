@@ -1,6 +1,6 @@
 use crate::cache::requests::MomentoRequest;
 use crate::utils::{parse_string, prep_request_with_timeout};
-use crate::{CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult};
+use crate::{CacheClient, IntoBytes, MomentoError, MomentoResult};
 use momento_protos::cache_client::{
     dictionary_fetch_response::Dictionary as DictionaryProto,
     DictionaryFetchRequest as DictionaryFetchRequestProto,
@@ -195,12 +195,7 @@ impl TryFrom<DictionaryFetch> for HashMap<Vec<u8>, Vec<u8>> {
     fn try_from(value: DictionaryFetch) -> Result<Self, Self::Error> {
         match value {
             DictionaryFetch::Hit { value } => Ok(value.into()),
-            DictionaryFetch::Miss => Err(MomentoError {
-                message: "dictionary fetch response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            DictionaryFetch::Miss => Err(MomentoError::miss("DictionaryFetch")),
         }
     }
 }
@@ -211,12 +206,7 @@ impl TryFrom<DictionaryFetch> for HashMap<String, String> {
     fn try_from(value: DictionaryFetch) -> Result<Self, Self::Error> {
         match value {
             DictionaryFetch::Hit { value } => value.try_into(),
-            DictionaryFetch::Miss => Err(MomentoError {
-                message: "dictionary fetch response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            DictionaryFetch::Miss => Err(MomentoError::miss("DictionaryFetch")),
         }
     }
 }

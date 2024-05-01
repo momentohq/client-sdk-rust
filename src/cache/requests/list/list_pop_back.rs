@@ -5,7 +5,7 @@ use momento_protos::cache_client::list_pop_back_response;
 use crate::{
     cache::MomentoRequest,
     utils::{parse_string, prep_request_with_timeout},
-    CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult,
+    CacheClient, IntoBytes, MomentoError, MomentoResult,
 };
 
 /// Remove and return the last element from a list item.
@@ -146,12 +146,7 @@ impl TryFrom<ListPopBack> for Vec<u8> {
     fn try_from(value: ListPopBack) -> Result<Self, Self::Error> {
         match value {
             ListPopBack::Hit { value } => Ok(value.try_into()?),
-            ListPopBack::Miss => Err(MomentoError {
-                message: "list length response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            ListPopBack::Miss => Err(MomentoError::miss("ListPopBack")),
         }
     }
 }
@@ -162,12 +157,7 @@ impl TryFrom<ListPopBack> for String {
     fn try_from(value: ListPopBack) -> Result<Self, Self::Error> {
         match value {
             ListPopBack::Hit { value } => Ok(value.try_into()?),
-            ListPopBack::Miss => Err(MomentoError {
-                message: "list length response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            ListPopBack::Miss => Err(MomentoError::miss("ListPopBack")),
         }
     }
 }

@@ -2,7 +2,6 @@ use crate::cache::requests::MomentoRequest;
 use crate::cache_client::CacheClient;
 use crate::utils::parse_string;
 use crate::utils::prep_request_with_timeout;
-use crate::MomentoErrorCode;
 use crate::{IntoBytes, MomentoError, MomentoResult};
 use momento_protos::cache_client::ECacheResult;
 use std::convert::{TryFrom, TryInto};
@@ -168,12 +167,7 @@ impl TryFrom<Get> for String {
     fn try_from(value: Get) -> Result<Self, Self::Error> {
         match value {
             Get::Hit { value } => value.try_into(),
-            Get::Miss => Err(MomentoError {
-                message: "get response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            Get::Miss => Err(MomentoError::miss("Get")),
         }
     }
 }
@@ -184,12 +178,7 @@ impl TryFrom<Get> for Vec<u8> {
     fn try_from(value: Get) -> Result<Self, Self::Error> {
         match value {
             Get::Hit { value } => Ok(value.into()),
-            Get::Miss => Err(MomentoError {
-                message: "get response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            Get::Miss => Err(MomentoError::miss("Get")),
         }
     }
 }

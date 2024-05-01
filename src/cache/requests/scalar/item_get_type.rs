@@ -4,7 +4,7 @@ use momento_protos::cache_client::item_get_type_response::{self};
 
 use crate::{
     cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
-    MomentoErrorCode, MomentoResult,
+    MomentoResult,
 };
 
 /// Return the type of the key in the cache.
@@ -144,12 +144,7 @@ impl TryFrom<ItemGetType> for ItemType {
     fn try_from(value: ItemGetType) -> Result<Self, Self::Error> {
         match value {
             ItemGetType::Hit { key_type } => Ok(key_type),
-            ItemGetType::Miss => Err(MomentoError {
-                message: "item get type response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            ItemGetType::Miss => Err(MomentoError::miss("ItemGetType")),
         }
     }
 }

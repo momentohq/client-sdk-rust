@@ -84,6 +84,15 @@ impl MomentoError {
             details: None,
         }
     }
+
+    pub(crate) fn miss(method_name: &str) -> Self {
+        Self {
+            message: "Received a MISS for ".to_string() + method_name,
+            error_code: MomentoErrorCode::UnknownError,
+            inner_error: None,
+            details: None,
+        }
+    }
 }
 
 trait ErrorDetails {

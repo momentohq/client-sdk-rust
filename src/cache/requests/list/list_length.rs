@@ -4,7 +4,7 @@ use momento_protos::cache_client::list_length_response;
 
 use crate::{
     cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
-    MomentoErrorCode, MomentoResult,
+    MomentoResult,
 };
 
 /// Gets the number of elements in the given list.
@@ -116,12 +116,7 @@ impl TryFrom<ListLength> for u32 {
     fn try_from(value: ListLength) -> Result<Self, Self::Error> {
         match value {
             ListLength::Hit { length } => Ok(length),
-            ListLength::Miss => Err(MomentoError {
-                message: "list length response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            ListLength::Miss => Err(MomentoError::miss("ListLength")),
         }
     }
 }

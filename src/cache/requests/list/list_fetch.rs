@@ -11,7 +11,7 @@ use momento_protos::{
 use crate::{
     cache::MomentoRequest,
     utils::{parse_string, prep_request_with_timeout},
-    CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult,
+    CacheClient, IntoBytes, MomentoError, MomentoResult,
 };
 
 /// Gets a list item from a cache with optional slices.
@@ -191,12 +191,7 @@ impl TryFrom<ListFetch> for Vec<Vec<u8>> {
     fn try_from(value: ListFetch) -> Result<Self, Self::Error> {
         match value {
             ListFetch::Hit { values } => Ok(values.try_into()?),
-            ListFetch::Miss => Err(MomentoError {
-                message: "list fetch response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            ListFetch::Miss => Err(MomentoError::miss("ListFetch")),
         }
     }
 }
@@ -207,12 +202,7 @@ impl TryFrom<ListFetch> for Vec<String> {
     fn try_from(value: ListFetch) -> Result<Self, Self::Error> {
         match value {
             ListFetch::Hit { values } => Ok(values.try_into()?),
-            ListFetch::Miss => Err(MomentoError {
-                message: "sorted set was not found".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            ListFetch::Miss => Err(MomentoError::miss("ListFetch")),
         }
     }
 }
