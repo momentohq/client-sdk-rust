@@ -71,13 +71,10 @@ impl<L: IntoBytes> MomentoRequest for SortedSetLengthRequest<L> {
             Some(sorted_set_length_response::SortedSet::Found(found)) => Ok(SortedSetLength::Hit {
                 length: found.length,
             }),
-            _ => Err(MomentoError {
-                message: "Unknown error has occurred, unable to parse sorted_set_length_response"
-                    .into(),
-                error_code: MomentoErrorCode::UnknownError,
-                inner_error: None,
-                details: None,
-            }),
+            _ => Err(MomentoError::unknown_error(
+                "SortedSetLength",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }

@@ -88,14 +88,10 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetScoreRequest<L, 
             Some(sorted_set_get_score_response::SortedSet::Missing(_)) => {
                 Ok(SortedSetGetScore::Miss)
             }
-            _ => Err(MomentoError {
-                message:
-                    "Unknown error has occurred, unable to parse sorted_set_get_score_response"
-                        .into(),
-                error_code: MomentoErrorCode::UnknownError,
-                inner_error: None,
-                details: None,
-            }),
+            _ => Err(MomentoError::unknown_error(
+                "SortedSetGetScore",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }
