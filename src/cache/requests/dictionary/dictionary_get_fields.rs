@@ -9,6 +9,49 @@ use momento_protos::cache_client::{
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 
+/// Request to get multiple fields from a dictionary.
+///
+/// # Arguments
+///
+/// * `cache_name` - The name of the cache containing the dictionary.
+/// * `dictionary_name` - The name of the dictionary to get fields from.
+/// * `fields` - The fields to get.
+///
+/// # Examples
+/// Assumes that a CacheClient named `cache_client` has been created and is available.
+/// ```
+/// # fn main() -> anyhow::Result<()> {
+/// # use std::collections::HashMap;
+/// # use std::convert::TryInto;
+/// # use momento_test_util::create_doctest_cache_client;
+/// # tokio_test::block_on(async {
+/// use momento::cache::{DictionaryGetFields, DictionaryGetFieldsRequest};
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
+/// let dictionary_name = "dictionary";
+/// let fields = vec!["field1", "field2"];
+///
+/// let set_response = cache_client.dictionary_set_fields(
+///   cache_name.to_string(),
+///   dictionary_name,
+///   vec![("field1", "value1"), ("field2", "value2")]
+/// ).await?;
+///
+/// let get_fields_request = DictionaryGetFieldsRequest::new(
+///    cache_name,
+///    dictionary_name,
+///    fields
+/// );
+///
+/// let get_fields_response = cache_client.send_request(get_fields_request).await?;
+///
+/// let returned_dictionary: HashMap<String, String> = get_fields_response.try_into()
+///   .expect("dictionary should be returned");
+/// println!("{:?}", returned_dictionary);
+/// # Ok(())
+/// # })
+/// # }
+/// ```
+#[derive(Debug, PartialEq, Eq)]
 pub struct DictionaryGetFieldsRequest<D: IntoBytes, F: IntoBytes + Clone> {
     cache_name: String,
     dictionary_name: D,
@@ -84,34 +127,34 @@ impl<D: IntoBytes, F: IntoBytes + Clone> MomentoRequest for DictionaryGetFieldsR
     }
 }
 
-/// Response to a dictionary fetch request.
+/// Response object for a [DictionaryGetFields](crate::cache::DictionaryGetFields).
 ///
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// fn main() -> anyhow::Result<()> {
 /// # use std::collections::HashMap;
-/// # use momento::cache::{DictionaryFetch, DictionaryFetchValue};
+/// # use momento::cache::DictionaryGetFields;
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryFetch::Hit { value: DictionaryFetchValue::default() };
+/// # let fetch_response = DictionaryGetFields::default();
 /// use std::convert::TryInto;
 /// let item: HashMap<String, String> = match fetch_response {
-///    DictionaryFetch::Hit { value } => value.try_into().expect("I stored strings!"),
-///   DictionaryFetch::Miss => panic!("I expected a hit!"),
+///   DictionaryGetFields::Hit { .. } => fetch_response.try_into().expect("I stored strings!"),
+///   DictionaryGetFields::Miss => panic!("I expected a hit!"),
 /// };
 /// # Ok(())
 /// }
 /// ```
 ///
-/// Or, if you're storing raw bytes you can get at them simply:
+/// Or if you're storing raw bytes you can get at them simply:
 /// ```
 /// # use std::collections::HashMap;
-/// # use momento::cache::{DictionaryFetch, DictionaryFetchValue};
+/// # use momento::cache::DictionaryGetFields;
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryFetch::Hit { value: DictionaryFetchValue::default() };
+/// # let fetch_response = DictionaryGetFields::default();
 /// use std::convert::TryInto;
 /// let item: HashMap<Vec<u8>, Vec<u8>> = match fetch_response {
-///   DictionaryFetch::Hit { value } => value.into(),
-///   DictionaryFetch::Miss => panic!("I expected a hit!"),
+///  DictionaryGetFields::Hit { .. } => fetch_response.try_into().expect("I stored raw bytes!"),
+/// DictionaryGetFields::Miss => panic!("I expected a hit!"),
 /// };
 /// ```
 ///
@@ -122,9 +165,9 @@ impl<D: IntoBytes, F: IntoBytes + Clone> MomentoRequest for DictionaryGetFieldsR
 /// this is what you're after:
 /// ```
 /// # use std::collections::HashMap;
-/// # use momento::cache::{DictionaryFetch, DictionaryFetchValue};
+/// # use momento::cache::DictionaryGetFields;
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryFetch::Hit { value: DictionaryFetchValue::default() };
+/// # let fetch_response = DictionaryGetFields::default();
 /// use std::convert::TryInto;
 /// let item: MomentoResult<HashMap<String, String>> = fetch_response.try_into();
 /// ```
@@ -132,12 +175,13 @@ impl<D: IntoBytes, F: IntoBytes + Clone> MomentoRequest for DictionaryGetFieldsR
 /// You can also go straight into a `HashMap<Vec<u8>, Vec<u8>>` if you prefer:
 /// ```
 /// # use std::collections::HashMap;
-/// # use momento::cache::{DictionaryFetch, DictionaryFetchValue};
+/// # use momento::cache::DictionaryGetFields;
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryFetch::Hit { value: DictionaryFetchValue::default() };
+/// # let fetch_response = DictionaryGetFields::default();
 /// use std::convert::TryInto;
 /// let item: MomentoResult<HashMap<Vec<u8>, Vec<u8>>> = fetch_response.try_into();
 /// ```
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum DictionaryGetFields<F: IntoBytes> {
     Hit {
@@ -145,6 +189,15 @@ pub enum DictionaryGetFields<F: IntoBytes> {
         responses: Vec<DictionaryGetField>,
     },
     Miss,
+}
+
+impl Default for DictionaryGetFields<String> {
+    fn default() -> Self {
+        DictionaryGetFields::Hit {
+            fields: vec![],
+            responses: vec![],
+        }
+    }
 }
 
 impl<F: IntoBytes> TryFrom<DictionaryGetFields<F>> for HashMap<String, String> {

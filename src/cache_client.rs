@@ -347,7 +347,48 @@ impl CacheClient {
     }
     // dictionary_get_field
 
-    // dictionary_get_fields - todo
+    /// Gets fields from a dictionary.
+    ///
+    /// If the dictionary does not exist, a miss is returned.
+    /// If a field does not exist, it is not included in the response.
+    ///
+    /// # Arguments
+    /// * `cache_name` - The name of the cache containing the dictionary.
+    /// * `dictionary_name` - The name of the dictionary to get fields from.
+    /// * `fields` - The fields to get.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use std::collections::HashMap;
+    /// # use std::convert::TryInto;
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{DictionaryGetFields, DictionaryGetFieldsRequest};
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let dictionary_name = "dictionary";
+    /// let fields = vec!["field1", "field2"];
+    ///
+    /// let set_response = cache_client.dictionary_set_fields(
+    ///  cache_name.to_string(),
+    /// dictionary_name,
+    /// vec![("field1", "value1"), ("field2", "value2")]
+    /// ).await?;
+    ///
+    /// let response = cache_client.dictionary_get_fields(cache_name, dictionary_name, fields).await?;
+    ///
+    /// match response {
+    ///    DictionaryGetFields::Hit { .. } => {
+    ///      let dictionary: HashMap<String, String> = response.try_into().expect("I stored a dictionary of strings!");
+    ///      println!("Fetched dictionary: {:?}", dictionary);
+    ///    }
+    ///    DictionaryGetFields::Miss => println!("Cache miss"),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
     pub async fn dictionary_get_fields<F: IntoBytes + Clone>(
         &self,
         cache_name: impl Into<String>,
