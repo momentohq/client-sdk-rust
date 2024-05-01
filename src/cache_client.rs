@@ -19,14 +19,15 @@ use crate::cache::{
     ListConcatenateFront, ListConcatenateFrontRequest, ListFetch, ListFetchRequest, ListLength,
     ListLengthRequest, ListPopBack, ListPopBackRequest, ListPopFront, ListPopFrontRequest,
     ListRemoveValue, ListRemoveValueRequest, MomentoRequest, Set, SetAddElements,
-    SetAddElementsRequest, SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest,
-    SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest,
-    SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest, SetIfPresentRequest,
-    SetRequest, SortedSetFetch, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest,
-    SortedSetGetRank, SortedSetGetRankRequest, SortedSetGetScore, SortedSetGetScoreRequest,
-    SortedSetLength, SortedSetLengthRequest, SortedSetOrder, SortedSetPutElement,
-    SortedSetPutElementRequest, SortedSetPutElements, SortedSetPutElementsRequest,
-    SortedSetRemoveElements, SortedSetRemoveElementsRequest, UpdateTtl, UpdateTtlRequest,
+    SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsent, SetIfAbsentOrEqual,
+    SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual,
+    SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,
+    SetIfPresentRequest, SetRemoveElements, SetRemoveElementsRequest, SetRequest, SortedSetFetch,
+    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetGetRank,
+    SortedSetGetRankRequest, SortedSetGetScore, SortedSetGetScoreRequest, SortedSetLength,
+    SortedSetLengthRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
+    SortedSetPutElements, SortedSetPutElementsRequest, SortedSetRemoveElements,
+    SortedSetRemoveElementsRequest, UpdateTtl, UpdateTtlRequest,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -554,8 +555,8 @@ impl CacheClient {
     ///
     /// # Arguments
     ///
-    /// * `cache_name` - The name of the cache containing the sorted set.
-    /// * `set_name` - The name of the sorted set to add an element to.
+    /// * `cache_name` - The name of the cache containing the set.
+    /// * `set_name` - The name of the set to add elements to.
     /// * `elements` - The elements to add. Must be able to be converted to a `Vec<u8>`.
     ///
     /// # Optional Arguments
@@ -598,6 +599,80 @@ impl CacheClient {
         elements: Vec<E>,
     ) -> MomentoResult<SetAddElements> {
         let request = SetAddElementsRequest::new(cache_name, set_name, elements);
+        request.send(self).await
+    }
+
+    /// Fetch the elements in the given set.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - The name of the cache containing the set.
+    /// * `set_name` - The name of the set to fetch.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento::MomentoResult;
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::SetFetch;
+    /// use std::convert::TryInto;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let set_name = "set";
+    ///
+    /// # let add_elements_response = cache_client.set_add_elements(&cache_name, set_name, vec!["value1", "value2"]).await?;
+    ///
+    /// let fetched_elements: Vec<String> = cache_client.set_fetch(cache_name, set_name).await?.try_into().expect("Expected a set!");
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to fetch elements using a [SetFetchRequest].
+    pub async fn set_fetch(
+        &self,
+        cache_name: impl Into<String>,
+        set_name: impl IntoBytes,
+    ) -> MomentoResult<SetFetch> {
+        let request = SetFetchRequest::new(cache_name, set_name);
+        request.send(self).await
+    }
+
+    /// Removes multiple elements from an existing set. If the set is emptied as a result, the set is deleted.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - The name of the cache containing the set.
+    /// * `set_name` - The name of the set to remove elements from.
+    /// * `elements` - The elements to remove. Must be able to be converted to a `Vec<u8>`.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento::MomentoResult;
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::SetRemoveElements;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let set_name = "set";
+    ///
+    /// match cache_client.set_remove_elements(cache_name, set_name, vec!["element1", "element2"]).await {
+    ///     Ok(_) => println!("Elements removed from set"),
+    ///     Err(e) => eprintln!("Error removing elements from set: {}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to fetch elements using a [SetRemoveElementsRequest].
+    pub async fn set_remove_elements<E: IntoBytes>(
+        &self,
+        cache_name: impl Into<String>,
+        set_name: impl IntoBytes,
+        elements: Vec<E>,
+    ) -> MomentoResult<SetRemoveElements> {
+        let request = SetRemoveElementsRequest::new(cache_name, set_name, elements);
         request.send(self).await
     }
 
@@ -755,7 +830,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to fetch elements using a [SortedSetFetchByRankRequest]..
+    /// You can also use the [send_request](CacheClient::send_request) method to fetch elements using a [SortedSetFetchByRankRequest].
     pub async fn sorted_set_fetch_by_rank(
         &self,
         cache_name: impl Into<String>,
