@@ -57,6 +57,9 @@ mod flush_cache {
         Ok(())
     }
 
+    // This test uses the ignore macro so that we can run it separately from the other
+    // test targets using `cargo test -- --ignored`. This is because all the tests share
+    // the same cache and flushing it will affect the other tests in nondeterministic ways.
     #[tokio::test]
     #[ignore]
     async fn flush_existing_cache_returns_success() -> MomentoResult<()> {
