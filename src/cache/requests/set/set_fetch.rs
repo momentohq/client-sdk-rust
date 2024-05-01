@@ -5,7 +5,7 @@ use momento_protos::cache_client::set_fetch_response;
 use crate::{
     cache::MomentoRequest,
     utils::{parse_string, prep_request_with_timeout},
-    CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult,
+    CacheClient, IntoBytes, MomentoError, MomentoResult,
 };
 
 /// Fetch the elements in the given set.
@@ -84,7 +84,36 @@ impl<L: IntoBytes> MomentoRequest for SetFetchRequest<L> {
     }
 }
 
-/// TODO
+/// Response for a set fetch operation.
+///
+/// If you'd like to handle misses you can simply match and handle your response:
+/// ```
+/// # use momento::MomentoResult;
+/// # use momento::cache::SetFetchValue;
+/// use momento::cache::SetFetch;
+/// use std::convert::TryInto;
+/// # let values = vec!["abc", "123"].iter().map(|s| s.as_bytes().to_vec()).collect();
+/// # let response = SetFetch::Hit { values: SetFetchValue::new(values) };
+/// let fetched_values: Vec<String> = match response {
+///     SetFetch::Hit { values } => values.try_into().expect("Expected to fetch a set!"),
+///     SetFetch::Miss => return // probably you'll do something else here
+/// };
+/// ```
+///
+/// You can cast your result directly into a `Result<Vec<String>, MomentoError>` suitable for
+/// ?-propagation if you know you are expecting a ListFetch::Hit.
+///
+/// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
+/// this is what you're after:
+/// ```
+/// # use momento::MomentoResult;
+/// # use momento::cache::SetFetchValue;
+/// use momento::cache::SetFetch;
+/// use std::convert::TryInto;
+/// # let values = vec!["abc", "123"].iter().map(|s| s.as_bytes().to_vec()).collect();
+/// # let response = SetFetch::Hit { values: SetFetchValue::new(values) };
+/// let fetched_values: Vec<String> = response.try_into().expect("Expected to fetch a set!");
+/// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum SetFetch {
     Hit { values: SetFetchValue },
@@ -128,13 +157,7 @@ impl TryFrom<SetFetch> for Vec<Vec<u8>> {
     fn try_from(value: SetFetch) -> Result<Self, Self::Error> {
         match value {
             SetFetch::Hit { values } => Ok(values.try_into()?),
-            // TODO: user MomentoError::miss helper
-            SetFetch::Miss => Err(MomentoError {
-                message: "set response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            SetFetch::Miss => Err(MomentoError::miss("SetFetch")),
         }
     }
 }
@@ -145,13 +168,7 @@ impl TryFrom<SetFetch> for Vec<String> {
     fn try_from(value: SetFetch) -> Result<Self, Self::Error> {
         match value {
             SetFetch::Hit { values } => Ok(values.try_into()?),
-            // TODO: user MomentoError::miss helper
-            SetFetch::Miss => Err(MomentoError {
-                message: "set response was a miss".into(),
-                error_code: MomentoErrorCode::Miss,
-                inner_error: None,
-                details: None,
-            }),
+            SetFetch::Miss => Err(MomentoError::miss("SetFetch")),
         }
     }
 }
