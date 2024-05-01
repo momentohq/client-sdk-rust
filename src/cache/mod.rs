@@ -11,6 +11,10 @@ pub use requests::list_caches::{
     CacheInfo, CacheLimits, ListCaches, ListCachesRequest, TopicLimits,
 };
 
+pub use requests::dictionary::dictionary_get_fields::{
+    DictionaryGetFields, DictionaryGetFieldsRequest,
+};
+
 pub use requests::dictionary::dictionary_fetch::{
     DictionaryFetch, DictionaryFetchRequest, DictionaryFetchValue,
 };

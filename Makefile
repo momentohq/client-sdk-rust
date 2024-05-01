@@ -40,12 +40,14 @@ test-doctests:
 	cargo test --doc
 
 .PHONY: test-integration
-## Run the flush_cache test first so as not to introduce a race condition that
-## might cause the other tests to fail since they all use the same test cache.
+## Run integration tests
 test-integration:
+	# Reason for "--ignored":
+	# The flush_cache test first so as not to introduce a race condition that
+	# might cause the other tests to fail since they all use the same test cache.
 	cargo test --tests -- --ignored
 	cargo test --tests
-	
+
 .PHONY: test
 ## Run unit and integration tests
 test: test-unit test-integration test-doctests
