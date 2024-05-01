@@ -41,6 +41,7 @@ use momento_protos::cache_client::{
 /// # Ok(())
 /// # })
 /// # }
+/// ```
 pub struct DictionarySetFieldRequest<D, F, V>
 where
     D: IntoBytes,

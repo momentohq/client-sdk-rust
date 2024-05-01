@@ -17,6 +17,10 @@ pub use requests::dictionary::dictionary_fetch::{
 pub use requests::dictionary::dictionary_set_field::{
     DictionarySetField, DictionarySetFieldRequest,
 };
+pub use requests::dictionary::dictionary_set_fields::{
+    DictionaryFieldValuePair, DictionarySetFields, DictionarySetFieldsRequest,
+    IntoDictionaryFieldValuePairs,
+};
 
 pub use requests::scalar::decrease_ttl::{DecreaseTtl, DecreaseTtlRequest};
 pub use requests::scalar::delete::{Delete, DeleteRequest};
