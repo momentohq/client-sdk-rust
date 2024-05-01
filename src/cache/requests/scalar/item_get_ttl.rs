@@ -72,7 +72,10 @@ impl<K: IntoBytes> MomentoRequest for ItemGetTtlRequest<K> {
             Some(item_get_ttl_response::Result::Found(found)) => Ok(ItemGetTtl::Hit {
                 remaining_ttl: Duration::from_millis(found.remaining_ttl_millis),
             }),
-            _ => unreachable!(),
+            _ => Err(MomentoError::unknown_error(
+                "ItemGetTtl",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }

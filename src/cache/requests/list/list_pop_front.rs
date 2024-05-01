@@ -71,12 +71,10 @@ impl<L: IntoBytes> MomentoRequest for ListPopFrontRequest<L> {
             Some(list_pop_front_response::List::Found(found)) => Ok(ListPopFront::Hit {
                 value: ListPopFrontValue::new(found.front),
             }),
-            _ => Err(MomentoError {
-                message: "Unknown error has occurred, unable to parse list_fetch_response".into(),
-                error_code: MomentoErrorCode::UnknownError,
-                inner_error: None,
-                details: None,
-            }),
+            _ => Err(MomentoError::unknown_error(
+                "ListPopFront",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }

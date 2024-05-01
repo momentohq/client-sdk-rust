@@ -4,7 +4,7 @@ use momento_protos::cache_client::set_if_response;
 use crate::cache::requests::MomentoRequest;
 use crate::cache_client::CacheClient;
 use crate::utils::prep_request_with_timeout;
-use crate::{IntoBytes, MomentoResult};
+use crate::{IntoBytes, MomentoError, MomentoResult};
 use std::time::Duration;
 
 /// Request to associate the given key with the given value if the key is present
@@ -106,7 +106,10 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest for SetIfEqualRequ
         match response.result {
             Some(set_if_response::Result::Stored(_)) => Ok(SetIfEqual::Stored),
             Some(set_if_response::Result::NotStored(_)) => Ok(SetIfEqual::NotStored),
-            _ => unreachable!(),
+            _ => Err(MomentoError::unknown_error(
+                "SetIfEqual",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }

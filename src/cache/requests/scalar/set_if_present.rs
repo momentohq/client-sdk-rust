@@ -4,7 +4,7 @@ use momento_protos::cache_client::set_if_response;
 use crate::cache::requests::MomentoRequest;
 use crate::cache_client::CacheClient;
 use crate::utils::prep_request_with_timeout;
-use crate::{IntoBytes, MomentoResult};
+use crate::{IntoBytes, MomentoError, MomentoResult};
 use std::time::Duration;
 
 /// Request to set associate the given key with the given value if key is present in the cache.
@@ -99,7 +99,10 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfPresentRequest<K, V> {
         match response.result {
             Some(set_if_response::Result::Stored(_)) => Ok(SetIfPresent::Stored),
             Some(set_if_response::Result::NotStored(_)) => Ok(SetIfPresent::NotStored),
-            _ => unreachable!(),
+            _ => Err(MomentoError::unknown_error(
+                "SetIfPresent",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }

@@ -79,7 +79,6 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
             .into_inner();
 
         match response.dictionary {
-            None => Ok(DictionaryFetch::Miss),
             Some(DictionaryProto::Missing(_)) => Ok(DictionaryFetch::Miss),
             Some(DictionaryProto::Found(elements)) => {
                 let raw_item = elements
@@ -91,6 +90,10 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
                     value: DictionaryFetchValue::new(raw_item),
                 })
             }
+            _ => Err(MomentoError::unknown_error(
+                "DictionaryFetch",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }

@@ -110,12 +110,10 @@ impl<L: IntoBytes> MomentoRequest for ListFetchRequest<L> {
                     raw_item: found.values,
                 },
             }),
-            _ => Err(MomentoError {
-                message: "Unknown error has occurred, unable to parse list_fetch_response".into(),
-                error_code: MomentoErrorCode::UnknownError,
-                inner_error: None,
-                details: None,
-            }),
+            _ => Err(MomentoError::unknown_error(
+                "ListFetch",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }

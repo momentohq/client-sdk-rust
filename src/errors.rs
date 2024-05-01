@@ -72,6 +72,20 @@ pub struct MomentoError {
     pub details: Option<MomentoGrpcErrorDetails>,
 }
 
+impl MomentoError {
+    pub(crate) fn unknown_error(method_name: &str, details: Option<String>) -> Self {
+        Self {
+            message: "Unknown error has occurred, unable to parse ".to_string()
+                + method_name
+                + " : "
+                + details.as_deref().unwrap_or(""),
+            error_code: MomentoErrorCode::UnknownError,
+            inner_error: None,
+            details: None,
+        }
+    }
+}
+
 trait ErrorDetails {
     fn message(&self) -> &String;
     fn error_code(&self) -> &MomentoErrorCode;

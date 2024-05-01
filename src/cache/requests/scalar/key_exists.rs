@@ -1,6 +1,6 @@
 use crate::cache::MomentoRequest;
 use crate::utils::prep_request_with_timeout;
-use crate::{CacheClient, IntoBytes, MomentoResult};
+use crate::{CacheClient, IntoBytes, MomentoError, MomentoResult};
 
 /// Request to check if a key exists in a cache.
 ///
@@ -67,7 +67,10 @@ impl<K: IntoBytes> MomentoRequest for KeyExistsRequest<K> {
 
         match response.exists.first() {
             Some(exists) => Ok(KeyExists { exists: *exists }),
-            _ => unreachable!(),
+            _ => Err(MomentoError::unknown_error(
+                "KeyExists",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }

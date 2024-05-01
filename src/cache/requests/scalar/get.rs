@@ -78,7 +78,10 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
                 },
             }),
             ECacheResult::Miss => Ok(Get::Miss),
-            _ => unreachable!(),
+            _ => Err(MomentoError::unknown_error(
+                "Get",
+                Some(format!("{:#?}", response)),
+            )),
         }
     }
 }
