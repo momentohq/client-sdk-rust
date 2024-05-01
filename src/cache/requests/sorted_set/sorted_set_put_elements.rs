@@ -9,9 +9,9 @@ use crate::cache::CollectionTtl;
 use crate::utils::prep_request_with_timeout;
 use crate::{CacheClient, IntoBytes, MomentoResult};
 
-/// This trait defines an interface for converting a type into a vector of `SortedSetElement`s.
+/// This trait defines an interface for converting a type into a vector of [SortedSetElement].
 pub trait IntoSortedSetElements<V: IntoBytes>: Send {
-    /// Converts the type into a vector of `SortedSetElement`s.
+    /// Converts the type into a vector of [SortedSetElement].
     fn into_sorted_set_elements(self) -> Vec<SortedSetElement<V>>;
 }
 
@@ -23,7 +23,7 @@ pub struct SortedSetElement<V: IntoBytes> {
     pub score: f64,
 }
 
-/// Converts an iterator of value-score pairs into a vector of `SortedSetElement`s.
+/// Converts an iterator of value-score pairs into a vector of [SortedSetElement]s.
 ///
 /// # Arguments
 ///
@@ -140,6 +140,7 @@ impl<V: IntoBytes> IntoSortedSetElements<V> for HashMap<V, f64> {
 /// # Ok(())
 /// # })
 /// # }
+/// ```
 pub struct SortedSetPutElementsRequest<S: IntoBytes, V: IntoBytes, E: IntoSortedSetElements<V>> {
     cache_name: String,
     sorted_set_name: S,

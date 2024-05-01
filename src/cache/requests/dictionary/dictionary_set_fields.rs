@@ -11,7 +11,9 @@ use momento_protos::cache_client::{
     DictionarySetRequest as DictionarySetFieldRequestProto,
 };
 
+/// This trait defines an interface for converting a type into a vector of [DictionaryFieldValuePair].
 pub trait IntoDictionaryFieldValuePairs<F: IntoBytes, V: IntoBytes>: Send {
+    /// Converts the type into a vector of [DictionaryFieldValuePair].
     fn into_dictionary_field_value_pairs(self) -> Vec<DictionaryFieldValuePair<F, V>>;
 }
 
@@ -45,6 +47,43 @@ impl<F: IntoBytes, V: IntoBytes> IntoDictionaryFieldValuePairs<F, V> for HashMap
     }
 }
 
+/// Request to set multiple fields in a dictionary. If the dictionary does not exist, it will be
+/// created. If the dictionary already exists, the fields will be updated.
+///
+/// # Arguments
+///
+/// - `cache_name`: The name of the cache where the dictionary is stored.
+/// - `dictionary_name`: The name of the dictionary to set fields in.
+/// - `elements`: The fields and values to set in the dictionary.
+///
+/// # Optional Arguments
+///
+/// - `collection_ttl`: The time-to-live for the collection. If not provided, the client's default time-to-live is used.
+///
+/// # Examples
+/// Assumes that a CacheClient named `cache_client` has been created and is available.
+/// ```
+/// # fn main() -> anyhow::Result<()> {
+/// # use momento_test_util::create_doctest_cache_client;
+/// # tokio_test::block_on(async {
+/// use momento::cache::{CollectionTtl, DictionarySetFields, DictionarySetFieldsRequest};
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
+/// let dictionary_name = "dictionary";
+///
+/// let set_fields_request = DictionarySetFieldsRequest::new(
+///     cache_name,
+///     dictionary_name,
+///     vec![("field1", "value1"), ("field2", "value2")]
+/// ).ttl(CollectionTtl::default());
+///
+/// match cache_client.send_request(set_fields_request).await {
+///     Ok(_) => println!("Fields set successfully"),
+///     Err(e) => eprintln!("Error setting fields: {:?}", e),
+/// }
+/// # Ok(())
+/// # })
+/// # }
+/// ```
 pub struct DictionarySetFieldsRequest<D, F, V, E>
 where
     D: IntoBytes,

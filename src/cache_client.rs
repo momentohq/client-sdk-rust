@@ -402,7 +402,44 @@ impl CacheClient {
         request.send(self).await
     }
 
-    // dictionary_set_fields - todo
+    /// Sets multiple fields in a dictionary. If the dictionary does not exist, it will be created.
+    /// If the dictionary already exists, the fields will be updated.
+    ///
+    /// # Arguments
+    /// * `cache_name` - The name of the cache containing the dictionary.
+    /// * `dictionary_name` - The name of the dictionary to set fields in.
+    /// * `elements` - The fields and values to set in the dictionary.
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to set fields using a
+    /// [DictionarySetFieldsRequest], you can also provide the following optional arguments:
+    ///
+    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{CollectionTtl, DictionarySetFields, DictionarySetFieldsRequest};
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let dictionary_name = "dictionary";
+    ///
+    /// let set_fields_response = cache_client.dictionary_set_fields(
+    ///    cache_name,
+    ///    dictionary_name,
+    ///    vec![("field1", "value1"), ("field2", "value2")]
+    /// ).await;
+    ///
+    /// match set_fields_response {
+    ///   Ok(_) => println!("Fields set successfully"),
+    ///   Err(e) => eprintln!("Error setting fields: {:?}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
     pub async fn dictionary_set_fields<F: IntoBytes, V: IntoBytes>(
         &self,
         cache_name: impl Into<String>,
