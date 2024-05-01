@@ -4,5 +4,6 @@ mod item;
 mod key_existence;
 mod list;
 mod scalar;
+mod set;
 mod sorted_set;
 mod ttl;
