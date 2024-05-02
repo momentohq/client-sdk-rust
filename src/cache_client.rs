@@ -9,7 +9,8 @@ use tonic::transport::Channel;
 use crate::cache::{
     Configuration, CreateCache, CreateCacheRequest, DecreaseTtl, DecreaseTtlRequest, Delete,
     DeleteCache, DeleteCacheRequest, DeleteRequest, DictionaryFetch, DictionaryFetchRequest,
-    DictionaryGetFields, DictionaryGetFieldsRequest, DictionarySetField, DictionarySetFieldRequest,
+    DictionaryGetFields, DictionaryGetFieldsRequest, DictionaryRemoveFields,
+    DictionaryRemoveFieldsRequest, DictionarySetField, DictionarySetFieldRequest,
     DictionarySetFields, DictionarySetFieldsRequest, FlushCache, FlushCacheRequest, Get,
     GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest,
     IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest,
@@ -402,7 +403,51 @@ impl CacheClient {
     // dictionary_increment
     // dictionary_length - todo
     // dictionary_remove_field
-    // dictionary_remove_fields - todo
+
+    /// Removes fields from a dictionary.
+    /// If the dictionary or any field does not exist, a success response is returned.
+    ///
+    /// # Arguments
+    /// * `cache_name` - The name of the cache containing the dictionary.
+    /// * `dictionary_name` - The name of the dictionary to remove fields from.
+    /// * `fields` - The fields to remove.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{DictionaryRemoveFields, DictionaryRemoveFieldsRequest};
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let dictionary_name = "dictionary";
+    /// let fields = vec!["field1", "field2"];
+    ///
+    /// let set_response = cache_client.dictionary_set_fields(
+    ///   cache_name.to_string(),
+    ///   dictionary_name,
+    ///   vec![("field1", "value1"), ("field2", "value2")]
+    /// ).await?;
+    ///
+    /// let response = cache_client.dictionary_remove_fields(cache_name, dictionary_name, fields).await;
+    ///
+    /// match response {
+    ///   Ok(_) => println!("Fields removed successfully"),
+    ///   Err(e) => println!("Error removing fields: {}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn dictionary_remove_fields<F: IntoBytes>(
+        &self,
+        cache_name: impl Into<String>,
+        dictionary_name: impl IntoBytes,
+        fields: Vec<F>,
+    ) -> MomentoResult<DictionaryRemoveFields> {
+        let request = DictionaryRemoveFieldsRequest::new(cache_name, dictionary_name, fields);
+        request.send(self).await
+    }
 
     /// Sets a field in a dictionary. If the field already exists, its value is updated.
     /// Creates the dictionary if it does not exist.
