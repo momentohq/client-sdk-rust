@@ -36,13 +36,13 @@ use crate::{
 /// # })
 /// # }
 /// ```
-pub struct SetFetchRequest<L: IntoBytes> {
+pub struct SetFetchRequest<S: IntoBytes> {
     cache_name: String,
-    set_name: L,
+    set_name: S,
 }
 
-impl<L: IntoBytes> SetFetchRequest<L> {
-    pub fn new(cache_name: impl Into<String>, set_name: L) -> Self {
+impl<S: IntoBytes> SetFetchRequest<S> {
+    pub fn new(cache_name: impl Into<String>, set_name: S) -> Self {
         Self {
             cache_name: cache_name.into(),
             set_name,
@@ -50,7 +50,7 @@ impl<L: IntoBytes> SetFetchRequest<L> {
     }
 }
 
-impl<L: IntoBytes> MomentoRequest for SetFetchRequest<L> {
+impl<S: IntoBytes> MomentoRequest for SetFetchRequest<S> {
     type Response = SetFetch;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetFetch> {
@@ -131,11 +131,9 @@ impl SetFetchValue {
     }
 }
 
-impl TryFrom<SetFetchValue> for Vec<Vec<u8>> {
-    type Error = MomentoError;
-
-    fn try_from(value: SetFetchValue) -> Result<Self, Self::Error> {
-        Ok(value.raw_item)
+impl From<SetFetchValue> for Vec<Vec<u8>> {
+    fn from(value: SetFetchValue) -> Self {
+        value.raw_item
     }
 }
 
@@ -156,7 +154,7 @@ impl TryFrom<SetFetch> for Vec<Vec<u8>> {
 
     fn try_from(value: SetFetch) -> Result<Self, Self::Error> {
         match value {
-            SetFetch::Hit { values } => Ok(values.try_into()?),
+            SetFetch::Hit { values } => Ok(values.into()),
             SetFetch::Miss => Err(MomentoError::miss("SetFetch")),
         }
     }
