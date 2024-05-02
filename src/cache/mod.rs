@@ -50,6 +50,8 @@ pub use requests::scalar::set_if_present_and_not_equal::{
 pub use requests::scalar::update_ttl::{UpdateTtl, UpdateTtlRequest};
 
 pub use requests::set::set_add_elements::{SetAddElements, SetAddElementsRequest};
+pub use requests::set::set_fetch::{SetFetch, SetFetchRequest, SetFetchValue};
+pub use requests::set::set_remove_elements::{SetRemoveElements, SetRemoveElementsRequest};
 
 pub use requests::sorted_set::sorted_set_fetch_by_rank::{
     SortedSetFetchByRankRequest, SortedSetOrder,
