@@ -1,5 +1,6 @@
 use momento::cache::{
-    DictionaryFetch, DictionaryGetFields, DictionarySetField, DictionarySetFields,
+    DictionaryFetch, DictionaryGetFields, DictionaryRemoveFields, DictionarySetField,
+    DictionarySetFields,
 };
 use momento::{MomentoError, MomentoErrorCode, MomentoResult};
 use momento_test_util::{
@@ -133,7 +134,64 @@ mod dictionary_increment {}
 
 mod dictionary_remove_field {}
 
-mod dictionary_remove_fields {}
+mod dictionary_remove_fields {
+    use super::*;
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+
+        let item = TestDictionary::new();
+        let response = client
+            .dictionary_set_fields(cache_name, item.name(), item.value().clone())
+            .await?;
+        assert_eq!(response, DictionarySetFields {});
+
+        let item2 = TestDictionary::new();
+        let response = client
+            .dictionary_set_fields(cache_name, item2.name(), item2.value().clone())
+            .await?;
+        assert_eq!(response, DictionarySetFields {});
+
+        let response = client
+            .dictionary_remove_fields(
+                cache_name,
+                item.name(),
+                item.value().keys().cloned().collect(),
+            )
+            .await?;
+        assert_eq!(response, DictionaryRemoveFields {});
+
+        let result = client.dictionary_fetch(cache_name, item.name()).await?;
+        assert_fetched_dictionary_equals_test_data(result, &item2)?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn invalid_cache_name() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let result = client
+            .dictionary_remove_fields("   ", "my-dictionary", vec!["my-field".to_string()])
+            .await
+            .unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_cache_name();
+        let result = client
+            .dictionary_remove_fields(cache_name, "my-dictionary", vec!["my-field".to_string()])
+            .await
+            .unwrap_err();
+
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        Ok(())
+    }
+}
 
 mod dictionary_set_field {
     use super::*;
