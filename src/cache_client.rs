@@ -986,11 +986,11 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to remove elements using a [SortedSetRemoveElementsRequest].
-    pub async fn sorted_set_remove_elements(
+    pub async fn sorted_set_remove_elements<V: IntoBytesIterable>(
         &self,
         cache_name: impl Into<String>,
         sorted_set_name: impl IntoBytes,
-        values: Vec<impl IntoBytes>,
+        values: V,
     ) -> MomentoResult<SortedSetRemoveElements> {
         let request = SortedSetRemoveElementsRequest::new(cache_name, sorted_set_name, values);
         request.send(self).await

@@ -3,7 +3,7 @@ use momento_protos::cache_client::SortedSetRemoveRequest;
 
 use crate::cache::requests::MomentoRequest;
 use crate::utils::prep_request_with_timeout;
-use crate::{CacheClient, IntoBytes, MomentoResult};
+use crate::{CacheClient, IntoBytes, IntoBytesIterable, MomentoResult};
 
 /// Remove multiple elements from the sorted set.
 ///
@@ -36,14 +36,14 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// # })
 /// # }
 /// ```
-pub struct SortedSetRemoveElementsRequest<S: IntoBytes, V: IntoBytes> {
+pub struct SortedSetRemoveElementsRequest<S: IntoBytes, V: IntoBytesIterable> {
     cache_name: String,
     sorted_set_name: S,
-    values: Vec<V>,
+    values: V,
 }
 
-impl<S: IntoBytes, V: IntoBytes> SortedSetRemoveElementsRequest<S, V> {
-    pub fn new(cache_name: impl Into<String>, sorted_set_name: S, values: Vec<V>) -> Self {
+impl<S: IntoBytes, V: IntoBytesIterable> SortedSetRemoveElementsRequest<S, V> {
+    pub fn new(cache_name: impl Into<String>, sorted_set_name: S, values: V) -> Self {
         Self {
             cache_name: cache_name.into(),
             sorted_set_name,
@@ -52,11 +52,11 @@ impl<S: IntoBytes, V: IntoBytes> SortedSetRemoveElementsRequest<S, V> {
     }
 }
 
-impl<S: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetRemoveElementsRequest<S, V> {
+impl<S: IntoBytes, V: IntoBytesIterable> MomentoRequest for SortedSetRemoveElementsRequest<S, V> {
     type Response = SortedSetRemoveElements;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<SortedSetRemoveElements> {
-        let values = self.values.into_iter().map(|v| v.into_bytes()).collect();
+        let values = self.values.into_bytes();
         let set_name = self.sorted_set_name.into_bytes();
         let cache_name = &self.cache_name;
         let request = prep_request_with_timeout(
