@@ -627,11 +627,11 @@ impl CacheClient {
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SetAddElementsRequest]
     /// which will allow you to set [optional arguments](SetAddElementsRequest#optional-arguments) as well.
-    pub async fn set_add_elements<E: IntoBytes>(
+    pub async fn set_add_elements<E: IntoBytesIterable>(
         &self,
         cache_name: impl Into<String>,
         set_name: impl IntoBytes,
-        elements: Vec<E>,
+        elements: E,
     ) -> MomentoResult<SetAddElements> {
         let request = SetAddElementsRequest::new(cache_name, set_name, elements);
         request.send(self).await

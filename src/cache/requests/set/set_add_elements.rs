@@ -4,7 +4,7 @@ use crate::cache::requests::MomentoRequest;
 use crate::cache::CollectionTtl;
 use crate::cache_client::CacheClient;
 use crate::utils::prep_request_with_timeout;
-use crate::{IntoBytes, MomentoResult};
+use crate::{IntoBytes, IntoBytesIterable, MomentoResult};
 
 /// Request to add elements to the given set. Creates the set if it does not exist.
 ///
@@ -42,15 +42,15 @@ use crate::{IntoBytes, MomentoResult};
 /// # })
 /// # }
 /// ```
-pub struct SetAddElementsRequest<S: IntoBytes, E: IntoBytes> {
+pub struct SetAddElementsRequest<S: IntoBytes, E: IntoBytesIterable> {
     cache_name: String,
     set_name: S,
-    elements: Vec<E>,
+    elements: E,
     collection_ttl: Option<CollectionTtl>,
 }
 
-impl<S: IntoBytes, E: IntoBytes> SetAddElementsRequest<S, E> {
-    pub fn new(cache_name: impl Into<String>, set_name: S, elements: Vec<E>) -> Self {
+impl<S: IntoBytes, E: IntoBytesIterable> SetAddElementsRequest<S, E> {
+    pub fn new(cache_name: impl Into<String>, set_name: S, elements: E) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
             cache_name: cache_name.into(),
@@ -66,12 +66,12 @@ impl<S: IntoBytes, E: IntoBytes> SetAddElementsRequest<S, E> {
     }
 }
 
-impl<S: IntoBytes, E: IntoBytes> MomentoRequest for SetAddElementsRequest<S, E> {
+impl<S: IntoBytes, E: IntoBytesIterable> MomentoRequest for SetAddElementsRequest<S, E> {
     type Response = SetAddElements;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetAddElements> {
         let collection_ttl = self.collection_ttl.unwrap_or_default();
-        let elements = self.elements.into_iter().map(|e| e.into_bytes()).collect();
+        let elements = self.elements.into_bytes();
         let set_name = self.set_name.into_bytes();
         let cache_name = &self.cache_name;
         let request = prep_request_with_timeout(
