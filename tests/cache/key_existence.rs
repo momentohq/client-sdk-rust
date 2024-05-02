@@ -104,7 +104,10 @@ mod keys_exists {
             .await?;
 
         let result = client
-            .keys_exist(cache_name, items.iter().map(|item| item.key()).collect())
+            .keys_exist(
+                cache_name,
+                items.iter().map(|item| item.key()).collect::<Vec<_>>(),
+            )
             .await?;
 
         let keys_list: Vec<bool> = result.clone().into();

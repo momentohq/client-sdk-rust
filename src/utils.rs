@@ -165,3 +165,16 @@ where
         self.into()
     }
 }
+
+pub trait IntoBytesIterable: Send {
+    fn into_bytes(self) -> Vec<Vec<u8>>;
+}
+
+impl<T: Send> IntoBytesIterable for Vec<T>
+where
+    T: IntoBytes,
+{
+    fn into_bytes(self) -> Vec<Vec<u8>> {
+        self.into_iter().map(|item| item.into_bytes()).collect()
+    }
+}

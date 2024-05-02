@@ -33,6 +33,7 @@ use crate::cache::{
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
 use crate::cache_client_builder::{CacheClientBuilder, NeedsDefaultTtl};
+use crate::utils::IntoBytesIterable;
 use crate::{utils, IntoBytes, MomentoResult};
 
 /// Client to perform operations on a Momento cache.
@@ -1175,7 +1176,7 @@ impl CacheClient {
     pub async fn keys_exist(
         &self,
         cache_name: impl Into<String>,
-        keys: Vec<impl IntoBytes>,
+        keys: impl IntoBytesIterable,
     ) -> MomentoResult<KeysExist> {
         let request = KeysExistRequest::new(cache_name, keys);
         request.send(self).await

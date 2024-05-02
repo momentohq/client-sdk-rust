@@ -28,4 +28,4 @@ pub use crate::cache_client::CacheClient;
 
 pub type MomentoResult<T> = Result<T, MomentoError>;
 
-pub use crate::utils::IntoBytes;
+pub use crate::utils::{IntoBytes, IntoBytesIterable};
