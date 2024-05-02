@@ -58,7 +58,11 @@ mod list_concatenate_back {
             .list_concatenate_back(
                 cache_name,
                 test_list.name(),
-                test_list.values().iter().map(|v| v.as_bytes()).collect(),
+                test_list
+                    .values()
+                    .iter()
+                    .map(|v| v.as_bytes())
+                    .collect::<Vec<_>>(),
             )
             .await?;
         assert_eq!(result, ListConcatenateBack {});
