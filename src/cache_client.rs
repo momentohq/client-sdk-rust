@@ -639,6 +639,7 @@ impl CacheClient {
     }
 
     /// Removes multiple elements from an existing set. If the set is emptied as a result, the set is deleted.
+    /// If the set or any element does not exist, a success response is returned.
     ///
     /// # Arguments
     ///
