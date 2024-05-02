@@ -152,3 +152,16 @@ pub(crate) fn parse_string(raw: Vec<u8>) -> MomentoResult<String> {
         details: None,
     })
 }
+
+pub trait IntoBytes: Send {
+    fn into_bytes(self) -> Vec<u8>;
+}
+
+impl<T: Send> IntoBytes for T
+where
+    T: Into<Vec<u8>>,
+{
+    fn into_bytes(self) -> Vec<u8> {
+        self.into()
+    }
+}
