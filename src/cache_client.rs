@@ -9,24 +9,25 @@ use tonic::transport::Channel;
 use crate::cache::{
     Configuration, CreateCache, CreateCacheRequest, DecreaseTtl, DecreaseTtlRequest, Delete,
     DeleteCache, DeleteCacheRequest, DeleteRequest, DictionaryFetch, DictionaryFetchRequest,
-    DictionaryGetFields, DictionaryGetFieldsRequest, DictionaryRemoveFields,
-    DictionaryRemoveFieldsRequest, DictionarySetField, DictionarySetFieldRequest,
-    DictionarySetFields, DictionarySetFieldsRequest, FlushCache, FlushCacheRequest, Get,
-    GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest,
-    IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest,
-    ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest,
-    ListCaches, ListCachesRequest, ListConcatenateBack, ListConcatenateBackRequest,
-    ListConcatenateFront, ListConcatenateFrontRequest, ListFetch, ListFetchRequest, ListLength,
-    ListLengthRequest, ListPopBack, ListPopBackRequest, ListPopFront, ListPopFrontRequest,
-    ListRemoveValue, ListRemoveValueRequest, MomentoRequest, Set, SetAddElements,
-    SetAddElementsRequest, SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest,
-    SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest,
-    SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest, SetIfPresentRequest,
-    SetRequest, SortedSetFetch, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest,
-    SortedSetGetRank, SortedSetGetRankRequest, SortedSetGetScore, SortedSetGetScoreRequest,
-    SortedSetLength, SortedSetLengthRequest, SortedSetOrder, SortedSetPutElement,
-    SortedSetPutElementRequest, SortedSetPutElements, SortedSetPutElementsRequest,
-    SortedSetRemoveElements, SortedSetRemoveElementsRequest, UpdateTtl, UpdateTtlRequest,
+    DictionaryGetFields, DictionaryGetFieldsRequest, DictionaryLength, DictionaryLengthRequest,
+    DictionaryRemoveFields, DictionaryRemoveFieldsRequest, DictionarySetField,
+    DictionarySetFieldRequest, DictionarySetFields, DictionarySetFieldsRequest, FlushCache,
+    FlushCacheRequest, Get, GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment,
+    IncrementRequest, IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl,
+    ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist,
+    KeysExistRequest, ListCaches, ListCachesRequest, ListConcatenateBack,
+    ListConcatenateBackRequest, ListConcatenateFront, ListConcatenateFrontRequest, ListFetch,
+    ListFetchRequest, ListLength, ListLengthRequest, ListPopBack, ListPopBackRequest, ListPopFront,
+    ListPopFrontRequest, ListRemoveValue, ListRemoveValueRequest, MomentoRequest, Set,
+    SetAddElements, SetAddElementsRequest, SetIfAbsent, SetIfAbsentOrEqual,
+    SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual,
+    SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,
+    SetIfPresentRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
+    SortedSetFetchByScoreRequest, SortedSetGetRank, SortedSetGetRankRequest, SortedSetGetScore,
+    SortedSetGetScoreRequest, SortedSetLength, SortedSetLengthRequest, SortedSetOrder,
+    SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements,
+    SortedSetPutElementsRequest, SortedSetRemoveElements, SortedSetRemoveElementsRequest,
+    UpdateTtl, UpdateTtlRequest,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -401,7 +402,40 @@ impl CacheClient {
     }
 
     // dictionary_increment
-    // dictionary_length - todo
+
+    /// Gets the number of elements in the given dictionary.
+    /// If the dictionary does not exist, a miss is returned.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `dictionary_name` - name of the dictionary
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # use std::convert::TryInto;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{DictionaryLength, DictionaryLengthRequest};
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let dictionary_name = "dictionary-name";
+    /// # cache_client.dictionary_set_fields(&cache_name, dictionary_name, vec![("field1", "value1"), ("field2", "value2")]).await;
+    ///
+    /// let length: u32 = cache_client.dictionary_length(&cache_name, dictionary_name).await?.try_into().expect("Expected a dictionary length!");
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn dictionary_length(
+        &self,
+        cache_name: impl Into<String>,
+        dictionary_name: impl IntoBytes,
+    ) -> MomentoResult<DictionaryLength> {
+        let request = DictionaryLengthRequest::new(cache_name, dictionary_name);
+        request.send(self).await
+    }
     // dictionary_remove_field
 
     /// Removes fields from a dictionary.

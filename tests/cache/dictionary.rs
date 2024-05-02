@@ -1,6 +1,6 @@
 use momento::cache::{
-    DictionaryFetch, DictionaryGetFields, DictionaryRemoveFields, DictionarySetField,
-    DictionarySetFields,
+    DictionaryFetch, DictionaryGetFields, DictionaryLength, DictionaryRemoveFields,
+    DictionarySetField, DictionarySetFields,
 };
 use momento::{MomentoError, MomentoErrorCode, MomentoResult};
 use momento_test_util::{
@@ -294,4 +294,77 @@ mod dictionary_set_fields {
     }
 }
 
-mod dictionary_length {}
+mod dictionary_length {
+    use super::*;
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+
+        // Length of a missing dictionary is not defined; it's a miss
+        let result = client.dictionary_length(cache_name, unique_key()).await?;
+        assert_eq!(result, DictionaryLength::Miss);
+
+        // Length of a stored dictionary should work
+        // Add 4 items to the dictionary
+        let item1 = TestDictionary::new();
+        let response = client
+            .dictionary_set_fields(cache_name, item1.name(), item1.value().clone())
+            .await?;
+        assert_eq!(response, DictionarySetFields {});
+
+        let item2 = TestDictionary::new();
+        let response = client
+            .dictionary_set_fields(cache_name, item1.name(), item2.value().clone())
+            .await?;
+        assert_eq!(response, DictionarySetFields {});
+
+        let result = client.dictionary_length(cache_name, item1.name()).await?;
+        assert_eq!(result, DictionaryLength::Hit { length: 4 });
+
+        // And after removing some fields we should have fewer
+        let response = client
+            .dictionary_remove_fields(
+                cache_name,
+                item1.name(),
+                item1.value().keys().cloned().collect(),
+            )
+            .await?;
+        assert_eq!(response, DictionaryRemoveFields {});
+
+        let result = client.dictionary_length(cache_name, item1.name()).await?;
+        assert_eq!(
+            result,
+            DictionaryLength::Hit {
+                length: item2.value().len() as u32
+            }
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn invalid_cache_name() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let result = client
+            .dictionary_length("   ", "my-dictionary")
+            .await
+            .unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_cache_name();
+        let result = client
+            .dictionary_length(cache_name, "my-dictionary")
+            .await
+            .unwrap_err();
+
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        Ok(())
+    }
+}
