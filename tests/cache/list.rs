@@ -142,7 +142,11 @@ mod list_concatenate_front {
             .list_concatenate_front(
                 cache_name,
                 test_list.name(),
-                test_list.values().iter().map(|v| v.as_bytes()).collect(),
+                test_list
+                    .values()
+                    .iter()
+                    .map(|v| v.as_bytes())
+                    .collect::<Vec<_>>(),
             )
             .await?;
         assert_eq!(result, ListConcatenateFront {});

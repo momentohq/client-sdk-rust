@@ -1808,7 +1808,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         list_name: impl IntoBytes,
-        values: Vec<impl IntoBytes>,
+        values: impl IntoBytesIterable,
     ) -> MomentoResult<ListConcatenateFront> {
         let request = ListConcatenateFrontRequest::new(cache_name, list_name, values);
         request.send(self).await
