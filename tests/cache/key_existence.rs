@@ -106,7 +106,10 @@ mod keys_exists {
         let result = client
             .keys_exist(
                 cache_name,
-                items.iter().map(|item| item.key()).collect::<Vec<_>>(),
+                items
+                    .iter()
+                    .map(|item| item.key().to_string())
+                    .collect::<Vec<String>>(),
             )
             .await?;
 
