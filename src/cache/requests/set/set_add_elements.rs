@@ -10,8 +10,8 @@ use crate::{IntoBytes, MomentoResult};
 ///
 /// # Arguments
 ///
-/// * `cache_name` - The name of the cache containing the sorted set.
-/// * `set_name` - The name of the sorted set to add an element to.
+/// * `cache_name` - The name of the cache containing the set.
+/// * `set_name` - The name of the set to add an element to.
 /// * `elements` - The elements to add. Must be able to be converted to a `Vec<u8>`.
 ///
 /// # Optional Arguments
