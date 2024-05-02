@@ -150,7 +150,7 @@ mod dictionary_remove_fields {
 
         let item2 = TestDictionary::new();
         let response = client
-            .dictionary_set_fields(cache_name, item2.name(), item2.value().clone())
+            .dictionary_set_fields(cache_name, item.name(), item2.value().clone())
             .await?;
         assert_eq!(response, DictionarySetFields {});
 
