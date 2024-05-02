@@ -134,7 +134,7 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
 /// # use std::collections::HashMap;
 /// # use momento::cache::DictionaryGetFields;
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryGetFields::default();
+/// # let fetch_response: DictionaryGetFields<Vec<String>> = DictionaryGetFields::default();
 /// use std::convert::TryInto;
 /// let item: HashMap<String, String> = match fetch_response {
 ///   DictionaryGetFields::Hit { .. } => fetch_response.try_into().expect("I stored strings!"),
@@ -149,7 +149,7 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
 /// # use std::collections::HashMap;
 /// # use momento::cache::DictionaryGetFields;
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryGetFields::default();
+/// # let fetch_response: DictionaryGetFields<Vec<String>> = DictionaryGetFields::default();
 /// use std::convert::TryInto;
 /// let item: HashMap<Vec<u8>, Vec<u8>> = match fetch_response {
 ///  DictionaryGetFields::Hit { .. } => fetch_response.try_into().expect("I stored raw bytes!"),
@@ -166,7 +166,7 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
 /// # use std::collections::HashMap;
 /// # use momento::cache::DictionaryGetFields;
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryGetFields::default();
+/// # let fetch_response: DictionaryGetFields<Vec<String>> = DictionaryGetFields::default();
 /// use std::convert::TryInto;
 /// let item: MomentoResult<HashMap<String, String>> = fetch_response.try_into();
 /// ```
@@ -176,7 +176,7 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
 /// # use std::collections::HashMap;
 /// # use momento::cache::DictionaryGetFields;
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryGetFields::default();
+/// # let fetch_response: DictionaryGetFields<Vec<String>> = DictionaryGetFields::default();
 /// use std::convert::TryInto;
 /// let item: MomentoResult<HashMap<Vec<u8>, Vec<u8>>> = fetch_response.try_into();
 /// ```
