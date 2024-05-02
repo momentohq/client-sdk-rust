@@ -92,7 +92,7 @@ mod dictionary_get_fields {
             .dictionary_get_fields(
                 cache_name,
                 item.name(),
-                item.value().keys().cloned().collect(),
+                item.value().keys().cloned().collect::<Vec<_>>(),
             )
             .await?;
         match result {

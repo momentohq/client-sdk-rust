@@ -393,11 +393,11 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    pub async fn dictionary_get_fields<F: IntoBytes + Clone>(
+    pub async fn dictionary_get_fields<F: IntoBytesIterable + Clone>(
         &self,
         cache_name: impl Into<String>,
         dictionary_name: impl IntoBytes,
-        fields: Vec<F>,
+        fields: F,
     ) -> MomentoResult<DictionaryGetFields<F>> {
         let request = DictionaryGetFieldsRequest::new(cache_name, dictionary_name, fields);
         request.send(self).await
