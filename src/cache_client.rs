@@ -475,11 +475,11 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    pub async fn dictionary_remove_fields<F: IntoBytes>(
+    pub async fn dictionary_remove_fields<F: IntoBytesIterable>(
         &self,
         cache_name: impl Into<String>,
         dictionary_name: impl IntoBytes,
-        fields: Vec<F>,
+        fields: F,
     ) -> MomentoResult<DictionaryRemoveFields> {
         let request = DictionaryRemoveFieldsRequest::new(cache_name, dictionary_name, fields);
         request.send(self).await

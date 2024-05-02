@@ -158,7 +158,7 @@ mod dictionary_remove_fields {
             .dictionary_remove_fields(
                 cache_name,
                 item.name(),
-                item.value().keys().cloned().collect(),
+                item.value().keys().cloned().collect::<Vec<_>>(),
             )
             .await?;
         assert_eq!(response, DictionaryRemoveFields {});
