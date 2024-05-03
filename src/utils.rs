@@ -259,15 +259,15 @@ mod tests {
         assert_eq!(error.message, "Key ID cannot be empty");
     }
 
-    #[test]
-    fn test_connect_channel_lazily() {
+    #[tokio::test]
+    async fn test_connect_channel_lazily() {
         let uri_string = "http://localhost:50051";
         let result = connect_channel_lazily(uri_string);
         assert!(result.is_ok());
     }
 
-    #[test]
-    fn test_connect_channel_lazily_configurable() {
+    #[tokio::test]
+    async fn test_connect_channel_lazily_configurable() {
         let uri_string = "http://localhost:50051";
         let grpc_config = GrpcConfiguration {
             keep_alive_while_idle: Some(true),
