@@ -182,3 +182,133 @@ where
         self.into_iter().map(|item| item.into_bytes()).collect()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+
+    use super::*;
+
+    #[test]
+    fn test_request_meta_data() {
+        let mut request = tonic::Request::new(());
+        let cache_name = "my_cache";
+        let result = request_meta_data(&mut request, cache_name);
+        assert!(result.is_ok());
+        assert_eq!(
+            request.metadata().get("cache"),
+            Some(&tonic::metadata::AsciiMetadataValue::from_str(cache_name).unwrap())
+        );
+    }
+
+    #[test]
+    fn test_is_ttl_valid() {
+        let ttl = Duration::from_secs(10);
+        let result = is_ttl_valid(ttl);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_is_ttl_valid_max_ttl() {
+        let ttl = Duration::from_secs(u64::MAX);
+        let result = is_ttl_valid(ttl);
+        assert!(result.is_err());
+        let error = result.unwrap_err();
+        assert_eq!(error.error_code, MomentoErrorCode::InvalidArgumentError);
+        assert_eq!(
+            error.message,
+            format!(
+                "TTL provided, {}, needs to be less than the maximum TTL {}",
+                ttl.as_secs(),
+                Duration::from_millis(u64::MAX).as_secs()
+            )
+        );
+    }
+
+    #[test]
+    fn test_is_cache_name_valid() {
+        let cache_name = "my_cache";
+        let result = is_cache_name_valid(cache_name);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_is_cache_name_valid_empty() {
+        let cache_name = "";
+        let result = is_cache_name_valid(cache_name);
+        assert!(result.is_err());
+        let error = result.unwrap_err();
+        assert_eq!(error.error_code, MomentoErrorCode::InvalidArgumentError);
+        assert_eq!(error.message, "Cache name cannot be empty");
+    }
+
+    #[test]
+    fn test_is_key_id_valid() {
+        let key_id = "my_key";
+        let result = is_key_id_valid(key_id);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_is_key_id_valid_empty() {
+        let key_id = "";
+        let result = is_key_id_valid(key_id);
+        assert!(result.is_err());
+        let error = result.unwrap_err();
+        assert_eq!(error.error_code, MomentoErrorCode::InvalidArgumentError);
+        assert_eq!(error.message, "Key ID cannot be empty");
+    }
+
+    #[test]
+    fn test_connect_channel_lazily() {
+        let uri_string = "http://localhost:50051";
+        let result = connect_channel_lazily(uri_string);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_connect_channel_lazily_configurable() {
+        let uri_string = "http://localhost:50051";
+        let grpc_config = GrpcConfiguration {
+            keep_alive_while_idle: Some(true),
+            keep_alive_interval: Some(Duration::from_secs(30)),
+            keep_alive_timeout: Some(Duration::from_secs(60)),
+            deadline: Duration::from_secs(30),
+        };
+        let result = connect_channel_lazily_configurable(uri_string, grpc_config);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_user_agent() {
+        let user_agent_name = "my_app";
+        let expected_user_agent = format!("rust-{user_agent_name}:{VERSION}");
+        let result = user_agent(user_agent_name);
+        assert_eq!(result, expected_user_agent);
+    }
+
+    #[test]
+    fn test_parse_string() {
+        let raw = vec![104, 101, 108, 108, 111];
+        let result = parse_string(raw);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), "hello");
+    }
+
+    #[test]
+    fn test_into_bytes() {
+        let value = "hello";
+        let result: Vec<u8> = value.into_bytes();
+        assert_eq!(result, vec![104, 101, 108, 108, 111]);
+    }
+
+    #[test]
+    fn test_into_bytes_iterable() {
+        let values = vec!["hello", "world"];
+        let result: Vec<Vec<u8>> = values.into_bytes();
+        assert_eq!(
+            result,
+            vec![vec![104, 101, 108, 108, 111], vec![119, 111, 114, 108, 100]]
+        );
+    }
+}
