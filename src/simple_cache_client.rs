@@ -16,14 +16,6 @@ use std::ops::RangeBounds;
 use std::time::{Duration, UNIX_EPOCH};
 use tonic::{codegen::InterceptedService, transport::Channel, Request};
 
-use crate::response::{
-    DictionaryFetch, DictionaryGet, DictionaryPairs, Get, GetValue, ListCacheEntry, MomentoCache,
-    MomentoCreateSigningKeyResponse, MomentoDeleteResponse, MomentoDictionaryDeleteResponse,
-    MomentoDictionaryIncrementResponse, MomentoDictionarySetResponse, MomentoFlushCacheResponse,
-    MomentoListCacheResponse, MomentoListFetchResponse, MomentoListSigningKeyResult,
-    MomentoSetDifferenceResponse, MomentoSetFetchResponse, MomentoSetResponse, MomentoSigningKey,
-    MomentoSortedSetFetchResponse, SortedSetFetch,
-};
 use crate::utils;
 use crate::{
     cache::CollectionTtl,
@@ -38,19 +30,19 @@ use crate::{
     utils::{is_cache_name_valid, request_meta_data},
 };
 use crate::{grpc::header_interceptor::HeaderInterceptor, utils::connect_channel_lazily};
+use crate::{
+    response::{
+        DictionaryFetch, DictionaryGet, DictionaryPairs, Get, GetValue, ListCacheEntry,
+        MomentoCache, MomentoCreateSigningKeyResponse, MomentoDeleteResponse,
+        MomentoDictionaryDeleteResponse, MomentoDictionaryIncrementResponse,
+        MomentoDictionarySetResponse, MomentoFlushCacheResponse, MomentoListCacheResponse,
+        MomentoListFetchResponse, MomentoListSigningKeyResult, MomentoSetDifferenceResponse,
+        MomentoSetFetchResponse, MomentoSetResponse, MomentoSigningKey,
+        MomentoSortedSetFetchResponse, SortedSetFetch,
+    },
+    IntoBytes,
+};
 use crate::{utils::user_agent, MomentoResult};
-pub trait IntoBytes: Send {
-    fn into_bytes(self) -> Vec<u8>;
-}
-
-impl<T: Send> IntoBytes for T
-where
-    T: Into<Vec<u8>>,
-{
-    fn into_bytes(self) -> Vec<u8> {
-        self.into()
-    }
-}
 
 #[derive(Clone)]
 pub struct SimpleCacheClientBuilder {

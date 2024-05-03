@@ -1,7 +1,9 @@
 use super::dictionary_get_field::{DictionaryGetField, DictionaryGetFieldValue};
 use crate::cache::requests::MomentoRequest;
 use crate::utils::{parse_string, prep_request_with_timeout};
-use crate::{CacheClient, IntoBytes, MomentoError, MomentoErrorCode, MomentoResult};
+use crate::{
+    CacheClient, IntoBytes, IntoBytesIterable, MomentoError, MomentoErrorCode, MomentoResult,
+};
 use momento_protos::cache_client::{
     dictionary_get_response::Dictionary as DictionaryProto,
     DictionaryGetRequest as DictionaryGetRequestProto, ECacheResult,
@@ -52,14 +54,14 @@ use std::convert::{TryFrom, TryInto};
 /// # }
 /// ```
 #[derive(Debug, PartialEq, Eq)]
-pub struct DictionaryGetFieldsRequest<D: IntoBytes, F: IntoBytes + Clone> {
+pub struct DictionaryGetFieldsRequest<D: IntoBytes, F: IntoBytesIterable + Clone> {
     cache_name: String,
     dictionary_name: D,
-    fields: Vec<F>,
+    fields: F,
 }
 
-impl<D: IntoBytes, F: IntoBytes + Clone> DictionaryGetFieldsRequest<D, F> {
-    pub fn new(cache_name: impl Into<String>, dictionary_name: D, fields: Vec<F>) -> Self {
+impl<D: IntoBytes, F: IntoBytesIterable + Clone> DictionaryGetFieldsRequest<D, F> {
+    pub fn new(cache_name: impl Into<String>, dictionary_name: D, fields: F) -> Self {
         Self {
             cache_name: cache_name.into(),
             dictionary_name,
@@ -68,7 +70,9 @@ impl<D: IntoBytes, F: IntoBytes + Clone> DictionaryGetFieldsRequest<D, F> {
     }
 }
 
-impl<D: IntoBytes, F: IntoBytes + Clone> MomentoRequest for DictionaryGetFieldsRequest<D, F> {
+impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
+    for DictionaryGetFieldsRequest<D, F>
+{
     type Response = DictionaryGetFields<F>;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<Self::Response> {
@@ -77,12 +81,7 @@ impl<D: IntoBytes, F: IntoBytes + Clone> MomentoRequest for DictionaryGetFieldsR
             cache_client.configuration.deadline_millis(),
             DictionaryGetRequestProto {
                 dictionary_name: self.dictionary_name.into_bytes(),
-                fields: self
-                    .fields
-                    .clone()
-                    .into_iter()
-                    .map(|field| field.into_bytes())
-                    .collect(),
+                fields: self.fields.clone().into_bytes(),
             },
         )?;
 
@@ -135,7 +134,7 @@ impl<D: IntoBytes, F: IntoBytes + Clone> MomentoRequest for DictionaryGetFieldsR
 /// # use std::collections::HashMap;
 /// # use momento::cache::DictionaryGetFields;
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryGetFields::default();
+/// # let fetch_response: DictionaryGetFields<Vec<String>> = DictionaryGetFields::default();
 /// use std::convert::TryInto;
 /// let item: HashMap<String, String> = match fetch_response {
 ///   DictionaryGetFields::Hit { .. } => fetch_response.try_into().expect("I stored strings!"),
@@ -150,7 +149,7 @@ impl<D: IntoBytes, F: IntoBytes + Clone> MomentoRequest for DictionaryGetFieldsR
 /// # use std::collections::HashMap;
 /// # use momento::cache::DictionaryGetFields;
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryGetFields::default();
+/// # let fetch_response: DictionaryGetFields<Vec<String>> = DictionaryGetFields::default();
 /// use std::convert::TryInto;
 /// let item: HashMap<Vec<u8>, Vec<u8>> = match fetch_response {
 ///  DictionaryGetFields::Hit { .. } => fetch_response.try_into().expect("I stored raw bytes!"),
@@ -167,7 +166,7 @@ impl<D: IntoBytes, F: IntoBytes + Clone> MomentoRequest for DictionaryGetFieldsR
 /// # use std::collections::HashMap;
 /// # use momento::cache::DictionaryGetFields;
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryGetFields::default();
+/// # let fetch_response: DictionaryGetFields<Vec<String>> = DictionaryGetFields::default();
 /// use std::convert::TryInto;
 /// let item: MomentoResult<HashMap<String, String>> = fetch_response.try_into();
 /// ```
@@ -177,21 +176,21 @@ impl<D: IntoBytes, F: IntoBytes + Clone> MomentoRequest for DictionaryGetFieldsR
 /// # use std::collections::HashMap;
 /// # use momento::cache::DictionaryGetFields;
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryGetFields::default();
+/// # let fetch_response: DictionaryGetFields<Vec<String>> = DictionaryGetFields::default();
 /// use std::convert::TryInto;
 /// let item: MomentoResult<HashMap<Vec<u8>, Vec<u8>>> = fetch_response.try_into();
 /// ```
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum DictionaryGetFields<F: IntoBytes> {
+pub enum DictionaryGetFields<F: IntoBytesIterable> {
     Hit {
-        fields: Vec<F>,
+        fields: F,
         responses: Vec<DictionaryGetField>,
     },
     Miss,
 }
 
-impl Default for DictionaryGetFields<String> {
+impl<F: IntoBytes> Default for DictionaryGetFields<Vec<F>> {
     fn default() -> Self {
         DictionaryGetFields::Hit {
             fields: vec![],
@@ -200,7 +199,7 @@ impl Default for DictionaryGetFields<String> {
     }
 }
 
-impl<F: IntoBytes> TryFrom<DictionaryGetFields<F>> for HashMap<String, String> {
+impl<F: IntoBytesIterable> TryFrom<DictionaryGetFields<F>> for HashMap<String, String> {
     type Error = MomentoError;
 
     fn try_from(value: DictionaryGetFields<F>) -> Result<Self, Self::Error> {
@@ -209,7 +208,8 @@ impl<F: IntoBytes> TryFrom<DictionaryGetFields<F>> for HashMap<String, String> {
                 fields, responses, ..
             } => {
                 let mut result = HashMap::new();
-                for (field, response) in fields.into_iter().zip(responses.into_iter()) {
+                for (field, response) in fields.into_bytes().into_iter().zip(responses.into_iter())
+                {
                     match response {
                         DictionaryGetField::Hit { value } => {
                             let key: String = parse_string(field.into_bytes())?;
@@ -227,7 +227,7 @@ impl<F: IntoBytes> TryFrom<DictionaryGetFields<F>> for HashMap<String, String> {
     }
 }
 
-impl<F: IntoBytes> TryFrom<DictionaryGetFields<F>> for HashMap<Vec<u8>, Vec<u8>> {
+impl<F: IntoBytesIterable> TryFrom<DictionaryGetFields<F>> for HashMap<Vec<u8>, Vec<u8>> {
     type Error = MomentoError;
 
     fn try_from(value: DictionaryGetFields<F>) -> Result<Self, Self::Error> {
@@ -236,7 +236,8 @@ impl<F: IntoBytes> TryFrom<DictionaryGetFields<F>> for HashMap<Vec<u8>, Vec<u8>>
                 fields, responses, ..
             } => {
                 let mut result = HashMap::new();
-                for (field, response) in fields.into_iter().zip(responses.into_iter()) {
+                for (field, response) in fields.into_bytes().into_iter().zip(responses.into_iter())
+                {
                     match response {
                         DictionaryGetField::Hit { value } => {
                             result.insert(field.into_bytes(), value.into());

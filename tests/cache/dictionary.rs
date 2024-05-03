@@ -92,7 +92,7 @@ mod dictionary_get_fields {
             .dictionary_get_fields(
                 cache_name,
                 item.name(),
-                item.value().keys().cloned().collect(),
+                item.value().keys().cloned().collect::<Vec<String>>(),
             )
             .await?;
         match result {
@@ -158,7 +158,7 @@ mod dictionary_remove_fields {
             .dictionary_remove_fields(
                 cache_name,
                 item.name(),
-                item.value().keys().cloned().collect(),
+                item.value().keys().cloned().collect::<Vec<String>>(),
             )
             .await?;
         assert_eq!(response, DictionaryRemoveFields {});
@@ -328,7 +328,7 @@ mod dictionary_length {
             .dictionary_remove_fields(
                 cache_name,
                 item1.name(),
-                item1.value().keys().cloned().collect(),
+                item1.value().keys().cloned().collect::<Vec<String>>(),
             )
             .await?;
         assert_eq!(response, DictionaryRemoveFields {});

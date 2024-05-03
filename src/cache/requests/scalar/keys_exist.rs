@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use crate::cache::MomentoRequest;
 use crate::utils::parse_string;
 use crate::utils::prep_request_with_timeout;
-use crate::{CacheClient, IntoBytes, MomentoResult};
+use crate::IntoBytesIterable;
+use crate::{CacheClient, MomentoResult};
 
 /// Request to check if the provided keys exist in the cache.
 /// Returns a list of booleans indicating whether each given key was found in the cache.
@@ -56,13 +57,13 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// # })
 /// # }
 /// ```
-pub struct KeysExistRequest<K: IntoBytes> {
+pub struct KeysExistRequest<K: IntoBytesIterable> {
     cache_name: String,
-    keys: Vec<K>,
+    keys: K,
 }
 
-impl<K: IntoBytes> KeysExistRequest<K> {
-    pub fn new(cache_name: impl Into<String>, keys: Vec<K>) -> Self {
+impl<K: IntoBytesIterable> KeysExistRequest<K> {
+    pub fn new(cache_name: impl Into<String>, keys: K) -> Self {
         Self {
             cache_name: cache_name.into(),
             keys,
@@ -70,12 +71,12 @@ impl<K: IntoBytes> KeysExistRequest<K> {
     }
 }
 
-impl<K: IntoBytes> MomentoRequest for KeysExistRequest<K> {
+impl<K: IntoBytesIterable> MomentoRequest for KeysExistRequest<K> {
     type Response = KeysExist;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<KeysExist> {
         // consume self.keys once to convert all keys to bytes
-        let byte_keys: Vec<Vec<u8>> = self.keys.into_iter().map(|key| key.into_bytes()).collect();
+        let byte_keys: Vec<Vec<u8>> = self.keys.into_bytes();
 
         // convert keys to strings for the response exists_dictionary because HashMap<IntoBytes, bool> is not allowed
         let string_keys: Vec<String> = byte_keys

@@ -1,5 +1,6 @@
 use crate::{
-    cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
+    cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes,
+    IntoBytesIterable, MomentoError,
 };
 use momento_protos::cache_client::{
     dictionary_delete_request as DictionaryFieldSelector,
@@ -38,14 +39,14 @@ use momento_protos::cache_client::{
 /// # })
 /// # }
 /// ```
-pub struct DictionaryRemoveFieldsRequest<D: IntoBytes, F: IntoBytes> {
+pub struct DictionaryRemoveFieldsRequest<D: IntoBytes, F: IntoBytesIterable> {
     cache_name: String,
     dictionary_name: D,
-    fields: Vec<F>,
+    fields: F,
 }
 
-impl<D: IntoBytes, F: IntoBytes> DictionaryRemoveFieldsRequest<D, F> {
-    pub fn new(cache_name: impl Into<String>, dictionary_name: D, fields: Vec<F>) -> Self {
+impl<D: IntoBytes, F: IntoBytesIterable> DictionaryRemoveFieldsRequest<D, F> {
+    pub fn new(cache_name: impl Into<String>, dictionary_name: D, fields: F) -> Self {
         Self {
             cache_name: cache_name.into(),
             dictionary_name,
@@ -54,16 +55,12 @@ impl<D: IntoBytes, F: IntoBytes> DictionaryRemoveFieldsRequest<D, F> {
     }
 }
 
-impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryRemoveFieldsRequest<D, F> {
+impl<D: IntoBytes, F: IntoBytesIterable> MomentoRequest for DictionaryRemoveFieldsRequest<D, F> {
     type Response = DictionaryRemoveFields;
 
     async fn send(self, cache_client: &CacheClient) -> Result<Self::Response, MomentoError> {
         let fields_to_delete = DictionaryFieldSelector::Some {
-            fields: self
-                .fields
-                .into_iter()
-                .map(|field| field.into_bytes())
-                .collect(),
+            fields: self.fields.into_bytes(),
         };
         let request = prep_request_with_timeout(
             &self.cache_name,

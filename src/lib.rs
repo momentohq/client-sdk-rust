@@ -22,10 +22,10 @@ mod utils;
 pub use self::errors::*;
 pub use crate::credential_provider::CredentialProvider;
 pub use crate::response::simple_cache_client_sorted_set;
-pub use crate::simple_cache_client::{
-    Fields, IntoBytes, SimpleCacheClient, SimpleCacheClientBuilder,
-};
+pub use crate::simple_cache_client::{Fields, SimpleCacheClient, SimpleCacheClientBuilder};
 
 pub use crate::cache_client::CacheClient;
 
 pub type MomentoResult<T> = Result<T, MomentoError>;
+
+pub use crate::utils::{IntoBytes, IntoBytesIterable};

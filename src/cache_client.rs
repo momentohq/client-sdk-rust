@@ -33,6 +33,7 @@ use crate::cache::{
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
 use crate::cache_client_builder::{CacheClientBuilder, NeedsDefaultTtl};
+use crate::utils::IntoBytesIterable;
 use crate::{utils, IntoBytes, MomentoResult};
 
 /// Client to perform operations on a Momento cache.
@@ -392,11 +393,11 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    pub async fn dictionary_get_fields<F: IntoBytes + Clone>(
+    pub async fn dictionary_get_fields<F: IntoBytesIterable + Clone>(
         &self,
         cache_name: impl Into<String>,
         dictionary_name: impl IntoBytes,
-        fields: Vec<F>,
+        fields: F,
     ) -> MomentoResult<DictionaryGetFields<F>> {
         let request = DictionaryGetFieldsRequest::new(cache_name, dictionary_name, fields);
         request.send(self).await
@@ -474,11 +475,11 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    pub async fn dictionary_remove_fields<F: IntoBytes>(
+    pub async fn dictionary_remove_fields<F: IntoBytesIterable>(
         &self,
         cache_name: impl Into<String>,
         dictionary_name: impl IntoBytes,
-        fields: Vec<F>,
+        fields: F,
     ) -> MomentoResult<DictionaryRemoveFields> {
         let request = DictionaryRemoveFieldsRequest::new(cache_name, dictionary_name, fields);
         request.send(self).await
@@ -626,11 +627,11 @@ impl CacheClient {
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SetAddElementsRequest]
     /// which will allow you to set [optional arguments](SetAddElementsRequest#optional-arguments) as well.
-    pub async fn set_add_elements<E: IntoBytes>(
+    pub async fn set_add_elements<E: IntoBytesIterable>(
         &self,
         cache_name: impl Into<String>,
         set_name: impl IntoBytes,
-        elements: Vec<E>,
+        elements: E,
     ) -> MomentoResult<SetAddElements> {
         let request = SetAddElementsRequest::new(cache_name, set_name, elements);
         request.send(self).await
@@ -985,11 +986,11 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to remove elements using a [SortedSetRemoveElementsRequest].
-    pub async fn sorted_set_remove_elements(
+    pub async fn sorted_set_remove_elements<V: IntoBytesIterable>(
         &self,
         cache_name: impl Into<String>,
         sorted_set_name: impl IntoBytes,
-        values: Vec<impl IntoBytes>,
+        values: V,
     ) -> MomentoResult<SortedSetRemoveElements> {
         let request = SortedSetRemoveElementsRequest::new(cache_name, sorted_set_name, values);
         request.send(self).await
@@ -1175,7 +1176,7 @@ impl CacheClient {
     pub async fn keys_exist(
         &self,
         cache_name: impl Into<String>,
-        keys: Vec<impl IntoBytes>,
+        keys: impl IntoBytesIterable,
     ) -> MomentoResult<KeysExist> {
         let request = KeysExistRequest::new(cache_name, keys);
         request.send(self).await
@@ -1807,7 +1808,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         list_name: impl IntoBytes,
-        values: Vec<impl IntoBytes>,
+        values: impl IntoBytesIterable,
     ) -> MomentoResult<ListConcatenateFront> {
         let request = ListConcatenateFrontRequest::new(cache_name, list_name, values);
         request.send(self).await
@@ -1857,7 +1858,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         list_name: impl IntoBytes,
-        values: Vec<impl IntoBytes>,
+        values: impl IntoBytesIterable,
     ) -> MomentoResult<ListConcatenateBack> {
         let request = ListConcatenateBackRequest::new(cache_name, list_name, values);
         request.send(self).await

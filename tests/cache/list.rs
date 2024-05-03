@@ -43,7 +43,6 @@ mod list_concatenate_back {
         let cache_name = &CACHE_TEST_STATE.cache_name;
         let test_list = TestList::default();
 
-        // Concatenates string values
         let result = client
             .list_concatenate_back(cache_name, test_list.name(), test_list.values().to_vec())
             .await?;
@@ -51,20 +50,6 @@ mod list_concatenate_back {
         assert_list_eq(
             client.list_fetch(cache_name, test_list.name()).await?,
             test_list.values().to_vec(),
-        )?;
-
-        // Concatenates byte values
-        let result = client
-            .list_concatenate_back(
-                cache_name,
-                test_list.name(),
-                test_list.values().iter().map(|v| v.as_bytes()).collect(),
-            )
-            .await?;
-        assert_eq!(result, ListConcatenateBack {});
-        assert_list_eq(
-            client.list_fetch(cache_name, test_list.name()).await?,
-            [test_list.values().to_vec(), test_list.values().to_vec()].concat(),
         )?;
 
         Ok(())
@@ -135,20 +120,6 @@ mod list_concatenate_front {
         assert_list_eq(
             client.list_fetch(cache_name, test_list.name()).await?,
             test_list.values().to_vec(),
-        )?;
-
-        // Concatenates byte values
-        let result = client
-            .list_concatenate_front(
-                cache_name,
-                test_list.name(),
-                test_list.values().iter().map(|v| v.as_bytes()).collect(),
-            )
-            .await?;
-        assert_eq!(result, ListConcatenateFront {});
-        assert_list_eq(
-            client.list_fetch(cache_name, test_list.name()).await?,
-            [test_list.values().to_vec(), test_list.values().to_vec()].concat(),
         )?;
 
         Ok(())

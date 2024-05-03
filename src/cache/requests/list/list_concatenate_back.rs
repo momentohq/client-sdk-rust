@@ -1,7 +1,7 @@
 use crate::{
     cache::{CollectionTtl, MomentoRequest},
     utils::prep_request_with_timeout,
-    CacheClient, IntoBytes, MomentoResult,
+    CacheClient, IntoBytes, IntoBytesIterable, MomentoResult,
 };
 
 /// Adds multiple elements to the back of the given list. Creates the list if it does not already exist.
@@ -38,16 +38,16 @@ use crate::{
 /// # })
 /// # }
 /// ```
-pub struct ListConcatenateBackRequest<L: IntoBytes, V: IntoBytes> {
+pub struct ListConcatenateBackRequest<L: IntoBytes, V: IntoBytesIterable> {
     cache_name: String,
     list_name: L,
-    values: Vec<V>,
+    values: V,
     collection_ttl: Option<CollectionTtl>,
     truncate_front_to_size: Option<u32>,
 }
 
-impl<L: IntoBytes, V: IntoBytes> ListConcatenateBackRequest<L, V> {
-    pub fn new(cache_name: impl Into<String>, list_name: L, values: Vec<V>) -> Self {
+impl<L: IntoBytes, V: IntoBytesIterable> ListConcatenateBackRequest<L, V> {
+    pub fn new(cache_name: impl Into<String>, list_name: L, values: V) -> Self {
         Self {
             cache_name: cache_name.into(),
             list_name,
@@ -70,7 +70,7 @@ impl<L: IntoBytes, V: IntoBytes> ListConcatenateBackRequest<L, V> {
     }
 }
 
-impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListConcatenateBackRequest<L, V> {
+impl<L: IntoBytes, V: IntoBytesIterable> MomentoRequest for ListConcatenateBackRequest<L, V> {
     type Response = ListConcatenateBack;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListConcatenateBack> {
@@ -83,7 +83,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListConcatenateBackRequest<L
             cache_client.configuration.deadline_millis(),
             momento_protos::cache_client::ListConcatenateBackRequest {
                 list_name,
-                values: values.into_iter().map(|v| v.into_bytes()).collect(),
+                values: values.into_bytes(),
                 ttl_milliseconds: cache_client.expand_ttl_ms(collection_ttl.ttl())?,
                 refresh_ttl: collection_ttl.refresh(),
                 truncate_front_to_size: self.truncate_front_to_size.unwrap_or(0),

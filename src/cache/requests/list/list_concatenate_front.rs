@@ -1,7 +1,7 @@
 use crate::{
     cache::{CollectionTtl, MomentoRequest},
     utils::prep_request_with_timeout,
-    CacheClient, IntoBytes, MomentoResult,
+    CacheClient, IntoBytes, IntoBytesIterable, MomentoResult,
 };
 
 /// Adds multiple elements to the front of the given list. Creates the list if it does not already exist.
@@ -38,16 +38,16 @@ use crate::{
 /// # })
 /// # }
 /// ```
-pub struct ListConcatenateFrontRequest<L: IntoBytes, V: IntoBytes> {
+pub struct ListConcatenateFrontRequest<L: IntoBytes, V: IntoBytesIterable> {
     cache_name: String,
     list_name: L,
-    values: Vec<V>,
+    values: V,
     collection_ttl: Option<CollectionTtl>,
     truncate_back_to_size: Option<u32>,
 }
 
-impl<L: IntoBytes, V: IntoBytes> ListConcatenateFrontRequest<L, V> {
-    pub fn new(cache_name: impl Into<String>, list_name: L, values: Vec<V>) -> Self {
+impl<L: IntoBytes, V: IntoBytesIterable> ListConcatenateFrontRequest<L, V> {
+    pub fn new(cache_name: impl Into<String>, list_name: L, values: V) -> Self {
         Self {
             cache_name: cache_name.into(),
             list_name,
@@ -70,7 +70,7 @@ impl<L: IntoBytes, V: IntoBytes> ListConcatenateFrontRequest<L, V> {
     }
 }
 
-impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListConcatenateFrontRequest<L, V> {
+impl<L: IntoBytes, V: IntoBytesIterable> MomentoRequest for ListConcatenateFrontRequest<L, V> {
     type Response = ListConcatenateFront;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListConcatenateFront> {
@@ -83,7 +83,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListConcatenateFrontRequest<
             cache_client.configuration.deadline_millis(),
             momento_protos::cache_client::ListConcatenateFrontRequest {
                 list_name,
-                values: values.into_iter().map(|v| v.into_bytes()).collect(),
+                values: values.into_bytes(),
                 ttl_milliseconds: cache_client.expand_ttl_ms(collection_ttl.ttl())?,
                 refresh_ttl: collection_ttl.refresh(),
                 truncate_back_to_size: self.truncate_back_to_size.unwrap_or(0),
