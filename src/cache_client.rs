@@ -1184,8 +1184,7 @@ impl CacheClient {
     ///
     /// # cache_client.sorted_set_put_elements(&cache_name, sorted_set_name.to_string(), vec![("value1", 1.0), ("value2", 2.0)]).await;
     ///
-    /// let get_rank_request = SortedSetGetRankRequest::new(cache_name, sorted_set_name, "value1");
-    /// let rank: u64 = cache_client.send_request(get_rank_request).await?.try_into().expect("Expected a rank!");
+    /// let rank: u64 = cache_client.sorted_set_get_rank(cache_name, sorted_set_name, "value1").await?.try_into().expect("Expected a rank!");
     /// # assert_eq!(rank, 0);
     /// # Ok(())
     /// # })
@@ -1223,8 +1222,7 @@ impl CacheClient {
     ///
     /// # cache_client.sorted_set_put_elements(&cache_name, sorted_set_name.to_string(), vec![("value1", 1.0), ("value2", 2.0)]).await;
     ///
-    /// let get_score_request = SortedSetGetScoreRequest::new(cache_name, sorted_set_name, "value1");
-    /// let score: f64 = cache_client.send_request(get_score_request).await?.try_into().expect("Expected a score!");
+    /// let score: f64 = cache_client.sorted_set_get_score(cache_name, sorted_set_name, "value1").await?.try_into().expect("Expected a score!");
     /// # assert_eq!(score, 1.0);
     /// # Ok(())
     /// # })
