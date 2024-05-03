@@ -796,11 +796,7 @@ pub async fn example_API_TopicPublish(
     topic_name: &String,
 ) -> Result<(), MomentoError> {
     match topic_client
-        .publish(
-            cache_name.to_string(),
-            topic_name.to_string(),
-            "Hello, Momento!",
-        )
+        .publish(cache_name, topic_name, "Hello, Momento!")
         .await
     {
         Ok(_) => println!("Published message!",),
@@ -817,7 +813,7 @@ pub async fn example_API_TopicSubscribe(
 ) -> Result<(), MomentoError> {
     // Make a subscription
     let mut subscription = topic_client
-        .subscribe(cache_name.to_string(), topic_name.to_string(), None)
+        .subscribe(cache_name, topic_name, None)
         .await
         .expect("subscribe rpc failed");
 

@@ -68,8 +68,8 @@ impl TopicClient {
     /// You don't create topics, you just start using them.
     pub async fn publish(
         &self,
-        cache_name: String,
-        topic: String,
+        cache_name: impl Into<String>,
+        topic: impl Into<String>,
         value: impl IntoTopicValue,
     ) -> Result<(), MomentoError> {
         TopicClient::actually_publish(&mut self.client.clone(), cache_name, topic, value).await
@@ -82,8 +82,8 @@ impl TopicClient {
     /// Use this if you have &mut, as it will save you a small amount of overhead for reusing the client.
     pub async fn publish_mut(
         &mut self,
-        cache_name: String,
-        topic: String,
+        cache_name: impl Into<String>,
+        topic: impl Into<String>,
         value: impl IntoTopicValue,
     ) -> Result<(), MomentoError> {
         TopicClient::actually_publish(&mut self.client, cache_name, topic, value).await
@@ -91,14 +91,14 @@ impl TopicClient {
 
     async fn actually_publish(
         client: &mut PubsubClient<ChannelType>,
-        cache_name: String,
-        topic: String,
+        cache_name: impl Into<String>,
+        topic: impl Into<String>,
         value: impl IntoTopicValue,
     ) -> Result<(), MomentoError> {
         client
             .publish(PublishRequest {
-                cache_name,
-                topic,
+                cache_name: cache_name.into(),
+                topic: topic.into(),
                 value: Some(pubsub::TopicValue {
                     kind: Some(value.into_topic_value()),
                 }),
@@ -112,8 +112,8 @@ impl TopicClient {
     /// You don't create topics, you just start using them.
     pub async fn subscribe(
         &self,
-        cache_name: String,
-        topic: String,
+        cache_name: impl Into<String> + Clone,
+        topic: impl Into<String> + Clone,
         resume_at_topic_sequence_number: Option<u64>,
     ) -> Result<Subscription, MomentoError> {
         TopicClient::actually_subscribe(
@@ -127,14 +127,14 @@ impl TopicClient {
 
     async fn actually_subscribe(
         mut client: PubsubClient<ChannelType>,
-        cache_name: String,
-        topic: String,
+        cache_name: impl Into<String> + Clone,
+        topic: impl Into<String> + Clone,
         resume_at_topic_sequence_number: Option<u64>,
     ) -> Result<Subscription, MomentoError> {
         let tonic_stream = client
             .subscribe(SubscriptionRequest {
-                cache_name: cache_name.clone(),
-                topic: topic.clone(),
+                cache_name: cache_name.clone().into(),
+                topic: topic.clone().into(),
                 resume_at_topic_sequence_number: resume_at_topic_sequence_number
                     .unwrap_or_default(),
             })
@@ -142,8 +142,8 @@ impl TopicClient {
             .into_inner();
         Ok(Subscription {
             client,
-            cache_name,
-            topic,
+            cache_name: cache_name.into(),
+            topic: topic.into(),
             current_sequence_number: resume_at_topic_sequence_number.unwrap_or_default(),
             current_subscription: SubscriptionState::Subscribed(tonic_stream),
         })
