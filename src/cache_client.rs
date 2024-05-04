@@ -10,26 +10,26 @@ use crate::cache::{
     Configuration, CreateCache, CreateCacheRequest, DecreaseTtl, DecreaseTtlRequest, Delete,
     DeleteCache, DeleteCacheRequest, DeleteRequest, DictionaryFetch, DictionaryFetchRequest,
     DictionaryGetField, DictionaryGetFieldRequest, DictionaryGetFields, DictionaryGetFieldsRequest,
-    DictionaryLength, DictionaryLengthRequest, DictionaryRemoveField, DictionaryRemoveFieldRequest,
-    DictionaryRemoveFields, DictionaryRemoveFieldsRequest, DictionarySetField,
-    DictionarySetFieldRequest, DictionarySetFields, DictionarySetFieldsRequest, FlushCache,
-    FlushCacheRequest, Get, GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment,
-    IncrementRequest, IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl,
-    ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist,
-    KeysExistRequest, ListCaches, ListCachesRequest, ListConcatenateBack,
-    ListConcatenateBackRequest, ListConcatenateFront, ListConcatenateFrontRequest, ListFetch,
-    ListFetchRequest, ListLength, ListLengthRequest, ListPopBack, ListPopBackRequest, ListPopFront,
-    ListPopFrontRequest, ListRemoveValue, ListRemoveValueRequest, MomentoRequest, Set,
-    SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsent,
-    SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual,
-    SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual,
-    SetIfPresentAndNotEqualRequest, SetIfPresentRequest, SetRemoveElements,
-    SetRemoveElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
-    SortedSetFetchByScoreRequest, SortedSetGetRank, SortedSetGetRankRequest, SortedSetGetScore,
-    SortedSetGetScoreRequest, SortedSetLength, SortedSetLengthRequest, SortedSetOrder,
-    SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements,
-    SortedSetPutElementsRequest, SortedSetRemoveElements, SortedSetRemoveElementsRequest,
-    UpdateTtl, UpdateTtlRequest,
+    DictionaryIncrement, DictionaryIncrementRequest, DictionaryLength, DictionaryLengthRequest,
+    DictionaryRemoveField, DictionaryRemoveFieldRequest, DictionaryRemoveFields,
+    DictionaryRemoveFieldsRequest, DictionarySetField, DictionarySetFieldRequest,
+    DictionarySetFields, DictionarySetFieldsRequest, FlushCache, FlushCacheRequest, Get,
+    GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest,
+    IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest,
+    ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest,
+    ListCaches, ListCachesRequest, ListConcatenateBack, ListConcatenateBackRequest,
+    ListConcatenateFront, ListConcatenateFrontRequest, ListFetch, ListFetchRequest, ListLength,
+    ListLengthRequest, ListPopBack, ListPopBackRequest, ListPopFront, ListPopFrontRequest,
+    ListRemoveValue, ListRemoveValueRequest, MomentoRequest, Set, SetAddElements,
+    SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsent, SetIfAbsentOrEqual,
+    SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual,
+    SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,
+    SetIfPresentRequest, SetRemoveElements, SetRemoveElementsRequest, SetRequest, SortedSetFetch,
+    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetGetRank,
+    SortedSetGetRankRequest, SortedSetGetScore, SortedSetGetScoreRequest, SortedSetLength,
+    SortedSetLengthRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
+    SortedSetPutElements, SortedSetPutElementsRequest, SortedSetRemoveElements,
+    SortedSetRemoveElementsRequest, UpdateTtl, UpdateTtlRequest,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -454,7 +454,50 @@ impl CacheClient {
         request.send(self).await
     }
 
-    // dictionary_increment
+    /// Increments a field in a dictionary.
+    /// If the dictionary does not exist, it is created and the field is set to the amount.
+    /// If the field does not exist, it is created and set to the amount.
+    /// If the value is not an integer, a type error is returned.
+    ///
+    /// # Arguments
+    /// * `cache_name` - The name of the cache containing the dictionary.
+    /// * `dictionary_name` - The name of the dictionary to increment the field in.
+    /// * `field` - The field to increment.
+    /// * `amount` - The amount to increment the field by.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::DictionaryIncrement;
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let dictionary_name = "dictionary";
+    /// let field = "field";
+    /// let amount = 1;
+    ///
+    /// let response = cache_client.dictionary_increment(&cache_name, dictionary_name, field, amount).await;
+    ///
+    /// match response {
+    ///   Ok(DictionaryIncrement { value }) => println!("Incremented value: {}", value),
+    ///   Err(e) => println!("Error incrementing value: {}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    pub async fn dictionary_increment(
+        &self,
+        cache_name: impl Into<String>,
+        dictionary_name: impl IntoBytes,
+        field: impl IntoBytes,
+        amount: i64,
+    ) -> MomentoResult<DictionaryIncrement> {
+        let request = DictionaryIncrementRequest::new(cache_name, dictionary_name, field, amount);
+        request.send(self).await
+    }
 
     /// Gets the number of elements in the given dictionary.
     /// If the dictionary does not exist, a miss is returned.
