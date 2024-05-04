@@ -4,11 +4,11 @@ use crate::{
     cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoResult,
 };
 
-/// Adds an integer quantity to a field value.
+/// Adds an integer quantity to a key value.
 ///
 /// # Arguments
 /// * `cache_name` - name of cache
-/// * `field` - the field to increment
+/// * `key` - the key to increment
 /// * `amount` - the quantity to add to the value. May be positive, negative, or zero. Defaults to 1.
 ///
 /// # Optional Arguments
@@ -46,17 +46,17 @@ use crate::{
 /// ```
 pub struct IncrementRequest<K: IntoBytes> {
     cache_name: String,
-    field: K,
+    key: K,
     amount: i64,
     ttl: Option<Duration>,
 }
 
 impl<K: IntoBytes> IncrementRequest<K> {
-    pub fn new(cache_name: impl Into<String>, field: K, amount: i64) -> Self {
+    pub fn new(cache_name: impl Into<String>, key: K, amount: i64) -> Self {
         let ttl = None;
         Self {
             cache_name: cache_name.into(),
-            field,
+            key,
             amount,
             ttl,
         }
@@ -76,7 +76,7 @@ impl<K: IntoBytes> MomentoRequest for IncrementRequest<K> {
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
             momento_protos::cache_client::IncrementRequest {
-                cache_key: self.field.into_bytes(),
+                cache_key: self.key.into_bytes(),
                 amount: self.amount,
                 ttl_milliseconds: cache_client.expand_ttl_ms(self.ttl)?,
             },
