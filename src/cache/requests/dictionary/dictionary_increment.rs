@@ -76,7 +76,7 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryIncrementRequest<D
     type Response = DictionaryIncrement;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<DictionaryIncrement> {
-        let collection_ttl = self.collection_ttl.unwrap_or_else(CollectionTtl::default);
+        let collection_ttl = self.collection_ttl.unwrap_or_default();
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
