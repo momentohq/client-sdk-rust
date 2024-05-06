@@ -3,8 +3,8 @@ use std::future::Future;
 use std::time::Duration;
 
 use momento::cache::configurations;
+use momento::CacheClient;
 use momento::CredentialProvider;
-use momento::{CacheClient, SimpleCacheClientBuilder};
 
 use crate::unique_cache_name;
 
@@ -29,11 +29,7 @@ where
     let _guard = runtime.enter();
 
     let cache_name = unique_cache_name();
-    let credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
-        .expect("MOMENTO_API_KEY must be set");
-
-    let mut client =
-        SimpleCacheClientBuilder::new(credential_provider.clone(), Duration::from_secs(5))?.build();
+    let (client, credential_provider) = build_cache_client_and_credential_provider();
     runtime.block_on(client.create_cache(&cache_name))?;
 
     let runtime = scopeguard::guard(runtime, {
@@ -51,15 +47,7 @@ where
 
 pub fn create_doctest_cache_client() -> (CacheClient, String) {
     let cache_name = get_test_cache_name();
-    let credential_provider = get_test_credential_provider();
-
-    let cache_client = momento::CacheClient::builder()
-        .default_ttl(Duration::from_secs(5))
-        .configuration(configurations::laptop::latest())
-        .credential_provider(credential_provider)
-        .build()
-        .expect("cache client should be created");
-
+    let (cache_client, _) = build_cache_client_and_credential_provider();
     (cache_client, cache_name)
 }
 
@@ -70,4 +58,16 @@ pub fn get_test_cache_name() -> String {
 pub fn get_test_credential_provider() -> CredentialProvider {
     CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
         .expect("auth token should be valid")
+}
+
+pub fn build_cache_client_and_credential_provider() -> (CacheClient, CredentialProvider) {
+    let credential_provider = get_test_credential_provider();
+    let cache_client = momento::CacheClient::builder()
+        .default_ttl(Duration::from_secs(5))
+        .configuration(configurations::laptop::latest())
+        .credential_provider(credential_provider.clone())
+        .build()
+        .expect("cache client should be created");
+
+    (cache_client, credential_provider)
 }
