@@ -2,7 +2,6 @@
     use momento::config::configurations::laptop;
     use momento::cache::{Get, GetRequest, Set, SetRequest};
 */
-pub mod auth;
 pub mod cache;
 /// Configuration structs for the Momento clients.
 pub mod config;
