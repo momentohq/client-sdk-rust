@@ -5,7 +5,7 @@ use crate::{
 };
 
 /// Adds an integer quantity to a cache item.
-/// Adds the quantity if and only if the existing value is a UTF-8 string representing a base 10 integer. 
+/// Adds the quantity if and only if the existing value is a UTF-8 string representing a base 10 integer.
 /// If the item does not exist, this method creates it and sets the item's value to the amount to increment by.
 ///
 /// # Arguments
