@@ -123,8 +123,8 @@ pub async fn example_API_Increment(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    cache_client.increment(cache_name, "key", 1).await?;
-    println!("Value incremented");
+    let response = cache_client.increment(cache_name, "key", 1).await?;
+    println!("Value incremented to {}", response.value);
     Ok(())
 }
 
@@ -384,10 +384,10 @@ pub async fn example_API_DictionaryIncrement(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    cache_client
+    let response = cache_client
         .dictionary_increment(cache_name, "dictionary_name", "field", 1)
         .await?;
-    println!("Incremented field in dictionary");
+    println!("Incremented field in dictionary to {}", response.value);
     Ok(())
 }
 
