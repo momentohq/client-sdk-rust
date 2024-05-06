@@ -1,12 +1,12 @@
 use futures::StreamExt;
 use momento::cache::configurations::laptop;
 use momento::cache::{
-    CreateCache, DecreaseTtl, DictionaryFetch, DictionaryGetFields, IncreaseTtl, ItemType,
-    SetIfAbsent, SetIfAbsentOrEqual, SetIfEqual, SetIfNotEqual, SetIfPresent,
-    SetIfPresentAndNotEqual, SortedSetFetch, SortedSetOrder, UpdateTtl,
+    CreateCache, DecreaseTtl, DictionaryFetch, DictionaryGetField, DictionaryGetFields,
+    IncreaseTtl, ItemType, SetIfAbsent, SetIfAbsentOrEqual, SetIfEqual, SetIfNotEqual,
+    SetIfPresent, SetIfPresentAndNotEqual, SortedSetFetch, SortedSetOrder, UpdateTtl,
 };
 use momento::topics::TopicClient;
-use momento::{CacheClient, CredentialProvider, MomentoError, MomentoErrorCode};
+use momento::{CacheClient, CredentialProvider, MomentoError};
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::time::Duration;
@@ -63,10 +63,8 @@ pub async fn example_API_CreateCache(
 
 #[allow(non_snake_case)]
 pub async fn example_API_ListCaches(cache_client: &CacheClient) -> Result<(), MomentoError> {
-    match cache_client.list_caches().await {
-        Ok(response) => println!("Caches: {:#?}", response.caches),
-        Err(e) => eprintln!("Error listing caches: {}", e),
-    }
+    let response = cache_client.list_caches().await?;
+    println!("Caches: {:#?}", response.caches);
     Ok(())
 }
 
@@ -75,16 +73,8 @@ pub async fn example_API_FlushCache(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    match cache_client.flush_cache(cache_name.to_string()).await {
-        Ok(_) => println!("Flushed cache: {}", cache_name),
-        Err(e) => {
-            if let MomentoErrorCode::NotFoundError = e.error_code {
-                println!("Cache not found: {}", cache_name);
-            } else {
-                eprintln!("Error flushing cache: {}", e);
-            }
-        }
-    }
+    cache_client.flush_cache(cache_name.to_string()).await?;
+    println!("Cache {} flushed", cache_name);
     Ok(())
 }
 
@@ -93,16 +83,8 @@ pub async fn example_API_DeleteCache(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    match cache_client.delete_cache(cache_name).await {
-        Ok(_) => println!("Cache deleted: {}", cache_name),
-        Err(e) => {
-            if let MomentoErrorCode::NotFoundError = e.error_code {
-                println!("Cache not found: {}", cache_name);
-            } else {
-                eprintln!("Error deleting cache {}: {}", cache_name, e);
-            }
-        }
-    }
+    cache_client.delete_cache(cache_name).await?;
+    println!("Cache {} deleted", cache_name);
     Ok(())
 }
 
@@ -111,16 +93,8 @@ pub async fn example_API_Set(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    match cache_client.set(cache_name, "key", "value").await {
-        Ok(_) => println!("Set successful"),
-        Err(e) => {
-            if let MomentoErrorCode::NotFoundError = e.error_code {
-                println!("Cache not found: {}", cache_name);
-            } else {
-                eprintln!("Error setting value in cache {}: {}", cache_name, e);
-            }
-        }
-    }
+    cache_client.set(cache_name, "key", "value").await?;
+    println!("Value stored");
     Ok(())
 }
 
@@ -139,16 +113,8 @@ pub async fn example_API_Delete(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    match cache_client.delete(cache_name, "key").await {
-        Ok(_) => println!("Delete successful"),
-        Err(e) => {
-            if let MomentoErrorCode::NotFoundError = e.error_code {
-                println!("Cache not found: {}", cache_name);
-            } else {
-                eprintln!("Error deleting value in cache {}: {}", cache_name, e);
-            }
-        }
-    }
+    cache_client.delete(cache_name, "key").await?;
+    println!("Value deleted");
     Ok(())
 }
 
@@ -157,16 +123,8 @@ pub async fn example_API_Increment(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    match cache_client.increment(cache_name, "key", 1).await {
-        Ok(r) => println!("Incremented value: {}", r.value),
-        Err(e) => {
-            if let MomentoErrorCode::NotFoundError = e.error_code {
-                println!("Cache not found: {}", cache_name);
-            } else {
-                eprintln!("Error incrementing value in cache {}: {}", cache_name, e);
-            }
-        }
-    }
+    cache_client.increment(cache_name, "key", 1).await?;
+    println!("Value incremented");
     Ok(())
 }
 
@@ -175,8 +133,11 @@ pub async fn example_API_ItemGetType(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    let response = cache_client.item_get_type(cache_name, "key").await?;
-    let _item: ItemType = response.try_into().expect("Expected an item type!");
+    let _item_type: ItemType = cache_client
+        .item_get_type(cache_name, "key")
+        .await?
+        .try_into()
+        .expect("Expected an item type!");
     Ok(())
 }
 
@@ -245,18 +206,12 @@ pub async fn example_API_SetIfAbsent(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    match cache_client.set_if_absent(cache_name, "key", "value").await {
-        Ok(response) => match response {
-            SetIfAbsent::Stored => println!("Value stored"),
-            SetIfAbsent::NotStored => println!("Value not stored"),
-        },
-        Err(e) => {
-            if let MomentoErrorCode::NotFoundError = e.error_code {
-                println!("Cache not found: {}", cache_name);
-            } else {
-                eprintln!("Error setting value in cache {}: {}", cache_name, e);
-            }
-        }
+    match cache_client
+        .set_if_absent(cache_name, "key", "value")
+        .await?
+    {
+        SetIfAbsent::Stored => println!("Value stored"),
+        SetIfAbsent::NotStored => println!("Value not stored"),
     }
     Ok(())
 }
@@ -268,19 +223,10 @@ pub async fn example_API_SetIfPresent(
 ) -> Result<(), MomentoError> {
     match cache_client
         .set_if_present(cache_name, "key", "value")
-        .await
+        .await?
     {
-        Ok(response) => match response {
-            SetIfPresent::Stored => println!("Value stored"),
-            SetIfPresent::NotStored => println!("Value not stored"),
-        },
-        Err(e) => {
-            if let MomentoErrorCode::NotFoundError = e.error_code {
-                println!("Cache not found: {}", cache_name);
-            } else {
-                eprintln!("Error setting value in cache {}: {}", cache_name, e);
-            }
-        }
+        SetIfPresent::Stored => println!("Value stored"),
+        SetIfPresent::NotStored => println!("Value not stored"),
     }
     Ok(())
 }
@@ -292,19 +238,10 @@ pub async fn example_API_SetIfEqual(
 ) -> Result<(), MomentoError> {
     match cache_client
         .set_if_equal(cache_name, "key", "new-value", "cached-value")
-        .await
+        .await?
     {
-        Ok(response) => match response {
-            SetIfEqual::Stored => println!("Value stored"),
-            SetIfEqual::NotStored => println!("Value not stored"),
-        },
-        Err(e) => {
-            if let MomentoErrorCode::NotFoundError = e.error_code {
-                println!("Cache not found: {}", cache_name);
-            } else {
-                eprintln!("Error setting value in cache {}: {}", cache_name, e);
-            }
-        }
+        SetIfEqual::Stored => println!("Value stored"),
+        SetIfEqual::NotStored => println!("Value not stored"),
     }
     Ok(())
 }
@@ -316,19 +253,10 @@ pub async fn example_API_SetIfNotEqual(
 ) -> Result<(), MomentoError> {
     match cache_client
         .set_if_not_equal(cache_name, "key", "new-value", "cached-value")
-        .await
+        .await?
     {
-        Ok(response) => match response {
-            SetIfNotEqual::Stored => println!("Value stored"),
-            SetIfNotEqual::NotStored => println!("Value not stored"),
-        },
-        Err(e) => {
-            if let MomentoErrorCode::NotFoundError = e.error_code {
-                println!("Cache not found: {}", cache_name);
-            } else {
-                eprintln!("Error setting value in cache {}: {}", cache_name, e);
-            }
-        }
+        SetIfNotEqual::Stored => println!("Value stored"),
+        SetIfNotEqual::NotStored => println!("Value not stored"),
     }
     Ok(())
 }
@@ -340,19 +268,10 @@ pub async fn example_API_SetIfPresentAndNotEqual(
 ) -> Result<(), MomentoError> {
     match cache_client
         .set_if_present_and_not_equal(cache_name, "key", "new-value", "cached-value")
-        .await
+        .await?
     {
-        Ok(response) => match response {
-            SetIfPresentAndNotEqual::Stored => println!("Value stored"),
-            SetIfPresentAndNotEqual::NotStored => println!("Value not stored"),
-        },
-        Err(e) => {
-            if let MomentoErrorCode::NotFoundError = e.error_code {
-                println!("Cache not found: {}", cache_name);
-            } else {
-                eprintln!("Error setting value in cache {}: {}", cache_name, e);
-            }
-        }
+        SetIfPresentAndNotEqual::Stored => println!("Value stored"),
+        SetIfPresentAndNotEqual::NotStored => println!("Value not stored"),
     }
     Ok(())
 }
@@ -364,19 +283,10 @@ pub async fn example_API_SetIfAbsentOrEqual(
 ) -> Result<(), MomentoError> {
     match cache_client
         .set_if_absent_or_equal(cache_name, "key", "new-value", "cached-value")
-        .await
+        .await?
     {
-        Ok(response) => match response {
-            SetIfAbsentOrEqual::Stored => println!("Value stored"),
-            SetIfAbsentOrEqual::NotStored => println!("Value not stored"),
-        },
-        Err(e) => {
-            if let MomentoErrorCode::NotFoundError = e.error_code {
-                println!("Cache not found: {}", cache_name);
-            } else {
-                eprintln!("Error setting value in cache {}: {}", cache_name, e);
-            }
-        }
+        SetIfAbsentOrEqual::Stored => println!("Value stored"),
+        SetIfAbsentOrEqual::NotStored => println!("Value not stored"),
     }
     Ok(())
 }
@@ -386,13 +296,10 @@ pub async fn example_API_ListConcatenateBack(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    match cache_client
+    cache_client
         .list_concatenate_back(cache_name, "list_name", vec!["value1", "value2"])
-        .await
-    {
-        Ok(_) => println!("Elements added to list"),
-        Err(e) => eprintln!("Error adding elements to list: {}", e),
-    }
+        .await?;
+    println!("Elements appended to list");
     Ok(())
 }
 
@@ -401,13 +308,10 @@ pub async fn example_API_ListConcatenateFront(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    match cache_client
+    cache_client
         .list_concatenate_front(cache_name, "list_name", vec!["value1", "value2"])
-        .await
-    {
-        Ok(_) => println!("Elements added to list"),
-        Err(e) => eprintln!("Error adding elements to list: {}", e),
-    }
+        .await?;
+    println!("Elements prepended to list");
     Ok(())
 }
 
@@ -468,13 +372,34 @@ pub async fn example_API_ListRemoveValue(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    match cache_client
+    cache_client
         .list_remove_value(cache_name, "list_name", "value1")
-        .await
-    {
-        Ok(_) => println!("Successfully removed value"),
-        Err(e) => eprintln!("Error removing value: {:?}", e),
-    }
+        .await?;
+    println!("Value removed from list");
+    Ok(())
+}
+
+#[allow(non_snake_case)]
+pub async fn example_API_DictionaryIncrement(
+    cache_client: &CacheClient,
+    cache_name: &String,
+) -> Result<(), MomentoError> {
+    cache_client
+        .dictionary_increment(cache_name, "dictionary_name", "field", 1)
+        .await?;
+    println!("Incremented field in dictionary");
+    Ok(())
+}
+
+#[allow(non_snake_case)]
+pub async fn example_API_DictionarySetField(
+    cache_client: &CacheClient,
+    cache_name: &String,
+) -> Result<(), MomentoError> {
+    cache_client
+        .dictionary_set_field(cache_name.to_string(), "dictionary_name", "field", "value")
+        .await?;
+    println!("Set field in dictionary");
     Ok(())
 }
 
@@ -483,13 +408,14 @@ pub async fn example_API_DictionarySetFields(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    match cache_client
-        .dictionary_set_field(cache_name.to_string(), "dictionary_name", "field", "value")
-        .await
-    {
-        Ok(_) => println!("Field set in dictionary"),
-        Err(e) => eprintln!("Error setting field in dictionary: {}", e),
-    }
+    cache_client
+        .dictionary_set_fields(
+            cache_name.to_string(),
+            "dictionary_name",
+            vec![("field1", "value1"), ("field2", "value2")],
+        )
+        .await?;
+    println!("Set fields in dictionary");
     Ok(())
 }
 
@@ -498,10 +424,11 @@ pub async fn example_API_DictionaryFetch(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    match cache_client
+    let response = cache_client
         .dictionary_fetch(cache_name, "dictionary_name")
-        .await?
-    {
+        .await?;
+
+    match response {
         DictionaryFetch::Hit { value } => {
             let dictionary: HashMap<String, String> =
                 value.try_into().expect("I stored a dictionary!");
@@ -522,6 +449,25 @@ pub async fn example_API_DictionaryLength(
         .await?
         .try_into()
         .expect("Expected a dictionary length!");
+    Ok(())
+}
+
+#[allow(non_snake_case)]
+pub async fn example_API_DictionaryGetField(
+    cache_client: &CacheClient,
+    cache_name: &String,
+) -> Result<(), MomentoError> {
+    let response = cache_client
+        .dictionary_get_field(cache_name, "dictionary_name", "field")
+        .await?;
+
+    match response {
+        DictionaryGetField::Hit { value } => {
+            let value: String = value.try_into().expect("I stored a string!");
+            println!("Fetched value: {}", value);
+        }
+        DictionaryGetField::Miss => println!("Cache miss"),
+    }
     Ok(())
 }
 
@@ -547,17 +493,26 @@ pub async fn example_API_DictionaryGetFields(
 }
 
 #[allow(non_snake_case)]
+pub async fn example_API_DictionaryRemoveField(
+    cache_client: &CacheClient,
+    cache_name: &String,
+) -> Result<(), MomentoError> {
+    cache_client
+        .dictionary_remove_field(cache_name, "dictionary_name", "field")
+        .await?;
+    println!("Field removed from dictionary");
+    Ok(())
+}
+
+#[allow(non_snake_case)]
 pub async fn example_API_DictionaryRemoveFields(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    match cache_client
+    cache_client
         .dictionary_remove_fields(cache_name, "dictionary_name", vec!["field1", "field2"])
-        .await
-    {
-        Ok(_) => println!("Fields removed successfully"),
-        Err(e) => println!("Error removing fields: {}", e),
-    }
+        .await?;
+    println!("Fields removed from dictionary");
     Ok(())
 }
 
@@ -566,13 +521,10 @@ pub async fn example_API_SetAddElements(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    match cache_client
+    cache_client
         .set_add_elements(cache_name, "set_name", vec!["value1", "value2"])
-        .await
-    {
-        Ok(_) => println!("Elements added to set"),
-        Err(e) => eprintln!("Error adding elements to set: {}", e),
-    }
+        .await?;
+    println!("Elements added to set");
     Ok(())
 }
 
@@ -594,13 +546,10 @@ pub async fn example_API_SetRemoveElements(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    match cache_client
+    cache_client
         .set_remove_elements(cache_name, "set_name", vec!["element1", "element2"])
-        .await
-    {
-        Ok(_) => println!("Elements removed from set"),
-        Err(e) => eprintln!("Error removing elements from set: {}", e),
-    }
+        .await?;
+    println!("Elements removed from set");
     Ok(())
 }
 
@@ -609,13 +558,10 @@ pub async fn example_API_SortedSetPutElement(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    match cache_client
+    cache_client
         .sorted_set_put_element(cache_name, "sorted_set_name", "value", 1.0)
-        .await
-    {
-        Ok(_) => println!("Element added to sorted set"),
-        Err(e) => eprintln!("Error adding element to sorted set: {}", e),
-    }
+        .await?;
+    println!("Element added to sorted set");
     Ok(())
 }
 
@@ -624,17 +570,14 @@ pub async fn example_API_SortedSetPutElements(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    match cache_client
+    cache_client
         .sorted_set_put_elements(
             cache_name,
             "sorted_set_name",
             vec![("value1", 1.0), ("value2", 2.0)],
         )
-        .await
-    {
-        Ok(_) => println!("Elements added to sorted set"),
-        Err(e) => eprintln!("Error adding elements to sorted set: {}", e),
-    }
+        .await?;
+    println!("Elements added to sorted set");
     Ok(())
 }
 
@@ -643,7 +586,7 @@ pub async fn example_API_SortedSetFetchByRank(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    let fetch_response = cache_client
+    let response = cache_client
         .sorted_set_fetch_by_rank(
             cache_name,
             "sorted_set_name",
@@ -653,13 +596,13 @@ pub async fn example_API_SortedSetFetchByRank(
         )
         .await?;
 
-    match fetch_response {
+    match response {
         SortedSetFetch::Hit { value } => match value.into_strings() {
             Ok(vec) => {
                 println!("Fetched elements: {:?}", vec);
             }
             Err(error) => {
-                eprintln!("Error: {}", error);
+                eprintln!("Error converting values into strings: {}", error);
             }
         },
         SortedSetFetch::Miss => println!("Cache miss"),
@@ -672,17 +615,17 @@ pub async fn example_API_SortedSetFetchByScore(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    let fetch_response = cache_client
+    let response = cache_client
         .sorted_set_fetch_by_score(cache_name, "sorted_set_name", SortedSetOrder::Ascending)
         .await?;
 
-    match fetch_response {
+    match response {
         SortedSetFetch::Hit { value } => match value.into_strings() {
             Ok(vec) => {
                 println!("Fetched elements: {:?}", vec);
             }
             Err(error) => {
-                eprintln!("Error: {}", error);
+                eprintln!("Error converting values into strings: {}", error);
             }
         },
         SortedSetFetch::Miss => println!("Cache miss"),
@@ -734,13 +677,10 @@ pub async fn example_API_SortedSetRemoveElements(
     cache_client: &CacheClient,
     cache_name: &String,
 ) -> Result<(), MomentoError> {
-    match cache_client
+    cache_client
         .sorted_set_remove_elements(cache_name, "sorted_set_name", vec!["value1", "value2"])
-        .await
-    {
-        Ok(_) => println!("Elements removed from sorted set"),
-        Err(e) => eprintln!("Error removing elements from sorted set: {}", e),
-    }
+        .await?;
+    println!("Elements removed from sorted set");
     Ok(())
 }
 
@@ -795,13 +735,10 @@ pub async fn example_API_TopicPublish(
     cache_name: &String,
     topic_name: &String,
 ) -> Result<(), MomentoError> {
-    match topic_client
+    topic_client
         .publish(cache_name, topic_name, "Hello, Momento!")
-        .await
-    {
-        Ok(_) => println!("Published message!",),
-        Err(e) => eprintln!("Error publishing message: {}", e),
-    }
+        .await?;
+    println!("Published message");
     Ok(())
 }
 
@@ -874,10 +811,14 @@ pub async fn main() -> Result<(), MomentoError> {
     example_API_ListPopFront(&cache_client, &cache_name).await?;
     example_API_ListRemoveValue(&cache_client, &cache_name).await?;
 
+    example_API_DictionaryIncrement(&cache_client, &cache_name).await?;
+    example_API_DictionarySetField(&cache_client, &cache_name).await?;
     example_API_DictionarySetFields(&cache_client, &cache_name).await?;
     example_API_DictionaryFetch(&cache_client, &cache_name).await?;
     example_API_DictionaryLength(&cache_client, &cache_name).await?;
+    example_API_DictionaryGetField(&cache_client, &cache_name).await?;
     example_API_DictionaryGetFields(&cache_client, &cache_name).await?;
+    example_API_DictionaryRemoveField(&cache_client, &cache_name).await?;
     example_API_DictionaryRemoveFields(&cache_client, &cache_name).await?;
 
     example_API_SetAddElements(&cache_client, &cache_name).await?;
