@@ -70,7 +70,7 @@ jobs:
         run: cargo run --example test-teardown
 
   rustfmt-build-examples:
-    name: examples - Style & Lint
+    name: Verify examples
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -88,6 +88,7 @@ jobs:
         continue-on-error: true
         run: |
           make build-examples
+          make run-examples
       - name: Send CI failure mail
         if: ${{ steps.validation.outcome == 'failure' }}
         uses: ./.github/actions/error-email-action
