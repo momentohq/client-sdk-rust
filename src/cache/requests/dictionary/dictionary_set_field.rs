@@ -17,6 +17,9 @@ use momento_protos::cache_client::{
 /// * `field` - The field to set.
 /// * `value` - The value to set.
 ///
+/// # Optional Arguments
+/// * `ttl` - The time-to-live for the dictionary. If not provided, the client's default time-to-live is used.
+///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```

@@ -1,6 +1,7 @@
 use momento::cache::{
-    DictionaryFetch, DictionaryGetField, DictionaryGetFields, DictionaryLength,
-    DictionaryRemoveField, DictionaryRemoveFields, DictionarySetField, DictionarySetFields,
+    DictionaryFetch, DictionaryGetField, DictionaryGetFields, DictionaryIncrement,
+    DictionaryLength, DictionaryRemoveField, DictionaryRemoveFields, DictionarySetField,
+    DictionarySetFields,
 };
 use momento::{MomentoError, MomentoErrorCode, MomentoResult};
 use momento_test_util::{
@@ -186,7 +187,65 @@ mod dictionary_get_fields {
     }
 }
 
-mod dictionary_increment {}
+mod dictionary_increment {
+    use super::*;
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+
+        // Add some test data
+        let item = TestDictionary::new();
+        let response = client
+            .dictionary_set_fields(cache_name, item.name(), item.value().clone())
+            .await?;
+        assert_eq!(response, DictionarySetFields {});
+
+        let response = client
+            .dictionary_increment(cache_name, item.name(), "number", 1)
+            .await?;
+        assert_eq!(response, DictionaryIncrement { value: 1 });
+
+        let (field, _) = item.value().iter().next().unwrap();
+
+        // Now increment the value relevant to the first dictionary
+        let response = client
+            .dictionary_increment(cache_name, item.name(), field.clone(), 1)
+            .await
+            .unwrap_err();
+        assert_eq!(
+            response.error_code,
+            MomentoErrorCode::FailedPreconditionError
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn invalid_cache_name() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let result = client
+            .dictionary_increment("   ", "my-dictionary", "my-field", 1)
+            .await
+            .unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_cache_name();
+        let result = client
+            .dictionary_increment(cache_name, "my-dictionary", "my-field", 1)
+            .await
+            .unwrap_err();
+
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        Ok(())
+    }
+}
 
 mod dictionary_remove_field {
     use super::*;

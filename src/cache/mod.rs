@@ -20,6 +20,9 @@ pub use requests::dictionary::dictionary_get_field::{
 pub use requests::dictionary::dictionary_get_fields::{
     DictionaryGetFields, DictionaryGetFieldsRequest,
 };
+pub use requests::dictionary::dictionary_increment::{
+    DictionaryIncrement, DictionaryIncrementRequest,
+};
 pub use requests::dictionary::dictionary_length::{DictionaryLength, DictionaryLengthRequest};
 pub use requests::dictionary::dictionary_remove_field::{
     DictionaryRemoveField, DictionaryRemoveFieldRequest,
