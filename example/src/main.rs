@@ -1,22 +1,26 @@
-use momento::response::Get;
-use momento::{CredentialProvider, MomentoError, SimpleCacheClientBuilder};
+use momento::cache::{configurations, Get};
+use momento::{CacheClient, CredentialProvider, MomentoError};
 use std::process;
 use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<(), MomentoError> {
     // Initializing Momento
-    let mut cache_client = match SimpleCacheClientBuilder::new(
-        CredentialProvider::from_env_var("MOMENTO_AUTH_TOKEN".to_string())?,
-        Duration::from_secs(60),
-    ) {
+    let cache_client = match CacheClient::builder()
+        .default_ttl(Duration::from_secs(60))
+        .configuration(configurations::laptop::latest())
+        .credential_provider(
+            CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
+                .expect("auth token should be valid"),
+        )
+        .build()
+    {
         Ok(client) => client,
         Err(err) => {
             eprintln!("{err}");
             process::exit(1);
         }
-    }
-    .build();
+    };
 
     // Creating a cache named "cache"
     let cache_name = String::from("cache");
@@ -32,7 +36,7 @@ async fn main() -> Result<(), MomentoError> {
     match cache_client.list_caches().await {
         Ok(list_cache_result) => {
             for listed_cache in list_cache_result.caches {
-                println!("{}", listed_cache.cache_name);
+                println!("{}", listed_cache.name);
             }
         }
         Err(err) => {
@@ -46,7 +50,7 @@ async fn main() -> Result<(), MomentoError> {
     let value = String::from("my_value");
     println!("Setting key: {key}, value: {value}");
     match cache_client
-        .set(&cache_name, key.clone(), value.clone(), None)
+        .set(&cache_name, key.clone(), value.clone())
         .await
     {
         Ok(_) => {}
