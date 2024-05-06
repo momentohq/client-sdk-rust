@@ -1314,15 +1314,15 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Adds an integer quantity to a field value.
+    /// Adds an integer quantity to a key value.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
-    /// * `field` - the field to increment
+    /// * `key` - the key to increment
     /// * `amount` - the quantity to add to the value. May be positive, negative, or zero. Defaults to 1.
     ///
     /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to increment a field using an
+    /// If you use [send_request](CacheClient::send_request) to increment a key using an
     /// [IncrementRequest], you can also provide the following optional arguments:
     ///
     /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
