@@ -4,18 +4,18 @@ _Read this in other languages_: [日本語](README.ja.md)
 
 <br>
 
-## Running the Example
+## Example Requirements
 
-- Rust and Cargo are needed. [Installation guide](https://doc.rust-lang.org/cargo/getting-started/installation.html).
-- A Momento Auth Token is required, you can generate one using the [Momento CLI](https://github.com/momentohq/momento-cli)
+- Follow the [installation guide](https://doc.rust-lang.org/cargo/getting-started/installation.html) to install Rust and Cargo.
+- To get started with Momento you will need a Momento API key. You can get one from the [Momento Console](https://console.gomomento.com).
+
+## Running the Basic Example
+
+This example demonstrates a basic set and get from a cache.
 
 ```bash
 # Run example code
-MOMENTO_AUTH_TOKEN=<YOUR AUTH TOKEN> cargo run
+MOMENTO_API_KEY=<YOUR API KEY> cargo run --bin=readme
 ```
 
 Example Code: [main.rs](src/main.rs)
-
-## Using the SDK in your projects
-
-Add the following line to your Cargo.toml file: `momento = "0.3.1"`, or you can check out the latest version [here](https://crates.io/crates/momento).
