@@ -1,6 +1,6 @@
 use momento::cache::{
-    DictionaryFetch, DictionaryGetFields, DictionaryLength, DictionaryRemoveField,
-    DictionaryRemoveFields, DictionarySetField, DictionarySetFields,
+    DictionaryFetch, DictionaryGetField, DictionaryGetFields, DictionaryLength,
+    DictionaryRemoveField, DictionaryRemoveFields, DictionarySetField, DictionarySetFields,
 };
 use momento::{MomentoError, MomentoErrorCode, MomentoResult};
 use momento_test_util::{
@@ -64,7 +64,63 @@ mod dictionary_fetch {
     }
 }
 
-mod dictionary_get_field {}
+mod dictionary_get_field {
+    use super::*;
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+
+        // Add some test data
+        let item = TestDictionary::new();
+        let response = client
+            .dictionary_set_fields(cache_name, item.name(), item.value().clone())
+            .await?;
+        assert_eq!(response, DictionarySetFields {});
+
+        let (field, value) = item.value().iter().next().unwrap();
+
+        // Now get the value relevant to the first dictionary
+        let result = client
+            .dictionary_get_field(cache_name, item.name(), field.clone())
+            .await?;
+        match result {
+            DictionaryGetField::Hit { .. } => {
+                let actual: String = result
+                    .try_into()
+                    .expect("Stored string but could not convert into String");
+                assert_eq!(actual, *value);
+            }
+            DictionaryGetField::Miss => panic!("I expected a hit!"),
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn invalid_cache_name() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let result = client
+            .dictionary_get_field("   ", "my-dictionary", "my-field")
+            .await
+            .unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_cache_name();
+        let result = client
+            .dictionary_get_field(cache_name, "my-dictionary", "my-field")
+            .await
+            .unwrap_err();
+
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        Ok(())
+    }
+}
 
 mod dictionary_get_fields {
     use super::*;

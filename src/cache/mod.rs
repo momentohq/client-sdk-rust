@@ -14,6 +14,9 @@ pub use requests::list_caches::{
 pub use requests::dictionary::dictionary_fetch::{
     DictionaryFetch, DictionaryFetchRequest, DictionaryFetchValue,
 };
+pub use requests::dictionary::dictionary_get_field::{
+    DictionaryGetField, DictionaryGetFieldRequest,
+};
 pub use requests::dictionary::dictionary_get_fields::{
     DictionaryGetFields, DictionaryGetFieldsRequest,
 };

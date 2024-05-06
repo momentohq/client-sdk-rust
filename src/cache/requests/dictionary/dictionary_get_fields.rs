@@ -180,7 +180,6 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
 /// use std::convert::TryInto;
 /// let item: MomentoResult<HashMap<Vec<u8>, Vec<u8>>> = fetch_response.try_into();
 /// ```
-
 #[derive(Debug, PartialEq, Eq)]
 pub enum DictionaryGetFields<F: IntoBytesIterable> {
     Hit {
