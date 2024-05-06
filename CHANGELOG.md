@@ -1,5 +1,54 @@
 # Changelog
 
+## [0.35.0](https://github.com/momentohq/client-sdk-rust/compare/v0.34.0...v0.35.0) (2024-05-06)
+
+
+### Features
+
+* add `IntoSortedSetElements` trait and implementations for Vec and HashMap ([#207](https://github.com/momentohq/client-sdk-rust/issues/207)) ([aaf4063](https://github.com/momentohq/client-sdk-rust/commit/aaf4063067b7a3428b647caf186b6208aea15d1c))
+* add Delete, Increment, ItemGetType ([#219](https://github.com/momentohq/client-sdk-rust/issues/219)) ([278adda](https://github.com/momentohq/client-sdk-rust/commit/278addae4ba39715179a7447e56a356374310b16))
+* add dictionary_set_fields ([#244](https://github.com/momentohq/client-sdk-rust/issues/244)) ([15d8a2f](https://github.com/momentohq/client-sdk-rust/commit/15d8a2fdc8aab7d1430ccd5534272cdf9aef849f))
+* add FlushCache and tests ([#209](https://github.com/momentohq/client-sdk-rust/issues/209)) ([d8da447](https://github.com/momentohq/client-sdk-rust/commit/d8da4477668a43ef87f306c7f7032efa0815b009))
+* add ItemGet/Update/Increase/Decrease TTL APIs ([#226](https://github.com/momentohq/client-sdk-rust/issues/226)) ([05886be](https://github.com/momentohq/client-sdk-rust/commit/05886be9bf0d187db426bf16d4abf130b8a11eaf))
+* add keyExists and keysExist ([#217](https://github.com/momentohq/client-sdk-rust/issues/217)) ([6b167a2](https://github.com/momentohq/client-sdk-rust/commit/6b167a2f95f139f974811664fe2a365d93b5482c))
+* add list collection ([#237](https://github.com/momentohq/client-sdk-rust/issues/237)) ([27279fa](https://github.com/momentohq/client-sdk-rust/commit/27279faaa35092d16244371780b851213d6759bc))
+* add more sorted set methods ([#243](https://github.com/momentohq/client-sdk-rust/issues/243)) ([00fcc91](https://github.com/momentohq/client-sdk-rust/commit/00fcc914355cc1af18b7e9d4a4d4bb7fe0d82357))
+* add set_fetch and set_remove_elements ([#248](https://github.com/momentohq/client-sdk-rust/issues/248)) ([7ad34e0](https://github.com/momentohq/client-sdk-rust/commit/7ad34e0f339b9815dd2f9d84a03a9e4faab84e67))
+* add SetIf* methods ([#234](https://github.com/momentohq/client-sdk-rust/issues/234)) ([f812c63](https://github.com/momentohq/client-sdk-rust/commit/f812c6397f551a553d23155da6fb0bec16bf8abe))
+* add start_rank and end_rank as optional arguments to SortedSetFetchByRank ([#215](https://github.com/momentohq/client-sdk-rust/issues/215)) ([5bece54](https://github.com/momentohq/client-sdk-rust/commit/5bece54b57928ca5f1ad966c11b1b6bef25c3ed7))
+* dictionary_fetch and dictionary_set_field implementation ([#236](https://github.com/momentohq/client-sdk-rust/issues/236)) ([9cdabb6](https://github.com/momentohq/client-sdk-rust/commit/9cdabb6436a0455652f57d2b0a70e703e6530801))
+* implement dictionary remove fields ([#249](https://github.com/momentohq/client-sdk-rust/issues/249)) ([c808a33](https://github.com/momentohq/client-sdk-rust/commit/c808a3380db0df2c34be08dcb452ae32e68689b0))
+* implement dictionary_get_field ([#254](https://github.com/momentohq/client-sdk-rust/issues/254)) ([d5ecaf6](https://github.com/momentohq/client-sdk-rust/commit/d5ecaf6a7b463136873c94e5223a0799f971ca54))
+* implement dictionary_get_field ([#255](https://github.com/momentohq/client-sdk-rust/issues/255)) ([519852a](https://github.com/momentohq/client-sdk-rust/commit/519852a4bec12b1a0bff61566249fe49284a88d7))
+* implement dictionary_get_fields ([#247](https://github.com/momentohq/client-sdk-rust/issues/247)) ([087b3c4](https://github.com/momentohq/client-sdk-rust/commit/087b3c430e9bf01be625a444b12736501045ea3b))
+* implement dictionary_increment ([#256](https://github.com/momentohq/client-sdk-rust/issues/256)) ([6b2d69c](https://github.com/momentohq/client-sdk-rust/commit/6b2d69cf092f7945a33689575acdf4c1c53a7a18))
+* implement dictionary_length ([#250](https://github.com/momentohq/client-sdk-rust/issues/250)) ([903509f](https://github.com/momentohq/client-sdk-rust/commit/903509f6b58828854d11f67fb41f8680982101c2))
+* re-export CollectionTtl under cache namespace ([#228](https://github.com/momentohq/client-sdk-rust/issues/228)) ([8a8a93e](https://github.com/momentohq/client-sdk-rust/commit/8a8a93e8d250d5a45c5bb033b889673aa1372696))
+* reorganize exports ([#221](https://github.com/momentohq/client-sdk-rust/issues/221)) ([6fada71](https://github.com/momentohq/client-sdk-rust/commit/6fada71e1160976da10498ab47e8db98511fa437))
+* reorganize topics exports ([#224](https://github.com/momentohq/client-sdk-rust/issues/224)) ([b3bde84](https://github.com/momentohq/client-sdk-rust/commit/b3bde84ca17ee91bf55ecdc2881a04e4af57e914))
+
+
+### Bug Fixes
+
+* increment should refer to key as key not field ([#257](https://github.com/momentohq/client-sdk-rust/issues/257)) ([6518427](https://github.com/momentohq/client-sdk-rust/commit/651842732ae78a3ae392e075ad93ba4747ac6fa8))
+* move prep_request_with_timeout into utils ([#223](https://github.com/momentohq/client-sdk-rust/issues/223)) ([b9a68af](https://github.com/momentohq/client-sdk-rust/commit/b9a68af2124a7fde91543a9e448af68661588f4e))
+* replace usage of unreachable macro with returning an UnknownError ([#242](https://github.com/momentohq/client-sdk-rust/issues/242)) ([1083717](https://github.com/momentohq/client-sdk-rust/commit/108371702273a5763046a3719f2d67e27ca33fd8))
+
+
+### Miscellaneous
+
+* add snippets for dev docs, corrected some docstring examples in cache client ([#253](https://github.com/momentohq/client-sdk-rust/issues/253)) ([834a1c5](https://github.com/momentohq/client-sdk-rust/commit/834a1c5d6664f9c97b107b56349cbd1a39cc0896))
+* extract lists of IntoBytes into an IntoBytesIterable trait ([#252](https://github.com/momentohq/client-sdk-rust/issues/252)) ([ac81f32](https://github.com/momentohq/client-sdk-rust/commit/ac81f321cccbdde41f04679966d83857ffc786f0))
+* fix minor issues in makefile and github actions ([#211](https://github.com/momentohq/client-sdk-rust/issues/211)) ([73f2284](https://github.com/momentohq/client-sdk-rust/commit/73f2284a2bb6fab303581bb7c9d00baa8886ef7b))
+* improve docs, replace asserts with pattern matching, reduce duplication of code examples ([#213](https://github.com/momentohq/client-sdk-rust/issues/213)) ([0df51ee](https://github.com/momentohq/client-sdk-rust/commit/0df51ee69c1d1058452a27b81a9943a6d2d827ae))
+* make build fail when there are docs warnings ([#214](https://github.com/momentohq/client-sdk-rust/issues/214)) ([f8a82f0](https://github.com/momentohq/client-sdk-rust/commit/f8a82f0d6b90e4d0cb732efb347a4c2589dc60c9))
+* minor test cleanups ([#225](https://github.com/momentohq/client-sdk-rust/issues/225)) ([ba18c65](https://github.com/momentohq/client-sdk-rust/commit/ba18c65e7ed0a55bec5246fd79e37d57b4956a00))
+* refactor tests for better consistency, more accurate asserts ([#218](https://github.com/momentohq/client-sdk-rust/issues/218)) ([a041485](https://github.com/momentohq/client-sdk-rust/commit/a04148528b3681112203caae0b5c9c3f2d8ba0e2))
+* remove `with_` prefixes from request buidlers ([#216](https://github.com/momentohq/client-sdk-rust/issues/216)) ([28dc57a](https://github.com/momentohq/client-sdk-rust/commit/28dc57af2a1d06e83c8d5166455a5cb83724bbec))
+* remove code from mod.rs and lib.rs files ([#232](https://github.com/momentohq/client-sdk-rust/issues/232)) ([7fe44b1](https://github.com/momentohq/client-sdk-rust/commit/7fe44b1f2a916230e7e045561dd442d4e36021de))
+* run flush cache test separately from other tests ([#246](https://github.com/momentohq/client-sdk-rust/issues/246)) ([3d89626](https://github.com/momentohq/client-sdk-rust/commit/3d896267a3f9cef8ad3190f4ffce85559cfb989a))
+* update client protos dependency ([#229](https://github.com/momentohq/client-sdk-rust/issues/229)) ([3420560](https://github.com/momentohq/client-sdk-rust/commit/342056050153ec9f597291eebfc2b96318f50e27))
+
 ## [0.34.0](https://github.com/momentohq/client-sdk-rust/compare/v0.33.1...v0.34.0) (2024-03-27)
 
 
