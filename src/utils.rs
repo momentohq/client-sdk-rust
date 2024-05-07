@@ -73,18 +73,6 @@ pub(crate) fn is_cache_name_valid(cache_name: &str) -> Result<(), MomentoError> 
     Ok(())
 }
 
-pub(crate) fn is_key_id_valid(key_id: &str) -> Result<(), MomentoError> {
-    if key_id.trim().is_empty() {
-        return Err(MomentoError {
-            message: "Key ID cannot be empty".into(),
-            error_code: MomentoErrorCode::InvalidArgumentError,
-            inner_error: None,
-            details: None,
-        });
-    }
-    Ok(())
-}
-
 #[derive(Debug, Error)]
 pub(crate) enum ChannelConnectError {
     #[error("URI was invalid")]
@@ -240,23 +228,6 @@ mod tests {
         let error = result.unwrap_err();
         assert_eq!(error.error_code, MomentoErrorCode::InvalidArgumentError);
         assert_eq!(error.message, "Cache name cannot be empty");
-    }
-
-    #[test]
-    fn test_is_key_id_valid() {
-        let key_id = "my_key";
-        let result = is_key_id_valid(key_id);
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    fn test_is_key_id_valid_empty() {
-        let key_id = "";
-        let result = is_key_id_valid(key_id);
-        assert!(result.is_err());
-        let error = result.unwrap_err();
-        assert_eq!(error.error_code, MomentoErrorCode::InvalidArgumentError);
-        assert_eq!(error.message, "Key ID cannot be empty");
     }
 
     #[tokio::test]

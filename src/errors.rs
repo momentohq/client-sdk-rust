@@ -2,8 +2,6 @@ use std::{error::Error, fmt::Debug, str::from_utf8};
 
 use tonic::codegen::http;
 
-use crate::auth::AuthError;
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum MomentoErrorCode {
     /// Invalid argument passed to Momento client
@@ -125,10 +123,6 @@ pub enum ErrorSource {
     /// A source you will need to downcast if you need to do something with it.
     #[error("unknown source")]
     Unknown(#[from] Box<dyn std::error::Error + Send + Sync>),
-
-    /// A detailed error from the Auth module
-    #[error("auth error")]
-    AuthError(#[from] AuthError),
 
     /// Caused by something in our backing library Tonic
     #[error("tonic transport error")]
