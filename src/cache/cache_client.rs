@@ -1254,7 +1254,7 @@ impl CacheClient {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use momento::cache::KeyExists;
     ///
-    /// let result = cache_client.key_exists(&cache_name, "key").await?;
+    /// let result = cache_client.key_exists(cache_name, "key").await?;
     /// if result.exists {
     ///     println!("Key exists!");
     /// } else {
@@ -1275,7 +1275,7 @@ impl CacheClient {
     }
 
     /// Check if the provided keys exist in the cache.
-    /// Returns a list of booleans indicating whether each given key was found in the cache.
+    /// Returns a list or map of booleans indicating whether each given key was found in the cache.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache

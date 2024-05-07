@@ -7,11 +7,11 @@ use crate::{
     MomentoResult,
 };
 
-/// Return the type of the key in the cache.
+/// Return the type of an item in the cache.
 ///
 /// # Arguments
 /// * `cache_name` - name of cache
-/// * `key` - the key for which type is requested
+/// * `key` - the key of the item to get the type of
 ///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
