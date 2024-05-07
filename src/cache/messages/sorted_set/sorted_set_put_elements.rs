@@ -110,7 +110,7 @@ impl<V: IntoBytes> IntoSortedSetElements<V> for HashMap<V, f64> {
 /// # Arguments
 ///
 /// * `cache_name` - The name of the cache containing the sorted set.
-/// * `sorted_set_name` - The name of the sorted set ot add an element to.
+/// * `sorted_set_name` - The name of the sorted set to add an element to.
 /// * `elements` - The values and scores to add.
 ///
 /// # Optional Arguments

@@ -8,11 +8,11 @@ use crate::{
     cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoResult,
 };
 
-/// Decrease the ttl of the key in the cache.
+/// Decrease the ttl of an item in the cache.
 ///
 /// # Arguments
 /// * `cache_name` - name of cache
-/// * `key` - the key for which ttl is requested
+/// * `key` - the key of the item for which ttl is requested
 /// * `ttl` - The time-to-live that should overwrite the current ttl. Should be less than the current ttl.
 ///
 /// # Examples

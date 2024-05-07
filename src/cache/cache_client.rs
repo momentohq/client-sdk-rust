@@ -1254,7 +1254,7 @@ impl CacheClient {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use momento::cache::KeyExists;
     ///
-    /// let result = cache_client.key_exists(&cache_name, "key").await?;
+    /// let result = cache_client.key_exists(cache_name, "key").await?;
     /// if result.exists {
     ///     println!("Key exists!");
     /// } else {
@@ -1275,7 +1275,7 @@ impl CacheClient {
     }
 
     /// Check if the provided keys exist in the cache.
-    /// Returns a list of booleans indicating whether each given key was found in the cache.
+    /// Returns an object that is accessible as a list or map of booleans indicating whether each given key was found in the cache.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
@@ -1312,7 +1312,9 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Adds an integer quantity to a key value.
+    /// Adds an integer quantity to a cache item.
+    /// Adds the quantity if and only if the existing value is a UTF-8 string representing a base 10 integer.
+    /// If the item does not exist, this method creates it and sets the item's value to the amount to increment by.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
@@ -1359,11 +1361,11 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Return the type of the key in the cache.
+    /// Return the type of an item in the cache.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
-    /// * `key` - the key for which type is requested
+    /// * `key` - the key of the item to get the type of
     ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -1395,11 +1397,11 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Return the remaining ttl of the key in the cache
+    /// Return the remaining ttl of an item in the cache
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
-    /// * `key` - the key for which remaining ttl is requested
+    /// * `key` - the key of the item for which the remaining ttl is requested
     ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -1429,11 +1431,11 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Update the ttl of the key in the cache.
+    /// Update the ttl of an item in the cache.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
-    /// * `key` - the key for which ttl is requested
+    /// * `key` - the key of the item for which ttl is requested
     /// * `ttl` - The time-to-live that should overwrite the current ttl.
     ///
     /// # Examples
@@ -1466,11 +1468,11 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Increase the ttl of the key in the cache.
+    /// Increase the ttl of an item in the cache.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
-    /// * `key` - the key for which ttl is requested
+    /// * `key` - the key of the item for which ttl is requested
     /// * `ttl` - The time-to-live that should overwrite the current ttl. Should be greater than the current ttl.
     ///
     /// # Examples
@@ -1504,11 +1506,11 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Decrease the ttl of the key in the cache.
+    /// Decrease the ttl of an item in the cache.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
-    /// * `key` - the key for which ttl is requested
+    /// * `key` - the key of the item for which ttl is requested
     /// * `ttl` - The time-to-live that should overwrite the current ttl. Should be less than the current ttl.
     ///
     /// # Examples
@@ -1551,7 +1553,7 @@ impl CacheClient {
     /// * `value` - data to store
     ///
     /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to conditionally set a field using an
+    /// If you use [send_request](CacheClient::send_request) to conditionally set an item using an
     /// [SetIfAbsentRequest], you can also provide the following optional arguments:
     ///
     /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
@@ -1602,7 +1604,7 @@ impl CacheClient {
     /// * `value` - data to store
     ///
     /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to conditionally set a field using an
+    /// If you use [send_request](CacheClient::send_request) to conditionally set an item using an
     /// [SetIfPresentRequest], you can also provide the following optional arguments:
     ///
     /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
@@ -1655,7 +1657,7 @@ impl CacheClient {
     /// * `equal` - data to compare to the cached value
     ///
     /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to conditionally set a field using an
+    /// If you use [send_request](CacheClient::send_request) to conditionally set an item using an
     /// [SetIfEqualRequest], you can also provide the following optional arguments:
     ///
     /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
@@ -1709,7 +1711,7 @@ impl CacheClient {
     /// * `not_equal` - data to compare to the cached value
     ///
     /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to conditionally set a field using an
+    /// If you use [send_request](CacheClient::send_request) to conditionally set an item using an
     /// [SetIfNotEqualRequest], you can also provide the following optional arguments:
     ///
     /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
@@ -1763,7 +1765,7 @@ impl CacheClient {
     /// * `not_equal` - data to compare to the cached value
     ///
     /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to conditionally set a field using an
+    /// If you use [send_request](CacheClient::send_request) to conditionally set an item using an
     /// [SetIfPresentAndNotEqualRequest], you can also provide the following optional arguments:
     ///
     /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
@@ -1817,7 +1819,7 @@ impl CacheClient {
     /// * `equal` - data to compare to the cached value
     ///
     /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to conditionally set a field using an
+    /// If you use [send_request](CacheClient::send_request) to conditionally set an item using an
     /// [SetIfAbsentOrEqualRequest], you can also provide the following optional arguments:
     ///
     /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.

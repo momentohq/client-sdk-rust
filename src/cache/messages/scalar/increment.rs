@@ -4,7 +4,9 @@ use crate::{
     cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoResult,
 };
 
-/// Adds an integer quantity to a key value.
+/// Adds an integer quantity to a cache item.
+/// Adds the quantity if and only if the existing value is a UTF-8 string representing a base 10 integer.
+/// If the item does not exist, this method creates it and sets the item's value to the amount to increment by.
 ///
 /// # Arguments
 /// * `cache_name` - name of cache
