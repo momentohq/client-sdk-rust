@@ -1,13 +1,7 @@
-/* These are the public namespaces shown in import paths e.g.
-    use momento::config::configurations::laptop;
-    use momento::cache::{Get, GetRequest, Set, SetRequest};
-*/
 pub mod cache;
-/// Configuration structs for the Momento clients.
 pub mod config;
 pub mod errors;
 pub mod topics;
-/*************************************************************/
 
 mod cache_client;
 mod cache_client_builder;
