@@ -1,16 +1,19 @@
-use crate::cache::requests::MomentoRequest;
-use crate::cache_client::CacheClient;
+use momento_protos::cache_client::set_if_request::Condition::Absent;
+use momento_protos::cache_client::set_if_response;
+
+use crate::cache::messages::MomentoRequest;
 use crate::utils::prep_request_with_timeout;
-use crate::{IntoBytes, MomentoResult};
+use crate::CacheClient;
+use crate::{IntoBytes, MomentoError, MomentoResult};
 use std::time::Duration;
 
-/// Request to set a value in a cache.
+/// Request to set associate the given key with the given value if key is not already present in the cache.
 ///
 /// # Arguments
 ///
 /// * `cache_name` - The name of the cache to create.
 /// * `key` - key of the item whose value we are setting
-/// * `value` - data to stored in the cache item
+/// * `value` - data to store
 ///
 /// # Optional Arguments
 ///
@@ -23,18 +26,21 @@ use std::time::Duration;
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::time::Duration;
-/// use momento::cache::{Set, SetRequest};
+/// use momento::cache::{SetIfAbsent, SetIfAbsentRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
-/// let set_request = SetRequest::new(
+/// let set_request = SetIfAbsentRequest::new(
 ///     &cache_name,
 ///     "key",
 ///     "value1"
 /// ).ttl(Duration::from_secs(60));
 ///
 /// match cache_client.send_request(set_request).await {
-///     Ok(_) => println!("Set successful"),
+///     Ok(response) => match response {
+///         SetIfAbsent::Stored => println!("Value stored"),
+///         SetIfAbsent::NotStored => println!("Value not stored"),
+///     }
 ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
 ///         println!("Cache not found: {}", &cache_name);
 ///     } else {
@@ -45,14 +51,14 @@ use std::time::Duration;
 /// # })
 /// # }
 /// ```
-pub struct SetRequest<K: IntoBytes, V: IntoBytes> {
+pub struct SetIfAbsentRequest<K: IntoBytes, V: IntoBytes> {
     cache_name: String,
     key: K,
     value: V,
     ttl: Option<Duration>,
 }
 
-impl<K: IntoBytes, V: IntoBytes> SetRequest<K, V> {
+impl<K: IntoBytes, V: IntoBytes> SetIfAbsentRequest<K, V> {
     pub fn new(cache_name: impl Into<String>, key: K, value: V) -> Self {
         let ttl = None;
         Self {
@@ -69,24 +75,40 @@ impl<K: IntoBytes, V: IntoBytes> SetRequest<K, V> {
     }
 }
 
-impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetRequest<K, V> {
-    type Response = Set;
+impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfAbsentRequest<K, V> {
+    type Response = SetIfAbsent;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<Set> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetIfAbsent> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
-            momento_protos::cache_client::SetRequest {
+            momento_protos::cache_client::SetIfRequest {
                 cache_key: self.key.into_bytes(),
                 cache_body: self.value.into_bytes(),
                 ttl_milliseconds: cache_client.expand_ttl_ms(self.ttl)?,
+                condition: Some(Absent(momento_protos::common::Absent {})),
             },
         )?;
 
-        let _ = cache_client.data_client.clone().set(request).await?;
-        Ok(Set {})
+        let response = cache_client
+            .data_client
+            .clone()
+            .set_if(request)
+            .await?
+            .into_inner();
+        match response.result {
+            Some(set_if_response::Result::Stored(_)) => Ok(SetIfAbsent::Stored),
+            Some(set_if_response::Result::NotStored(_)) => Ok(SetIfAbsent::NotStored),
+            _ => Err(MomentoError::unknown_error(
+                "SetIfAbsent",
+                Some(format!("{:#?}", response)),
+            )),
+        }
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct Set {}
+pub enum SetIfAbsent {
+    Stored,
+    NotStored,
+}

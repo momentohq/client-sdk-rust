@@ -1,5 +1,5 @@
 use super::dictionary_get_field::{DictionaryGetField, DictionaryGetFieldValue};
-use crate::cache::requests::MomentoRequest;
+use crate::cache::messages::MomentoRequest;
 use crate::utils::{parse_string, prep_request_with_timeout};
 use crate::{
     CacheClient, IntoBytes, IntoBytesIterable, MomentoError, MomentoErrorCode, MomentoResult,

@@ -33,7 +33,7 @@ use crate::cache::{
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
-use crate::cache_client_builder::{CacheClientBuilder, NeedsDefaultTtl};
+use crate::cache::cache_client_builder::{CacheClientBuilder, NeedsDefaultTtl};
 use crate::utils::IntoBytesIterable;
 use crate::{utils, IntoBytes, MomentoResult};
 

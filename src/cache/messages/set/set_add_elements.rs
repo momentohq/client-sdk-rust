@@ -1,9 +1,9 @@
 use momento_protos::cache_client::SetUnionRequest;
 
-use crate::cache::requests::MomentoRequest;
+use crate::cache::messages::MomentoRequest;
 use crate::cache::CollectionTtl;
-use crate::cache_client::CacheClient;
 use crate::utils::prep_request_with_timeout;
+use crate::CacheClient;
 use crate::{IntoBytes, IntoBytesIterable, MomentoResult};
 
 /// Request to add elements to the given set. Creates the set if it does not exist.

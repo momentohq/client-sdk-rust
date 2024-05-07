@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 use momento_protos::cache_client::SortedSetElement as ProtoSortedSetElement;
 use momento_protos::cache_client::SortedSetPutRequest;
 
-use crate::cache::requests::MomentoRequest;
+use crate::cache::messages::MomentoRequest;
 use crate::cache::CollectionTtl;
 use crate::utils::prep_request_with_timeout;
 use crate::{CacheClient, IntoBytes, MomentoResult};

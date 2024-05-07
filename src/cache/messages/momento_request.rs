@@ -1,4 +1,4 @@
-use crate::cache_client::CacheClient;
+use crate::CacheClient;
 use crate::MomentoResult;
 
 pub trait MomentoRequest {

@@ -1,19 +1,16 @@
-use momento_protos::cache_client::set_if_request::Condition::Present;
-use momento_protos::cache_client::set_if_response;
-
-use crate::cache::requests::MomentoRequest;
-use crate::cache_client::CacheClient;
+use crate::cache::messages::MomentoRequest;
 use crate::utils::prep_request_with_timeout;
-use crate::{IntoBytes, MomentoError, MomentoResult};
+use crate::CacheClient;
+use crate::{IntoBytes, MomentoResult};
 use std::time::Duration;
 
-/// Request to set associate the given key with the given value if key is present in the cache.
+/// Request to set a value in a cache.
 ///
 /// # Arguments
 ///
 /// * `cache_name` - The name of the cache to create.
 /// * `key` - key of the item whose value we are setting
-/// * `value` - data to store
+/// * `value` - data to stored in the cache item
 ///
 /// # Optional Arguments
 ///
@@ -26,21 +23,18 @@ use std::time::Duration;
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::time::Duration;
-/// use momento::cache::{SetIfPresent, SetIfPresentRequest};
+/// use momento::cache::{Set, SetRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
-/// let set_request = SetIfPresentRequest::new(
+/// let set_request = SetRequest::new(
 ///     &cache_name,
 ///     "key",
 ///     "value1"
 /// ).ttl(Duration::from_secs(60));
 ///
 /// match cache_client.send_request(set_request).await {
-///     Ok(response) => match response {
-///         SetIfPresent::Stored => println!("Value stored"),
-///         SetIfPresent::NotStored => println!("Value not stored"),
-///     }
+///     Ok(_) => println!("Set successful"),
 ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
 ///         println!("Cache not found: {}", &cache_name);
 ///     } else {
@@ -51,14 +45,14 @@ use std::time::Duration;
 /// # })
 /// # }
 /// ```
-pub struct SetIfPresentRequest<K: IntoBytes, V: IntoBytes> {
+pub struct SetRequest<K: IntoBytes, V: IntoBytes> {
     cache_name: String,
     key: K,
     value: V,
     ttl: Option<Duration>,
 }
 
-impl<K: IntoBytes, V: IntoBytes> SetIfPresentRequest<K, V> {
+impl<K: IntoBytes, V: IntoBytes> SetRequest<K, V> {
     pub fn new(cache_name: impl Into<String>, key: K, value: V) -> Self {
         let ttl = None;
         Self {
@@ -75,40 +69,24 @@ impl<K: IntoBytes, V: IntoBytes> SetIfPresentRequest<K, V> {
     }
 }
 
-impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfPresentRequest<K, V> {
-    type Response = SetIfPresent;
+impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetRequest<K, V> {
+    type Response = Set;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetIfPresent> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<Set> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
-            momento_protos::cache_client::SetIfRequest {
+            momento_protos::cache_client::SetRequest {
                 cache_key: self.key.into_bytes(),
                 cache_body: self.value.into_bytes(),
                 ttl_milliseconds: cache_client.expand_ttl_ms(self.ttl)?,
-                condition: Some(Present(momento_protos::common::Present {})),
             },
         )?;
 
-        let response = cache_client
-            .data_client
-            .clone()
-            .set_if(request)
-            .await?
-            .into_inner();
-        match response.result {
-            Some(set_if_response::Result::Stored(_)) => Ok(SetIfPresent::Stored),
-            Some(set_if_response::Result::NotStored(_)) => Ok(SetIfPresent::NotStored),
-            _ => Err(MomentoError::unknown_error(
-                "SetIfPresent",
-                Some(format!("{:#?}", response)),
-            )),
-        }
+        let _ = cache_client.data_client.clone().set(request).await?;
+        Ok(Set {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum SetIfPresent {
-    Stored,
-    NotStored,
-}
+pub struct Set {}
