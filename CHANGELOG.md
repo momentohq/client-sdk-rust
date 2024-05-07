@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.36.0](https://github.com/momentohq/client-sdk-rust/compare/v0.35.0...v0.36.0) (2024-05-07)
+
+
+### Features
+
+* remove legacy sdk and related artifacts ([#265](https://github.com/momentohq/client-sdk-rust/issues/265)) ([e8221ab](https://github.com/momentohq/client-sdk-rust/commit/e8221abc85e164555144c4e191c7ca013f84b852))
+
+
+### Miscellaneous
+
+* audit docs for usage of key/field/value ([#266](https://github.com/momentohq/client-sdk-rust/issues/266)) ([71016e2](https://github.com/momentohq/client-sdk-rust/commit/71016e2e44641d01a22d436ded26b3f56066da39))
+* port example to new sdk ([#262](https://github.com/momentohq/client-sdk-rust/issues/262)) ([fd240b6](https://github.com/momentohq/client-sdk-rust/commit/fd240b6c386ee962d1db29a52d4152eeddc375e8))
+* verify examples in CI and clean up workflow files ([#264](https://github.com/momentohq/client-sdk-rust/issues/264)) ([a34e4ee](https://github.com/momentohq/client-sdk-rust/commit/a34e4eeb0824229bc2e32d01b6e37b53ffacd6ce))
+
 ## [0.35.0](https://github.com/momentohq/client-sdk-rust/compare/v0.34.0...v0.35.0) (2024-05-06)
 
 
