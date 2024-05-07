@@ -2,8 +2,8 @@ use momento_protos::cache_client::set_if_request::Condition::Present;
 use momento_protos::cache_client::set_if_response;
 
 use crate::cache::requests::MomentoRequest;
-use crate::cache_client::CacheClient;
 use crate::utils::prep_request_with_timeout;
+use crate::CacheClient;
 use crate::{IntoBytes, MomentoError, MomentoResult};
 use std::time::Duration;
 
