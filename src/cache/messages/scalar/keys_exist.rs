@@ -7,7 +7,7 @@ use crate::IntoBytesIterable;
 use crate::{CacheClient, MomentoResult};
 
 /// Request to check if the provided keys exist in the cache.
-/// Returns a list or map of booleans indicating whether each given key was found in the cache.
+/// Returns an object that is accessible as a list or map of booleans indicating whether each given key was found in the cache.
 ///
 /// # Arguments
 /// * `cache_name` - name of cache
