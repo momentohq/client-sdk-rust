@@ -1,7 +1,7 @@
 use momento_protos::cache_client::set_if_request::Condition::PresentAndNotEqual;
 use momento_protos::cache_client::set_if_response;
 
-use crate::cache::requests::MomentoRequest;
+use crate::cache::messages::MomentoRequest;
 use crate::utils::prep_request_with_timeout;
 use crate::CacheClient;
 use crate::{IntoBytes, MomentoError, MomentoResult};

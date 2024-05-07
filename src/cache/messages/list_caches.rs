@@ -1,7 +1,7 @@
 use momento_protos::control_client;
 use tonic::Request;
 
-use crate::cache::requests::MomentoRequest;
+use crate::cache::messages::MomentoRequest;
 use crate::{CacheClient, MomentoResult};
 
 /// Request to list all caches in your account.

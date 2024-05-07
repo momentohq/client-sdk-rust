@@ -1,14 +1,14 @@
-use momento_protos::cache_client::set_if_request::Condition::Equal;
+use momento_protos::cache_client::set_if_request::Condition::AbsentOrEqual;
 use momento_protos::cache_client::set_if_response;
 
-use crate::cache::requests::MomentoRequest;
+use crate::cache::messages::MomentoRequest;
 use crate::utils::prep_request_with_timeout;
 use crate::CacheClient;
 use crate::{IntoBytes, MomentoError, MomentoResult};
 use std::time::Duration;
 
-/// Request to associate the given key with the given value if the key is present
-/// in the cache and its value is equal to the supplied `equal` value.
+/// Request to associate the given key with the given value if the key does not already
+/// exist in the cache or the value in the cache is equal to the supplied `equal` value.
 ///
 /// # Arguments
 ///
@@ -28,11 +28,11 @@ use std::time::Duration;
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::time::Duration;
-/// use momento::cache::{SetIfEqual, SetIfEqualRequest};
+/// use momento::cache::{SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
-/// let set_request = SetIfEqualRequest::new(
+/// let set_request = SetIfAbsentOrEqualRequest::new(
 ///     &cache_name,
 ///     "key",
 ///     "new-value",
@@ -41,8 +41,8 @@ use std::time::Duration;
 ///
 /// match cache_client.send_request(set_request).await {
 ///     Ok(response) => match response {
-///         SetIfEqual::Stored => println!("Value stored"),
-///         SetIfEqual::NotStored => println!("Value not stored"),
+///         SetIfAbsentOrEqual::Stored => println!("Value stored"),
+///         SetIfAbsentOrEqual::NotStored => println!("Value not stored"),
 ///     }
 ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
 ///         println!("Cache not found: {}", &cache_name);
@@ -54,7 +54,7 @@ use std::time::Duration;
 /// # })
 /// # }
 /// ```
-pub struct SetIfEqualRequest<K: IntoBytes, V: IntoBytes, E: IntoBytes> {
+pub struct SetIfAbsentOrEqualRequest<K: IntoBytes, V: IntoBytes, E: IntoBytes> {
     cache_name: String,
     key: K,
     value: V,
@@ -62,7 +62,7 @@ pub struct SetIfEqualRequest<K: IntoBytes, V: IntoBytes, E: IntoBytes> {
     ttl: Option<Duration>,
 }
 
-impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> SetIfEqualRequest<K, V, E> {
+impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> SetIfAbsentOrEqualRequest<K, V, E> {
     pub fn new(cache_name: impl Into<String>, key: K, value: V, equal: E) -> Self {
         let ttl = None;
         Self {
@@ -80,10 +80,12 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> SetIfEqualRequest<K, V, E> {
     }
 }
 
-impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest for SetIfEqualRequest<K, V, E> {
-    type Response = SetIfEqual;
+impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest
+    for SetIfAbsentOrEqualRequest<K, V, E>
+{
+    type Response = SetIfAbsentOrEqual;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetIfEqual> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetIfAbsentOrEqual> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -91,7 +93,7 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest for SetIfEqualRequ
                 cache_key: self.key.into_bytes(),
                 cache_body: self.value.into_bytes(),
                 ttl_milliseconds: cache_client.expand_ttl_ms(self.ttl)?,
-                condition: Some(Equal(momento_protos::common::Equal {
+                condition: Some(AbsentOrEqual(momento_protos::common::AbsentOrEqual {
                     value_to_check: self.equal.into_bytes(),
                 })),
             },
@@ -104,10 +106,10 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest for SetIfEqualRequ
             .await?
             .into_inner();
         match response.result {
-            Some(set_if_response::Result::Stored(_)) => Ok(SetIfEqual::Stored),
-            Some(set_if_response::Result::NotStored(_)) => Ok(SetIfEqual::NotStored),
+            Some(set_if_response::Result::Stored(_)) => Ok(SetIfAbsentOrEqual::Stored),
+            Some(set_if_response::Result::NotStored(_)) => Ok(SetIfAbsentOrEqual::NotStored),
             _ => Err(MomentoError::unknown_error(
-                "SetIfEqual",
+                "SetIfAbsentOrEqual",
                 Some(format!("{:#?}", response)),
             )),
         }
@@ -115,7 +117,7 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest for SetIfEqualRequ
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum SetIfEqual {
+pub enum SetIfAbsentOrEqual {
     Stored,
     NotStored,
 }

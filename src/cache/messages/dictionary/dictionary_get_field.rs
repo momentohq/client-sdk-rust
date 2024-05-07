@@ -1,4 +1,4 @@
-use crate::cache::requests::MomentoRequest;
+use crate::cache::messages::MomentoRequest;
 use crate::utils::{parse_string, prep_request_with_timeout};
 use crate::{CacheClient, IntoBytes, MomentoError, MomentoResult};
 use momento_protos::cache_client::dictionary_get_response::DictionaryGetResponsePart;

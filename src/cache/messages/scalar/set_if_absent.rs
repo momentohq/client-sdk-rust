@@ -1,13 +1,13 @@
-use momento_protos::cache_client::set_if_request::Condition::Present;
+use momento_protos::cache_client::set_if_request::Condition::Absent;
 use momento_protos::cache_client::set_if_response;
 
-use crate::cache::requests::MomentoRequest;
+use crate::cache::messages::MomentoRequest;
 use crate::utils::prep_request_with_timeout;
 use crate::CacheClient;
 use crate::{IntoBytes, MomentoError, MomentoResult};
 use std::time::Duration;
 
-/// Request to set associate the given key with the given value if key is present in the cache.
+/// Request to set associate the given key with the given value if key is not already present in the cache.
 ///
 /// # Arguments
 ///
@@ -26,11 +26,11 @@ use std::time::Duration;
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::time::Duration;
-/// use momento::cache::{SetIfPresent, SetIfPresentRequest};
+/// use momento::cache::{SetIfAbsent, SetIfAbsentRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
-/// let set_request = SetIfPresentRequest::new(
+/// let set_request = SetIfAbsentRequest::new(
 ///     &cache_name,
 ///     "key",
 ///     "value1"
@@ -38,8 +38,8 @@ use std::time::Duration;
 ///
 /// match cache_client.send_request(set_request).await {
 ///     Ok(response) => match response {
-///         SetIfPresent::Stored => println!("Value stored"),
-///         SetIfPresent::NotStored => println!("Value not stored"),
+///         SetIfAbsent::Stored => println!("Value stored"),
+///         SetIfAbsent::NotStored => println!("Value not stored"),
 ///     }
 ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
 ///         println!("Cache not found: {}", &cache_name);
@@ -51,14 +51,14 @@ use std::time::Duration;
 /// # })
 /// # }
 /// ```
-pub struct SetIfPresentRequest<K: IntoBytes, V: IntoBytes> {
+pub struct SetIfAbsentRequest<K: IntoBytes, V: IntoBytes> {
     cache_name: String,
     key: K,
     value: V,
     ttl: Option<Duration>,
 }
 
-impl<K: IntoBytes, V: IntoBytes> SetIfPresentRequest<K, V> {
+impl<K: IntoBytes, V: IntoBytes> SetIfAbsentRequest<K, V> {
     pub fn new(cache_name: impl Into<String>, key: K, value: V) -> Self {
         let ttl = None;
         Self {
@@ -75,10 +75,10 @@ impl<K: IntoBytes, V: IntoBytes> SetIfPresentRequest<K, V> {
     }
 }
 
-impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfPresentRequest<K, V> {
-    type Response = SetIfPresent;
+impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfAbsentRequest<K, V> {
+    type Response = SetIfAbsent;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetIfPresent> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetIfAbsent> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -86,7 +86,7 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfPresentRequest<K, V> {
                 cache_key: self.key.into_bytes(),
                 cache_body: self.value.into_bytes(),
                 ttl_milliseconds: cache_client.expand_ttl_ms(self.ttl)?,
-                condition: Some(Present(momento_protos::common::Present {})),
+                condition: Some(Absent(momento_protos::common::Absent {})),
             },
         )?;
 
@@ -97,10 +97,10 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfPresentRequest<K, V> {
             .await?
             .into_inner();
         match response.result {
-            Some(set_if_response::Result::Stored(_)) => Ok(SetIfPresent::Stored),
-            Some(set_if_response::Result::NotStored(_)) => Ok(SetIfPresent::NotStored),
+            Some(set_if_response::Result::Stored(_)) => Ok(SetIfAbsent::Stored),
+            Some(set_if_response::Result::NotStored(_)) => Ok(SetIfAbsent::NotStored),
             _ => Err(MomentoError::unknown_error(
-                "SetIfPresent",
+                "SetIfAbsent",
                 Some(format!("{:#?}", response)),
             )),
         }
@@ -108,7 +108,7 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfPresentRequest<K, V> {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum SetIfPresent {
+pub enum SetIfAbsent {
     Stored,
     NotStored,
 }

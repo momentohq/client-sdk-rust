@@ -1,4 +1,4 @@
-use crate::cache::requests::MomentoRequest;
+use crate::cache::messages::MomentoRequest;
 use crate::utils::prep_request_with_timeout;
 use crate::CacheClient;
 use crate::{IntoBytes, MomentoResult};

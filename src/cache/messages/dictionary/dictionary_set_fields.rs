@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
-use crate::cache::requests::MomentoRequest;
+use crate::cache::messages::MomentoRequest;
 use crate::cache::CollectionTtl;
 use crate::utils::prep_request_with_timeout;
 use crate::IntoBytes;

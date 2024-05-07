@@ -1,7 +1,7 @@
 use momento_protos::cache_client::sorted_set_remove_request::{RemoveElements, Some};
 use momento_protos::cache_client::SortedSetRemoveRequest;
 
-use crate::cache::requests::MomentoRequest;
+use crate::cache::messages::MomentoRequest;
 use crate::utils::prep_request_with_timeout;
 use crate::{CacheClient, IntoBytes, IntoBytesIterable, MomentoResult};
 
