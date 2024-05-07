@@ -69,6 +69,9 @@ jobs:
         # This script relies on dev dependencies such as Tokio, so we run it with the --example flag
         run: cargo run --example test-teardown
 
+      - name: Run examples
+        run: make run-examples
+
   rustfmt-build-examples:
     name: examples - Style & Lint
     runs-on: ubuntu-latest
@@ -86,8 +89,8 @@ jobs:
       - name: rustfmt -> rigorous lint via Clippy -> build
         id: validation
         continue-on-error: true
-        run: |
-          make build-examples
+        run: make build-examples
+
       - name: Send CI failure mail
         if: ${{ steps.validation.outcome == 'failure' }}
         uses: ./.github/actions/error-email-action
