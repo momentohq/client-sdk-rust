@@ -63,7 +63,6 @@ mod flush_cache {
     // tests that all share the same cache. Flushing the cache when other tests are running concurrently creates
     // a race condition and nondeterministic behavior.
     #[tokio::test]
-    #[ignore]
     async fn flush_existing_cache_returns_success() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = &unique_cache_name();
