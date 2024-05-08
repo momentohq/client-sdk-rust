@@ -94,8 +94,6 @@ To run only the integration tests:
 MOMENTO_API_KEY=<api key> make test-integration
 ```
 
-Note: the flush_cache test runs separately from the other tests as all the integration tests share the same cache and flushing the cache when other tests are running concurrently creates a race condition and nondeterministic behavior.
-
 To run a single file of integration tests:
 
 ```
