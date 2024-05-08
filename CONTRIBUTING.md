@@ -104,8 +104,8 @@ MOMENTO_API_KEY=<api key> cargo test --test 'cache_sorted_set'
 
 #### Running through VSCode
 
-If you're using VSCode, you would have been prompted to install certain extensions when you opened the project. If not, then navigate to the [extensions file](./.vscode/extensions.json) and install them. The `rust-lang.rust-analyzer` displays a `Run Test | Debug` button above every test
-that's handy to add breakpoints if you wish to debug request paths. You'll need to update your `MOMENTO_API_KEY` in the [settings](./.vscode/settings.json) file for the tests to run succesfully. (Sometimes it requires a VSCode restart for them to apply).
+If you're using VSCode, you would have been prompted to install certain extensions when you opened the project. If not, then navigate to the [extensions file](./.vscode/extensions.json) and install them. The Rust Analyzer extension displays a `Run Test | Debug` button above every test
+that's handy to run tests through the IDE and add breakpoints to debug request paths. You'll need to update your `MOMENTO_API_KEY` in the [settings](./.vscode/settings.json) file for the tests to run succesfully. (Sometimes it requires a VSCode restart for them to apply).
 
 ### How the integration tests are organized
 
