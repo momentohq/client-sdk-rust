@@ -27,6 +27,8 @@ mod create_delete_list_cache {
 }
 
 mod flush_cache {
+    use momento::cache::DeleteCache;
+
     use super::*;
 
     #[tokio::test]
@@ -57,14 +59,18 @@ mod flush_cache {
         Ok(())
     }
 
-    // This test uses the ignore macro so that we can run it separately from the other
-    // test targets using `cargo test -- --ignored`. This is because all the tests share
-    // the same cache and flushing it will affect the other tests in nondeterministic ways.
+    // Note: the flush_cache test requires creating its own cache as to not interfere with the other integration
+    // tests that all share the same cache. Flushing the cache when other tests are running concurrently creates
+    // a race condition and nondeterministic behavior.
     #[tokio::test]
     #[ignore]
     async fn flush_existing_cache_returns_success() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
-        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let cache_name = &unique_cache_name();
+
+        // Create isolated cache for this test
+        let create_result = client.create_cache(cache_name).await?;
+        assert_eq!(create_result, CreateCache::Created {});
 
         // Insert some elements
         let item1 = TestScalar::new();
@@ -100,6 +106,10 @@ mod flush_cache {
         assert_eq!(get_result3, Get::Miss {});
         let get_result4 = client.get(cache_name, item2.key()).await?;
         assert_eq!(get_result4, Get::Miss {});
+
+        // Delete the cache
+        let delete_result = client.delete_cache(cache_name).await?;
+        assert_eq!(delete_result, DeleteCache {});
 
         Ok(())
     }
