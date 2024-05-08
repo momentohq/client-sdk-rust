@@ -105,7 +105,9 @@ MOMENTO_API_KEY=<api key> cargo test --test 'cache_sorted_set'
 #### Running through VSCode
 
 If you're using VSCode, you would have been prompted to install certain extensions when you opened the project. If not, then navigate to the [extensions file](./.vscode/extensions.json) and install them. The Rust Analyzer extension displays a `Run Test | Debug` button above every test
-that's handy to run tests through the IDE and add breakpoints to debug request paths. You'll need to update your `MOMENTO_API_KEY` in the [settings](./.vscode/settings.json) file for the tests to run succesfully. (Sometimes it requires a VSCode restart for them to apply).
+that's handy to run tests through the IDE and add breakpoints to debug request paths. 
+
+To configure required the environment variable, `MOMENTO_API_KEY`, for the Rust Analyzer, you'll need to update your VSCode `settings.json`. The repository includes a default settings file that you can use as a starting point. If you do not already have a `settings.json` file in your .vscode directory or if you don't have existing global settings that conflict, you can rename `settings.json.default` to `settings.json`. If you already have a `settings.json` file, consider merging the necessary configurations to preserve your existing settings. Note that changes to `settings.json` may require restarting VSCode to take effect.
 
 ### How the integration tests are organized
 
