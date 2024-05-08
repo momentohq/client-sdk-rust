@@ -1,5 +1,5 @@
-use momento::{CredentialProvider, MomentoError, TopicClient};
 use futures::StreamExt;
+use momento::{CredentialProvider, MomentoError, TopicClient};
 
 #[tokio::main]
 async fn main() -> Result<(), MomentoError> {
