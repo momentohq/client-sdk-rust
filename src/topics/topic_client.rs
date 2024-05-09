@@ -17,32 +17,39 @@ pub struct TopicClient {
     pub(crate) configuration: Configuration,
 }
 
-/// Work with topics, publishing and subscribing.
-/// ```rust
-/// use momento::topics::TopicClient;
-/// use momento::{CredentialProvider};
+/// Client to work with Momento Topics, the pub/sub service.
+///
+/// # Example
+/// ```no_run
+/// # fn main() -> anyhow::Result<()> {
+/// # tokio_test::block_on(async {
+/// use momento::{CredentialProvider, TopicClient};
 /// use futures::StreamExt;
 ///
-/// async {
-///     let credential_provider = CredentialProvider::from_string("token".to_string())
-///        .expect("could not get credentials");
-///     // Get a topic client
-///     let client = TopicClient::connect(
-///         credential_provider,
-///         Some("github-demo")
-///     ).expect("could not connect");
-///
-///     // Make a subscription
-///     let mut subscription = client
-///         .subscribe("some_cache".to_string(), "some topic".to_string(), None)
-///         .await
-///         .expect("subscribe rpc failed");
-///
-///     // Consume the subscription
-///     while let Some(item) = subscription.next().await {
-///         println!("{item:?}")
-///     }
+/// let topic_client = match TopicClient::builder()
+///     .configuration(momento::topics::configurations::laptop::latest())
+///     .credential_provider(
+///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
+///             .expect("auth token should be valid"),
+///     )
+///     .build()
+/// {
+///     Ok(client) => client,
+///     Err(err) => panic!("{err}"),
 /// };
+///
+/// // Publish to a topic
+/// topic_client.publish("cache", "topic", "value").await?;
+///
+/// // Subscribe to a topic and print received messages
+/// let mut subscription = topic_client.subscribe("cache", "topic").await?;
+/// while let Some(message) = subscription.next().await {
+///    println!("Received message: {:?}", message);
+/// }
+///
+/// # Ok(())
+/// # })
+/// # }
 /// ```
 impl TopicClient {
     /* constructor */
@@ -53,6 +60,16 @@ impl TopicClient {
     /// Publish a value to a topic.
     /// The cache is used as a namespace for your topics, and it needs to exist.
     /// You don't create topics, you just start using them.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - The name of the cache to use as a namespace for the topic.
+    /// * `topic` - The name of the topic to publish to.
+    /// * `value` - The value to publish to the topic.
+    ///
+    /// # Example
+    ///
+    /// See [TopicClient] for an example.
     pub async fn publish(
         &self,
         cache_name: impl Into<String>,
@@ -66,6 +83,19 @@ impl TopicClient {
     /// Subscribe to a topic.
     /// The cache is used as a namespace for your topics, and it needs to exist.
     /// You don't create topics, you just start using them.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - The name of the cache to use as a namespace for the topic.
+    /// * `topic` - The name of the topic to publish to.
+    ///
+    /// # Optional Arguments
+    ///
+    /// * `resume_at_topic_sequence_number` - The sequence number to resume from. If not provided, the subscription will start from the latest message or from zero if starting a new subscription.
+    ///
+    /// # Example
+    ///
+    /// See [TopicClient] for an example.
     pub async fn subscribe(
         &self,
         cache_name: impl Into<String> + Clone,

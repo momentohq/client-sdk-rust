@@ -4,7 +4,22 @@ use crate::{
     MomentoResult, TopicClient,
 };
 
-/// TODO
+/// Subscribe to a topic.
+/// The cache is used as a namespace for your topics, and it needs to exist.
+/// You don't create topics, you just start using them.
+///
+/// # Arguments
+///
+/// * `cache_name` - The name of the cache to use as a namespace for the topic.
+/// * `topic` - The name of the topic to publish to.
+///
+/// # Optional Arguments
+///
+/// * `resume_at_topic_sequence_number` - The sequence number to resume from. If not provided, the subscription will start from the latest message or from zero if starting a new subscription.
+///
+/// # Example
+///
+/// See [TopicClient] for an example.
 pub struct SubscriptionRequest {
     cache_name: String,
     topic: String,
