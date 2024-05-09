@@ -19,7 +19,35 @@ use crate::{
 ///
 /// # Example
 ///
-/// See [TopicClient] for an example.
+/// ```no_run
+/// # fn main() -> anyhow::Result<()> {
+/// # tokio_test::block_on(async {
+/// use momento::{CredentialProvider, TopicClient};
+/// use futures::StreamExt;
+/// use momento::topics::{SubscribeRequest};
+///
+/// let topic_client = TopicClient::builder()
+///     .configuration(momento::topics::configurations::laptop::latest())
+///     .credential_provider(
+///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
+///             .expect("auth token should be valid"),
+///     )
+///     .build()?;
+///
+/// // Subscribe to a topic and resume from sequence number 10
+/// let request = SubscribeRequest::new("cache", "topic", Some(10));
+///
+/// // Note: your subscription must be declared as `mut`!
+/// let mut subscription = topic_client.send_request(request).await?;
+///
+/// // Consume messages from the subscription using `next()`
+/// while let Some(message) = subscription.next().await {
+///    println!("Received message: {:?}", message);
+/// }
+/// # Ok(())
+/// # })
+/// # }
+/// ```
 pub struct SubscribeRequest {
     cache_name: String,
     topic: String,

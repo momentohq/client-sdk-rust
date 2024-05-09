@@ -14,6 +14,69 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 ///
 /// A Subscription is a `futures::Stream<SubscriptionItem>`. It will try to
 /// stay connected for as long as you try to consume it.
+///
+/// # Examples
+///
+/// Below are a couple examples of spawning a task with a subscriber.
+///
+/// You can call `abort` on the task handle after some time has passed.
+/// ```no_run
+/// # fn main() -> anyhow::Result<()> {
+/// # tokio_test::block_on(async {
+/// use momento::{CredentialProvider, TopicClient};
+/// use futures::StreamExt;
+/// 
+/// let topic_client = TopicClient::builder()
+///     .configuration(momento::topics::configurations::laptop::latest())
+///     .credential_provider(
+///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
+///             .expect("auth token should be valid"),
+///     )
+///     .build()?;
+/// 
+/// let mut subscription = topic_client.subscribe("cache", "my-topic").await?;
+/// let subscriber_handle = tokio::spawn(async move {
+///     println!("Subscriber should keep receiving until thread is killed");
+///     while let Some(message) = subscription.next().await {
+///         println!("[1] Received message: {:?}", message);
+///     }
+/// });
+///
+/// tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+/// subscriber_handle.abort();
+/// 
+/// # Ok(())
+/// # })
+/// # }
+/// ```
+///
+/// Or you can break out of the `next()` loop after consuming some number of messages.
+/// ```no_run
+/// # fn main() -> anyhow::Result<()> {
+/// # tokio_test::block_on(async {
+/// use momento::{CredentialProvider, TopicClient};
+/// use futures::StreamExt;
+/// 
+/// let topic_client = TopicClient::builder()
+///     .configuration(momento::topics::configurations::laptop::latest())
+///     .credential_provider(
+///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
+///             .expect("auth token should be valid"),
+///     )
+///     .build()?;
+/// 
+/// let mut subscription = topic_client.subscribe("cache", "my-topic").await?;
+/// tokio::spawn(async move {
+///     println!("Subscriber should receive 10 messages then exist");
+///     for _ in 0..10 {
+///         let message = subscription.next().await;
+///         println!("[2] Received message: {:?}", message);
+///     }
+/// });
+/// # Ok(())
+/// # })
+/// # }
+/// ```
 pub struct Subscription {
     client: PubsubClient<ChannelType>,
     cache_name: String,

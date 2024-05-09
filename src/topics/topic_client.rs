@@ -20,7 +20,8 @@ pub struct TopicClient {
 /// Client to work with Momento Topics, the pub/sub service.
 ///
 /// # Example
-/// ```no_run
+///
+/// ```
 /// # fn main() -> anyhow::Result<()> {
 /// # tokio_test::block_on(async {
 /// use momento::{CredentialProvider, TopicClient};
@@ -37,16 +38,6 @@ pub struct TopicClient {
 ///     Ok(client) => client,
 ///     Err(err) => panic!("{err}"),
 /// };
-///
-/// // Publish to a topic
-/// topic_client.publish("cache", "topic", "value").await?;
-///
-/// // Subscribe to a topic and print received messages
-/// let mut subscription = topic_client.subscribe("cache", "topic").await?;
-/// while let Some(message) = subscription.next().await {
-///    println!("Received message: {:?}", message);
-/// }
-///
 /// # Ok(())
 /// # })
 /// # }
@@ -69,7 +60,29 @@ impl TopicClient {
     ///
     /// # Example
     ///
-    /// See [TopicClient] for an example.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # tokio_test::block_on(async {
+    /// use momento::{CredentialProvider, TopicClient};
+    /// use momento::topics::{TopicPublish};
+    /// use futures::StreamExt;
+    ///
+    /// let topic_client = TopicClient::builder()
+    ///     .configuration(momento::topics::configurations::laptop::latest())
+    ///     .credential_provider(
+    ///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
+    ///             .expect("auth token should be valid"),
+    ///     )
+    ///     .build()?;
+    ///
+    /// // Publish to a topic
+    /// match topic_client.publish("cache", "topic", "value").await? {
+    ///     TopicPublish {} => println!("Published message!"),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
     pub async fn publish(
         &self,
         cache_name: impl Into<String>,
@@ -89,13 +102,33 @@ impl TopicClient {
     /// * `cache_name` - The name of the cache to use as a namespace for the topic.
     /// * `topic` - The name of the topic to publish to.
     ///
-    /// # Optional Arguments
-    ///
-    /// * `resume_at_topic_sequence_number` - The sequence number to resume from. If not provided, the subscription will start from the latest message or from zero if starting a new subscription.
-    ///
     /// # Example
     ///
-    /// See [TopicClient] for an example.
+    /// ```no_run
+    /// # fn main() -> anyhow::Result<()> {
+    /// # tokio_test::block_on(async {
+    /// use momento::{CredentialProvider, TopicClient};
+    /// use futures::StreamExt;
+    ///
+    /// let topic_client = TopicClient::builder()
+    ///     .configuration(momento::topics::configurations::laptop::latest())
+    ///     .credential_provider(
+    ///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
+    ///             .expect("auth token should be valid"),
+    ///     )
+    ///     .build()?;
+    ///
+    /// // Subscribe to a topic. Note: your subscription must be declared as `mut`!
+    /// let mut subscription = topic_client.subscribe("cache", "topic").await?;
+    ///
+    /// // Consume messages from the subscription using `next()`
+    /// while let Some(message) = subscription.next().await {
+    ///    println!("Received message: {:?}", message);
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
     pub async fn subscribe(
         &self,
         cache_name: impl Into<String> + Clone,
