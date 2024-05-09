@@ -25,7 +25,7 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 /// # tokio_test::block_on(async {
 /// use momento::{CredentialProvider, TopicClient};
 /// use futures::StreamExt;
-/// 
+///
 /// let topic_client = TopicClient::builder()
 ///     .configuration(momento::topics::configurations::laptop::latest())
 ///     .credential_provider(
@@ -33,7 +33,7 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 ///             .expect("auth token should be valid"),
 ///     )
 ///     .build()?;
-/// 
+///
 /// let mut subscription = topic_client.subscribe("cache", "my-topic").await?;
 /// let subscriber_handle = tokio::spawn(async move {
 ///     println!("Subscriber should keep receiving until thread is killed");
@@ -44,7 +44,7 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 ///
 /// tokio::time::sleep(std::time::Duration::from_secs(10)).await;
 /// subscriber_handle.abort();
-/// 
+///
 /// # Ok(())
 /// # })
 /// # }
@@ -56,7 +56,7 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 /// # tokio_test::block_on(async {
 /// use momento::{CredentialProvider, TopicClient};
 /// use futures::StreamExt;
-/// 
+///
 /// let topic_client = TopicClient::builder()
 ///     .configuration(momento::topics::configurations::laptop::latest())
 ///     .credential_provider(
@@ -64,7 +64,7 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 ///             .expect("auth token should be valid"),
 ///     )
 ///     .build()?;
-/// 
+///
 /// let mut subscription = topic_client.subscribe("cache", "my-topic").await?;
 /// tokio::spawn(async move {
 ///     println!("Subscriber should receive 10 messages then exist");
