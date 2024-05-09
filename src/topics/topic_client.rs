@@ -129,6 +129,8 @@ impl TopicClient {
     /// # })
     /// # }
     /// ```
+    ///
+    /// Learn more about how to use a Momento Topics [Subscription].
     pub async fn subscribe(
         &self,
         cache_name: impl Into<String> + Clone,

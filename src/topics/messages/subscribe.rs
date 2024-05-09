@@ -48,6 +48,8 @@ use crate::{
 /// # })
 /// # }
 /// ```
+/// 
+/// Learn more about how to use a Momento Topics [Subscription].
 pub struct SubscribeRequest {
     cache_name: String,
     topic: String,
