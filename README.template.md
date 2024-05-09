@@ -8,7 +8,7 @@ You will need to install additional dependencies to make full use of our SDK:
 
 ```
 cargo add momento
-cargo add tokio
+cargo add tokio --features full
 cargo add futures
 ```
 
