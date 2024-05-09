@@ -6,7 +6,7 @@ The Momento Rust SDK package is available on `crates.io`: [momento](https://crat
 
 You will need to install additional dependencies to make full use of our SDK:
 
-```
+```bash
 cargo add momento
 cargo add tokio --features full
 cargo add futures
