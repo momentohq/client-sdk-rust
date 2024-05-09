@@ -721,11 +721,10 @@ pub async fn example_API_KeysExist(
 
 #[allow(non_snake_case)]
 pub fn example_API_InstantiateTopicClient() -> Result<(), MomentoError> {
-    let _topic_client = TopicClient::connect(
-        CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())?,
-        None,
-    )
-    .expect("could not connect");
+    let _topic_client = TopicClient::builder()
+        .configuration(momento::topics::configurations::laptop::latest())
+        .credential_provider(CredentialProvider::from_env_var("MOMENTO_API_KEY")?)
+        .build()?;
     Ok(())
 }
 
@@ -750,7 +749,7 @@ pub async fn example_API_TopicSubscribe(
 ) -> Result<(), MomentoError> {
     // Make a subscription
     let mut subscription = topic_client
-        .subscribe(cache_name, topic_name, None)
+        .subscribe(cache_name, topic_name)
         .await
         .expect("subscribe rpc failed");
 
@@ -836,11 +835,10 @@ pub async fn main() -> Result<(), MomentoError> {
 
     example_API_InstantiateTopicClient()?;
 
-    let topic_client = TopicClient::connect(
-        CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())?,
-        None,
-    )
-    .expect("TopicClient could not connect");
+    let topic_client = TopicClient::builder()
+        .configuration(momento::topics::configurations::laptop::latest())
+        .credential_provider(CredentialProvider::from_env_var("MOMENTO_API_KEY")?)
+        .build()?;
     let topic_name = format!("{}-{}", "docs-examples-topic", Uuid::new_v4());
 
     example_API_TopicPublish(&topic_client, &cache_name, &topic_name).await?;
