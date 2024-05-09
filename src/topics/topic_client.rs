@@ -8,7 +8,7 @@ use crate::topics::{Configuration, IntoTopicValue, PublishRequest, Subscription}
 use crate::{MomentoError, MomentoResult};
 
 use crate::topics::messages::publish::TopicPublish;
-use crate::topics::messages::subscribe::SubscriptionRequest;
+use crate::topics::messages::subscribe::SubscribeRequest;
 
 type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 
@@ -101,7 +101,7 @@ impl TopicClient {
         cache_name: impl Into<String> + Clone,
         topic: impl Into<String> + Clone,
     ) -> Result<Subscription, MomentoError> {
-        let request = SubscriptionRequest::new(cache_name, topic, None);
+        let request = SubscribeRequest::new(cache_name, topic, None);
         request.send(self).await
     }
 
@@ -109,7 +109,7 @@ impl TopicClient {
     /// you want to set optional fields on a request that are not supported by the short-hand API for
     /// that request type.
     ///
-    /// See [SubscriptionRequest] for an example of creating a request with optional fields.
+    /// See [SubscribeRequest] for an example of creating a request with optional fields.
     pub async fn send_request<R: MomentoRequest>(&self, request: R) -> MomentoResult<R::Response> {
         request.send(self).await
     }

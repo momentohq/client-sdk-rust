@@ -20,13 +20,13 @@ use crate::{
 /// # Example
 ///
 /// See [TopicClient] for an example.
-pub struct SubscriptionRequest {
+pub struct SubscribeRequest {
     cache_name: String,
     topic: String,
     resume_at_topic_sequence_number: Option<u64>,
 }
 
-impl SubscriptionRequest {
+impl SubscribeRequest {
     pub fn new(
         cache_name: impl Into<String>,
         topic: impl Into<String>,
@@ -40,7 +40,7 @@ impl SubscriptionRequest {
     }
 }
 
-impl MomentoRequest for SubscriptionRequest {
+impl MomentoRequest for SubscribeRequest {
     type Response = Subscription;
 
     async fn send(self, topic_client: &TopicClient) -> MomentoResult<Subscription> {
