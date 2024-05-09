@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.37.0](https://github.com/momentohq/client-sdk-rust/compare/v0.36.0...v0.37.0) (2024-05-09)
+
+
+### Features
+
+* update the topic client for consistency with cache client ([#276](https://github.com/momentohq/client-sdk-rust/issues/276)) ([fd5d5a8](https://github.com/momentohq/client-sdk-rust/commit/fd5d5a8ae4bd1860c85c5aa7cd195eacf9c41c1d))
+
+
+### Miscellaneous
+
+* add settings file for rust analyzer env variables ([#268](https://github.com/momentohq/client-sdk-rust/issues/268)) ([a084f75](https://github.com/momentohq/client-sdk-rust/commit/a084f75923754745fc4a11efd3ba4842e535ef29))
+* flush_cache test should create own cache ([#272](https://github.com/momentohq/client-sdk-rust/issues/272)) ([c55079e](https://github.com/momentohq/client-sdk-rust/commit/c55079e2a288e887a4e2ba7f0a1591d6161ba8cc))
+
 ## [0.36.0](https://github.com/momentohq/client-sdk-rust/compare/v0.35.0...v0.36.0) (2024-05-07)
 
 
