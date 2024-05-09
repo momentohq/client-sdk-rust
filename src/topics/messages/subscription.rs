@@ -1,8 +1,7 @@
 use futures::future::BoxFuture;
 use futures::{Future, FutureExt};
-use momento_protos::cache_client::pubsub::{
-    self, pubsub_client::PubsubClient, SubscriptionRequest,
-};
+use momento_protos::cache_client::pubsub::SubscriptionRequest;
+use momento_protos::cache_client::pubsub::{self, pubsub_client::PubsubClient};
 use tonic::{codegen::InterceptedService, transport::Channel};
 
 use crate::grpc::header_interceptor::HeaderInterceptor;
