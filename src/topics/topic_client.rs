@@ -12,11 +12,6 @@ use crate::topics::messages::subscribe::SubscribeRequest;
 
 type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 
-pub struct TopicClient {
-    pub(crate) client: pubsub::pubsub_client::PubsubClient<ChannelType>,
-    pub(crate) configuration: Configuration,
-}
-
 /// Client to work with Momento Topics, the pub/sub service.
 ///
 /// # Example
@@ -42,6 +37,11 @@ pub struct TopicClient {
 /// # })
 /// # }
 /// ```
+pub struct TopicClient {
+    pub(crate) client: pubsub::pubsub_client::PubsubClient<ChannelType>,
+    pub(crate) configuration: Configuration,
+}
+
 impl TopicClient {
     /* constructor */
     pub fn builder() -> TopicClientBuilder<NeedsConfiguration> {
