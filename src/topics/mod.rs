@@ -1,7 +1,7 @@
 mod messages;
 pub use messages::publish::{PublishRequest, TopicPublish};
 pub use messages::subscribe::SubscribeRequest;
-pub use messages::subscription::{IntoTopicValue, Subscription, SubscriptionState};
+pub use messages::subscription::*;
 pub use messages::MomentoRequest;
 
 mod config;
