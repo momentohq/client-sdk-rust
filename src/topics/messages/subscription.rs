@@ -30,7 +30,7 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 ///     .configuration(momento::topics::configurations::laptop::latest())
 ///     .credential_provider(
 ///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
-///             .expect("auth token should be valid"),
+///             .expect("API key should be valid"),
 ///     )
 ///     .build()?;
 ///
@@ -61,7 +61,7 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 ///     .configuration(momento::topics::configurations::laptop::latest())
 ///     .credential_provider(
 ///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
-///             .expect("auth token should be valid"),
+///             .expect("API key should be valid"),
 ///     )
 ///     .build()?;
 ///
