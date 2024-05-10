@@ -24,18 +24,11 @@ use crate::{
 /// # tokio_test::block_on(async {
 /// use momento::{CredentialProvider, TopicClient};
 /// use futures::StreamExt;
-/// use momento::topics::{configurations , SubscribeRequest};
-///
-/// let topic_client = TopicClient::builder()
-///     .configuration(configurations::Laptop::latest())
-///     .credential_provider(
-///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
-///             .expect("API key should be valid"),
-///     )
-///     .build()?;
+/// use momento::topics::SubscribeRequest;
+/// # let (topic_client, cache_name) = momento_test_util::create_doctest_topic_client();
 ///
 /// // Subscribe to a topic and resume from sequence number 10
-/// let request = SubscribeRequest::new("cache", "topic", Some(10));
+/// let request = SubscribeRequest::new(cache_name, "topic", Some(10));
 ///
 /// // Note: your subscription must be declared as `mut`!
 /// let mut subscription = topic_client.send_request(request).await?;

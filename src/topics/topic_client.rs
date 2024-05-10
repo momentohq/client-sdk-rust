@@ -36,6 +36,7 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 /// # })
 /// # }
 /// ```
+#[derive(Clone, Debug)]
 pub struct TopicClient {
     pub(crate) client: pubsub::pubsub_client::PubsubClient<ChannelType>,
     pub(crate) configuration: Configuration,
@@ -63,18 +64,11 @@ impl TopicClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # tokio_test::block_on(async {
     /// use momento::{CredentialProvider, TopicClient};
-    /// use momento::topics::{configurations, TopicPublish};
-    ///
-    /// let topic_client = TopicClient::builder()
-    ///     .configuration(configurations::Laptop::latest())
-    ///     .credential_provider(
-    ///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
-    ///             .expect("API key should be valid"),
-    ///     )
-    ///     .build()?;
+    /// use momento::topics::TopicPublish;
+    /// # let (topic_client, cache_name) = momento_test_util::create_doctest_topic_client();
     ///
     /// // Publish to a topic
-    /// match topic_client.publish("cache", "topic", "value").await? {
+    /// match topic_client.publish(cache_name, "topic", "value").await? {
     ///     TopicPublish {} => println!("Published message!"),
     /// }
     /// # Ok(())
@@ -107,17 +101,10 @@ impl TopicClient {
     /// # tokio_test::block_on(async {
     /// use momento::{topics::configurations, CredentialProvider, TopicClient};
     /// use futures::StreamExt;
-    ///
-    /// let topic_client = TopicClient::builder()
-    ///     .configuration(configurations::Laptop::latest())
-    ///     .credential_provider(
-    ///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
-    ///             .expect("API key should be valid"),
-    ///     )
-    ///     .build()?;
+    /// # let (topic_client, cache_name) = momento_test_util::create_doctest_topic_client();
     ///
     /// // Subscribe to a topic. Note: your subscription must be declared as `mut`!
-    /// let mut subscription = topic_client.subscribe("cache", "topic").await?;
+    /// let mut subscription = topic_client.subscribe(cache_name, "topic").await?;
     ///
     /// // Consume messages from the subscription using `next()`
     /// while let Some(message) = subscription.next().await {

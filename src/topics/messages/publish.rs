@@ -21,18 +21,11 @@ use crate::{
 /// # fn main() -> anyhow::Result<()> {
 /// # tokio_test::block_on(async {
 /// use momento::{CredentialProvider, TopicClient};
-/// use momento::topics::{configurations, TopicPublish, PublishRequest};
-///
-/// let topic_client = TopicClient::builder()
-///     .configuration(configurations::Laptop::latest())
-///     .credential_provider(
-///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
-///             .expect("API key should be valid"),
-///     )
-///     .build()?;
+/// use momento::topics::{TopicPublish, PublishRequest};
+/// # let (topic_client, cache_name) = momento_test_util::create_doctest_topic_client();
 ///
 /// // Publish to a topic
-/// let request = PublishRequest::new("cache", "topic", "value");
+/// let request = PublishRequest::new(cache_name, "topic", "value");
 /// match topic_client.send_request(request).await? {
 ///     TopicPublish {} => println!("Published message!"),
 /// }

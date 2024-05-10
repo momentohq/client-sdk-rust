@@ -1,3 +1,6 @@
+use core::str;
+use std::convert::{TryFrom, TryInto};
+
 use futures::future::BoxFuture;
 use futures::{Future, FutureExt};
 use momento_protos::cache_client::pubsub::SubscriptionRequest;
@@ -5,6 +8,8 @@ use momento_protos::cache_client::pubsub::{self, pubsub_client::PubsubClient};
 use tonic::{codegen::InterceptedService, transport::Channel};
 
 use crate::grpc::header_interceptor::HeaderInterceptor;
+use crate::utils::parse_string;
+use crate::MomentoError;
 
 type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 
@@ -25,16 +30,9 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 /// # tokio_test::block_on(async {
 /// use momento::{topics::configurations, CredentialProvider, TopicClient};
 /// use futures::StreamExt;
+/// # let (topic_client, cache_name) = momento_test_util::create_doctest_topic_client();
 ///
-/// let topic_client = TopicClient::builder()
-///     .configuration(configurations::Laptop::latest())
-///     .credential_provider(
-///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
-///             .expect("API key should be valid"),
-///     )
-///     .build()?;
-///
-/// let mut subscription = topic_client.subscribe("cache", "my-topic").await?;
+/// let mut subscription = topic_client.subscribe(cache_name, "my-topic").await?;
 /// let subscriber_handle = tokio::spawn(async move {
 ///     println!("Subscriber should keep receiving until thread is killed");
 ///     while let Some(message) = subscription.next().await {
@@ -56,16 +54,9 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 /// # tokio_test::block_on(async {
 /// use momento::{topics::configurations, CredentialProvider, TopicClient};
 /// use futures::StreamExt;
+/// # let (topic_client, cache_name) = momento_test_util::create_doctest_topic_client();
 ///
-/// let topic_client = TopicClient::builder()
-///     .configuration(configurations::Laptop::latest())
-///     .credential_provider(
-///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
-///             .expect("API key should be valid"),
-///     )
-///     .build()?;
-///
-/// let mut subscription = topic_client.subscribe("cache", "my-topic").await?;
+/// let mut subscription = topic_client.subscribe(cache_name, "my-topic").await?;
 /// tokio::spawn(async move {
 ///     println!("Subscriber should receive 10 messages then exist");
 ///     for _ in 0..10 {
@@ -274,7 +265,7 @@ impl futures::Stream for Subscription {
 }
 
 /// An item from a topic.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum SubscriptionItem {
     Value(SubscriptionValue),
     /// Sometimes something will break in a subscription. It is an unfortunate reality
@@ -286,8 +277,19 @@ pub enum SubscriptionItem {
     Discontinuity(Discontinuity),
 }
 
+impl TryFrom<SubscriptionItem> for String {
+    type Error = MomentoError;
+
+    fn try_from(value: SubscriptionItem) -> Result<Self, Self::Error> {
+        match value {
+            SubscriptionItem::Value(v) => v.try_into(),
+            SubscriptionItem::Discontinuity(_) => Err(MomentoError::discontinuity()),
+        }
+    }
+}
+
 /// An actual published value from a topic.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct SubscriptionValue {
     /// The published value.
     pub kind: ValueKind,
@@ -296,7 +298,18 @@ pub struct SubscriptionValue {
     pub topic_sequence_number: u64,
 }
 
-#[derive(Debug)]
+impl TryFrom<SubscriptionValue> for String {
+    type Error = MomentoError;
+
+    fn try_from(value: SubscriptionValue) -> Result<Self, Self::Error> {
+        match value.kind {
+            ValueKind::Text(string) => Ok(string),
+            ValueKind::Binary(binary) => parse_string(binary),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub enum ValueKind {
     /// A value that was published to the topic as a string.
     Text(String),
@@ -310,7 +323,7 @@ pub enum ValueKind {
 /// You might not care about these, and that's okay! It's probably a good idea to
 /// log them though, so you can reach out for help if you notice something naughty
 /// that hurts your users.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Discontinuity {
     /// The last sequence number we know we processed for this stream on your
     /// behalf - it is not necessarily the last sequence number you received!

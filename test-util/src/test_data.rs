@@ -21,6 +21,10 @@ pub fn unique_value() -> String {
     unique_string("value")
 }
 
+pub fn unique_topic_name() -> String {
+    unique_string("topic")
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct TestScalar {
     pub key: String,
