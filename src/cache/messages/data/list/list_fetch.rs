@@ -177,11 +177,7 @@ impl TryFrom<ListFetchValue> for Vec<String> {
     type Error = MomentoError;
 
     fn try_from(value: ListFetchValue) -> Result<Self, Self::Error> {
-        Ok(value
-            .raw_item
-            .into_iter()
-            .map(|v| parse_string(v).expect("expected a valid UTF-8 string"))
-            .collect())
+        value.raw_item.into_iter().map(parse_string).collect()
     }
 }
 

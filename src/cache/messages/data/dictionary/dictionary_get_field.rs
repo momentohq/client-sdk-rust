@@ -104,7 +104,10 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryGetFieldRequest<D,
                             Some(format!("{:#?}", value)),
                         )),
                     },
-                    None => Err(MomentoError::unknown_error("DictionaryGetField", None)),
+                    None => Err(MomentoError::unknown_error(
+                        "DictionaryGetField",
+                        Some("Expected to receive one element".to_string()),
+                    )),
                 }
             }
             _ => Err(MomentoError::unknown_error(

@@ -20,6 +20,7 @@ pub struct CacheTestState {
     runtime: tokio::runtime::Runtime,
 }
 
+#[allow(clippy::expect_used)] // we want to panic if clients can't be built
 impl CacheTestState {
     fn new() -> Self {
         let cache_name = get_test_cache_name();
