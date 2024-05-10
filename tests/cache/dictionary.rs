@@ -1,5 +1,5 @@
 use momento::cache::{
-    DictionaryFetch, DictionaryGetField, DictionaryGetFields, DictionaryIncrement,
+    DictionaryFetchResponse, DictionaryGetField, DictionaryGetFields, DictionaryIncrement,
     DictionaryLength, DictionaryRemoveField, DictionaryRemoveFields, DictionarySetField,
     DictionarySetFields,
 };
@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 
 fn assert_fetched_dictionary_equals_test_data(
-    dictionary_fetch_result: DictionaryFetch,
+    dictionary_fetch_result: DictionaryFetchResponse,
     expected: &TestDictionary,
 ) -> Result<(), MomentoError> {
     let actual: HashMap<String, String> = dictionary_fetch_result.try_into()?;
@@ -30,7 +30,7 @@ mod dictionary_fetch {
         // Test a miss
         let dictionary_name = unique_key();
         let result = client.dictionary_fetch(cache_name, dictionary_name).await?;
-        assert_eq!(result, DictionaryFetch::Miss);
+        assert_eq!(result, DictionaryFetchResponse::Miss);
 
         // Test a hit
         let item = TestDictionary::new();

@@ -10,7 +10,7 @@ pub use messages::list_caches::{
 };
 
 pub use messages::dictionary::dictionary_fetch::{
-    DictionaryFetch, DictionaryFetchRequest, DictionaryFetchValue,
+    DictionaryFetchRequest, DictionaryFetchResponse, DictionaryFetchValue,
 };
 pub use messages::dictionary::dictionary_get_field::{
     DictionaryGetField, DictionaryGetFieldRequest,
