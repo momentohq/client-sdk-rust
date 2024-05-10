@@ -31,7 +31,7 @@ pub use messages::dictionary::dictionary_remove_fields::{
     DictionaryRemoveFieldsRequest, DictionaryRemoveFieldsResponse,
 };
 pub use messages::dictionary::dictionary_set_field::{
-    DictionarySetField, DictionarySetFieldRequest,
+    DictionarySetFieldRequest, DictionarySetFieldResponse,
 };
 pub use messages::dictionary::dictionary_set_fields::{
     DictionaryFieldValuePair, DictionarySetFields, DictionarySetFieldsRequest,

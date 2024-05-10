@@ -1,7 +1,7 @@
 use momento::cache::{
     DictionaryFetchResponse, DictionaryGetFieldResponse, DictionaryGetFieldsResponse,
     DictionaryIncrementResponse, DictionaryLengthResponse, DictionaryRemoveFieldResponse,
-    DictionaryRemoveFieldsResponse, DictionarySetField, DictionarySetFields,
+    DictionaryRemoveFieldsResponse, DictionarySetFieldResponse, DictionarySetFields,
 };
 use momento::{MomentoError, MomentoErrorCode, MomentoResult};
 use momento_test_util::{
@@ -383,7 +383,7 @@ mod dictionary_set_field {
         let response = client
             .dictionary_set_field(cache_name, item.name(), pair.0, pair.1)
             .await?;
-        assert_eq!(response, DictionarySetField {});
+        assert_eq!(response, DictionarySetFieldResponse {});
 
         let result = client.dictionary_fetch(cache_name, item.name()).await?;
         assert_fetched_dictionary_equals_test_data(result, &item)?;

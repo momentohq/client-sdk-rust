@@ -26,7 +26,7 @@ use momento_protos::cache_client::{
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{CollectionTtl, DictionarySetField, DictionarySetFieldRequest};
+/// use momento::cache::{CollectionTtl, DictionarySetFieldResponse, DictionarySetFieldRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let dictionary_name = "dictionary";
 ///
@@ -87,7 +87,7 @@ where
     F: IntoBytes,
     V: IntoBytes,
 {
-    type Response = DictionarySetField;
+    type Response = DictionarySetFieldResponse;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<Self::Response> {
         let collection_ttl = self.collection_ttl.unwrap_or_default();
@@ -111,9 +111,9 @@ where
             .dictionary_set(request)
             .await?;
 
-        Ok(DictionarySetField {})
+        Ok(DictionarySetFieldResponse {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct DictionarySetField {}
+pub struct DictionarySetFieldResponse {}
