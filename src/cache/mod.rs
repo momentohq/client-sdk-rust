@@ -13,7 +13,7 @@ pub use messages::dictionary::dictionary_fetch::{
     DictionaryFetchRequest, DictionaryFetchResponse, DictionaryFetchValue,
 };
 pub use messages::dictionary::dictionary_get_field::{
-    DictionaryGetField, DictionaryGetFieldRequest,
+    DictionaryGetFieldRequest, DictionaryGetFieldResponse,
 };
 pub use messages::dictionary::dictionary_get_fields::{
     DictionaryGetFields, DictionaryGetFieldsRequest,

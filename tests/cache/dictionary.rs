@@ -1,5 +1,5 @@
 use momento::cache::{
-    DictionaryFetchResponse, DictionaryGetField, DictionaryGetFields, DictionaryIncrement,
+    DictionaryFetchResponse, DictionaryGetFieldResponse, DictionaryGetFields, DictionaryIncrement,
     DictionaryLength, DictionaryRemoveField, DictionaryRemoveFields, DictionarySetField,
     DictionarySetFields,
 };
@@ -87,13 +87,13 @@ mod dictionary_get_field {
             .dictionary_get_field(cache_name, item.name(), field.clone())
             .await?;
         match result {
-            DictionaryGetField::Hit { .. } => {
+            DictionaryGetFieldResponse::Hit { .. } => {
                 let actual: String = result
                     .try_into()
                     .expect("Stored string but could not convert into String");
                 assert_eq!(actual, *value);
             }
-            DictionaryGetField::Miss => panic!("I expected a hit!"),
+            DictionaryGetFieldResponse::Miss => panic!("I expected a hit!"),
         }
         Ok(())
     }

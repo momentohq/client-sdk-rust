@@ -1,4 +1,4 @@
-use super::dictionary_get_field::{DictionaryGetField, DictionaryGetFieldValue};
+use super::dictionary_get_field::{DictionaryGetFieldResponse, DictionaryGetFieldValue};
 use crate::cache::messages::MomentoRequest;
 use crate::utils::{parse_string, prep_request_with_timeout};
 use crate::{
@@ -95,14 +95,14 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
         match response.dictionary {
             Some(DictionaryProto::Missing(_)) => Ok(DictionaryGetFields::Miss),
             Some(DictionaryProto::Found(elements)) => {
-                let responses: Result<Vec<DictionaryGetField>, MomentoError> = elements
+                let responses: Result<Vec<DictionaryGetFieldResponse>, MomentoError> = elements
                     .items
                     .into_iter()
                     .map(|value| match value.result() {
-                        ECacheResult::Hit => Ok(DictionaryGetField::Hit {
+                        ECacheResult::Hit => Ok(DictionaryGetFieldResponse::Hit {
                             value: DictionaryGetFieldValue::new(value.cache_body),
                         }),
-                        ECacheResult::Miss => Ok(DictionaryGetField::Miss),
+                        ECacheResult::Miss => Ok(DictionaryGetFieldResponse::Miss),
                         _ => Err(MomentoError::unknown_error(
                             "DictionaryGetFields",
                             Some(format!("{:#?}", value)),
@@ -184,7 +184,7 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
 pub enum DictionaryGetFields<F: IntoBytesIterable> {
     Hit {
         fields: F,
-        responses: Vec<DictionaryGetField>,
+        responses: Vec<DictionaryGetFieldResponse>,
     },
     Miss,
 }
@@ -210,12 +210,12 @@ impl<F: IntoBytesIterable> TryFrom<DictionaryGetFields<F>> for HashMap<String, S
                 for (field, response) in fields.into_bytes().into_iter().zip(responses.into_iter())
                 {
                     match response {
-                        DictionaryGetField::Hit { value } => {
+                        DictionaryGetFieldResponse::Hit { value } => {
                             let key: String = parse_string(field.into_bytes())?;
                             let value: String = value.try_into()?;
                             result.insert(key, value);
                         }
-                        DictionaryGetField::Miss => (),
+                        DictionaryGetFieldResponse::Miss => (),
                     }
                 }
                 Ok(result)
@@ -238,10 +238,10 @@ impl<F: IntoBytesIterable> TryFrom<DictionaryGetFields<F>> for HashMap<Vec<u8>, 
                 for (field, response) in fields.into_bytes().into_iter().zip(responses.into_iter())
                 {
                     match response {
-                        DictionaryGetField::Hit { value } => {
+                        DictionaryGetFieldResponse::Hit { value } => {
                             result.insert(field.into_bytes(), value.into());
                         }
-                        DictionaryGetField::Miss => (),
+                        DictionaryGetFieldResponse::Miss => (),
                     }
                 }
                 Ok(result)
