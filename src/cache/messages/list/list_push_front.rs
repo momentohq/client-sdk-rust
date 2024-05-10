@@ -26,7 +26,7 @@ use crate::{
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let list_name = "list-name";
 /// let push_front_request = ListPushFrontRequest::new(cache_name, list_name, "value1")
-///     .ttl(CollectionTtl::::default())
+///     .ttl(CollectionTtl::default())
 ///     .truncate_back_to_size(10);
 ///
 /// match cache_client.send_request(push_front_request).await {

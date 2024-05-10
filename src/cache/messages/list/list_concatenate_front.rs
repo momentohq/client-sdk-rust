@@ -29,7 +29,7 @@ use crate::{
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let list_name = "list-name";
 /// let concat_front_request = ListConcatenateFrontRequest::new(cache_name, list_name, vec!["value1", "value2"])
-///     .ttl(CollectionTtl::::default())
+///     .ttl(CollectionTtl::default())
 ///     .truncate_back_to_size(10);
 ///
 /// match cache_client.send_request(concat_front_request).await {
