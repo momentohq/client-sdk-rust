@@ -1,7 +1,7 @@
 use momento::cache::{
     CollectionTtl, ListConcatenateBackRequest, ListConcatenateBackResponse,
-    ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetchResponse, ListLength,
-    ListPopBack, ListPopFront, ListRemoveValue,
+    ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetchResponse,
+    ListLengthResponse, ListPopBack, ListPopFront, ListRemoveValue,
 };
 use momento::{MomentoErrorCode, MomentoResult};
 
@@ -185,7 +185,7 @@ mod list_length {
 
         let result = client.list_length(cache_name, list_name).await?;
 
-        assert_eq!(result, ListLength::Miss {});
+        assert_eq!(result, ListLengthResponse::Miss {});
 
         Ok(())
     }
@@ -204,7 +204,7 @@ mod list_length {
 
         // Fetch list length
         let result = client.list_length(cache_name, test_list.name()).await?;
-        assert_eq!(result, ListLength::Hit { length: 2 });
+        assert_eq!(result, ListLengthResponse::Hit { length: 2 });
 
         Ok(())
     }
