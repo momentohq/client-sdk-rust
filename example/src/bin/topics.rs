@@ -6,7 +6,7 @@ use tokio::time::sleep;
 #[tokio::main]
 async fn main() -> MomentoResult<()> {
     let topic_client = TopicClient::builder()
-        .configuration(configurations::laptop::latest())
+        .configuration(configurations::Laptop::latest())
         .credential_provider(CredentialProvider::from_env_var("MOMENTO_API_KEY")?)
         .build()?;
 
