@@ -20,7 +20,6 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 /// # fn main() -> anyhow::Result<()> {
 /// # tokio_test::block_on(async {
 /// use momento::{CredentialProvider, TopicClient};
-/// use futures::StreamExt;
 ///
 /// let topic_client = match TopicClient::builder()
 ///     .configuration(momento::topics::configurations::laptop::latest())
@@ -65,7 +64,6 @@ impl TopicClient {
     /// # tokio_test::block_on(async {
     /// use momento::{CredentialProvider, TopicClient};
     /// use momento::topics::TopicPublish;
-    /// use futures::StreamExt;
     ///
     /// let topic_client = TopicClient::builder()
     ///     .configuration(momento::topics::configurations::laptop::latest())

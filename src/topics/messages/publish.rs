@@ -22,7 +22,6 @@ use crate::{
 /// # tokio_test::block_on(async {
 /// use momento::{CredentialProvider, TopicClient};
 /// use momento::topics::{TopicPublish, PublishRequest};
-/// use futures::StreamExt;
 ///
 /// let topic_client = TopicClient::builder()
 ///     .configuration(momento::topics::configurations::laptop::latest())
