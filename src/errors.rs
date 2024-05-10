@@ -91,6 +91,15 @@ impl MomentoError {
             details: None,
         }
     }
+
+    pub(crate) fn discontinuity() -> Self {
+        Self {
+            message: "Received a Discontinuity in a Topics subscription".to_string(),
+            error_code: MomentoErrorCode::UnknownError,
+            inner_error: None,
+            details: None,
+        }
+    }
 }
 
 trait ErrorDetails {

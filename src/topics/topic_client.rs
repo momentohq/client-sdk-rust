@@ -36,6 +36,7 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 /// # })
 /// # }
 /// ```
+#[derive(Clone, Debug)]
 pub struct TopicClient {
     pub(crate) client: pubsub::pubsub_client::PubsubClient<ChannelType>,
     pub(crate) configuration: Configuration,

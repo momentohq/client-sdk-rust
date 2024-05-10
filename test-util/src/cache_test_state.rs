@@ -7,7 +7,7 @@ use tokio::sync::watch::channel;
 
 use crate::{get_test_cache_name, get_test_credential_provider};
 use momento::cache::configurations;
-use momento::CacheClient;
+use momento::{CacheClient, TopicClient};
 
 pub static CACHE_TEST_STATE: Lazy<Arc<CacheTestState>> =
     Lazy::new(|| Arc::new(CacheTestState::new()));
@@ -15,6 +15,7 @@ pub static CACHE_TEST_STATE: Lazy<Arc<CacheTestState>> =
 pub struct CacheTestState {
     pub client: Arc<CacheClient>,
     pub cache_name: String,
+    pub topic_client: Arc<TopicClient>,
     #[allow(dead_code)]
     runtime: tokio::runtime::Runtime,
 }
@@ -40,7 +41,7 @@ impl CacheTestState {
             let cache_client = CacheClient::builder()
                 .default_ttl(Duration::from_secs(5))
                 .configuration(configurations::Laptop::latest())
-                .credential_provider(credential_provider)
+                .credential_provider(credential_provider.clone())
                 .build()
                 .expect("Failed to create cache client");
 
@@ -52,22 +53,29 @@ impl CacheTestState {
                 Err(e) => panic!("Failed to create cache: {:?}", e),
             }
 
+            let topic_client = TopicClient::builder()
+                .configuration(momento::topics::configurations::Laptop::latest())
+                .credential_provider(credential_provider.clone())
+                .build()
+                .expect("Failed to create topic client");
+
             sender
-                .send(Some(cache_client))
+                .send(Some((cache_client, topic_client)))
                 .expect("client should be sent to test state thread");
             thread_barrier.wait();
         });
         barrier.wait();
 
         // Retrieve the client from the runtime that created it.
-        let client = client_receiver
+        let (client, topic_client) = client_receiver
             .borrow()
             .as_ref()
-            .expect("Client should already exist")
+            .expect("Clients should already exist")
             .clone();
 
         CacheTestState {
-            client: Arc::new(client),
+            client: Arc::new(client.clone()),
+            topic_client: Arc::new(topic_client.clone()),
             cache_name,
             runtime,
         }
