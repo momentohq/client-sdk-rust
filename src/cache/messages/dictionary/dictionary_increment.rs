@@ -22,7 +22,7 @@ use crate::{
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
-/// use momento::cache::{CollectionTtl, DictionaryIncrement, DictionaryIncrementRequest};
+/// use momento::cache::{CollectionTtl, DictionaryIncrementResponse, DictionaryIncrementRequest};
 /// use momento::MomentoErrorCode;
 ///
 /// let dictionary_name = "dictionary";
@@ -73,9 +73,9 @@ impl<D: IntoBytes, F: IntoBytes> DictionaryIncrementRequest<D, F> {
 }
 
 impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryIncrementRequest<D, F> {
-    type Response = DictionaryIncrement;
+    type Response = DictionaryIncrementResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<DictionaryIncrement> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<DictionaryIncrementResponse> {
         let collection_ttl = self.collection_ttl.unwrap_or_default();
         let request = prep_request_with_timeout(
             &self.cache_name,
@@ -95,18 +95,18 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryIncrementRequest<D
             .dictionary_increment(request)
             .await?
             .into_inner();
-        Ok(DictionaryIncrement {
+        Ok(DictionaryIncrementResponse {
             value: response.value,
         })
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct DictionaryIncrement {
+pub struct DictionaryIncrementResponse {
     pub value: i64,
 }
 
-impl DictionaryIncrement {
+impl DictionaryIncrementResponse {
     pub fn value(self) -> i64 {
         self.value
     }

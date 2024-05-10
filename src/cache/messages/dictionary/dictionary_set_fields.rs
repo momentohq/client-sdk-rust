@@ -66,7 +66,7 @@ impl<F: IntoBytes, V: IntoBytes> IntoDictionaryFieldValuePairs<F, V> for HashMap
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{CollectionTtl, DictionarySetFields, DictionarySetFieldsRequest};
+/// use momento::cache::{CollectionTtl, DictionarySetFieldsResponse, DictionarySetFieldsRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let dictionary_name = "dictionary";
 ///
@@ -133,7 +133,7 @@ where
     V: IntoBytes,
     E: IntoDictionaryFieldValuePairs<F, V>,
 {
-    type Response = DictionarySetFields;
+    type Response = DictionarySetFieldsResponse;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<Self::Response> {
         let collection_ttl = self.collection_ttl.unwrap_or_default();
@@ -162,9 +162,9 @@ where
             .dictionary_set(request)
             .await?;
 
-        Ok(DictionarySetFields {})
+        Ok(DictionarySetFieldsResponse {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct DictionarySetFields {}
+pub struct DictionarySetFieldsResponse {}

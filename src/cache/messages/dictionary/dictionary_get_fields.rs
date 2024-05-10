@@ -1,4 +1,4 @@
-use super::dictionary_get_field::{DictionaryGetField, DictionaryGetFieldValue};
+use super::dictionary_get_field::{DictionaryGetFieldResponse, DictionaryGetFieldValue};
 use crate::cache::messages::MomentoRequest;
 use crate::utils::{parse_string, prep_request_with_timeout};
 use crate::{
@@ -27,7 +27,7 @@ use std::convert::{TryFrom, TryInto};
 /// # use std::convert::TryInto;
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{DictionaryGetFields, DictionaryGetFieldsRequest};
+/// use momento::cache::{DictionaryGetFieldsResponse, DictionaryGetFieldsRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let dictionary_name = "dictionary";
 /// let fields = vec!["field1", "field2"];
@@ -73,7 +73,7 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> DictionaryGetFieldsRequest<D, F
 impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
     for DictionaryGetFieldsRequest<D, F>
 {
-    type Response = DictionaryGetFields<F>;
+    type Response = DictionaryGetFieldsResponse<F>;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<Self::Response> {
         let request = prep_request_with_timeout(
@@ -93,16 +93,16 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
             .into_inner();
 
         match response.dictionary {
-            Some(DictionaryProto::Missing(_)) => Ok(DictionaryGetFields::Miss),
+            Some(DictionaryProto::Missing(_)) => Ok(DictionaryGetFieldsResponse::Miss),
             Some(DictionaryProto::Found(elements)) => {
-                let responses: Result<Vec<DictionaryGetField>, MomentoError> = elements
+                let responses: Result<Vec<DictionaryGetFieldResponse>, MomentoError> = elements
                     .items
                     .into_iter()
                     .map(|value| match value.result() {
-                        ECacheResult::Hit => Ok(DictionaryGetField::Hit {
+                        ECacheResult::Hit => Ok(DictionaryGetFieldResponse::Hit {
                             value: DictionaryGetFieldValue::new(value.cache_body),
                         }),
-                        ECacheResult::Miss => Ok(DictionaryGetField::Miss),
+                        ECacheResult::Miss => Ok(DictionaryGetFieldResponse::Miss),
                         _ => Err(MomentoError::unknown_error(
                             "DictionaryGetFields",
                             Some(format!("{:#?}", value)),
@@ -111,7 +111,7 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
                     .collect();
 
                 match responses {
-                    Ok(responses) => Ok(DictionaryGetFields::Hit {
+                    Ok(responses) => Ok(DictionaryGetFieldsResponse::Hit {
                         fields: self.fields,
                         responses,
                     }),
@@ -126,19 +126,19 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
     }
 }
 
-/// Response object for a [DictionaryGetFields](crate::cache::DictionaryGetFields).
+/// Response object for a [DictionaryGetFieldsRequest](crate::cache::DictionaryGetFieldsRequest).
 ///
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// fn main() -> anyhow::Result<()> {
 /// # use std::collections::HashMap;
-/// # use momento::cache::DictionaryGetFields;
+/// # use momento::cache::DictionaryGetFieldsResponse;
 /// # use momento::MomentoResult;
-/// # let fetch_response: DictionaryGetFields<Vec<String>> = DictionaryGetFields::default();
+/// # let fetch_response: DictionaryGetFieldsResponse<Vec<String>> = DictionaryGetFieldsResponse::default();
 /// use std::convert::TryInto;
 /// let item: HashMap<String, String> = match fetch_response {
-///   DictionaryGetFields::Hit { .. } => fetch_response.try_into().expect("I stored strings!"),
-///   DictionaryGetFields::Miss => panic!("I expected a hit!"),
+///   DictionaryGetFieldsResponse::Hit { .. } => fetch_response.try_into().expect("I stored strings!"),
+///   DictionaryGetFieldsResponse::Miss => panic!("I expected a hit!"),
 /// };
 /// # Ok(())
 /// }
@@ -147,13 +147,13 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
 /// Or if you're storing raw bytes you can get at them simply:
 /// ```
 /// # use std::collections::HashMap;
-/// # use momento::cache::DictionaryGetFields;
+/// # use momento::cache::DictionaryGetFieldsResponse;
 /// # use momento::MomentoResult;
-/// # let fetch_response: DictionaryGetFields<Vec<String>> = DictionaryGetFields::default();
+/// # let fetch_response: DictionaryGetFieldsResponse<Vec<String>> = DictionaryGetFieldsResponse::default();
 /// use std::convert::TryInto;
 /// let item: HashMap<Vec<u8>, Vec<u8>> = match fetch_response {
-///  DictionaryGetFields::Hit { .. } => fetch_response.try_into().expect("I stored raw bytes!"),
-/// DictionaryGetFields::Miss => panic!("I expected a hit!"),
+///  DictionaryGetFieldsResponse::Hit { .. } => fetch_response.try_into().expect("I stored raw bytes!"),
+/// DictionaryGetFieldsResponse::Miss => panic!("I expected a hit!"),
 /// };
 /// ```
 ///
@@ -164,9 +164,9 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
 /// this is what you're after:
 /// ```
 /// # use std::collections::HashMap;
-/// # use momento::cache::DictionaryGetFields;
+/// # use momento::cache::DictionaryGetFieldsResponse;
 /// # use momento::MomentoResult;
-/// # let fetch_response: DictionaryGetFields<Vec<String>> = DictionaryGetFields::default();
+/// # let fetch_response: DictionaryGetFieldsResponse<Vec<String>> = DictionaryGetFieldsResponse::default();
 /// use std::convert::TryInto;
 /// let item: MomentoResult<HashMap<String, String>> = fetch_response.try_into();
 /// ```
@@ -174,80 +174,80 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
 /// You can also go straight into a `HashMap<Vec<u8>, Vec<u8>>` if you prefer:
 /// ```
 /// # use std::collections::HashMap;
-/// # use momento::cache::DictionaryGetFields;
+/// # use momento::cache::DictionaryGetFieldsResponse;
 /// # use momento::MomentoResult;
-/// # let fetch_response: DictionaryGetFields<Vec<String>> = DictionaryGetFields::default();
+/// # let fetch_response: DictionaryGetFieldsResponse<Vec<String>> = DictionaryGetFieldsResponse::default();
 /// use std::convert::TryInto;
 /// let item: MomentoResult<HashMap<Vec<u8>, Vec<u8>>> = fetch_response.try_into();
 /// ```
 #[derive(Debug, PartialEq, Eq)]
-pub enum DictionaryGetFields<F: IntoBytesIterable> {
+pub enum DictionaryGetFieldsResponse<F: IntoBytesIterable> {
     Hit {
         fields: F,
-        responses: Vec<DictionaryGetField>,
+        responses: Vec<DictionaryGetFieldResponse>,
     },
     Miss,
 }
 
-impl<F: IntoBytes> Default for DictionaryGetFields<Vec<F>> {
+impl<F: IntoBytes> Default for DictionaryGetFieldsResponse<Vec<F>> {
     fn default() -> Self {
-        DictionaryGetFields::Hit {
+        DictionaryGetFieldsResponse::Hit {
             fields: vec![],
             responses: vec![],
         }
     }
 }
 
-impl<F: IntoBytesIterable> TryFrom<DictionaryGetFields<F>> for HashMap<String, String> {
+impl<F: IntoBytesIterable> TryFrom<DictionaryGetFieldsResponse<F>> for HashMap<String, String> {
     type Error = MomentoError;
 
-    fn try_from(value: DictionaryGetFields<F>) -> Result<Self, Self::Error> {
+    fn try_from(value: DictionaryGetFieldsResponse<F>) -> Result<Self, Self::Error> {
         match value {
-            DictionaryGetFields::Hit {
+            DictionaryGetFieldsResponse::Hit {
                 fields, responses, ..
             } => {
                 let mut result = HashMap::new();
                 for (field, response) in fields.into_bytes().into_iter().zip(responses.into_iter())
                 {
                     match response {
-                        DictionaryGetField::Hit { value } => {
+                        DictionaryGetFieldResponse::Hit { value } => {
                             let key: String = parse_string(field.into_bytes())?;
                             let value: String = value.try_into()?;
                             result.insert(key, value);
                         }
-                        DictionaryGetField::Miss => (),
+                        DictionaryGetFieldResponse::Miss => (),
                     }
                 }
                 Ok(result)
             }
             // In other SDKs we do not convert a `Miss` into an empty HashMap
-            DictionaryGetFields::Miss => Err(MomentoError::miss("DictionaryGetFields")),
+            DictionaryGetFieldsResponse::Miss => Err(MomentoError::miss("DictionaryGetFields")),
         }
     }
 }
 
-impl<F: IntoBytesIterable> TryFrom<DictionaryGetFields<F>> for HashMap<Vec<u8>, Vec<u8>> {
+impl<F: IntoBytesIterable> TryFrom<DictionaryGetFieldsResponse<F>> for HashMap<Vec<u8>, Vec<u8>> {
     type Error = MomentoError;
 
-    fn try_from(value: DictionaryGetFields<F>) -> Result<Self, Self::Error> {
+    fn try_from(value: DictionaryGetFieldsResponse<F>) -> Result<Self, Self::Error> {
         match value {
-            DictionaryGetFields::Hit {
+            DictionaryGetFieldsResponse::Hit {
                 fields, responses, ..
             } => {
                 let mut result = HashMap::new();
                 for (field, response) in fields.into_bytes().into_iter().zip(responses.into_iter())
                 {
                     match response {
-                        DictionaryGetField::Hit { value } => {
+                        DictionaryGetFieldResponse::Hit { value } => {
                             result.insert(field.into_bytes(), value.into());
                         }
-                        DictionaryGetField::Miss => (),
+                        DictionaryGetFieldResponse::Miss => (),
                     }
                 }
                 Ok(result)
             }
             // In other SDKs we do not convert a `Miss` into an empty HashMap
-            DictionaryGetFields::Miss => Err(MomentoError {
+            DictionaryGetFieldsResponse::Miss => Err(MomentoError {
                 message: "dictionary get fields response was a miss".into(),
                 error_code: MomentoErrorCode::Miss,
                 inner_error: None,

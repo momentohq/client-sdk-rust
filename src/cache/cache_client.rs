@@ -8,12 +8,13 @@ use tonic::transport::Channel;
 
 use crate::cache::{
     Configuration, CreateCache, CreateCacheRequest, DecreaseTtl, DecreaseTtlRequest, Delete,
-    DeleteCache, DeleteCacheRequest, DeleteRequest, DictionaryFetch, DictionaryFetchRequest,
-    DictionaryGetField, DictionaryGetFieldRequest, DictionaryGetFields, DictionaryGetFieldsRequest,
-    DictionaryIncrement, DictionaryIncrementRequest, DictionaryLength, DictionaryLengthRequest,
-    DictionaryRemoveField, DictionaryRemoveFieldRequest, DictionaryRemoveFields,
-    DictionaryRemoveFieldsRequest, DictionarySetField, DictionarySetFieldRequest,
-    DictionarySetFields, DictionarySetFieldsRequest, FlushCache, FlushCacheRequest, Get,
+    DeleteCache, DeleteCacheRequest, DeleteRequest, DictionaryFetchRequest,
+    DictionaryFetchResponse, DictionaryGetFieldRequest, DictionaryGetFieldResponse,
+    DictionaryGetFieldsRequest, DictionaryGetFieldsResponse, DictionaryIncrementRequest,
+    DictionaryIncrementResponse, DictionaryLengthRequest, DictionaryLengthResponse,
+    DictionaryRemoveFieldRequest, DictionaryRemoveFieldResponse, DictionaryRemoveFieldsRequest,
+    DictionaryRemoveFieldsResponse, DictionarySetFieldRequest, DictionarySetFieldResponse,
+    DictionarySetFieldsRequest, DictionarySetFieldsResponse, FlushCache, FlushCacheRequest, Get,
     GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest,
     IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest,
     ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest,
@@ -317,7 +318,7 @@ impl CacheClient {
     /// # use std::convert::TryInto;
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::{DictionaryFetchRequest, DictionaryFetch};
+    /// use momento::cache::{DictionaryFetchRequest, DictionaryFetchResponse};
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let dictionary_name = "dictionary";
     ///
@@ -331,11 +332,11 @@ impl CacheClient {
     /// let fetch_response = cache_client.dictionary_fetch(cache_name, dictionary_name).await?;
     ///
     /// match fetch_response {
-    ///    DictionaryFetch::Hit{ value } => {
+    ///    DictionaryFetchResponse::Hit{ value } => {
     ///       let dictionary: HashMap<String, String> = value.try_into().expect("I stored a dictionary!");
     ///       println!("Fetched dictionary: {:?}", dictionary);
     ///    }
-    ///    DictionaryFetch::Miss => println!("Cache miss"),
+    ///    DictionaryFetchResponse::Miss => println!("Cache miss"),
     /// }
     /// # Ok(())
     /// # })
@@ -346,7 +347,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         dictionary_name: impl IntoBytes,
-    ) -> MomentoResult<DictionaryFetch> {
+    ) -> MomentoResult<DictionaryFetchResponse> {
         let request = DictionaryFetchRequest::new(cache_name, dictionary_name);
         request.send(self).await
     }
@@ -367,7 +368,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # use std::convert::TryInto;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::DictionaryGetField;
+    /// use momento::cache::DictionaryGetFieldResponse;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let dictionary_name = "dictionary";
     /// let field = "field";
@@ -382,11 +383,11 @@ impl CacheClient {
     /// let response = cache_client.dictionary_get_field(cache_name, dictionary_name, field).await?;
     ///
     /// match response {
-    ///   DictionaryGetField::Hit { value } => {
+    ///   DictionaryGetFieldResponse::Hit { value } => {
     ///     let value: String = value.try_into().expect("I stored a string!");
     ///     println!("Fetched value: {}", value);
     ///   }
-    ///   DictionaryGetField::Miss => println!("Cache miss"),
+    ///   DictionaryGetFieldResponse::Miss => println!("Cache miss"),
     /// }
     /// # Ok(())
     /// # })
@@ -397,7 +398,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         dictionary_name: impl IntoBytes,
         field: impl IntoBytes,
-    ) -> MomentoResult<DictionaryGetField> {
+    ) -> MomentoResult<DictionaryGetFieldResponse> {
         let request = DictionaryGetFieldRequest::new(cache_name, dictionary_name, field);
         request.send(self).await
     }
@@ -420,7 +421,7 @@ impl CacheClient {
     /// # use std::convert::TryInto;
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::{DictionaryGetFields, DictionaryGetFieldsRequest};
+    /// use momento::cache::{DictionaryGetFieldsResponse, DictionaryGetFieldsRequest};
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let dictionary_name = "dictionary";
     /// let fields = vec!["field1", "field2"];
@@ -434,11 +435,11 @@ impl CacheClient {
     /// let response = cache_client.dictionary_get_fields(cache_name, dictionary_name, fields).await?;
     ///
     /// match response {
-    ///    DictionaryGetFields::Hit { .. } => {
+    ///    DictionaryGetFieldsResponse::Hit { .. } => {
     ///      let dictionary: HashMap<String, String> = response.try_into().expect("I stored a dictionary of strings!");
     ///      println!("Fetched dictionary: {:?}", dictionary);
     ///    }
-    ///    DictionaryGetFields::Miss => println!("Cache miss"),
+    ///    DictionaryGetFieldsResponse::Miss => println!("Cache miss"),
     /// }
     /// # Ok(())
     /// # })
@@ -449,7 +450,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         dictionary_name: impl IntoBytes,
         fields: F,
-    ) -> MomentoResult<DictionaryGetFields<F>> {
+    ) -> MomentoResult<DictionaryGetFieldsResponse<F>> {
         let request = DictionaryGetFieldsRequest::new(cache_name, dictionary_name, fields);
         request.send(self).await
     }
@@ -471,7 +472,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::DictionaryIncrement;
+    /// use momento::cache::DictionaryIncrementResponse;
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let dictionary_name = "dictionary";
@@ -481,7 +482,7 @@ impl CacheClient {
     /// let response = cache_client.dictionary_increment(&cache_name, dictionary_name, field, amount).await;
     ///
     /// match response {
-    ///   Ok(DictionaryIncrement { value }) => println!("Incremented value: {}", value),
+    ///   Ok(DictionaryIncrementResponse { value }) => println!("Incremented value: {}", value),
     ///   Err(e) => println!("Error incrementing value: {}", e),
     /// }
     /// # Ok(())
@@ -494,7 +495,7 @@ impl CacheClient {
         dictionary_name: impl IntoBytes,
         field: impl IntoBytes,
         amount: i64,
-    ) -> MomentoResult<DictionaryIncrement> {
+    ) -> MomentoResult<DictionaryIncrementResponse> {
         let request = DictionaryIncrementRequest::new(cache_name, dictionary_name, field, amount);
         request.send(self).await
     }
@@ -513,7 +514,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # use std::convert::TryInto;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::{DictionaryLength, DictionaryLengthRequest};
+    /// use momento::cache::{DictionaryLengthResponse, DictionaryLengthRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let dictionary_name = "dictionary-name";
@@ -528,7 +529,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         dictionary_name: impl IntoBytes,
-    ) -> MomentoResult<DictionaryLength> {
+    ) -> MomentoResult<DictionaryLengthResponse> {
         let request = DictionaryLengthRequest::new(cache_name, dictionary_name);
         request.send(self).await
     }
@@ -547,7 +548,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::{DictionaryRemoveField, DictionaryRemoveFieldRequest};
+    /// use momento::cache::{DictionaryRemoveFieldResponse, DictionaryRemoveFieldRequest};
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let dictionary_name = "dictionary";
     /// let field = "field";
@@ -567,7 +568,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         dictionary_name: impl IntoBytes,
         field: impl IntoBytes,
-    ) -> MomentoResult<DictionaryRemoveField> {
+    ) -> MomentoResult<DictionaryRemoveFieldResponse> {
         let request = DictionaryRemoveFieldRequest::new(cache_name, dictionary_name, field);
         request.send(self).await
     }
@@ -586,7 +587,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::{DictionaryRemoveFields, DictionaryRemoveFieldsRequest};
+    /// use momento::cache::{DictionaryRemoveFieldsResponse, DictionaryRemoveFieldsRequest};
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let dictionary_name = "dictionary";
     /// let fields = vec!["field1", "field2"];
@@ -612,7 +613,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         dictionary_name: impl IntoBytes,
         fields: F,
-    ) -> MomentoResult<DictionaryRemoveFields> {
+    ) -> MomentoResult<DictionaryRemoveFieldsResponse> {
         let request = DictionaryRemoveFieldsRequest::new(cache_name, dictionary_name, fields);
         request.send(self).await
     }
@@ -638,7 +639,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::{CollectionTtl, DictionarySetField, DictionarySetFieldRequest};
+    /// use momento::cache::{CollectionTtl, DictionarySetFieldResponse, DictionarySetFieldRequest};
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let dictionary_name = "dictionary";
     ///
@@ -665,7 +666,7 @@ impl CacheClient {
         dictionary_name: impl IntoBytes,
         field: impl IntoBytes,
         value: impl IntoBytes,
-    ) -> MomentoResult<DictionarySetField> {
+    ) -> MomentoResult<DictionarySetFieldResponse> {
         let request = DictionarySetFieldRequest::new(cache_name, dictionary_name, field, value);
         request.send(self).await
     }
@@ -690,7 +691,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::{CollectionTtl, DictionarySetFields, DictionarySetFieldsRequest};
+    /// use momento::cache::{CollectionTtl, DictionarySetFieldsResponse, DictionarySetFieldsRequest};
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let dictionary_name = "dictionary";
     ///
@@ -713,7 +714,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         dictionary_name: impl IntoBytes,
         elements: impl IntoDictionaryFieldValuePairs<F, V>,
-    ) -> MomentoResult<DictionarySetFields> {
+    ) -> MomentoResult<DictionarySetFieldsResponse> {
         let request = DictionarySetFieldsRequest::new(cache_name, dictionary_name, elements);
         request.send(self).await
     }

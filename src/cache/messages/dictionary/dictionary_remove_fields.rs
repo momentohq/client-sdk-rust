@@ -20,7 +20,7 @@ use momento_protos::cache_client::{
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{DictionaryRemoveFields, DictionaryRemoveFieldsRequest};
+/// use momento::cache::{DictionaryRemoveFieldsResponse, DictionaryRemoveFieldsRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let dictionary_name = "dictionary";
 /// let fields = vec!["field1", "field2"];
@@ -32,7 +32,7 @@ use momento_protos::cache_client::{
 /// );
 ///
 /// match cache_client.send_request(remove_fields_request).await {
-///   Ok(DictionaryRemoveFields {}) => println!("Fields removed from dictionary"),
+///   Ok(DictionaryRemoveFieldsResponse {}) => println!("Fields removed from dictionary"),
 ///   Err(e) => eprintln!("Error removing fields from dictionary: {}", e),
 /// }
 /// # Ok(())
@@ -56,7 +56,7 @@ impl<D: IntoBytes, F: IntoBytesIterable> DictionaryRemoveFieldsRequest<D, F> {
 }
 
 impl<D: IntoBytes, F: IntoBytesIterable> MomentoRequest for DictionaryRemoveFieldsRequest<D, F> {
-    type Response = DictionaryRemoveFields;
+    type Response = DictionaryRemoveFieldsResponse;
 
     async fn send(self, cache_client: &CacheClient) -> Result<Self::Response, MomentoError> {
         let fields_to_delete = DictionaryFieldSelector::Some {
@@ -78,9 +78,9 @@ impl<D: IntoBytes, F: IntoBytesIterable> MomentoRequest for DictionaryRemoveFiel
             .await?
             .into_inner();
 
-        Ok(DictionaryRemoveFields {})
+        Ok(DictionaryRemoveFieldsResponse {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct DictionaryRemoveFields {}
+pub struct DictionaryRemoveFieldsResponse {}

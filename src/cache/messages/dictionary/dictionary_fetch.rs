@@ -23,7 +23,7 @@ use std::convert::{TryFrom, TryInto};
 /// # use std::convert::TryInto;
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{DictionaryFetchRequest, DictionaryFetch};
+/// use momento::cache::{DictionaryFetchRequest, DictionaryFetchResponse};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let dictionary_name = "dictionary";
 ///
@@ -60,7 +60,7 @@ impl<D: IntoBytes> DictionaryFetchRequest<D> {
 }
 
 impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
-    type Response = DictionaryFetch;
+    type Response = DictionaryFetchResponse;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<Self::Response> {
         let request = prep_request_with_timeout(
@@ -79,14 +79,14 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
             .into_inner();
 
         match response.dictionary {
-            Some(DictionaryProto::Missing(_)) => Ok(DictionaryFetch::Miss),
+            Some(DictionaryProto::Missing(_)) => Ok(DictionaryFetchResponse::Miss),
             Some(DictionaryProto::Found(elements)) => {
                 let raw_item = elements
                     .items
                     .into_iter()
                     .map(|element| (element.field, element.value))
                     .collect();
-                Ok(DictionaryFetch::Hit {
+                Ok(DictionaryFetchResponse::Hit {
                     value: DictionaryFetchValue::new(raw_item),
                 })
             }
@@ -104,13 +104,13 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
 /// ```
 /// fn main() -> anyhow::Result<()> {
 /// # use std::collections::HashMap;
-/// # use momento::cache::{DictionaryFetch, DictionaryFetchValue};
+/// # use momento::cache::{DictionaryFetchResponse, DictionaryFetchValue};
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryFetch::Hit { value: DictionaryFetchValue::default() };
+/// # let fetch_response = DictionaryFetchResponse::Hit { value: DictionaryFetchValue::default() };
 /// use std::convert::TryInto;
 /// let item: HashMap<String, String> = match fetch_response {
-///    DictionaryFetch::Hit { value } => value.try_into().expect("I stored strings!"),
-///   DictionaryFetch::Miss => panic!("I expected a hit!"),
+///    DictionaryFetchResponse::Hit { value } => value.try_into().expect("I stored strings!"),
+///   DictionaryFetchResponse::Miss => panic!("I expected a hit!"),
 /// };
 /// # Ok(())
 /// }
@@ -119,13 +119,13 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
 /// Or, if you're storing raw bytes you can get at them simply:
 /// ```
 /// # use std::collections::HashMap;
-/// # use momento::cache::{DictionaryFetch, DictionaryFetchValue};
+/// # use momento::cache::{DictionaryFetchResponse, DictionaryFetchValue};
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryFetch::Hit { value: DictionaryFetchValue::default() };
+/// # let fetch_response = DictionaryFetchResponse::Hit { value: DictionaryFetchValue::default() };
 /// use std::convert::TryInto;
 /// let item: HashMap<Vec<u8>, Vec<u8>> = match fetch_response {
-///   DictionaryFetch::Hit { value } => value.into(),
-///   DictionaryFetch::Miss => panic!("I expected a hit!"),
+///   DictionaryFetchResponse::Hit { value } => value.into(),
+///   DictionaryFetchResponse::Miss => panic!("I expected a hit!"),
 /// };
 /// ```
 ///
@@ -136,9 +136,9 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
 /// this is what you're after:
 /// ```
 /// # use std::collections::HashMap;
-/// # use momento::cache::{DictionaryFetch, DictionaryFetchValue};
+/// # use momento::cache::{DictionaryFetchResponse, DictionaryFetchValue};
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryFetch::Hit { value: DictionaryFetchValue::default() };
+/// # let fetch_response = DictionaryFetchResponse::Hit { value: DictionaryFetchValue::default() };
 /// use std::convert::TryInto;
 /// let item: MomentoResult<HashMap<String, String>> = fetch_response.try_into();
 /// ```
@@ -146,14 +146,14 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
 /// You can also go straight into a `HashMap<Vec<u8>, Vec<u8>>` if you prefer:
 /// ```
 /// # use std::collections::HashMap;
-/// # use momento::cache::{DictionaryFetch, DictionaryFetchValue};
+/// # use momento::cache::{DictionaryFetchResponse, DictionaryFetchValue};
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryFetch::Hit { value: DictionaryFetchValue::default() };
+/// # let fetch_response = DictionaryFetchResponse::Hit { value: DictionaryFetchValue::default() };
 /// use std::convert::TryInto;
 /// let item: MomentoResult<HashMap<Vec<u8>, Vec<u8>>> = fetch_response.try_into();
 /// ```
 #[derive(Debug, PartialEq, Eq)]
-pub enum DictionaryFetch {
+pub enum DictionaryFetchResponse {
     Hit { value: DictionaryFetchValue },
     Miss,
 }
@@ -189,24 +189,24 @@ impl From<DictionaryFetchValue> for HashMap<Vec<u8>, Vec<u8>> {
     }
 }
 
-impl TryFrom<DictionaryFetch> for HashMap<Vec<u8>, Vec<u8>> {
+impl TryFrom<DictionaryFetchResponse> for HashMap<Vec<u8>, Vec<u8>> {
     type Error = MomentoError;
 
-    fn try_from(value: DictionaryFetch) -> Result<Self, Self::Error> {
+    fn try_from(value: DictionaryFetchResponse) -> Result<Self, Self::Error> {
         match value {
-            DictionaryFetch::Hit { value } => Ok(value.into()),
-            DictionaryFetch::Miss => Err(MomentoError::miss("DictionaryFetch")),
+            DictionaryFetchResponse::Hit { value } => Ok(value.into()),
+            DictionaryFetchResponse::Miss => Err(MomentoError::miss("DictionaryFetch")),
         }
     }
 }
 
-impl TryFrom<DictionaryFetch> for HashMap<String, String> {
+impl TryFrom<DictionaryFetchResponse> for HashMap<String, String> {
     type Error = MomentoError;
 
-    fn try_from(value: DictionaryFetch) -> Result<Self, Self::Error> {
+    fn try_from(value: DictionaryFetchResponse) -> Result<Self, Self::Error> {
         match value {
-            DictionaryFetch::Hit { value } => value.try_into(),
-            DictionaryFetch::Miss => Err(MomentoError::miss("DictionaryFetch")),
+            DictionaryFetchResponse::Hit { value } => value.try_into(),
+            DictionaryFetchResponse::Miss => Err(MomentoError::miss("DictionaryFetch")),
         }
     }
 }

@@ -10,29 +10,31 @@ pub use messages::list_caches::{
 };
 
 pub use messages::dictionary::dictionary_fetch::{
-    DictionaryFetch, DictionaryFetchRequest, DictionaryFetchValue,
+    DictionaryFetchRequest, DictionaryFetchResponse, DictionaryFetchValue,
 };
 pub use messages::dictionary::dictionary_get_field::{
-    DictionaryGetField, DictionaryGetFieldRequest,
+    DictionaryGetFieldRequest, DictionaryGetFieldResponse,
 };
 pub use messages::dictionary::dictionary_get_fields::{
-    DictionaryGetFields, DictionaryGetFieldsRequest,
+    DictionaryGetFieldsRequest, DictionaryGetFieldsResponse,
 };
 pub use messages::dictionary::dictionary_increment::{
-    DictionaryIncrement, DictionaryIncrementRequest,
+    DictionaryIncrementRequest, DictionaryIncrementResponse,
 };
-pub use messages::dictionary::dictionary_length::{DictionaryLength, DictionaryLengthRequest};
+pub use messages::dictionary::dictionary_length::{
+    DictionaryLengthRequest, DictionaryLengthResponse,
+};
 pub use messages::dictionary::dictionary_remove_field::{
-    DictionaryRemoveField, DictionaryRemoveFieldRequest,
+    DictionaryRemoveFieldRequest, DictionaryRemoveFieldResponse,
 };
 pub use messages::dictionary::dictionary_remove_fields::{
-    DictionaryRemoveFields, DictionaryRemoveFieldsRequest,
+    DictionaryRemoveFieldsRequest, DictionaryRemoveFieldsResponse,
 };
 pub use messages::dictionary::dictionary_set_field::{
-    DictionarySetField, DictionarySetFieldRequest,
+    DictionarySetFieldRequest, DictionarySetFieldResponse,
 };
 pub use messages::dictionary::dictionary_set_fields::{
-    DictionaryFieldValuePair, DictionarySetFields, DictionarySetFieldsRequest,
+    DictionaryFieldValuePair, DictionarySetFieldsRequest, DictionarySetFieldsResponse,
     IntoDictionaryFieldValuePairs,
 };
 
