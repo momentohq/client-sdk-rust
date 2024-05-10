@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.38.0](https://github.com/momentohq/client-sdk-rust/compare/v0.37.0...v0.38.0) (2024-05-10)
+
+
+### Features
+
+* TopicClient follow-up revisions" ([#287](https://github.com/momentohq/client-sdk-rust/issues/287)) ([66e190d](https://github.com/momentohq/client-sdk-rust/commit/66e190d1bea27d4feb3ceabaa856af53d8274e47))
+
+
+### Miscellaneous
+
+* allow `IntoBytesIterable` on statically allocated arrays ([#288](https://github.com/momentohq/client-sdk-rust/issues/288)) ([82c556c](https://github.com/momentohq/client-sdk-rust/commit/82c556c424d3fe37e72faf771667a8245ca92242))
+
 ## [0.37.0](https://github.com/momentohq/client-sdk-rust/compare/v0.36.0...v0.37.0) (2024-05-09)
 
 
