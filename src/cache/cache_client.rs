@@ -10,8 +10,8 @@ use crate::cache::{
     Configuration, CreateCache, CreateCacheRequest, DecreaseTtl, DecreaseTtlRequest, Delete,
     DeleteCache, DeleteCacheRequest, DeleteRequest, DictionaryFetchRequest,
     DictionaryFetchResponse, DictionaryGetFieldRequest, DictionaryGetFieldResponse,
-    DictionaryGetFieldsRequest, DictionaryGetFieldsResponse, DictionaryIncrement,
-    DictionaryIncrementRequest, DictionaryLength, DictionaryLengthRequest, DictionaryRemoveField,
+    DictionaryGetFieldsRequest, DictionaryGetFieldsResponse, DictionaryIncrementRequest,
+    DictionaryIncrementResponse, DictionaryLength, DictionaryLengthRequest, DictionaryRemoveField,
     DictionaryRemoveFieldRequest, DictionaryRemoveFields, DictionaryRemoveFieldsRequest,
     DictionarySetField, DictionarySetFieldRequest, DictionarySetFields, DictionarySetFieldsRequest,
     FlushCache, FlushCacheRequest, Get, GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment,
@@ -472,7 +472,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::DictionaryIncrement;
+    /// use momento::cache::DictionaryIncrementResponse;
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let dictionary_name = "dictionary";
@@ -482,7 +482,7 @@ impl CacheClient {
     /// let response = cache_client.dictionary_increment(&cache_name, dictionary_name, field, amount).await;
     ///
     /// match response {
-    ///   Ok(DictionaryIncrement { value }) => println!("Incremented value: {}", value),
+    ///   Ok(DictionaryIncrementResponse { value }) => println!("Incremented value: {}", value),
     ///   Err(e) => println!("Error incrementing value: {}", e),
     /// }
     /// # Ok(())
@@ -495,7 +495,7 @@ impl CacheClient {
         dictionary_name: impl IntoBytes,
         field: impl IntoBytes,
         amount: i64,
-    ) -> MomentoResult<DictionaryIncrement> {
+    ) -> MomentoResult<DictionaryIncrementResponse> {
         let request = DictionaryIncrementRequest::new(cache_name, dictionary_name, field, amount);
         request.send(self).await
     }

@@ -1,6 +1,6 @@
 use momento::cache::{
     DictionaryFetchResponse, DictionaryGetFieldResponse, DictionaryGetFieldsResponse,
-    DictionaryIncrement, DictionaryLength, DictionaryRemoveField, DictionaryRemoveFields,
+    DictionaryIncrementResponse, DictionaryLength, DictionaryRemoveField, DictionaryRemoveFields,
     DictionarySetField, DictionarySetFields,
 };
 use momento::{MomentoError, MomentoErrorCode, MomentoResult};
@@ -205,7 +205,7 @@ mod dictionary_increment {
         let response = client
             .dictionary_increment(cache_name, item.name(), "number", 1)
             .await?;
-        assert_eq!(response, DictionaryIncrement { value: 1 });
+        assert_eq!(response, DictionaryIncrementResponse { value: 1 });
 
         let (field, _) = item.value().iter().next().unwrap();
 

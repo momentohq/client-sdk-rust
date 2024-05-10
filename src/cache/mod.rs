@@ -19,7 +19,7 @@ pub use messages::dictionary::dictionary_get_fields::{
     DictionaryGetFieldsRequest, DictionaryGetFieldsResponse,
 };
 pub use messages::dictionary::dictionary_increment::{
-    DictionaryIncrement, DictionaryIncrementRequest,
+    DictionaryIncrementRequest, DictionaryIncrementResponse,
 };
 pub use messages::dictionary::dictionary_length::{DictionaryLength, DictionaryLengthRequest};
 pub use messages::dictionary::dictionary_remove_field::{
