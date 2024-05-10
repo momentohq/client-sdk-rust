@@ -88,7 +88,9 @@ pub use messages::list::list_concatenate_front::{
 };
 pub use messages::list::list_fetch::{ListFetchRequest, ListFetchResponse, ListFetchValue};
 pub use messages::list::list_length::{ListLengthRequest, ListLengthResponse};
-pub use messages::list::list_pop_back::{ListPopBack, ListPopBackRequest, ListPopBackValue};
+pub use messages::list::list_pop_back::{
+    ListPopBackRequest, ListPopBackResponse, ListPopBackValue,
+};
 pub use messages::list::list_pop_front::{ListPopFront, ListPopFrontRequest, ListPopFrontValue};
 pub use messages::list::list_remove_value::{ListRemoveValue, ListRemoveValueRequest};
 
