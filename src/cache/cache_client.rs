@@ -2146,6 +2146,94 @@ impl CacheClient {
         request.send(self).await
     }
 
+    /// Adds an element to the back of the given list. Creates the list if it does not already exist.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    /// * `value` - value to append to list
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to add to a list using a [ListPushBackRequest],
+    /// you can also provide the following optional arguments:
+    ///
+    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
+    /// * `truncate_front_to_size` - If the list exceeds this length, remove excess from the front of the list.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{ListPushBack, ListPushBackRequest};
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    ///
+    /// match cache_client.list_push_back(cache_name, list_name, "value").await {
+    ///     Ok(_) => println!("Element added to list"),
+    ///     Err(e) => eprintln!("Error adding element to list: {}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to add to a list using a [ListPushBackRequest]
+    /// which will allow you to set [optional arguments](ListPushBackRequest#optional-arguments) as well.
+    pub async fn list_push_back(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+        value: impl IntoBytes,
+    ) -> MomentoResult<ListPushBack> {
+        let request = ListPushBackRequest::new(cache_name, list_name, value);
+        request.send(self).await
+    }
+
+    /// Adds an element to the front of the given list. Creates the list if it does not already exist.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    /// * `value` - value to prepend to list
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to add to a list using a [ListPushFrontRequest],
+    /// you can also provide the following optional arguments:
+    ///
+    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
+    /// * `truncate_back_to_size` - If the list exceeds this length, remove excess from the back of the list.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{ListPushFront, ListPushFrontRequest};
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    ///
+    /// match cache_client.list_push_front(cache_name, list_name, "value").await {
+    ///     Ok(_) => println!("Element added to list"),
+    ///     Err(e) => eprintln!("Error adding element to list: {}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to add to a list using a [ListPushFrontRequest]
+    /// which will allow you to set [optional arguments](ListPushFrontRequest#optional-arguments) as well.
+    pub async fn list_push_front(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+        value: impl IntoBytes,
+    ) -> MomentoResult<ListPushFront> {
+        let request = ListPushFrontRequest::new(cache_name, list_name, value);
+        request.send(self).await
+    }
+
     /// Lower-level API to send any type of MomentoRequest to the server. This is used for cases when
     /// you want to set optional fields on a request that are not supported by the short-hand API for
     /// that request type.
