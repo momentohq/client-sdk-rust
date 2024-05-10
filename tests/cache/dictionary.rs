@@ -1,6 +1,6 @@
 use momento::cache::{
     DictionaryFetchResponse, DictionaryGetFieldResponse, DictionaryGetFieldsResponse,
-    DictionaryIncrementResponse, DictionaryLengthResponse, DictionaryRemoveField,
+    DictionaryIncrementResponse, DictionaryLengthResponse, DictionaryRemoveFieldResponse,
     DictionaryRemoveFields, DictionarySetField, DictionarySetFields,
 };
 use momento::{MomentoError, MomentoErrorCode, MomentoResult};
@@ -275,7 +275,7 @@ mod dictionary_remove_field {
         let response = client
             .dictionary_remove_field(cache_name, item.name(), pair.0.clone())
             .await?;
-        assert_eq!(response, DictionaryRemoveField {});
+        assert_eq!(response, DictionaryRemoveFieldResponse {});
 
         let result = client.dictionary_fetch(cache_name, item.name()).await?;
         assert_fetched_dictionary_equals_test_data(result, &item2)?;

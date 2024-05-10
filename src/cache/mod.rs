@@ -25,7 +25,7 @@ pub use messages::dictionary::dictionary_length::{
     DictionaryLengthRequest, DictionaryLengthResponse,
 };
 pub use messages::dictionary::dictionary_remove_field::{
-    DictionaryRemoveField, DictionaryRemoveFieldRequest,
+    DictionaryRemoveFieldRequest, DictionaryRemoveFieldResponse,
 };
 pub use messages::dictionary::dictionary_remove_fields::{
     DictionaryRemoveFields, DictionaryRemoveFieldsRequest,

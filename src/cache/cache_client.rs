@@ -12,7 +12,7 @@ use crate::cache::{
     DictionaryFetchResponse, DictionaryGetFieldRequest, DictionaryGetFieldResponse,
     DictionaryGetFieldsRequest, DictionaryGetFieldsResponse, DictionaryIncrementRequest,
     DictionaryIncrementResponse, DictionaryLengthRequest, DictionaryLengthResponse,
-    DictionaryRemoveField, DictionaryRemoveFieldRequest, DictionaryRemoveFields,
+    DictionaryRemoveFieldRequest, DictionaryRemoveFieldResponse, DictionaryRemoveFields,
     DictionaryRemoveFieldsRequest, DictionarySetField, DictionarySetFieldRequest,
     DictionarySetFields, DictionarySetFieldsRequest, FlushCache, FlushCacheRequest, Get,
     GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest,
@@ -548,7 +548,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::{DictionaryRemoveField, DictionaryRemoveFieldRequest};
+    /// use momento::cache::{DictionaryRemoveFieldResponse, DictionaryRemoveFieldRequest};
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let dictionary_name = "dictionary";
     /// let field = "field";
@@ -568,7 +568,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         dictionary_name: impl IntoBytes,
         field: impl IntoBytes,
-    ) -> MomentoResult<DictionaryRemoveField> {
+    ) -> MomentoResult<DictionaryRemoveFieldResponse> {
         let request = DictionaryRemoveFieldRequest::new(cache_name, dictionary_name, field);
         request.send(self).await
     }
