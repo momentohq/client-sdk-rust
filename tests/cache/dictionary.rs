@@ -1,7 +1,7 @@
 use momento::cache::{
     DictionaryFetchResponse, DictionaryGetFieldResponse, DictionaryGetFieldsResponse,
     DictionaryIncrementResponse, DictionaryLengthResponse, DictionaryRemoveFieldResponse,
-    DictionaryRemoveFields, DictionarySetField, DictionarySetFields,
+    DictionaryRemoveFieldsResponse, DictionarySetField, DictionarySetFields,
 };
 use momento::{MomentoError, MomentoErrorCode, MomentoResult};
 use momento_test_util::{
@@ -334,7 +334,7 @@ mod dictionary_remove_fields {
                 item.value().keys().cloned().collect::<Vec<String>>(),
             )
             .await?;
-        assert_eq!(response, DictionaryRemoveFields {});
+        assert_eq!(response, DictionaryRemoveFieldsResponse {});
 
         let result = client.dictionary_fetch(cache_name, item.name()).await?;
         assert_fetched_dictionary_equals_test_data(result, &item2)?;
@@ -504,7 +504,7 @@ mod dictionary_length {
                 item1.value().keys().cloned().collect::<Vec<String>>(),
             )
             .await?;
-        assert_eq!(response, DictionaryRemoveFields {});
+        assert_eq!(response, DictionaryRemoveFieldsResponse {});
 
         let result = client.dictionary_length(cache_name, item1.name()).await?;
         assert_eq!(
