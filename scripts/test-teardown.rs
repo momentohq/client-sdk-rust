@@ -11,7 +11,7 @@ async fn main() {
 
     let cache_client = CacheClient::builder()
         .default_ttl(Duration::from_secs(5))
-        .configuration(configurations::laptop::latest())
+        .configuration(configurations::Laptop::latest())
         .credential_provider(credential_provider)
         .build()
         .expect("cache client cannot be created");

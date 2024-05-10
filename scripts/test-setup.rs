@@ -12,7 +12,7 @@ async fn main() -> MomentoResult<()> {
 
     let cache_client = CacheClient::builder()
         .default_ttl(Duration::from_secs(5))
-        .configuration(configurations::laptop::latest())
+        .configuration(configurations::Laptop::latest())
         .credential_provider(credential_provider)
         .build()?;
 

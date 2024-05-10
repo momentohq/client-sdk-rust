@@ -39,7 +39,7 @@ impl CacheTestState {
         runtime.spawn(async move {
             let cache_client = CacheClient::builder()
                 .default_ttl(Duration::from_secs(5))
-                .configuration(configurations::laptop::latest())
+                .configuration(configurations::Laptop::latest())
                 .credential_provider(credential_provider)
                 .build()
                 .expect("Failed to create cache client");
