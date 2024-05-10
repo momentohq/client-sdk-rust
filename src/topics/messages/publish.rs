@@ -17,7 +17,29 @@ use crate::{
 ///
 /// # Example
 ///
-/// See [TopicClient] for an example.
+/// ```
+/// # fn main() -> anyhow::Result<()> {
+/// # tokio_test::block_on(async {
+/// use momento::{CredentialProvider, TopicClient};
+/// use momento::topics::{TopicPublish, PublishRequest};
+///
+/// let topic_client = TopicClient::builder()
+///     .configuration(momento::topics::configurations::laptop::latest())
+///     .credential_provider(
+///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
+///             .expect("API key should be valid"),
+///     )
+///     .build()?;
+///
+/// // Publish to a topic
+/// let request = PublishRequest::new("cache", "topic", "value");
+/// match topic_client.send_request(request).await? {
+///     TopicPublish {} => println!("Published message!"),
+/// }
+/// # Ok(())
+/// # })
+/// # }
+/// ```
 pub struct PublishRequest<V: IntoTopicValue> {
     cache_name: String,
     topic: String,
