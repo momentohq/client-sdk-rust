@@ -27,7 +27,7 @@ pub struct TopicClient {
 /// use futures::StreamExt;
 ///
 /// let topic_client = match TopicClient::builder()
-///     .configuration(momento::topics::configurations::laptop::latest())
+///     .configuration(momento::topics::configurations::Laptop::latest())
 ///     .credential_provider(
 ///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
 ///             .expect("auth token should be valid"),

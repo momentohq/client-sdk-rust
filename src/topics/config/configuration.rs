@@ -9,10 +9,10 @@ use crate::config::transport_strategy::TransportStrategy;
 /// use momento::topics::configurations;
 ///
 /// /// Use laptop for local development
-/// let developer_config = configurations::laptop::latest();
+/// let developer_config = configurations::Laptop::latest();
 ///
 /// /// Use in_region for a typical server environment
-/// let server_config = configurations::in_region::latest();
+/// let server_config = configurations::Region::latest();
 /// ```
 /// If you have specific requirements, configurations can also be constructed manually:
 /// ```
