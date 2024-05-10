@@ -12,7 +12,7 @@ use crate::config::transport_strategy::TransportStrategy;
 /// let developer_config = configurations::Laptop::latest();
 ///
 /// /// Use in_region for a typical server environment
-/// let server_config = configurations::Region::latest();
+/// let server_config = configurations::InRegion::latest();
 /// ```
 /// If you have specific requirements, configurations can also be constructed manually:
 /// ```
