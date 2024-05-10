@@ -80,7 +80,9 @@ pub use messages::sorted_set::sorted_set_remove_elements::{
     SortedSetRemoveElements, SortedSetRemoveElementsRequest,
 };
 
-pub use messages::list::list_concatenate_back::{ListConcatenateBack, ListConcatenateBackRequest};
+pub use messages::list::list_concatenate_back::{
+    ListConcatenateBackRequest, ListConcatenateBackResponse,
+};
 pub use messages::list::list_concatenate_front::{
     ListConcatenateFront, ListConcatenateFrontRequest,
 };

@@ -1,5 +1,5 @@
 use momento::cache::{
-    CollectionTtl, ListConcatenateBack, ListConcatenateBackRequest, ListConcatenateFront,
+    CollectionTtl, ListConcatenateBackRequest, ListConcatenateBackResponse, ListConcatenateFront,
     ListConcatenateFrontRequest, ListFetch, ListLength, ListPopBack, ListPopFront, ListRemoveValue,
 };
 use momento::{MomentoErrorCode, MomentoResult};
@@ -46,7 +46,7 @@ mod list_concatenate_back {
         let result = client
             .list_concatenate_back(cache_name, test_list.name(), test_list.values().to_vec())
             .await?;
-        assert_eq!(result, ListConcatenateBack {});
+        assert_eq!(result, ListConcatenateBackResponse {});
         assert_list_eq(
             client.list_fetch(cache_name, test_list.name()).await?,
             test_list.values().to_vec(),
@@ -70,7 +70,7 @@ mod list_concatenate_back {
         .truncate_back_to_size(2)
         .ttl(CollectionTtl::new(Some(Duration::from_secs(3)), false));
         let result = client.send_request(request).await?;
-        assert_eq!(result, ListConcatenateBack {});
+        assert_eq!(result, ListConcatenateBackResponse {});
 
         // Should have truncated to only 2 elements
         assert_list_eq(
@@ -196,7 +196,7 @@ mod list_length {
         let result = client
             .list_concatenate_back(cache_name, test_list.name(), test_list.values().to_vec())
             .await?;
-        assert_eq!(result, ListConcatenateBack {});
+        assert_eq!(result, ListConcatenateBackResponse {});
 
         // Fetch list length
         let result = client.list_length(cache_name, test_list.name()).await?;
@@ -251,7 +251,7 @@ mod list_fetch {
                 [list1.values().to_vec(), list2.values().to_vec()].concat(),
             )
             .await?;
-        assert_eq!(result, ListConcatenateBack {});
+        assert_eq!(result, ListConcatenateBackResponse {});
 
         // Fetch entire list
         let fetch_full_list = client.list_fetch(cache_name, list1.name()).await?;
@@ -311,7 +311,7 @@ mod list_pop_back {
         let result = client
             .list_concatenate_back(cache_name, test_list.name(), test_list.values().to_vec())
             .await?;
-        assert_eq!(result, ListConcatenateBack {});
+        assert_eq!(result, ListConcatenateBackResponse {});
 
         // Pop first value from the back
         let popped_first: String = client
@@ -374,7 +374,7 @@ mod list_pop_front {
         let result = client
             .list_concatenate_back(cache_name, test_list.name(), test_list.values().to_vec())
             .await?;
-        assert_eq!(result, ListConcatenateBack {});
+        assert_eq!(result, ListConcatenateBackResponse {});
 
         // Pop first value from the front
         let popped_first: String = client
@@ -445,7 +445,7 @@ mod list_remove {
         let result = client
             .list_concatenate_back(cache_name, test_list.name(), test_list.values().to_vec())
             .await?;
-        assert_eq!(result, ListConcatenateBack {});
+        assert_eq!(result, ListConcatenateBackResponse {});
 
         let first_value = test_list
             .values()

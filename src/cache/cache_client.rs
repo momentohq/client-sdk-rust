@@ -18,7 +18,7 @@ use crate::cache::{
     GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest,
     IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest,
     ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest,
-    ListCaches, ListCachesRequest, ListConcatenateBack, ListConcatenateBackRequest,
+    ListCaches, ListCachesRequest, ListConcatenateBackRequest, ListConcatenateBackResponse,
     ListConcatenateFront, ListConcatenateFrontRequest, ListFetch, ListFetchRequest, ListLength,
     ListLengthRequest, ListPopBack, ListPopBackRequest, ListPopFront, ListPopFrontRequest,
     ListRemoveValue, ListRemoveValueRequest, MomentoRequest, Set, SetAddElements,
@@ -1967,7 +1967,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::ListConcatenateBack;
+    /// use momento::cache::ListConcatenateBackResponse;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let list_name = "list-name";
     ///
@@ -1992,7 +1992,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         list_name: impl IntoBytes,
         values: impl IntoBytesIterable,
-    ) -> MomentoResult<ListConcatenateBack> {
+    ) -> MomentoResult<ListConcatenateBackResponse> {
         let request = ListConcatenateBackRequest::new(cache_name, list_name, values);
         request.send(self).await
     }
