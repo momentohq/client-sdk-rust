@@ -16,7 +16,7 @@ pub use messages::dictionary::dictionary_get_field::{
     DictionaryGetFieldRequest, DictionaryGetFieldResponse,
 };
 pub use messages::dictionary::dictionary_get_fields::{
-    DictionaryGetFields, DictionaryGetFieldsRequest,
+    DictionaryGetFieldsRequest, DictionaryGetFieldsResponse,
 };
 pub use messages::dictionary::dictionary_increment::{
     DictionaryIncrement, DictionaryIncrementRequest,

@@ -10,7 +10,7 @@ use crate::cache::{
     Configuration, CreateCache, CreateCacheRequest, DecreaseTtl, DecreaseTtlRequest, Delete,
     DeleteCache, DeleteCacheRequest, DeleteRequest, DictionaryFetchRequest,
     DictionaryFetchResponse, DictionaryGetFieldRequest, DictionaryGetFieldResponse,
-    DictionaryGetFields, DictionaryGetFieldsRequest, DictionaryIncrement,
+    DictionaryGetFieldsRequest, DictionaryGetFieldsResponse, DictionaryIncrement,
     DictionaryIncrementRequest, DictionaryLength, DictionaryLengthRequest, DictionaryRemoveField,
     DictionaryRemoveFieldRequest, DictionaryRemoveFields, DictionaryRemoveFieldsRequest,
     DictionarySetField, DictionarySetFieldRequest, DictionarySetFields, DictionarySetFieldsRequest,
@@ -421,7 +421,7 @@ impl CacheClient {
     /// # use std::convert::TryInto;
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::{DictionaryGetFields, DictionaryGetFieldsRequest};
+    /// use momento::cache::{DictionaryGetFieldsResponse, DictionaryGetFieldsRequest};
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let dictionary_name = "dictionary";
     /// let fields = vec!["field1", "field2"];
@@ -435,11 +435,11 @@ impl CacheClient {
     /// let response = cache_client.dictionary_get_fields(cache_name, dictionary_name, fields).await?;
     ///
     /// match response {
-    ///    DictionaryGetFields::Hit { .. } => {
+    ///    DictionaryGetFieldsResponse::Hit { .. } => {
     ///      let dictionary: HashMap<String, String> = response.try_into().expect("I stored a dictionary of strings!");
     ///      println!("Fetched dictionary: {:?}", dictionary);
     ///    }
-    ///    DictionaryGetFields::Miss => println!("Cache miss"),
+    ///    DictionaryGetFieldsResponse::Miss => println!("Cache miss"),
     /// }
     /// # Ok(())
     /// # })
@@ -450,7 +450,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         dictionary_name: impl IntoBytes,
         fields: F,
-    ) -> MomentoResult<DictionaryGetFields<F>> {
+    ) -> MomentoResult<DictionaryGetFieldsResponse<F>> {
         let request = DictionaryGetFieldsRequest::new(cache_name, dictionary_name, fields);
         request.send(self).await
     }

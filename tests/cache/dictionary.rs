@@ -1,7 +1,7 @@
 use momento::cache::{
-    DictionaryFetchResponse, DictionaryGetFieldResponse, DictionaryGetFields, DictionaryIncrement,
-    DictionaryLength, DictionaryRemoveField, DictionaryRemoveFields, DictionarySetField,
-    DictionarySetFields,
+    DictionaryFetchResponse, DictionaryGetFieldResponse, DictionaryGetFieldsResponse,
+    DictionaryIncrement, DictionaryLength, DictionaryRemoveField, DictionaryRemoveFields,
+    DictionarySetField, DictionarySetFields,
 };
 use momento::{MomentoError, MomentoErrorCode, MomentoResult};
 use momento_test_util::{
@@ -153,11 +153,11 @@ mod dictionary_get_fields {
             )
             .await?;
         match result {
-            DictionaryGetFields::Hit { .. } => {
+            DictionaryGetFieldsResponse::Hit { .. } => {
                 let actual: HashMap<String, String> = result.try_into().expect("Stored string-string field-value pairs but could not convert into HashMap<String, String>");
                 assert_eq!(actual, *item.value());
             }
-            DictionaryGetFields::Miss => panic!("I expected a hit!"),
+            DictionaryGetFieldsResponse::Miss => panic!("I expected a hit!"),
         }
         Ok(())
     }
