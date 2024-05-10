@@ -84,7 +84,7 @@ pub use messages::list::list_concatenate_back::{
     ListConcatenateBackRequest, ListConcatenateBackResponse,
 };
 pub use messages::list::list_concatenate_front::{
-    ListConcatenateFront, ListConcatenateFrontRequest,
+    ListConcatenateFrontRequest, ListConcatenateFrontResponse,
 };
 pub use messages::list::list_fetch::{ListFetch, ListFetchRequest, ListFetchValue};
 pub use messages::list::list_length::{ListLength, ListLengthRequest};

@@ -19,18 +19,19 @@ use crate::cache::{
     IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest,
     ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest,
     ListCaches, ListCachesRequest, ListConcatenateBackRequest, ListConcatenateBackResponse,
-    ListConcatenateFront, ListConcatenateFrontRequest, ListFetch, ListFetchRequest, ListLength,
-    ListLengthRequest, ListPopBack, ListPopBackRequest, ListPopFront, ListPopFrontRequest,
-    ListRemoveValue, ListRemoveValueRequest, MomentoRequest, Set, SetAddElements,
-    SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsent, SetIfAbsentOrEqual,
-    SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual,
-    SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,
-    SetIfPresentRequest, SetRemoveElements, SetRemoveElementsRequest, SetRequest, SortedSetFetch,
-    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetGetRank,
-    SortedSetGetRankRequest, SortedSetGetScore, SortedSetGetScoreRequest, SortedSetLength,
-    SortedSetLengthRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
-    SortedSetPutElements, SortedSetPutElementsRequest, SortedSetRemoveElements,
-    SortedSetRemoveElementsRequest, UpdateTtl, UpdateTtlRequest,
+    ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetch, ListFetchRequest,
+    ListLength, ListLengthRequest, ListPopBack, ListPopBackRequest, ListPopFront,
+    ListPopFrontRequest, ListRemoveValue, ListRemoveValueRequest, MomentoRequest, Set,
+    SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsent,
+    SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual,
+    SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual,
+    SetIfPresentAndNotEqualRequest, SetIfPresentRequest, SetRemoveElements,
+    SetRemoveElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
+    SortedSetFetchByScoreRequest, SortedSetGetRank, SortedSetGetRankRequest, SortedSetGetScore,
+    SortedSetGetScoreRequest, SortedSetLength, SortedSetLengthRequest, SortedSetOrder,
+    SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements,
+    SortedSetPutElementsRequest, SortedSetRemoveElements, SortedSetRemoveElementsRequest,
+    UpdateTtl, UpdateTtlRequest,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -1917,7 +1918,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::ListConcatenateFront;
+    /// use momento::cache::ListConcatenateFrontResponse;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let list_name = "list-name";
     ///
@@ -1942,7 +1943,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         list_name: impl IntoBytes,
         values: impl IntoBytesIterable,
-    ) -> MomentoResult<ListConcatenateFront> {
+    ) -> MomentoResult<ListConcatenateFrontResponse> {
         let request = ListConcatenateFrontRequest::new(cache_name, list_name, values);
         request.send(self).await
     }

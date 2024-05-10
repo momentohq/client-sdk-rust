@@ -1,6 +1,7 @@
 use momento::cache::{
-    CollectionTtl, ListConcatenateBackRequest, ListConcatenateBackResponse, ListConcatenateFront,
-    ListConcatenateFrontRequest, ListFetch, ListLength, ListPopBack, ListPopFront, ListRemoveValue,
+    CollectionTtl, ListConcatenateBackRequest, ListConcatenateBackResponse,
+    ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetch, ListLength, ListPopBack,
+    ListPopFront, ListRemoveValue,
 };
 use momento::{MomentoErrorCode, MomentoResult};
 
@@ -116,7 +117,7 @@ mod list_concatenate_front {
         let result = client
             .list_concatenate_front(cache_name, test_list.name(), test_list.values().to_vec())
             .await?;
-        assert_eq!(result, ListConcatenateFront {});
+        assert_eq!(result, ListConcatenateFrontResponse {});
         assert_list_eq(
             client.list_fetch(cache_name, test_list.name()).await?,
             test_list.values().to_vec(),
@@ -140,7 +141,7 @@ mod list_concatenate_front {
         .truncate_back_to_size(2)
         .ttl(CollectionTtl::new(Some(Duration::from_secs(3)), false));
         let result = client.send_request(request).await?;
-        assert_eq!(result, ListConcatenateFront {});
+        assert_eq!(result, ListConcatenateFrontResponse {});
 
         // Should have truncated to only 2 elements
         assert_list_eq(
