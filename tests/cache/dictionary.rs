@@ -1,7 +1,7 @@
 use momento::cache::{
     DictionaryFetchResponse, DictionaryGetFieldResponse, DictionaryGetFieldsResponse,
     DictionaryIncrementResponse, DictionaryLengthResponse, DictionaryRemoveFieldResponse,
-    DictionaryRemoveFieldsResponse, DictionarySetFieldResponse, DictionarySetFields,
+    DictionaryRemoveFieldsResponse, DictionarySetFieldResponse, DictionarySetFieldsResponse,
 };
 use momento::{MomentoError, MomentoErrorCode, MomentoResult};
 use momento_test_util::{
@@ -37,7 +37,7 @@ mod dictionary_fetch {
         let dictionary_set_response = client
             .dictionary_set_fields(cache_name, item.name(), item.value().clone())
             .await?;
-        assert_eq!(dictionary_set_response, DictionarySetFields {});
+        assert_eq!(dictionary_set_response, DictionarySetFieldsResponse {});
         let result = client.dictionary_fetch(cache_name, item.name()).await?;
         assert_fetched_dictionary_equals_test_data(result, &item)?;
         Ok(())
@@ -78,7 +78,7 @@ mod dictionary_get_field {
         let response = client
             .dictionary_set_fields(cache_name, item.name(), item.value().clone())
             .await?;
-        assert_eq!(response, DictionarySetFields {});
+        assert_eq!(response, DictionarySetFieldsResponse {});
 
         let (field, value) = item.value().iter().next().unwrap();
 
@@ -136,13 +136,13 @@ mod dictionary_get_fields {
         let response = client
             .dictionary_set_fields(cache_name, item.name(), item.value().clone())
             .await?;
-        assert_eq!(response, DictionarySetFields {});
+        assert_eq!(response, DictionarySetFieldsResponse {});
 
         let item2 = TestDictionary::new();
         let response = client
             .dictionary_set_fields(cache_name, item2.name(), item2.value().clone())
             .await?;
-        assert_eq!(response, DictionarySetFields {});
+        assert_eq!(response, DictionarySetFieldsResponse {});
 
         // Now get the values relevant to the first dictionary
         let result = client
@@ -200,7 +200,7 @@ mod dictionary_increment {
         let response = client
             .dictionary_set_fields(cache_name, item.name(), item.value().clone())
             .await?;
-        assert_eq!(response, DictionarySetFields {});
+        assert_eq!(response, DictionarySetFieldsResponse {});
 
         let response = client
             .dictionary_increment(cache_name, item.name(), "number", 1)
@@ -264,13 +264,13 @@ mod dictionary_remove_field {
         let response = client
             .dictionary_set_fields(cache_name, item.name(), item.value().clone())
             .await?;
-        assert_eq!(response, DictionarySetFields {});
+        assert_eq!(response, DictionarySetFieldsResponse {});
 
         let item2 = TestDictionary::new();
         let response = client
             .dictionary_set_fields(cache_name, item.name(), item2.value().clone())
             .await?;
-        assert_eq!(response, DictionarySetFields {});
+        assert_eq!(response, DictionarySetFieldsResponse {});
 
         let response = client
             .dictionary_remove_field(cache_name, item.name(), pair.0.clone())
@@ -319,13 +319,13 @@ mod dictionary_remove_fields {
         let response = client
             .dictionary_set_fields(cache_name, item.name(), item.value().clone())
             .await?;
-        assert_eq!(response, DictionarySetFields {});
+        assert_eq!(response, DictionarySetFieldsResponse {});
 
         let item2 = TestDictionary::new();
         let response = client
             .dictionary_set_fields(cache_name, item.name(), item2.value().clone())
             .await?;
-        assert_eq!(response, DictionarySetFields {});
+        assert_eq!(response, DictionarySetFieldsResponse {});
 
         let response = client
             .dictionary_remove_fields(
@@ -427,7 +427,7 @@ mod dictionary_set_fields {
         let response = client
             .dictionary_set_fields(cache_name, item.name(), item.value().clone())
             .await?;
-        assert_eq!(response, DictionarySetFields {});
+        assert_eq!(response, DictionarySetFieldsResponse {});
 
         let result = client.dictionary_fetch(cache_name, item.name()).await?;
         assert_fetched_dictionary_equals_test_data(result, &item)?;
@@ -485,13 +485,13 @@ mod dictionary_length {
         let response = client
             .dictionary_set_fields(cache_name, item1.name(), item1.value().clone())
             .await?;
-        assert_eq!(response, DictionarySetFields {});
+        assert_eq!(response, DictionarySetFieldsResponse {});
 
         let item2 = TestDictionary::new();
         let response = client
             .dictionary_set_fields(cache_name, item1.name(), item2.value().clone())
             .await?;
-        assert_eq!(response, DictionarySetFields {});
+        assert_eq!(response, DictionarySetFieldsResponse {});
 
         let result = client.dictionary_length(cache_name, item1.name()).await?;
         assert_eq!(result, DictionaryLengthResponse::Hit { length: 4 });

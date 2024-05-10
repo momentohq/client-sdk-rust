@@ -14,7 +14,7 @@ use crate::cache::{
     DictionaryIncrementResponse, DictionaryLengthRequest, DictionaryLengthResponse,
     DictionaryRemoveFieldRequest, DictionaryRemoveFieldResponse, DictionaryRemoveFieldsRequest,
     DictionaryRemoveFieldsResponse, DictionarySetFieldRequest, DictionarySetFieldResponse,
-    DictionarySetFields, DictionarySetFieldsRequest, FlushCache, FlushCacheRequest, Get,
+    DictionarySetFieldsRequest, DictionarySetFieldsResponse, FlushCache, FlushCacheRequest, Get,
     GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest,
     IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest,
     ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest,
@@ -691,7 +691,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::{CollectionTtl, DictionarySetFields, DictionarySetFieldsRequest};
+    /// use momento::cache::{CollectionTtl, DictionarySetFieldsResponse, DictionarySetFieldsRequest};
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let dictionary_name = "dictionary";
     ///
@@ -714,7 +714,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         dictionary_name: impl IntoBytes,
         elements: impl IntoDictionaryFieldValuePairs<F, V>,
-    ) -> MomentoResult<DictionarySetFields> {
+    ) -> MomentoResult<DictionarySetFieldsResponse> {
         let request = DictionarySetFieldsRequest::new(cache_name, dictionary_name, elements);
         request.send(self).await
     }

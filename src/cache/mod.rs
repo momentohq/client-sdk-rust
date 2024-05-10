@@ -34,7 +34,7 @@ pub use messages::dictionary::dictionary_set_field::{
     DictionarySetFieldRequest, DictionarySetFieldResponse,
 };
 pub use messages::dictionary::dictionary_set_fields::{
-    DictionaryFieldValuePair, DictionarySetFields, DictionarySetFieldsRequest,
+    DictionaryFieldValuePair, DictionarySetFieldsRequest, DictionarySetFieldsResponse,
     IntoDictionaryFieldValuePairs,
 };
 
