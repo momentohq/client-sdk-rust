@@ -19,10 +19,10 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 /// ```
 /// # fn main() -> anyhow::Result<()> {
 /// # tokio_test::block_on(async {
-/// use momento::{CredentialProvider, TopicClient};
+/// use momento::{topics::configurations, CredentialProvider, TopicClient};
 ///
 /// let topic_client = match TopicClient::builder()
-///     .configuration(momento::topics::configurations::Laptop::latest())
+///     .configuration(configurations::Laptop::latest())
 ///     .credential_provider(
 ///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
 ///             .expect("API key should be valid"),
@@ -63,10 +63,10 @@ impl TopicClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # tokio_test::block_on(async {
     /// use momento::{CredentialProvider, TopicClient};
-    /// use momento::topics::TopicPublish;
+    /// use momento::topics::{configurations, TopicPublish};
     ///
     /// let topic_client = TopicClient::builder()
-    ///     .configuration(momento::topics::configurations::laptop::latest())
+    ///     .configuration(configurations::Laptop::latest())
     ///     .credential_provider(
     ///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
     ///             .expect("API key should be valid"),
@@ -105,11 +105,11 @@ impl TopicClient {
     /// ```no_run
     /// # fn main() -> anyhow::Result<()> {
     /// # tokio_test::block_on(async {
-    /// use momento::{CredentialProvider, TopicClient};
+    /// use momento::{topics::configurations, CredentialProvider, TopicClient};
     /// use futures::StreamExt;
     ///
     /// let topic_client = TopicClient::builder()
-    ///     .configuration(momento::topics::configurations::laptop::latest())
+    ///     .configuration(configurations::Laptop::latest())
     ///     .credential_provider(
     ///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
     ///             .expect("API key should be valid"),

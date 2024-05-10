@@ -23,11 +23,11 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 /// ```no_run
 /// # fn main() -> anyhow::Result<()> {
 /// # tokio_test::block_on(async {
-/// use momento::{CredentialProvider, TopicClient};
+/// use momento::{topics::configurations, CredentialProvider, TopicClient};
 /// use futures::StreamExt;
 ///
 /// let topic_client = TopicClient::builder()
-///     .configuration(momento::topics::configurations::laptop::latest())
+///     .configuration(configurations::Laptop::latest())
 ///     .credential_provider(
 ///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
 ///             .expect("API key should be valid"),
@@ -54,11 +54,11 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 /// ```no_run
 /// # fn main() -> anyhow::Result<()> {
 /// # tokio_test::block_on(async {
-/// use momento::{CredentialProvider, TopicClient};
+/// use momento::{topics::configurations, CredentialProvider, TopicClient};
 /// use futures::StreamExt;
 ///
 /// let topic_client = TopicClient::builder()
-///     .configuration(momento::topics::configurations::laptop::latest())
+///     .configuration(configurations::Laptop::latest())
 ///     .credential_provider(
 ///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
 ///             .expect("API key should be valid"),
