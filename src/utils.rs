@@ -162,9 +162,10 @@ pub trait IntoBytesIterable: Send {
     fn into_bytes(self) -> Vec<Vec<u8>>;
 }
 
-impl<T: Send> IntoBytesIterable for Vec<T>
+impl<T, I> IntoBytesIterable for I
 where
     T: IntoBytes,
+    I: IntoIterator<Item = T> + Send,
 {
     fn into_bytes(self) -> Vec<Vec<u8>> {
         self.into_iter().map(|item| item.into_bytes()).collect()
@@ -276,6 +277,16 @@ mod tests {
     #[test]
     fn test_into_bytes_iterable() {
         let values = vec!["hello", "world"];
+        let result: Vec<Vec<u8>> = values.into_bytes();
+        assert_eq!(
+            result,
+            vec![vec![104, 101, 108, 108, 111], vec![119, 111, 114, 108, 100]]
+        );
+    }
+
+    #[test]
+    fn test_into_bytes_iterable_on_static_array() {
+        let values = ["hello", "world"];
         let result: Vec<Vec<u8>> = values.into_bytes();
         assert_eq!(
             result,
