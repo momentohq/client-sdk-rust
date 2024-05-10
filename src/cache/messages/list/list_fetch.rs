@@ -32,7 +32,7 @@ use crate::{
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::convert::TryInto;
-/// use momento::cache::{ListFetch, ListFetchRequest};
+/// use momento::cache::{ListFetchResponse, ListFetchRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let list_name = "list-name";
@@ -75,9 +75,9 @@ impl<L: IntoBytes> ListFetchRequest<L> {
 }
 
 impl<L: IntoBytes> MomentoRequest for ListFetchRequest<L> {
-    type Response = ListFetch;
+    type Response = ListFetchResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListFetch> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListFetchResponse> {
         let start_index = match self.start_index {
             Some(start) => Some(StartIndex::InclusiveStart(start)),
             None => Some(StartIndex::UnboundedStart(Unbounded {})),
@@ -104,8 +104,8 @@ impl<L: IntoBytes> MomentoRequest for ListFetchRequest<L> {
             .into_inner();
 
         match response.list {
-            Some(list_fetch_response::List::Missing(_)) => Ok(ListFetch::Miss),
-            Some(list_fetch_response::List::Found(found)) => Ok(ListFetch::Hit {
+            Some(list_fetch_response::List::Missing(_)) => Ok(ListFetchResponse::Miss),
+            Some(list_fetch_response::List::Found(found)) => Ok(ListFetchResponse::Hit {
                 values: ListFetchValue {
                     raw_item: found.values,
                 },
@@ -124,32 +124,32 @@ impl<L: IntoBytes> MomentoRequest for ListFetchRequest<L> {
 /// ```
 /// # use momento::MomentoResult;
 /// # use momento::cache::ListFetchValue;
-/// use momento::cache::ListFetch;
+/// use momento::cache::ListFetchResponse;
 /// use std::convert::TryInto;
 /// # let values = vec!["abc", "123"].iter().map(|s| s.as_bytes().to_vec()).collect();
-/// # let response = ListFetch::Hit { values: ListFetchValue::new(values) };
+/// # let response = ListFetchResponse::Hit { values: ListFetchValue::new(values) };
 /// let fetched_values: Vec<String> = match response {
-///     ListFetch::Hit { values } => values.try_into().expect("Expected to fetch a list of strings!"),
-///     ListFetch::Miss => return // probably you'll do something else here
+///     ListFetchResponse::Hit { values } => values.try_into().expect("Expected to fetch a list of strings!"),
+///     ListFetchResponse::Miss => return // probably you'll do something else here
 /// };
 /// ```
 ///
 /// You can cast your result directly into a `Result<Vec<String>, MomentoError>` suitable for
-/// ?-propagation if you know you are expecting a ListFetch::Hit.
+/// ?-propagation if you know you are expecting a ListFetchResponse::Hit.
 ///
 /// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
 /// this is what you're after:
 /// ```
 /// # use momento::MomentoResult;
 /// # use momento::cache::ListFetchValue;
-/// use momento::cache::ListFetch;
+/// use momento::cache::ListFetchResponse;
 /// use std::convert::TryInto;
 /// # let values = vec!["abc", "123"].iter().map(|s| s.as_bytes().to_vec()).collect();
-/// # let response = ListFetch::Hit { values: ListFetchValue::new(values) };
+/// # let response = ListFetchResponse::Hit { values: ListFetchValue::new(values) };
 /// let fetched_values: Vec<String> = response.try_into().expect("Expected to fetch a list of strings!");
 /// ```
 #[derive(Debug, PartialEq, Eq)]
-pub enum ListFetch {
+pub enum ListFetchResponse {
     Hit { values: ListFetchValue },
     Miss,
 }
@@ -185,31 +185,31 @@ impl TryFrom<ListFetchValue> for Vec<String> {
     }
 }
 
-impl TryFrom<ListFetch> for Vec<Vec<u8>> {
+impl TryFrom<ListFetchResponse> for Vec<Vec<u8>> {
     type Error = MomentoError;
 
-    fn try_from(value: ListFetch) -> Result<Self, Self::Error> {
+    fn try_from(value: ListFetchResponse) -> Result<Self, Self::Error> {
         match value {
-            ListFetch::Hit { values } => Ok(values.try_into()?),
-            ListFetch::Miss => Err(MomentoError::miss("ListFetch")),
+            ListFetchResponse::Hit { values } => Ok(values.try_into()?),
+            ListFetchResponse::Miss => Err(MomentoError::miss("ListFetch")),
         }
     }
 }
 
-impl TryFrom<ListFetch> for Vec<String> {
+impl TryFrom<ListFetchResponse> for Vec<String> {
     type Error = MomentoError;
 
-    fn try_from(value: ListFetch) -> Result<Self, Self::Error> {
+    fn try_from(value: ListFetchResponse) -> Result<Self, Self::Error> {
         match value {
-            ListFetch::Hit { values } => Ok(values.try_into()?),
-            ListFetch::Miss => Err(MomentoError::miss("ListFetch")),
+            ListFetchResponse::Hit { values } => Ok(values.try_into()?),
+            ListFetchResponse::Miss => Err(MomentoError::miss("ListFetch")),
         }
     }
 }
 
-impl From<Vec<String>> for ListFetch {
+impl From<Vec<String>> for ListFetchResponse {
     fn from(values: Vec<String>) -> Self {
-        ListFetch::Hit {
+        ListFetchResponse::Hit {
             values: ListFetchValue::new(
                 values.into_iter().map(|v| v.as_bytes().to_vec()).collect(),
             ),

@@ -1,5 +1,5 @@
 use momento::{
-    cache::{Get, GetValue, ListFetch, ListFetchValue, SortedSetElements, SortedSetFetch},
+    cache::{Get, GetValue, ListFetchResponse, ListFetchValue, SortedSetElements, SortedSetFetch},
     IntoBytes,
 };
 use std::collections::HashMap;
@@ -197,9 +197,9 @@ impl Default for TestList {
     }
 }
 
-impl From<&TestList> for ListFetch {
+impl From<&TestList> for ListFetchResponse {
     fn from(test_list: &TestList) -> Self {
-        ListFetch::Hit {
+        ListFetchResponse::Hit {
             values: ListFetchValue::new(
                 test_list
                     .values()

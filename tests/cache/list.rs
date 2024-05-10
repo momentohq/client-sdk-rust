@@ -1,7 +1,7 @@
 use momento::cache::{
     CollectionTtl, ListConcatenateBackRequest, ListConcatenateBackResponse,
-    ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetch, ListLength, ListPopBack,
-    ListPopFront, ListRemoveValue,
+    ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetchResponse, ListLength,
+    ListPopBack, ListPopFront, ListRemoveValue,
 };
 use momento::{MomentoErrorCode, MomentoResult};
 
@@ -10,8 +10,11 @@ use momento_test_util::{unique_cache_name, TestList, CACHE_TEST_STATE};
 use std::convert::TryInto;
 use std::time::Duration;
 
-fn assert_list_eq(list_fetch_result: ListFetch, expected: Vec<String>) -> MomentoResult<()> {
-    let expected: ListFetch = expected.into();
+fn assert_list_eq(
+    list_fetch_result: ListFetchResponse,
+    expected: Vec<String>,
+) -> MomentoResult<()> {
+    let expected: ListFetchResponse = expected.into();
     assert_eq!(
         list_fetch_result, expected,
         "Expected ListFetch::Hit to be equal to {:?}, but got {:?}",
@@ -83,7 +86,7 @@ mod list_concatenate_back {
 
         // Expect a miss after collection ttl expires
         let result = client.list_fetch(cache_name, test_list.name()).await?;
-        assert_eq!(result, ListFetch::Miss);
+        assert_eq!(result, ListFetchResponse::Miss);
 
         Ok(())
     }
@@ -153,7 +156,7 @@ mod list_concatenate_front {
 
         // Expect a miss after collection ttl expires
         let result = client.list_fetch(cache_name, test_list.name()).await?;
-        assert_eq!(result, ListFetch::Miss);
+        assert_eq!(result, ListFetchResponse::Miss);
 
         Ok(())
     }
@@ -232,7 +235,7 @@ mod list_fetch {
 
         let result = client.list_fetch(cache_name, list_name).await?;
 
-        assert_eq!(result, ListFetch::Miss {});
+        assert_eq!(result, ListFetchResponse::Miss {});
 
         Ok(())
     }
