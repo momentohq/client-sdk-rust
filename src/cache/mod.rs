@@ -21,7 +21,9 @@ pub use messages::dictionary::dictionary_get_fields::{
 pub use messages::dictionary::dictionary_increment::{
     DictionaryIncrementRequest, DictionaryIncrementResponse,
 };
-pub use messages::dictionary::dictionary_length::{DictionaryLength, DictionaryLengthRequest};
+pub use messages::dictionary::dictionary_length::{
+    DictionaryLengthRequest, DictionaryLengthResponse,
+};
 pub use messages::dictionary::dictionary_remove_field::{
     DictionaryRemoveField, DictionaryRemoveFieldRequest,
 };

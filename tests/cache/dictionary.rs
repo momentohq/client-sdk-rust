@@ -1,7 +1,7 @@
 use momento::cache::{
     DictionaryFetchResponse, DictionaryGetFieldResponse, DictionaryGetFieldsResponse,
-    DictionaryIncrementResponse, DictionaryLength, DictionaryRemoveField, DictionaryRemoveFields,
-    DictionarySetField, DictionarySetFields,
+    DictionaryIncrementResponse, DictionaryLengthResponse, DictionaryRemoveField,
+    DictionaryRemoveFields, DictionarySetField, DictionarySetFields,
 };
 use momento::{MomentoError, MomentoErrorCode, MomentoResult};
 use momento_test_util::{
@@ -477,7 +477,7 @@ mod dictionary_length {
 
         // Length of a missing dictionary is not defined; it's a miss
         let result = client.dictionary_length(cache_name, unique_key()).await?;
-        assert_eq!(result, DictionaryLength::Miss);
+        assert_eq!(result, DictionaryLengthResponse::Miss);
 
         // Length of a stored dictionary should work
         // Add 4 items to the dictionary
@@ -494,7 +494,7 @@ mod dictionary_length {
         assert_eq!(response, DictionarySetFields {});
 
         let result = client.dictionary_length(cache_name, item1.name()).await?;
-        assert_eq!(result, DictionaryLength::Hit { length: 4 });
+        assert_eq!(result, DictionaryLengthResponse::Hit { length: 4 });
 
         // And after removing some fields we should have fewer
         let response = client
@@ -509,7 +509,7 @@ mod dictionary_length {
         let result = client.dictionary_length(cache_name, item1.name()).await?;
         assert_eq!(
             result,
-            DictionaryLength::Hit {
+            DictionaryLengthResponse::Hit {
                 length: item2.value().len() as u32
             }
         );

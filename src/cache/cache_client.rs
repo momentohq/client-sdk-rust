@@ -11,26 +11,26 @@ use crate::cache::{
     DeleteCache, DeleteCacheRequest, DeleteRequest, DictionaryFetchRequest,
     DictionaryFetchResponse, DictionaryGetFieldRequest, DictionaryGetFieldResponse,
     DictionaryGetFieldsRequest, DictionaryGetFieldsResponse, DictionaryIncrementRequest,
-    DictionaryIncrementResponse, DictionaryLength, DictionaryLengthRequest, DictionaryRemoveField,
-    DictionaryRemoveFieldRequest, DictionaryRemoveFields, DictionaryRemoveFieldsRequest,
-    DictionarySetField, DictionarySetFieldRequest, DictionarySetFields, DictionarySetFieldsRequest,
-    FlushCache, FlushCacheRequest, Get, GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment,
-    IncrementRequest, IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl,
-    ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist,
-    KeysExistRequest, ListCaches, ListCachesRequest, ListConcatenateBack,
-    ListConcatenateBackRequest, ListConcatenateFront, ListConcatenateFrontRequest, ListFetch,
-    ListFetchRequest, ListLength, ListLengthRequest, ListPopBack, ListPopBackRequest, ListPopFront,
-    ListPopFrontRequest, ListRemoveValue, ListRemoveValueRequest, MomentoRequest, Set,
-    SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsent,
-    SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual,
-    SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual,
-    SetIfPresentAndNotEqualRequest, SetIfPresentRequest, SetRemoveElements,
-    SetRemoveElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
-    SortedSetFetchByScoreRequest, SortedSetGetRank, SortedSetGetRankRequest, SortedSetGetScore,
-    SortedSetGetScoreRequest, SortedSetLength, SortedSetLengthRequest, SortedSetOrder,
-    SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements,
-    SortedSetPutElementsRequest, SortedSetRemoveElements, SortedSetRemoveElementsRequest,
-    UpdateTtl, UpdateTtlRequest,
+    DictionaryIncrementResponse, DictionaryLengthRequest, DictionaryLengthResponse,
+    DictionaryRemoveField, DictionaryRemoveFieldRequest, DictionaryRemoveFields,
+    DictionaryRemoveFieldsRequest, DictionarySetField, DictionarySetFieldRequest,
+    DictionarySetFields, DictionarySetFieldsRequest, FlushCache, FlushCacheRequest, Get,
+    GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest,
+    IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest,
+    ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest,
+    ListCaches, ListCachesRequest, ListConcatenateBack, ListConcatenateBackRequest,
+    ListConcatenateFront, ListConcatenateFrontRequest, ListFetch, ListFetchRequest, ListLength,
+    ListLengthRequest, ListPopBack, ListPopBackRequest, ListPopFront, ListPopFrontRequest,
+    ListRemoveValue, ListRemoveValueRequest, MomentoRequest, Set, SetAddElements,
+    SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsent, SetIfAbsentOrEqual,
+    SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual,
+    SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,
+    SetIfPresentRequest, SetRemoveElements, SetRemoveElementsRequest, SetRequest, SortedSetFetch,
+    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetGetRank,
+    SortedSetGetRankRequest, SortedSetGetScore, SortedSetGetScoreRequest, SortedSetLength,
+    SortedSetLengthRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
+    SortedSetPutElements, SortedSetPutElementsRequest, SortedSetRemoveElements,
+    SortedSetRemoveElementsRequest, UpdateTtl, UpdateTtlRequest,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -514,7 +514,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # use std::convert::TryInto;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::{DictionaryLength, DictionaryLengthRequest};
+    /// use momento::cache::{DictionaryLengthResponse, DictionaryLengthRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let dictionary_name = "dictionary-name";
@@ -529,7 +529,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         dictionary_name: impl IntoBytes,
-    ) -> MomentoResult<DictionaryLength> {
+    ) -> MomentoResult<DictionaryLengthResponse> {
         let request = DictionaryLengthRequest::new(cache_name, dictionary_name);
         request.send(self).await
     }

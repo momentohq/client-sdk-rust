@@ -22,7 +22,7 @@ use crate::{
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::convert::TryInto;
-/// use momento::cache::{DictionaryLength, DictionaryLengthRequest};
+/// use momento::cache::{DictionaryLengthResponse, DictionaryLengthRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let dictionary_name = "dictionary-name";
@@ -49,9 +49,9 @@ impl<D: IntoBytes> DictionaryLengthRequest<D> {
 }
 
 impl<D: IntoBytes> MomentoRequest for DictionaryLengthRequest<D> {
-    type Response = DictionaryLength;
+    type Response = DictionaryLengthResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<DictionaryLength> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<DictionaryLengthResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -68,9 +68,11 @@ impl<D: IntoBytes> MomentoRequest for DictionaryLengthRequest<D> {
             .into_inner();
 
         match response.dictionary {
-            Some(dictionary_length_response::Dictionary::Missing(_)) => Ok(DictionaryLength::Miss),
+            Some(dictionary_length_response::Dictionary::Missing(_)) => {
+                Ok(DictionaryLengthResponse::Miss)
+            }
             Some(dictionary_length_response::Dictionary::Found(found)) => {
-                Ok(DictionaryLength::Hit {
+                Ok(DictionaryLengthResponse::Hit {
                     length: found.length,
                 })
             }
@@ -87,40 +89,40 @@ impl<D: IntoBytes> MomentoRequest for DictionaryLengthRequest<D> {
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// # use momento::MomentoResult;
-/// use momento::cache::DictionaryLength;
+/// use momento::cache::DictionaryLengthResponse;
 /// use std::convert::TryInto;
-/// # let response = DictionaryLength::Hit { length: 5 };
+/// # let response = DictionaryLengthResponse::Hit { length: 5 };
 /// let length: u32 = match response {
-///     DictionaryLength::Hit { length } => length.try_into().expect("Expected a dictionary length!"),
-///     DictionaryLength::Miss => return // probably you'll do something else here
+///     DictionaryLengthResponse::Hit { length } => length.try_into().expect("Expected a dictionary length!"),
+///     DictionaryLengthResponse::Miss => return // probably you'll do something else here
 /// };
 /// ```
 ///
 /// You can cast your result directly into a Result<u32, MomentoError> suitable for
-/// ?-propagation if you know you are expecting a DictionaryLength::Hit.
+/// ?-propagation if you know you are expecting a DictionaryLengthResponse::Hit.
 ///
 /// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
 /// this is what you're after:
 /// ```
 /// # use momento::MomentoResult;
-/// use momento::cache::DictionaryLength;
+/// use momento::cache::DictionaryLengthResponse;
 /// use std::convert::TryInto;
-/// # let response = DictionaryLength::Hit { length: 5 };
+/// # let response = DictionaryLengthResponse::Hit { length: 5 };
 /// let length: MomentoResult<u32> = response.try_into();
 /// ```
 #[derive(Debug, PartialEq, Eq)]
-pub enum DictionaryLength {
+pub enum DictionaryLengthResponse {
     Hit { length: u32 },
     Miss,
 }
 
-impl TryFrom<DictionaryLength> for u32 {
+impl TryFrom<DictionaryLengthResponse> for u32 {
     type Error = MomentoError;
 
-    fn try_from(value: DictionaryLength) -> Result<Self, Self::Error> {
+    fn try_from(value: DictionaryLengthResponse) -> Result<Self, Self::Error> {
         match value {
-            DictionaryLength::Hit { length } => Ok(length),
-            DictionaryLength::Miss => Err(MomentoError::miss("DictionaryLength")),
+            DictionaryLengthResponse::Hit { length } => Ok(length),
+            DictionaryLengthResponse::Miss => Err(MomentoError::miss("DictionaryLength")),
         }
     }
 }
