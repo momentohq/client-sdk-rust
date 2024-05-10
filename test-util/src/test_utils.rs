@@ -5,6 +5,7 @@ use std::time::Duration;
 use momento::cache::configurations;
 use momento::CacheClient;
 use momento::CredentialProvider;
+use momento::TopicClient;
 
 use crate::unique_cache_name;
 
@@ -29,7 +30,7 @@ where
     let _guard = runtime.enter();
 
     let cache_name = unique_cache_name();
-    let (client, credential_provider) = build_cache_client_and_credential_provider();
+    let (client, _, credential_provider) = build_clients_and_credential_provider();
     runtime.block_on(client.create_cache(&cache_name))?;
 
     let runtime = scopeguard::guard(runtime, {
@@ -47,8 +48,14 @@ where
 
 pub fn create_doctest_cache_client() -> (CacheClient, String) {
     let cache_name = get_test_cache_name();
-    let (cache_client, _) = build_cache_client_and_credential_provider();
+    let (cache_client, _, _) = build_clients_and_credential_provider();
     (cache_client, cache_name)
+}
+
+pub fn create_doctest_topic_client() -> (TopicClient, String) {
+    let cache_name = get_test_cache_name();
+    let (_, topic_client, _) = build_clients_and_credential_provider();
+    (topic_client, cache_name)
 }
 
 pub fn get_test_cache_name() -> String {
@@ -60,7 +67,7 @@ pub fn get_test_credential_provider() -> CredentialProvider {
         .expect("auth token should be valid")
 }
 
-pub fn build_cache_client_and_credential_provider() -> (CacheClient, CredentialProvider) {
+pub fn build_clients_and_credential_provider() -> (CacheClient, TopicClient, CredentialProvider) {
     let credential_provider = get_test_credential_provider();
     let cache_client = momento::CacheClient::builder()
         .default_ttl(Duration::from_secs(5))
@@ -68,6 +75,11 @@ pub fn build_cache_client_and_credential_provider() -> (CacheClient, CredentialP
         .credential_provider(credential_provider.clone())
         .build()
         .expect("cache client should be created");
+    let topic_client = momento::TopicClient::builder()
+        .configuration(momento::topics::configurations::Laptop::latest())
+        .credential_provider(credential_provider.clone())
+        .build()
+        .expect("topic client should be created");
 
-    (cache_client, credential_provider)
+    (cache_client, topic_client, credential_provider)
 }

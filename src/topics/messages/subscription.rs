@@ -25,16 +25,9 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 /// # tokio_test::block_on(async {
 /// use momento::{topics::configurations, CredentialProvider, TopicClient};
 /// use futures::StreamExt;
+/// # let (topic_client, cache_name) = momento_test_util::create_doctest_topic_client();
 ///
-/// let topic_client = TopicClient::builder()
-///     .configuration(configurations::Laptop::latest())
-///     .credential_provider(
-///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
-///             .expect("API key should be valid"),
-///     )
-///     .build()?;
-///
-/// let mut subscription = topic_client.subscribe("cache", "my-topic").await?;
+/// let mut subscription = topic_client.subscribe(cache_name, "my-topic").await?;
 /// let subscriber_handle = tokio::spawn(async move {
 ///     println!("Subscriber should keep receiving until thread is killed");
 ///     while let Some(message) = subscription.next().await {
@@ -56,16 +49,9 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 /// # tokio_test::block_on(async {
 /// use momento::{topics::configurations, CredentialProvider, TopicClient};
 /// use futures::StreamExt;
+/// # let (topic_client, cache_name) = momento_test_util::create_doctest_topic_client();
 ///
-/// let topic_client = TopicClient::builder()
-///     .configuration(configurations::Laptop::latest())
-///     .credential_provider(
-///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
-///             .expect("API key should be valid"),
-///     )
-///     .build()?;
-///
-/// let mut subscription = topic_client.subscribe("cache", "my-topic").await?;
+/// let mut subscription = topic_client.subscribe(cache_name, "my-topic").await?;
 /// tokio::spawn(async move {
 ///     println!("Subscriber should receive 10 messages then exist");
 ///     for _ in 0..10 {
