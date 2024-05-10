@@ -20,10 +20,10 @@ use crate::cache::{
     ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest,
     ListCaches, ListCachesRequest, ListConcatenateBackRequest, ListConcatenateBackResponse,
     ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetchRequest, ListFetchResponse,
-    ListLengthRequest, ListLengthResponse, ListPopBackRequest, ListPopBackResponse, ListPopFront,
-    ListPopFrontRequest, ListRemoveValue, ListRemoveValueRequest, MomentoRequest, Set,
-    SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsent,
-    SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual,
+    ListLengthRequest, ListLengthResponse, ListPopBackRequest, ListPopBackResponse,
+    ListPopFrontRequest, ListPopFrontResponse, ListRemoveValue, ListRemoveValueRequest,
+    MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest,
+    SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual,
     SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual,
     SetIfPresentAndNotEqualRequest, SetIfPresentRequest, SetRemoveElements,
     SetRemoveElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
@@ -2087,7 +2087,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::convert::TryInto;
-    /// use momento::cache::{ListPopFront, ListPopFrontRequest};
+    /// use momento::cache::{ListPopFrontResponse, ListPopFrontRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let list_name = "list-name";
@@ -2103,7 +2103,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         list_name: impl IntoBytes,
-    ) -> MomentoResult<ListPopFront> {
+    ) -> MomentoResult<ListPopFrontResponse> {
         let request = ListPopFrontRequest::new(cache_name, list_name);
         request.send(self).await
     }

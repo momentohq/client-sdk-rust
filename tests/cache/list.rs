@@ -1,7 +1,7 @@
 use momento::cache::{
     CollectionTtl, ListConcatenateBackRequest, ListConcatenateBackResponse,
     ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetchResponse,
-    ListLengthResponse, ListPopBackResponse, ListPopFront, ListRemoveValue,
+    ListLengthResponse, ListPopBackResponse, ListPopFrontResponse, ListRemoveValue,
 };
 use momento::{MomentoErrorCode, MomentoResult};
 
@@ -363,7 +363,7 @@ mod list_pop_front {
 
         let result = client.list_pop_front(cache_name, list_name).await?;
 
-        assert_eq!(result, ListPopFront::Miss {});
+        assert_eq!(result, ListPopFrontResponse::Miss {});
 
         Ok(())
     }
