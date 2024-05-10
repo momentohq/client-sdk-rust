@@ -2,7 +2,7 @@ use std::env;
 use std::future::Future;
 use std::time::Duration;
 
-use momento::cache::configurations::{self, PrebuiltConfiguration};
+use momento::cache::configurations;
 use momento::CacheClient;
 use momento::CredentialProvider;
 

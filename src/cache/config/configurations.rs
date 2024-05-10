@@ -4,33 +4,27 @@ use crate::cache::Configuration;
 use crate::config::grpc_configuration::GrpcConfiguration;
 use crate::config::transport_strategy::TransportStrategy;
 
-/// A trait representing prebuilt configurations.
-pub trait PrebuiltConfiguration {
+/// Provides defaults suitable for a medium-to-high-latency dev environment. Permissive timeouts
+/// and relaxed latency and throughput targets.
+pub struct Laptop {}
+
+impl Laptop {
     /// Returns the latest prebuilt configuration.
     /// This is the recommended configuration for most users.
     ///
     /// NOTE: this config may change in future releases to take advantage of improvements
     /// we identify for default configurations.
-    fn latest() -> impl Into<Configuration>;
+    #[allow(dead_code)]
+    pub fn latest() -> impl Into<Configuration> {
+        Laptop::v1()
+    }
 
     /// Returns the v1 prebuilt configuration.
     ///
     /// Versioning the prebuilt configurations allows users to opt-in to changes in the default
     /// configurations. This is useful for users who want to ensure that their application's
     /// behavior does not change unexpectedly.
-    fn v1() -> impl Into<Configuration>;
-}
-
-/// Provides defaults suitable for a medium-to-high-latency dev environment. Permissive timeouts
-/// and relaxed latency and throughput targets.
-pub struct Laptop {}
-
-impl PrebuiltConfiguration for Laptop {
-    fn latest() -> impl Into<Configuration> {
-        Laptop::v1()
-    }
-
-    fn v1() -> impl Into<Configuration> {
+    pub fn v1() -> impl Into<Configuration> {
         Configuration::builder().transport_strategy(
             TransportStrategy::builder().grpc_configuration(
                 GrpcConfiguration::builder()
@@ -45,12 +39,24 @@ impl PrebuiltConfiguration for Laptop {
 /// region as the Momento service. It has more aggressive timeouts than the laptop config.
 pub struct InRegion {}
 
-impl PrebuiltConfiguration for InRegion {
-    fn latest() -> impl Into<Configuration> {
+impl InRegion {
+    /// Returns the latest prebuilt configuration.
+    /// This is the recommended configuration for most users.
+    ///
+    /// NOTE: this config may change in future releases to take advantage of improvements
+    /// we identify for default configurations.
+    #[allow(dead_code)]
+    pub fn latest() -> impl Into<Configuration> {
         InRegion::v1()
     }
 
-    fn v1() -> impl Into<Configuration> {
+    /// Returns the v1 prebuilt configuration.
+    ///
+    /// Versioning the prebuilt configurations allows users to opt-in to changes in the default
+    /// configurations. This is useful for users who want to ensure that their application's
+    /// behavior does not change unexpectedly.
+    #[allow(dead_code)]
+    pub fn v1() -> impl Into<Configuration> {
         Configuration::builder().transport_strategy(
             TransportStrategy::builder().grpc_configuration(
                 GrpcConfiguration::builder()
@@ -66,12 +72,23 @@ impl PrebuiltConfiguration for InRegion {
 /// your application than cache availability.
 pub struct LowLatency {}
 
-impl PrebuiltConfiguration for LowLatency {
-    fn latest() -> impl Into<Configuration> {
+impl LowLatency {
+    /// Returns the latest prebuilt configuration.
+    /// This is the recommended configuration for most users.
+    ///
+    /// NOTE: this config may change in future releases to take advantage of improvements
+    /// we identify for default configurations.
+    #[allow(dead_code)]
+    pub fn latest() -> impl Into<Configuration> {
         LowLatency::v1()
     }
 
-    fn v1() -> impl Into<Configuration> {
+    /// Returns the v1 prebuilt configuration.
+    ///
+    /// Versioning the prebuilt configurations allows users to opt-in to changes in the default
+    /// configurations. This is useful for users who want to ensure that their application's
+    /// behavior does not change unexpectedly.
+    pub fn v1() -> impl Into<Configuration> {
         Configuration::builder().transport_strategy(
             TransportStrategy::builder().grpc_configuration(
                 GrpcConfiguration::builder()
@@ -94,16 +111,22 @@ impl PrebuiltConfiguration for LowLatency {
 /// Therefore, keep-alives should be disabled in lambda and similar environments.
 pub struct Lambda {}
 
-impl PrebuiltConfiguration for Lambda {
+impl Lambda {
     /// Latest recommended config for a typical lambda environment.
     ///
     /// NOTE: this config may change in future releases to take advantage of improvements
     /// we identify for default configurations.
-    fn latest() -> impl Into<Configuration> {
+    #[allow(dead_code)]
+    pub fn latest() -> impl Into<Configuration> {
         Lambda::v1()
     }
 
-    fn v1() -> impl Into<Configuration> {
+    /// Returns the v1 prebuilt configuration.
+    ///
+    /// Versioning the prebuilt configurations allows users to opt-in to changes in the default
+    /// configurations. This is useful for users who want to ensure that their application's
+    /// behavior does not change unexpectedly.
+    pub fn v1() -> impl Into<Configuration> {
         Configuration::builder().transport_strategy(
             TransportStrategy::builder().grpc_configuration(
                 GrpcConfiguration::builder().deadline(Duration::from_millis(1100)),

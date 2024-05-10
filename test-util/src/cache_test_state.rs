@@ -6,7 +6,7 @@ use once_cell::sync::Lazy;
 use tokio::sync::watch::channel;
 
 use crate::{get_test_cache_name, get_test_credential_provider};
-use momento::cache::configurations::{self, PrebuiltConfiguration};
+use momento::cache::configurations;
 use momento::CacheClient;
 
 pub static CACHE_TEST_STATE: Lazy<Arc<CacheTestState>> =
