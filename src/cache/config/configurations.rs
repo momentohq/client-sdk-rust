@@ -1,17 +1,36 @@
-/// Provides defaults suitable for a medium-to-high-latency dev environment. Permissive timeouts
-/// and relaxed latency and throughput targets.
-pub mod laptop {
-    use std::time::Duration;
+use std::time::Duration;
 
-    use crate::cache::Configuration;
-    use crate::config::grpc_configuration::GrpcConfiguration;
-    use crate::config::transport_strategy::TransportStrategy;
+use crate::cache::Configuration;
+use crate::config::grpc_configuration::GrpcConfiguration;
+use crate::config::transport_strategy::TransportStrategy;
 
-    /// Latest recommended config for a laptop development environment.
+/// A trait representing prebuilt configurations.
+pub trait PrebuiltConfiguration {
+    /// Returns the latest prebuilt configuration.
+    /// This is the recommended configuration for most users.
     ///
     /// NOTE: this config may change in future releases to take advantage of improvements
     /// we identify for default configurations.
-    pub fn latest() -> impl Into<Configuration> {
+    fn latest() -> impl Into<Configuration>;
+
+    /// Returns the v1 prebuilt configuration.
+    ///
+    /// Versioning the prebuilt configurations allows users to opt-in to changes in the default
+    /// configurations. This is useful for users who want to ensure that their application's
+    /// behavior does not change unexpectedly.
+    fn v1() -> impl Into<Configuration>;
+}
+
+/// Provides defaults suitable for a medium-to-high-latency dev environment. Permissive timeouts
+/// and relaxed latency and throughput targets.
+pub struct Laptop {}
+
+impl PrebuiltConfiguration for Laptop {
+    fn latest() -> impl Into<Configuration> {
+        Laptop::v1()
+    }
+
+    fn v1() -> impl Into<Configuration> {
         Configuration::builder().transport_strategy(
             TransportStrategy::builder().grpc_configuration(
                 GrpcConfiguration::builder()
@@ -24,18 +43,14 @@ pub mod laptop {
 
 /// Provides defaults suitable for an environment where your client is running in the same
 /// region as the Momento service. It has more aggressive timeouts than the laptop config.
-pub mod in_region {
-    use std::time::Duration;
+pub struct InRegion {}
 
-    use crate::cache::Configuration;
-    use crate::config::grpc_configuration::GrpcConfiguration;
-    use crate::config::transport_strategy::TransportStrategy;
+impl PrebuiltConfiguration for InRegion {
+    fn latest() -> impl Into<Configuration> {
+        InRegion::v1()
+    }
 
-    /// Latest recommended config for a typical in-region environment.
-    ///
-    /// NOTE: this config may change in future releases to take advantage of improvements
-    /// we identify for default configurations.
-    pub fn latest() -> impl Into<Configuration> {
+    fn v1() -> impl Into<Configuration> {
         Configuration::builder().transport_strategy(
             TransportStrategy::builder().grpc_configuration(
                 GrpcConfiguration::builder()
@@ -49,18 +64,14 @@ pub mod in_region {
 /// This config prioritizes keeping p99.9 latencies as low as possible, potentially sacrificing
 /// some throughput to achieve this. Use this config if low latency is more important in
 /// your application than cache availability.
-pub mod low_latency {
-    use std::time::Duration;
+pub struct LowLatency {}
 
-    use crate::cache::Configuration;
-    use crate::config::grpc_configuration::GrpcConfiguration;
-    use crate::config::transport_strategy::TransportStrategy;
+impl PrebuiltConfiguration for LowLatency {
+    fn latest() -> impl Into<Configuration> {
+        LowLatency::v1()
+    }
 
-    /// Latest recommended config for a low-latency environment.
-    ///
-    /// NOTE: this config may change in future releases to take advantage of improvements
-    /// we identify for default configurations.
-    pub fn latest() -> impl Into<Configuration> {
+    fn v1() -> impl Into<Configuration> {
         Configuration::builder().transport_strategy(
             TransportStrategy::builder().grpc_configuration(
                 GrpcConfiguration::builder()
@@ -71,20 +82,28 @@ pub mod low_latency {
     }
 }
 
-/// Provides defaults suitable for a typical lambda environment. It has more aggressive timeouts
-/// than the laptop config and does not check connection health with a keep-alive.
-pub mod lambda {
-    use std::time::Duration;
+/// This config optimizes for lambda environments.
+///
+/// In addition to the in region settings of [InRegion], this
+/// disables keep-alives.
+///
+/// NOTE: keep-alives are very important for long-lived server environments where there may be periods of time
+/// when the connection is idle. However, they are very problematic for lambda environments where the lambda
+/// runtime is continuously frozen and unfrozen, because the lambda may be frozen before the "ACK" is received
+/// from the server. This can cause the keep-alive to timeout even though the connection is completely healthy.
+/// Therefore, keep-alives should be disabled in lambda and similar environments.
+pub struct Lambda {}
 
-    use crate::cache::Configuration;
-    use crate::config::grpc_configuration::GrpcConfiguration;
-    use crate::config::transport_strategy::TransportStrategy;
-
+impl PrebuiltConfiguration for Lambda {
     /// Latest recommended config for a typical lambda environment.
     ///
     /// NOTE: this config may change in future releases to take advantage of improvements
     /// we identify for default configurations.
-    pub fn latest() -> impl Into<Configuration> {
+    fn latest() -> impl Into<Configuration> {
+        Lambda::v1()
+    }
+
+    fn v1() -> impl Into<Configuration> {
         Configuration::builder().transport_strategy(
             TransportStrategy::builder().grpc_configuration(
                 GrpcConfiguration::builder().deadline(Duration::from_millis(1100)),

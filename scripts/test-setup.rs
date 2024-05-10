@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use momento::cache::configurations;
+use momento::cache::configurations::{self, PrebuiltConfiguration};
 use momento::{CacheClient, MomentoResult};
 use momento_test_util::{get_test_cache_name, get_test_credential_provider};
 
@@ -12,7 +12,7 @@ async fn main() -> MomentoResult<()> {
 
     let cache_client = CacheClient::builder()
         .default_ttl(Duration::from_secs(5))
-        .configuration(configurations::laptop::latest())
+        .configuration(configurations::Laptop::latest())
         .credential_provider(credential_provider)
         .build()?;
 

@@ -2,7 +2,7 @@ use std::env;
 use std::future::Future;
 use std::time::Duration;
 
-use momento::cache::configurations;
+use momento::cache::configurations::{self, PrebuiltConfiguration};
 use momento::CacheClient;
 use momento::CredentialProvider;
 
@@ -64,7 +64,7 @@ pub fn build_cache_client_and_credential_provider() -> (CacheClient, CredentialP
     let credential_provider = get_test_credential_provider();
     let cache_client = momento::CacheClient::builder()
         .default_ttl(Duration::from_secs(5))
-        .configuration(configurations::laptop::latest())
+        .configuration(configurations::Laptop::latest())
         .credential_provider(credential_provider.clone())
         .build()
         .expect("cache client should be created");

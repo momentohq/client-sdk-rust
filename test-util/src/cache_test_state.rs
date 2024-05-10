@@ -6,7 +6,7 @@ use once_cell::sync::Lazy;
 use tokio::sync::watch::channel;
 
 use crate::{get_test_cache_name, get_test_credential_provider};
-use momento::cache::configurations;
+use momento::cache::configurations::{self, PrebuiltConfiguration};
 use momento::CacheClient;
 
 pub static CACHE_TEST_STATE: Lazy<Arc<CacheTestState>> =
@@ -39,7 +39,7 @@ impl CacheTestState {
         runtime.spawn(async move {
             let cache_client = CacheClient::builder()
                 .default_ttl(Duration::from_secs(5))
-                .configuration(configurations::laptop::latest())
+                .configuration(configurations::Laptop::latest())
                 .credential_provider(credential_provider)
                 .build()
                 .expect("Failed to create cache client");
