@@ -94,7 +94,7 @@ pub use messages::list::list_pop_back::{
 pub use messages::list::list_pop_front::{
     ListPopFrontRequest, ListPopFrontResponse, ListPopFrontValue,
 };
-pub use messages::list::list_remove_value::{ListRemoveValue, ListRemoveValueRequest};
+pub use messages::list::list_remove_value::{ListRemoveValueRequest, ListRemoveValueResponse};
 
 // Similar re-exporting with config::configuration and config::configurations
 // so import paths can be simpmlified to "momento::cache::Configuration" and

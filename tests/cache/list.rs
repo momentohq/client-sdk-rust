@@ -1,7 +1,7 @@
 use momento::cache::{
     CollectionTtl, ListConcatenateBackRequest, ListConcatenateBackResponse,
     ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetchResponse,
-    ListLengthResponse, ListPopBackResponse, ListPopFrontResponse, ListRemoveValue,
+    ListLengthResponse, ListPopBackResponse, ListPopFrontResponse, ListRemoveValueResponse,
 };
 use momento::{MomentoErrorCode, MomentoResult};
 
@@ -434,7 +434,7 @@ mod list_remove {
             .list_remove_value(cache_name, list_name, "value")
             .await?;
 
-        assert_eq!(result, ListRemoveValue {});
+        assert_eq!(result, ListRemoveValueResponse {});
 
         Ok(())
     }
@@ -466,7 +466,7 @@ mod list_remove {
         let result = client
             .list_remove_value(cache_name, test_list.name(), first_value)
             .await?;
-        assert_eq!(result, ListRemoveValue {});
+        assert_eq!(result, ListRemoveValueResponse {});
         assert_list_eq(
             client.list_fetch(cache_name, test_list.name()).await?,
             vec![second_value],

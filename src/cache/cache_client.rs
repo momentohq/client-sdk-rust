@@ -21,7 +21,7 @@ use crate::cache::{
     ListCaches, ListCachesRequest, ListConcatenateBackRequest, ListConcatenateBackResponse,
     ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetchRequest, ListFetchResponse,
     ListLengthRequest, ListLengthResponse, ListPopBackRequest, ListPopBackResponse,
-    ListPopFrontRequest, ListPopFrontResponse, ListRemoveValue, ListRemoveValueRequest,
+    ListPopFrontRequest, ListPopFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse,
     MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest,
     SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual,
     SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual,
@@ -2121,14 +2121,14 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::{ListRemoveValue, ListRemoveValueRequest};
+    /// use momento::cache::{ListRemoveValueResponse, ListRemoveValueRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let list_name = "list-name";
     /// # cache_client.list_concatenate_front(&cache_name, list_name, vec!["value1", "value2"]).await;
     ///
     /// match cache_client.list_remove_value(cache_name, list_name, "value1").await {
-    ///     Ok(ListRemoveValue {}) => println!("Successfully removed value"),
+    ///     Ok(ListRemoveValueResponse {}) => println!("Successfully removed value"),
     ///     Err(e) => eprintln!("Error removing value: {:?}", e),
     /// }
     /// # Ok(())
@@ -2141,7 +2141,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         list_name: impl IntoBytes,
         value: impl IntoBytes,
-    ) -> MomentoResult<ListRemoveValue> {
+    ) -> MomentoResult<ListRemoveValueResponse> {
         let request = ListRemoveValueRequest::new(cache_name, list_name, value);
         request.send(self).await
     }
