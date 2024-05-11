@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use momento::{
     cache::{
-        CollectionTtl, DecreaseTtlResponse, IncreaseTtl, ItemGetTtl, SetRequest,
+        CollectionTtl, DecreaseTtlResponse, IncreaseTtlResponse, ItemGetTtl, SetRequest,
         SortedSetPutElementsRequest, UpdateTtl,
     },
     MomentoErrorCode, MomentoResult,
@@ -138,7 +138,7 @@ mod increase_ttl {
         let result = client
             .increase_ttl(cache_name, key, Duration::from_secs(10))
             .await?;
-        assert_eq!(result, IncreaseTtl::Miss {});
+        assert_eq!(result, IncreaseTtlResponse::Miss {});
         Ok(())
     }
 
@@ -166,7 +166,7 @@ mod increase_ttl {
         let result = client
             .increase_ttl(cache_name, item.key(), Duration::from_secs(20))
             .await?;
-        assert_eq!(result, IncreaseTtl::Set {});
+        assert_eq!(result, IncreaseTtlResponse::Set {});
 
         let ttl_after: Duration = client
             .item_get_ttl(cache_name, item.key())
@@ -179,7 +179,7 @@ mod increase_ttl {
         let result = client
             .increase_ttl(cache_name, item.key(), Duration::from_secs(10))
             .await?;
-        assert_eq!(result, IncreaseTtl::NotSet {});
+        assert_eq!(result, IncreaseTtlResponse::NotSet {});
 
         let ttl_lower: Duration = client
             .item_get_ttl(cache_name, item.key())

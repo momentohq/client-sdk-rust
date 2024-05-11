@@ -15,7 +15,7 @@ use crate::cache::{
     DictionaryRemoveFieldRequest, DictionaryRemoveFieldResponse, DictionaryRemoveFieldsRequest,
     DictionaryRemoveFieldsResponse, DictionarySetFieldRequest, DictionarySetFieldResponse,
     DictionarySetFieldsRequest, DictionarySetFieldsResponse, FlushCache, FlushCacheRequest,
-    GetRequest, GetResponse, IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest,
+    GetRequest, GetResponse, IncreaseTtlRequest, IncreaseTtlResponse, Increment, IncrementRequest,
     IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest,
     ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest,
     ListCaches, ListCachesRequest, ListConcatenateBackRequest, ListConcatenateBackResponse,
@@ -1485,13 +1485,13 @@ impl CacheClient {
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use std::time::Duration;
-    /// use momento::cache::IncreaseTtl;
+    /// use momento::cache::IncreaseTtlResponse;
     /// # cache_client.set(&cache_name, "key1", "value").await?;
     ///
     /// match(cache_client.increase_ttl(&cache_name, "key1", Duration::from_secs(5)).await?) {
-    ///     IncreaseTtl::Set => println!("TTL updated"),
-    ///     IncreaseTtl::NotSet => println!("unable to increase TTL"),
-    ///     IncreaseTtl::Miss => return Err(anyhow::Error::msg("cache miss"))
+    ///     IncreaseTtlResponse::Set => println!("TTL updated"),
+    ///     IncreaseTtlResponse::NotSet => println!("unable to increase TTL"),
+    ///     IncreaseTtlResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
     /// };
     /// # Ok(())
     /// # })
@@ -1503,7 +1503,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         key: impl IntoBytes,
         ttl: Duration,
-    ) -> MomentoResult<IncreaseTtl> {
+    ) -> MomentoResult<IncreaseTtlResponse> {
         let request = IncreaseTtlRequest::new(cache_name, key, ttl);
         request.send(self).await
     }
