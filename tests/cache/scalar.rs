@@ -1,8 +1,8 @@
 use momento::cache::{
-    DeleteResponse, GetResponse, Set, SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest,
-    SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest,
-    SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest, SetIfPresentRequest,
-    SetRequest,
+    DeleteResponse, GetResponse, Set, SetIfAbsent, SetIfAbsentOrEqualRequest,
+    SetIfAbsentOrEqualResponse, SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual,
+    SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,
+    SetIfPresentRequest, SetRequest,
 };
 use momento::{MomentoErrorCode, MomentoResult};
 use momento_test_util::{
@@ -707,7 +707,7 @@ mod set_if_absent_or_equal {
         let result = client
             .set_if_absent_or_equal(cache_name, item1.key(), item1.value(), item1.value())
             .await?;
-        assert_eq!(result, SetIfAbsentOrEqual::Stored);
+        assert_eq!(result, SetIfAbsentOrEqualResponse::Stored);
 
         let result = client.set(cache_name, item1.key(), item1.value()).await?;
         assert_eq!(result, Set {});
@@ -716,7 +716,7 @@ mod set_if_absent_or_equal {
         let result = client
             .set_if_absent_or_equal(cache_name, item1.key(), item2.value(), item1.value())
             .await?;
-        assert_eq!(result, SetIfAbsentOrEqual::Stored);
+        assert_eq!(result, SetIfAbsentOrEqualResponse::Stored);
         let result = client.get(cache_name, item1.key()).await?;
         assert_eq!(result, GetResponse::from(&item2));
 
@@ -724,7 +724,7 @@ mod set_if_absent_or_equal {
         let result = client
             .set_if_absent_or_equal(cache_name, item1.key(), item1.value(), item1.value())
             .await?;
-        assert_eq!(result, SetIfAbsentOrEqual::NotStored);
+        assert_eq!(result, SetIfAbsentOrEqualResponse::NotStored);
         let result = client.get(cache_name, item1.key()).await?;
         assert_eq!(result, GetResponse::from(&item2));
 
@@ -743,7 +743,7 @@ mod set_if_absent_or_equal {
             SetIfAbsentOrEqualRequest::new(cache_name, key, "first_value", "first_value")
                 .ttl(Duration::from_secs(2));
         let result = client.send_request(set_request).await?;
-        assert_eq!(result, SetIfAbsentOrEqual::Stored);
+        assert_eq!(result, SetIfAbsentOrEqualResponse::Stored);
 
         // Should have remaining ttl > 0
         let result_ttl: Duration = client

@@ -49,7 +49,9 @@ pub use messages::scalar::key_exists::{KeyExistsRequest, KeyExistsResponse};
 pub use messages::scalar::keys_exist::{KeysExistRequest, KeysExistResponse};
 pub use messages::scalar::set::{Set, SetRequest};
 pub use messages::scalar::set_if_absent::{SetIfAbsent, SetIfAbsentRequest};
-pub use messages::scalar::set_if_absent_or_equal::{SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest};
+pub use messages::scalar::set_if_absent_or_equal::{
+    SetIfAbsentOrEqualRequest, SetIfAbsentOrEqualResponse,
+};
 pub use messages::scalar::set_if_equal::{SetIfEqual, SetIfEqualRequest};
 pub use messages::scalar::set_if_not_equal::{SetIfNotEqual, SetIfNotEqualRequest};
 pub use messages::scalar::set_if_present::{SetIfPresent, SetIfPresentRequest};

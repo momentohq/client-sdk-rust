@@ -24,7 +24,7 @@ use crate::cache::{
     ListLengthResponse, ListPopBackRequest, ListPopBackResponse, ListPopFrontRequest,
     ListPopFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse, MomentoRequest, Set,
     SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsent,
-    SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual,
+    SetIfAbsentOrEqualRequest, SetIfAbsentOrEqualResponse, SetIfAbsentRequest, SetIfEqual,
     SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual,
     SetIfPresentAndNotEqualRequest, SetIfPresentRequest, SetRemoveElements,
     SetRemoveElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
@@ -1834,14 +1834,14 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::time::Duration;
-    /// use momento::cache::{SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest};
+    /// use momento::cache::{SetIfAbsentOrEqualResponse, SetIfAbsentOrEqualRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.set_if_absent_or_equal(&cache_name, "key", "new-value", "cached-value").await {
     ///     Ok(response) => match response {
-    ///         SetIfAbsentOrEqual::Stored => println!("Value stored"),
-    ///         SetIfAbsentOrEqual::NotStored => println!("Value not stored"),
+    ///         SetIfAbsentOrEqualResponse::Stored => println!("Value stored"),
+    ///         SetIfAbsentOrEqualResponse::NotStored => println!("Value not stored"),
     ///     }
     ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
@@ -1860,7 +1860,7 @@ impl CacheClient {
         key: impl IntoBytes,
         value: impl IntoBytes,
         equal: impl IntoBytes,
-    ) -> MomentoResult<SetIfAbsentOrEqual> {
+    ) -> MomentoResult<SetIfAbsentOrEqualResponse> {
         let request = SetIfAbsentOrEqualRequest::new(cache_name, key, value, equal);
         request.send(self).await
     }
