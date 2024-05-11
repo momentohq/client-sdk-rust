@@ -1,5 +1,5 @@
 use momento::cache::{
-    DeleteResponse, Get, Set, SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest,
+    DeleteResponse, GetResponse, Set, SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest,
     SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest,
     SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest, SetIfPresentRequest,
     SetRequest,
@@ -25,7 +25,7 @@ mod get_set_delete {
         let result = client.get(cache_name, item.key()).await?;
         assert_eq!(
             result,
-            Get::Miss,
+            GetResponse::Miss,
             "Expected miss for key '{}' in cache {}, got {:?}",
             item.key(),
             cache_name,
@@ -47,7 +47,7 @@ mod get_set_delete {
         let result = client.get(cache_name, item.key()).await?;
         assert_eq!(
             result,
-            Get::from(&item),
+            GetResponse::from(&item),
             "Expected hit for key '{}' in cache {}, got {:?}",
             item.key(),
             cache_name,
@@ -88,7 +88,7 @@ mod get_set_delete {
         let result = client.get(cache_name, item.key()).await?;
         assert_eq!(
             result,
-            Get::Miss,
+            GetResponse::Miss,
             "Expected miss for key '{}' in cache {}, got {:?}",
             item.key(),
             cache_name,
@@ -253,7 +253,7 @@ mod set_if_absent {
             .await?;
         assert_eq!(result, SetIfAbsent::Stored);
         let result = client.get(cache_name, item1.key()).await?;
-        assert_eq!(result, Get::from(&item1));
+        assert_eq!(result, GetResponse::from(&item1));
 
         // Setting a key that exists should not overwrite it
         let result = client
@@ -261,7 +261,7 @@ mod set_if_absent {
             .await?;
         assert_eq!(result, SetIfAbsent::NotStored);
         let result = client.get(cache_name, item1.key()).await?;
-        assert_eq!(result, Get::from(&item1));
+        assert_eq!(result, GetResponse::from(&item1));
 
         Ok(())
     }
@@ -290,7 +290,7 @@ mod set_if_absent {
 
         // Should get a cache miss
         let result = client.get(cache_name, item.key()).await?;
-        assert_eq!(result, Get::Miss {});
+        assert_eq!(result, GetResponse::Miss {});
 
         Ok(())
     }
@@ -344,7 +344,7 @@ mod set_if_present {
             .await?;
         assert_eq!(result, SetIfPresent::Stored);
         let result = client.get(cache_name, item1.key()).await?;
-        assert_eq!(result, Get::from(&item2));
+        assert_eq!(result, GetResponse::from(&item2));
 
         Ok(())
     }
@@ -376,7 +376,7 @@ mod set_if_present {
 
         // Should get a cache miss
         let result = client.get(cache_name, item.key()).await?;
-        assert_eq!(result, Get::Miss {});
+        assert_eq!(result, GetResponse::Miss {});
 
         Ok(())
     }
@@ -430,7 +430,7 @@ mod set_if_equal {
             .await?;
         assert_eq!(result, SetIfEqual::Stored);
         let result = client.get(cache_name, item1.key()).await?;
-        assert_eq!(result, Get::from(&item2));
+        assert_eq!(result, GetResponse::from(&item2));
 
         // Setting a key that exists and does NOT equal the value should NOT overwrite it
         let result = client
@@ -438,7 +438,7 @@ mod set_if_equal {
             .await?;
         assert_eq!(result, SetIfEqual::NotStored);
         let result = client.get(cache_name, item1.key()).await?;
-        assert_eq!(result, Get::from(&item2));
+        assert_eq!(result, GetResponse::from(&item2));
 
         Ok(())
     }
@@ -472,7 +472,7 @@ mod set_if_equal {
 
         // Should get a cache miss
         let result = client.get(cache_name, key).await?;
-        assert_eq!(result, Get::Miss {});
+        assert_eq!(result, GetResponse::Miss {});
 
         Ok(())
     }
@@ -526,7 +526,7 @@ mod set_if_not_equal {
             .await?;
         assert_eq!(result, SetIfNotEqual::Stored);
         let result = client.get(cache_name, item1.key()).await?;
-        assert_eq!(result, Get::from(&item2));
+        assert_eq!(result, GetResponse::from(&item2));
 
         // Setting a key that exists and equals the value should NOT overwrite it
         let result = client
@@ -534,7 +534,7 @@ mod set_if_not_equal {
             .await?;
         assert_eq!(result, SetIfNotEqual::NotStored);
         let result = client.get(cache_name, item1.key()).await?;
-        assert_eq!(result, Get::from(&item2));
+        assert_eq!(result, GetResponse::from(&item2));
 
         Ok(())
     }
@@ -567,7 +567,7 @@ mod set_if_not_equal {
 
         // Should get a cache miss
         let result = client.get(cache_name, item.key()).await?;
-        assert_eq!(result, Get::Miss {});
+        assert_eq!(result, GetResponse::Miss {});
 
         Ok(())
     }
@@ -621,7 +621,7 @@ mod set_if_present_and_not_equal {
             .await?;
         assert_eq!(result, SetIfPresentAndNotEqual::Stored);
         let result = client.get(cache_name, item1.key()).await?;
-        assert_eq!(result, Get::from(&item2));
+        assert_eq!(result, GetResponse::from(&item2));
 
         // Setting a key that exists and equals the value should NOT overwrite it
         let result = client
@@ -629,7 +629,7 @@ mod set_if_present_and_not_equal {
             .await?;
         assert_eq!(result, SetIfPresentAndNotEqual::NotStored);
         let result = client.get(cache_name, item1.key()).await?;
-        assert_eq!(result, Get::from(&item2));
+        assert_eq!(result, GetResponse::from(&item2));
 
         Ok(())
     }
@@ -664,7 +664,7 @@ mod set_if_present_and_not_equal {
 
         // Should get a cache miss
         let result = client.get(cache_name, key).await?;
-        assert_eq!(result, Get::Miss {});
+        assert_eq!(result, GetResponse::Miss {});
 
         Ok(())
     }
@@ -718,7 +718,7 @@ mod set_if_absent_or_equal {
             .await?;
         assert_eq!(result, SetIfAbsentOrEqual::Stored);
         let result = client.get(cache_name, item1.key()).await?;
-        assert_eq!(result, Get::from(&item2));
+        assert_eq!(result, GetResponse::from(&item2));
 
         // Setting a key that exists and does NOT equal the value should NOT overwrite it
         let result = client
@@ -726,7 +726,7 @@ mod set_if_absent_or_equal {
             .await?;
         assert_eq!(result, SetIfAbsentOrEqual::NotStored);
         let result = client.get(cache_name, item1.key()).await?;
-        assert_eq!(result, Get::from(&item2));
+        assert_eq!(result, GetResponse::from(&item2));
 
         Ok(())
     }
@@ -758,7 +758,7 @@ mod set_if_absent_or_equal {
 
         // Should get a cache miss
         let result = client.get(cache_name, key).await?;
-        assert_eq!(result, Get::Miss {});
+        assert_eq!(result, GetResponse::Miss {});
 
         Ok(())
     }

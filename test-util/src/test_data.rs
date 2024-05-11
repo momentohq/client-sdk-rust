@@ -1,5 +1,7 @@
 use momento::{
-    cache::{Get, GetValue, ListFetchResponse, ListFetchValue, SortedSetElements, SortedSetFetch},
+    cache::{
+        GetResponse, GetValue, ListFetchResponse, ListFetchValue, SortedSetElements, SortedSetFetch,
+    },
     IntoBytes,
 };
 use std::collections::HashMap;
@@ -54,9 +56,9 @@ impl Default for TestScalar {
     }
 }
 
-impl From<&TestScalar> for Get {
+impl From<&TestScalar> for GetResponse {
     fn from(test_scalar: &TestScalar) -> Self {
-        Get::Hit {
+        GetResponse::Hit {
             value: GetValue::new(test_scalar.value().into_bytes()),
         }
     }

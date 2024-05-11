@@ -14,8 +14,8 @@ use crate::cache::{
     DictionaryIncrementResponse, DictionaryLengthRequest, DictionaryLengthResponse,
     DictionaryRemoveFieldRequest, DictionaryRemoveFieldResponse, DictionaryRemoveFieldsRequest,
     DictionaryRemoveFieldsResponse, DictionarySetFieldRequest, DictionarySetFieldResponse,
-    DictionarySetFieldsRequest, DictionarySetFieldsResponse, FlushCache, FlushCacheRequest, Get,
-    GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest,
+    DictionarySetFieldsRequest, DictionarySetFieldsResponse, FlushCache, FlushCacheRequest,
+    GetRequest, GetResponse, IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest,
     IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest,
     ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest,
     ListCaches, ListCachesRequest, ListConcatenateBackRequest, ListConcatenateBackResponse,
@@ -243,12 +243,12 @@ impl CacheClient {
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use std::convert::TryInto;
-    /// use momento::cache::Get;
+    /// use momento::cache::GetResponse;
     /// # cache_client.set(&cache_name, "key", "value").await?;
     ///
     /// let item: String = match(cache_client.get(&cache_name, "key").await?) {
-    ///     Get::Hit { value } => value.try_into().expect("I stored a string!"),
-    ///     Get::Miss => return Err(anyhow::Error::msg("cache miss"))
+    ///     GetResponse::Hit { value } => value.try_into().expect("I stored a string!"),
+    ///     GetResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
     /// };
     /// # assert_eq!(item, "value");
     /// # Ok(())
@@ -260,7 +260,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         key: impl IntoBytes,
-    ) -> MomentoResult<Get> {
+    ) -> MomentoResult<GetResponse> {
         let request = GetRequest::new(cache_name, key);
         request.send(self).await
     }
@@ -1130,7 +1130,7 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Get the number of entries in a sorted set collection.
+    /// GetResponse the number of entries in a sorted set collection.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
@@ -1165,7 +1165,7 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Get the rank (position) of a specific element in a sorted set.
+    /// GetResponse the rank (position) of a specific element in a sorted set.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
@@ -1203,7 +1203,7 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Get the score of a specific element in a sorted set.
+    /// GetResponse the score of a specific element in a sorted set.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
