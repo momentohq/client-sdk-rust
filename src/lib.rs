@@ -57,16 +57,37 @@
 //! Using a `match`:
 //!
 //! ```
+//! # fn main() -> anyhow::Result<()> {
+//! # use momento_test_util::create_doctest_cache_client;
+//! # tokio_test::block_on(async {
+//! # let (cache_client, cache_name) = create_doctest_cache_client();
+//! # use std::convert::TryInto;
+//! # use momento::cache::Get;
+//! # cache_client.set(&cache_name, "key", "value").await?;
 //! let item: String = match(cache_client.get(&cache_name, "key").await?) {
 //!     Get::Hit { value } => value.try_into()?,
 //!     Get::Miss => return Err(anyhow::Error::msg("cache miss"))
 //! };
+//! # assert_eq!(item, "value");
+//! # Ok(())
+//! # })
+//! # }
 //! ```
 //!
 //! Or directly via `try_into`:
 //!
 //! ```
+//! # fn main() -> anyhow::Result<()> {
+//! # use momento_test_util::create_doctest_cache_client;
+//! # tokio_test::block_on(async {
+//! # let (cache_client, cache_name) = create_doctest_cache_client();
+//! # use std::convert::TryInto;
+//! # cache_client.set(&cache_name, "key", "value").await?;
 //! let item: String = cache_client.get(&cache_name, "key").await?.try_into()?;
+//! # assert_eq!(item, "value");
+//! # Ok(())
+//! # })
+//! # }
 //! ```
 //!
 //! If you are using Momento collection data types, such as lists and dictionaries, we support
@@ -74,10 +95,21 @@
 //! example, for Momento dictionaries:
 //!
 //! ```
+//! # fn main() -> anyhow::Result<()> {
+//! # use momento_test_util::create_doctest_cache_client;
+//! # tokio_test::block_on(async {
+//! # let (cache_client, cache_name) = create_doctest_cache_client();
+//! # use std::convert::TryInto;
+//! # use std::collections::HashMap;
+//! # cache_client.dictionary_set_fields(&cache_name, "dictionary_key", vec![("foo", "FOOO"), ("bar", "BAAAR")]).await?;
 //! let dictionary: HashMap<String, String> =
 //!     cache_client.dictionary_fetch(&cache_name, "dictionary_key")
 //!     .await?
 //!     .try_into()?;
+//! # assert_eq!(dictionary, HashMap::from([("foo".to_string(), "FOOO".to_string()), ("bar".to_string(), "BAAAR".to_string())]));
+//! # Ok(())
+//! # })
+//! # }
 //! ```
 //!
 
