@@ -44,7 +44,7 @@ pub use messages::scalar::get::{GetRequest, GetResponse, GetValue};
 pub use messages::scalar::increase_ttl::{IncreaseTtlRequest, IncreaseTtlResponse};
 pub use messages::scalar::increment::{IncrementRequest, IncrementResponse};
 pub use messages::scalar::item_get_ttl::{ItemGetTtlRequest, ItemGetTtlResponse};
-pub use messages::scalar::item_get_type::{ItemGetType, ItemGetTypeRequest, ItemType};
+pub use messages::scalar::item_get_type::{ItemGetTypeRequest, ItemGetTypeResponse, ItemType};
 pub use messages::scalar::key_exists::{KeyExists, KeyExistsRequest};
 pub use messages::scalar::keys_exist::{KeysExist, KeysExistRequest};
 pub use messages::scalar::set::{Set, SetRequest};

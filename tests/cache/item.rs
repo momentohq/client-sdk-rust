@@ -1,5 +1,5 @@
 use momento::{
-    cache::{ItemGetType, ItemType},
+    cache::{ItemGetTypeResponse, ItemType},
     MomentoErrorCode, MomentoResult,
 };
 use momento_test_util::{unique_cache_name, TestScalar, TestSet, TestSortedSet, CACHE_TEST_STATE};
@@ -32,13 +32,13 @@ mod item_get_type {
 
         // Expect miss when key is not set
         let result = client.item_get_type(cache_name, item.key()).await?;
-        assert_eq!(result, ItemGetType::Miss {});
+        assert_eq!(result, ItemGetTypeResponse::Miss {});
 
         // Expect Scalar after using set
         client.set(cache_name, item.key(), item.value()).await?;
         let result = client.item_get_type(cache_name, item.key()).await?;
         match result {
-            ItemGetType::Hit { key_type } => assert_eq!(
+            ItemGetTypeResponse::Hit { key_type } => assert_eq!(
                 key_type,
                 ItemType::Scalar,
                 "Expected Scalar, got {:?}",
@@ -61,7 +61,7 @@ mod item_get_type {
             .await?;
         let result = client.item_get_type(cache_name, item.name()).await?;
         match result {
-            ItemGetType::Hit { key_type } => {
+            ItemGetTypeResponse::Hit { key_type } => {
                 assert_eq!(key_type, ItemType::Set, "Expected Set, got {:?}", key_type)
             }
             _ => panic!("Expected Hit, got {:?}", result),
@@ -81,7 +81,7 @@ mod item_get_type {
             .await?;
         let result = client.item_get_type(cache_name, item.name()).await?;
         match result {
-            ItemGetType::Hit { key_type } => assert_eq!(
+            ItemGetTypeResponse::Hit { key_type } => assert_eq!(
                 key_type,
                 ItemType::SortedSet,
                 "Expected SortedSet, got {:?}",

@@ -17,8 +17,8 @@ use crate::cache::{
     DictionarySetFieldsRequest, DictionarySetFieldsResponse, FlushCache, FlushCacheRequest,
     GetRequest, GetResponse, IncreaseTtlRequest, IncreaseTtlResponse, IncrementRequest,
     IncrementResponse, IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtlRequest,
-    ItemGetTtlResponse, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist,
-    KeysExistRequest, ListCaches, ListCachesRequest, ListConcatenateBackRequest,
+    ItemGetTtlResponse, ItemGetTypeRequest, ItemGetTypeResponse, KeyExists, KeyExistsRequest,
+    KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, ListConcatenateBackRequest,
     ListConcatenateBackResponse, ListConcatenateFrontRequest, ListConcatenateFrontResponse,
     ListFetchRequest, ListFetchResponse, ListLengthRequest, ListLengthResponse, ListPopBackRequest,
     ListPopBackResponse, ListPopFrontRequest, ListPopFrontResponse, ListRemoveValueRequest,
@@ -1377,12 +1377,12 @@ impl CacheClient {
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use std::convert::TryInto;
-    /// use momento::cache::{ItemGetType, ItemType};
+    /// use momento::cache::{ItemGetTypeResponse, ItemType};
     /// # cache_client.set(&cache_name, "key1", "value").await?;
     ///
     /// let item: ItemType = match(cache_client.item_get_type(&cache_name, "key1").await?) {
-    ///     ItemGetType::Hit { key_type } => key_type.try_into().expect("Expected an item type!"),
-    ///     ItemGetType::Miss => return Err(anyhow::Error::msg("cache miss"))
+    ///     ItemGetTypeResponse::Hit { key_type } => key_type.try_into().expect("Expected an item type!"),
+    ///     ItemGetTypeResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
     /// };
     /// # assert_eq!(item, ItemType::Scalar);
     /// # Ok(())
@@ -1394,7 +1394,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         key: impl IntoBytes,
-    ) -> MomentoResult<ItemGetType> {
+    ) -> MomentoResult<ItemGetTypeResponse> {
         let request = ItemGetTypeRequest::new(cache_name, key);
         request.send(self).await
     }
