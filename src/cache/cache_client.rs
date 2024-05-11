@@ -8,7 +8,7 @@ use tonic::transport::Channel;
 
 use crate::cache::{
     Configuration, CreateCache, CreateCacheRequest, DecreaseTtlRequest, DecreaseTtlResponse,
-    Delete, DeleteCache, DeleteCacheRequest, DeleteRequest, DictionaryFetchRequest,
+    DeleteCache, DeleteCacheRequest, DeleteRequest, DeleteResponse, DictionaryFetchRequest,
     DictionaryFetchResponse, DictionaryGetFieldRequest, DictionaryGetFieldResponse,
     DictionaryGetFieldsRequest, DictionaryGetFieldsResponse, DictionaryIncrementRequest,
     DictionaryIncrementResponse, DictionaryLengthRequest, DictionaryLengthResponse,
@@ -279,11 +279,11 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::cache::Delete;
+    /// use momento::cache::DeleteResponse;
     /// use momento::MomentoErrorCode;
     ///
     /// match cache_client.delete(&cache_name, "key").await {
-    ///     Ok(_) => println!("Delete successful"),
+    ///     Ok(_) => println!("DeleteResponse successful"),
     ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
     ///     } else {
@@ -299,7 +299,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         key: impl IntoBytes,
-    ) -> MomentoResult<Delete> {
+    ) -> MomentoResult<DeleteResponse> {
         let request = DeleteRequest::new(cache_name, key);
         request.send(self).await
     }

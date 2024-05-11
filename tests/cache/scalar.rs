@@ -1,5 +1,5 @@
 use momento::cache::{
-    Delete, Get, Set, SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest,
+    DeleteResponse, Get, Set, SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest,
     SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest,
     SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest, SetIfPresentRequest,
     SetRequest,
@@ -125,7 +125,7 @@ mod get_set_delete {
         let result = client.delete(cache_name, item.key()).await?;
         assert_eq!(
             result,
-            Delete {},
+            DeleteResponse {},
             "Expected successful Delete of nonexistent key, got {:?}",
             result
         );
@@ -135,7 +135,7 @@ mod get_set_delete {
         let result = client.delete(cache_name, item.key()).await?;
         assert_eq!(
             result,
-            Delete {},
+            DeleteResponse {},
             "Expected successful Delete of existing key, got {:?}",
             result
         );
