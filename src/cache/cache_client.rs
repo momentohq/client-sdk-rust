@@ -18,7 +18,7 @@ use crate::cache::{
     GetRequest, GetResponse, IncreaseTtlRequest, IncreaseTtlResponse, IncrementRequest,
     IncrementResponse, IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtlRequest,
     ItemGetTtlResponse, ItemGetTypeRequest, ItemGetTypeResponse, KeyExistsRequest,
-    KeyExistsResponse, KeysExist, KeysExistRequest, ListCaches, ListCachesRequest,
+    KeyExistsResponse, KeysExistRequest, KeysExistResponse, ListCaches, ListCachesRequest,
     ListConcatenateBackRequest, ListConcatenateBackResponse, ListConcatenateFrontRequest,
     ListConcatenateFrontResponse, ListFetchRequest, ListFetchResponse, ListLengthRequest,
     ListLengthResponse, ListPopBackRequest, ListPopBackResponse, ListPopFrontRequest,
@@ -1291,7 +1291,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::cache::KeysExist;
+    /// use momento::cache::KeysExistResponse;
     /// use std::collections::HashMap;
     ///
     /// // Receive results as a HashMap
@@ -1310,7 +1310,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         keys: impl IntoBytesIterable,
-    ) -> MomentoResult<KeysExist> {
+    ) -> MomentoResult<KeysExistResponse> {
         let request = KeysExistRequest::new(cache_name, keys);
         request.send(self).await
     }
