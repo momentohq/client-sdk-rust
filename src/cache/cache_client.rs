@@ -21,7 +21,8 @@ use crate::cache::{
     ListCaches, ListCachesRequest, ListConcatenateBackRequest, ListConcatenateBackResponse,
     ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetchRequest, ListFetchResponse,
     ListLengthRequest, ListLengthResponse, ListPopBackRequest, ListPopBackResponse,
-    ListPopFrontRequest, ListPopFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse,
+    ListPopFrontRequest, ListPopFrontResponse, ListPushBackRequest, ListPushBackResponse,
+    ListPushFrontRequest, ListPushFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse,
     MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest,
     SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual,
     SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual,
@@ -2166,7 +2167,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::{ListPushBack, ListPushBackRequest};
+    /// use momento::cache::{ListPushBackResponse, ListPushBackRequest};
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let list_name = "list-name";
     ///
@@ -2185,7 +2186,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         list_name: impl IntoBytes,
         value: impl IntoBytes,
-    ) -> MomentoResult<ListPushBack> {
+    ) -> MomentoResult<ListPushBackResponse> {
         let request = ListPushBackRequest::new(cache_name, list_name, value);
         request.send(self).await
     }
@@ -2210,7 +2211,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::{ListPushFront, ListPushFrontRequest};
+    /// use momento::cache::{ListPushFrontResponse, ListPushFrontRequest};
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let list_name = "list-name";
     ///
@@ -2229,7 +2230,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         list_name: impl IntoBytes,
         value: impl IntoBytes,
-    ) -> MomentoResult<ListPushFront> {
+    ) -> MomentoResult<ListPushFrontResponse> {
         let request = ListPushFrontRequest::new(cache_name, list_name, value);
         request.send(self).await
     }

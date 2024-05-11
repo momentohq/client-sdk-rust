@@ -22,7 +22,7 @@ use crate::{
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{ListPushFront, ListPushFrontRequest, CollectionTtl};
+/// use momento::cache::{ListPushFrontResponse, ListPushFrontRequest, CollectionTtl};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let list_name = "list-name";
 /// let push_front_request = ListPushFrontRequest::new(cache_name, list_name, "value1")
@@ -70,9 +70,9 @@ impl<L: IntoBytes, V: IntoBytes> ListPushFrontRequest<L, V> {
 }
 
 impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListPushFrontRequest<L, V> {
-    type Response = ListPushFront;
+    type Response = ListPushFrontResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListPushFront> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListPushFrontResponse> {
         let collection_ttl = self.collection_ttl.unwrap_or_default();
         let value = self.value.into_bytes();
         let list_name = self.list_name.into_bytes();
@@ -94,9 +94,9 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListPushFrontRequest<L, V> {
             .clone()
             .list_push_front(request)
             .await?;
-        Ok(ListPushFront {})
+        Ok(ListPushFrontResponse {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct ListPushFront {}
+pub struct ListPushFrontResponse {}

@@ -22,7 +22,7 @@ use crate::{
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{ListPushBack, ListPushBackRequest, CollectionTtl};
+/// use momento::cache::{ListPushBackResponse, ListPushBackRequest, CollectionTtl};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let list_name = "list-name";
 /// let push_back_request = ListPushBackRequest::new(cache_name, list_name, "value1")
@@ -70,9 +70,9 @@ impl<L: IntoBytes, V: IntoBytes> ListPushBackRequest<L, V> {
 }
 
 impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListPushBackRequest<L, V> {
-    type Response = ListPushBack;
+    type Response = ListPushBackResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListPushBack> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListPushBackResponse> {
         let collection_ttl = self.collection_ttl.unwrap_or_default();
         let value = self.value.into_bytes();
         let list_name = self.list_name.into_bytes();
@@ -94,9 +94,9 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListPushBackRequest<L, V> {
             .clone()
             .list_push_back(request)
             .await?;
-        Ok(ListPushBack {})
+        Ok(ListPushBackResponse {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct ListPushBack {}
+pub struct ListPushBackResponse {}

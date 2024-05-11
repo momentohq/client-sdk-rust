@@ -94,6 +94,8 @@ pub use messages::list::list_pop_back::{
 pub use messages::list::list_pop_front::{
     ListPopFrontRequest, ListPopFrontResponse, ListPopFrontValue,
 };
+pub use messages::list::list_push_back::{ListPushBackRequest, ListPushBackResponse};
+pub use messages::list::list_push_front::{ListPushFrontRequest, ListPushFrontResponse};
 pub use messages::list::list_remove_value::{ListRemoveValueRequest, ListRemoveValueResponse};
 
 // Similar re-exporting with config::configuration and config::configurations

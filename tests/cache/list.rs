@@ -1,7 +1,8 @@
 use momento::cache::{
     CollectionTtl, ListConcatenateBackRequest, ListConcatenateBackResponse,
     ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetchResponse,
-    ListLengthResponse, ListPopBackResponse, ListPopFrontResponse, ListRemoveValueResponse,
+    ListLengthResponse, ListPopBackResponse, ListPopFrontResponse, ListPushBackRequest,
+    ListPushBackResponse, ListPushFrontRequest, ListPushFrontResponse, ListRemoveValueResponse,
 };
 use momento::{MomentoErrorCode, MomentoResult};
 
@@ -17,7 +18,7 @@ fn assert_list_eq(
     let expected: ListFetchResponse = expected.into();
     assert_eq!(
         list_fetch_result, expected,
-        "Expected ListFetch::Hit to be equal to {:?}, but got {:?}",
+        "Expected ListFetchResponse::Hit to be equal to {:?}, but got {:?}",
         expected, list_fetch_result
     );
     Ok(())
@@ -434,7 +435,7 @@ mod list_push_back {
         let result = client
             .list_push_back(cache_name, test_list.name(), one_value.clone())
             .await?;
-        assert_eq!(result, ListPushBack {});
+        assert_eq!(result, ListPushBackResponse {});
         assert_list_eq(
             client.list_fetch(cache_name, test_list.name()).await?,
             vec![one_value],
@@ -453,7 +454,7 @@ mod list_push_back {
         let result = client
             .list_concatenate_back(cache_name, test_list.name(), test_list.values().to_vec())
             .await?;
-        assert_eq!(result, ListConcatenateBack {});
+        assert_eq!(result, ListConcatenateBackResponse {});
 
         // Push back with truncation and collection ttl
         let request = ListPushBackRequest::new(
@@ -464,7 +465,7 @@ mod list_push_back {
         .truncate_front_to_size(2)
         .ttl(CollectionTtl::new(Some(Duration::from_secs(3)), true));
         let result = client.send_request(request).await?;
-        assert_eq!(result, ListPushBack {});
+        assert_eq!(result, ListPushBackResponse {});
 
         // Should have truncated to only 2 elements
         assert_list_eq(
@@ -479,7 +480,7 @@ mod list_push_back {
 
         // Expect a miss after collection ttl expires
         let result = client.list_fetch(cache_name, test_list.name()).await?;
-        assert_eq!(result, ListFetch::Miss);
+        assert_eq!(result, ListFetchResponse::Miss);
 
         Ok(())
     }
@@ -513,7 +514,7 @@ mod list_push_front {
         let result = client
             .list_push_front(cache_name, test_list.name(), one_value.clone())
             .await?;
-        assert_eq!(result, ListPushFront {});
+        assert_eq!(result, ListPushFrontResponse {});
         assert_list_eq(
             client.list_fetch(cache_name, test_list.name()).await?,
             vec![one_value],
@@ -532,7 +533,7 @@ mod list_push_front {
         let result = client
             .list_concatenate_back(cache_name, test_list.name(), test_list.values().to_vec())
             .await?;
-        assert_eq!(result, ListConcatenateBack {});
+        assert_eq!(result, ListConcatenateBackResponse {});
 
         // Push back with truncation and collection ttl
         let request = ListPushFrontRequest::new(
@@ -543,7 +544,7 @@ mod list_push_front {
         .truncate_back_to_size(2)
         .ttl(CollectionTtl::new(Some(Duration::from_secs(3)), true));
         let result = client.send_request(request).await?;
-        assert_eq!(result, ListPushFront {});
+        assert_eq!(result, ListPushFrontResponse {});
 
         // Should have truncated to only 2 elements
         assert_list_eq(
@@ -558,7 +559,7 @@ mod list_push_front {
 
         // Expect a miss after collection ttl expires
         let result = client.list_fetch(cache_name, test_list.name()).await?;
-        assert_eq!(result, ListFetch::Miss);
+        assert_eq!(result, ListFetchResponse::Miss);
 
         Ok(())
     }
