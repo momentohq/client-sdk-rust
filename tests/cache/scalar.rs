@@ -1,8 +1,8 @@
 use momento::cache::{
     DeleteResponse, GetResponse, Set, SetIfAbsentOrEqualRequest, SetIfAbsentOrEqualResponse,
-    SetIfAbsentRequest, SetIfAbsentResponse, SetIfEqualRequest, SetIfEqualResponse, SetIfNotEqual,
-    SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,
-    SetIfPresentRequest, SetRequest,
+    SetIfAbsentRequest, SetIfAbsentResponse, SetIfEqualRequest, SetIfEqualResponse,
+    SetIfNotEqualRequest, SetIfNotEqualResponse, SetIfPresent, SetIfPresentAndNotEqual,
+    SetIfPresentAndNotEqualRequest, SetIfPresentRequest, SetRequest,
 };
 use momento::{MomentoErrorCode, MomentoResult};
 use momento_test_util::{
@@ -515,7 +515,7 @@ mod set_if_not_equal {
         let result = client
             .set_if_not_equal(cache_name, item1.key(), item1.value(), item1.value())
             .await?;
-        assert_eq!(result, SetIfNotEqual::Stored);
+        assert_eq!(result, SetIfNotEqualResponse::Stored);
 
         let result = client.set(cache_name, item1.key(), item1.value()).await?;
         assert_eq!(result, Set {});
@@ -524,7 +524,7 @@ mod set_if_not_equal {
         let result = client
             .set_if_not_equal(cache_name, item1.key(), item2.value(), item2.value())
             .await?;
-        assert_eq!(result, SetIfNotEqual::Stored);
+        assert_eq!(result, SetIfNotEqualResponse::Stored);
         let result = client.get(cache_name, item1.key()).await?;
         assert_eq!(result, GetResponse::from(&item2));
 
@@ -532,7 +532,7 @@ mod set_if_not_equal {
         let result = client
             .set_if_not_equal(cache_name, item1.key(), item1.value(), item2.value())
             .await?;
-        assert_eq!(result, SetIfNotEqual::NotStored);
+        assert_eq!(result, SetIfNotEqualResponse::NotStored);
         let result = client.get(cache_name, item1.key()).await?;
         assert_eq!(result, GetResponse::from(&item2));
 
@@ -553,7 +553,7 @@ mod set_if_not_equal {
             SetIfNotEqualRequest::new(cache_name, item.key(), "second_value", "second_value")
                 .ttl(Duration::from_secs(2));
         let result = client.send_request(set_request).await?;
-        assert_eq!(result, SetIfNotEqual::Stored);
+        assert_eq!(result, SetIfNotEqualResponse::Stored);
 
         // Should have remaining ttl > 0
         let result_ttl: Duration = client

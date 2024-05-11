@@ -28,7 +28,7 @@ use std::time::Duration;
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::time::Duration;
-/// use momento::cache::{SetIfNotEqual, SetIfNotEqualRequest};
+/// use momento::cache::{SetIfNotEqualResponse, SetIfNotEqualRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
@@ -41,8 +41,8 @@ use std::time::Duration;
 ///
 /// match cache_client.send_request(set_request).await {
 ///     Ok(response) => match response {
-///         SetIfNotEqual::Stored => println!("Value stored"),
-///         SetIfNotEqual::NotStored => println!("Value not stored"),
+///         SetIfNotEqualResponse::Stored => println!("Value stored"),
+///         SetIfNotEqualResponse::NotStored => println!("Value not stored"),
 ///     }
 ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
 ///         println!("Cache not found: {}", &cache_name);
@@ -81,9 +81,9 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> SetIfNotEqualRequest<K, V, E> {
 }
 
 impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest for SetIfNotEqualRequest<K, V, E> {
-    type Response = SetIfNotEqual;
+    type Response = SetIfNotEqualResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetIfNotEqual> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetIfNotEqualResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -104,8 +104,8 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest for SetIfNotEqualR
             .await?
             .into_inner();
         match response.result {
-            Some(set_if_response::Result::Stored(_)) => Ok(SetIfNotEqual::Stored),
-            Some(set_if_response::Result::NotStored(_)) => Ok(SetIfNotEqual::NotStored),
+            Some(set_if_response::Result::Stored(_)) => Ok(SetIfNotEqualResponse::Stored),
+            Some(set_if_response::Result::NotStored(_)) => Ok(SetIfNotEqualResponse::NotStored),
             _ => Err(MomentoError::unknown_error(
                 "SetIfNotEqual",
                 Some(format!("{:#?}", response)),
@@ -115,7 +115,7 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest for SetIfNotEqualR
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum SetIfNotEqual {
+pub enum SetIfNotEqualResponse {
     Stored,
     NotStored,
 }

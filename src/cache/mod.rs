@@ -53,7 +53,7 @@ pub use messages::scalar::set_if_absent_or_equal::{
     SetIfAbsentOrEqualRequest, SetIfAbsentOrEqualResponse,
 };
 pub use messages::scalar::set_if_equal::{SetIfEqualRequest, SetIfEqualResponse};
-pub use messages::scalar::set_if_not_equal::{SetIfNotEqual, SetIfNotEqualRequest};
+pub use messages::scalar::set_if_not_equal::{SetIfNotEqualRequest, SetIfNotEqualResponse};
 pub use messages::scalar::set_if_present::{SetIfPresent, SetIfPresentRequest};
 pub use messages::scalar::set_if_present_and_not_equal::{
     SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,

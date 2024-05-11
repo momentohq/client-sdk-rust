@@ -25,14 +25,14 @@ use crate::cache::{
     ListPopFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse, MomentoRequest, Set,
     SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsentOrEqualRequest,
     SetIfAbsentOrEqualResponse, SetIfAbsentRequest, SetIfAbsentResponse, SetIfEqualRequest,
-    SetIfEqualResponse, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual,
-    SetIfPresentAndNotEqualRequest, SetIfPresentRequest, SetRemoveElements,
-    SetRemoveElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
-    SortedSetFetchByScoreRequest, SortedSetGetRank, SortedSetGetRankRequest, SortedSetGetScore,
-    SortedSetGetScoreRequest, SortedSetLength, SortedSetLengthRequest, SortedSetOrder,
-    SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements,
-    SortedSetPutElementsRequest, SortedSetRemoveElements, SortedSetRemoveElementsRequest,
-    UpdateTtl, UpdateTtlRequest,
+    SetIfEqualResponse, SetIfNotEqualRequest, SetIfNotEqualResponse, SetIfPresent,
+    SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest, SetIfPresentRequest,
+    SetRemoveElements, SetRemoveElementsRequest, SetRequest, SortedSetFetch,
+    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetGetRank,
+    SortedSetGetRankRequest, SortedSetGetScore, SortedSetGetScoreRequest, SortedSetLength,
+    SortedSetLengthRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
+    SortedSetPutElements, SortedSetPutElementsRequest, SortedSetRemoveElements,
+    SortedSetRemoveElementsRequest, UpdateTtl, UpdateTtlRequest,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -1726,14 +1726,14 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::time::Duration;
-    /// use momento::cache::{SetIfNotEqual, SetIfNotEqualRequest};
+    /// use momento::cache::{SetIfNotEqualResponse, SetIfNotEqualRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.set_if_not_equal(&cache_name, "key", "new-value", "cached-value").await {
     ///     Ok(response) => match response {
-    ///         SetIfNotEqual::Stored => println!("Value stored"),
-    ///         SetIfNotEqual::NotStored => println!("Value not stored"),
+    ///         SetIfNotEqualResponse::Stored => println!("Value stored"),
+    ///         SetIfNotEqualResponse::NotStored => println!("Value not stored"),
     ///     }
     ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
@@ -1752,7 +1752,7 @@ impl CacheClient {
         key: impl IntoBytes,
         value: impl IntoBytes,
         not_equal: impl IntoBytes,
-    ) -> MomentoResult<SetIfNotEqual> {
+    ) -> MomentoResult<SetIfNotEqualResponse> {
         let request = SetIfNotEqualRequest::new(cache_name, key, value, not_equal);
         request.send(self).await
     }
