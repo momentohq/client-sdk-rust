@@ -4,7 +4,7 @@ use std::time::Duration;
 use momento::{
     cache::{
         CollectionTtl, DecreaseTtlResponse, IncreaseTtlResponse, ItemGetTtlResponse, SetRequest,
-        SortedSetPutElementsRequest, UpdateTtl,
+        SortedSetPutElementsRequest, UpdateTtlResponse,
     },
     MomentoErrorCode, MomentoResult,
 };
@@ -312,7 +312,7 @@ mod update_ttl {
         let result = client
             .update_ttl(cache_name, key, Duration::from_secs(5))
             .await?;
-        assert_eq!(result, UpdateTtl::Miss {});
+        assert_eq!(result, UpdateTtlResponse::Miss {});
         Ok(())
     }
 

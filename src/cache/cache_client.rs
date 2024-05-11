@@ -32,7 +32,7 @@ use crate::cache::{
     SortedSetGetRankRequest, SortedSetGetScore, SortedSetGetScoreRequest, SortedSetLength,
     SortedSetLengthRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
     SortedSetPutElements, SortedSetPutElementsRequest, SortedSetRemoveElements,
-    SortedSetRemoveElementsRequest, UpdateTtl, UpdateTtlRequest,
+    SortedSetRemoveElementsRequest, UpdateTtlRequest, UpdateTtlResponse,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -1449,12 +1449,12 @@ impl CacheClient {
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use std::time::Duration;
-    /// use momento::cache::UpdateTtl;
+    /// use momento::cache::UpdateTtlResponse;
     /// # cache_client.set(&cache_name, "key1", "value").await?;
     ///
     /// match(cache_client.update_ttl(&cache_name, "key1", Duration::from_secs(10)).await?) {
-    ///     UpdateTtl::SetResponse => println!("TTL updated"),
-    ///     UpdateTtl::Miss => return Err(anyhow::Error::msg("cache miss"))
+    ///     UpdateTtlResponse::Set => println!("TTL updated"),
+    ///     UpdateTtlResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
     /// };
     /// # Ok(())
     /// # })
@@ -1466,7 +1466,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         key: impl IntoBytes,
         ttl: Duration,
-    ) -> MomentoResult<UpdateTtl> {
+    ) -> MomentoResult<UpdateTtlResponse> {
         let request = UpdateTtlRequest::new(cache_name, key, ttl);
         request.send(self).await
     }
@@ -1490,8 +1490,8 @@ impl CacheClient {
     /// # cache_client.set(&cache_name, "key1", "value").await?;
     ///
     /// match(cache_client.increase_ttl(&cache_name, "key1", Duration::from_secs(5)).await?) {
-    ///     IncreaseTtlResponse::SetResponse => println!("TTL updated"),
-    ///     IncreaseTtlResponse::NotSetResponse => println!("unable to increase TTL"),
+    ///     IncreaseTtlResponse::Set => println!("TTL updated"),
+    ///     IncreaseTtlResponse::NotSet => println!("unable to increase TTL"),
     ///     IncreaseTtlResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
     /// };
     /// # Ok(())
@@ -1528,8 +1528,8 @@ impl CacheClient {
     /// # cache_client.set(&cache_name, "key1", "value").await?;
     ///
     /// match(cache_client.decrease_ttl(&cache_name, "key1", Duration::from_secs(3)).await?) {
-    ///     DecreaseTtlResponse::SetResponse => println!("TTL updated"),
-    ///     DecreaseTtlResponse::NotSetResponse => println!("unable to decrease TTL"),
+    ///     DecreaseTtlResponse::Set => println!("TTL updated"),
+    ///     DecreaseTtlResponse::NotSet => println!("unable to decrease TTL"),
     ///     DecreaseTtlResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
     /// };
     /// # Ok(())
