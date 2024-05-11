@@ -15,23 +15,23 @@ use crate::cache::{
     DictionaryRemoveFieldRequest, DictionaryRemoveFieldResponse, DictionaryRemoveFieldsRequest,
     DictionaryRemoveFieldsResponse, DictionarySetFieldRequest, DictionarySetFieldResponse,
     DictionarySetFieldsRequest, DictionarySetFieldsResponse, FlushCache, FlushCacheRequest,
-    GetRequest, GetResponse, IncreaseTtlRequest, IncreaseTtlResponse, Increment, IncrementRequest,
-    IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest,
-    ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest,
-    ListCaches, ListCachesRequest, ListConcatenateBackRequest, ListConcatenateBackResponse,
-    ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetchRequest, ListFetchResponse,
-    ListLengthRequest, ListLengthResponse, ListPopBackRequest, ListPopBackResponse,
-    ListPopFrontRequest, ListPopFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse,
-    MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest,
-    SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual,
-    SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual,
-    SetIfPresentAndNotEqualRequest, SetIfPresentRequest, SetRemoveElements,
-    SetRemoveElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
-    SortedSetFetchByScoreRequest, SortedSetGetRank, SortedSetGetRankRequest, SortedSetGetScore,
-    SortedSetGetScoreRequest, SortedSetLength, SortedSetLengthRequest, SortedSetOrder,
-    SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements,
-    SortedSetPutElementsRequest, SortedSetRemoveElements, SortedSetRemoveElementsRequest,
-    UpdateTtl, UpdateTtlRequest,
+    GetRequest, GetResponse, IncreaseTtlRequest, IncreaseTtlResponse, IncrementRequest,
+    IncrementResponse, IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl,
+    ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist,
+    KeysExistRequest, ListCaches, ListCachesRequest, ListConcatenateBackRequest,
+    ListConcatenateBackResponse, ListConcatenateFrontRequest, ListConcatenateFrontResponse,
+    ListFetchRequest, ListFetchResponse, ListLengthRequest, ListLengthResponse, ListPopBackRequest,
+    ListPopBackResponse, ListPopFrontRequest, ListPopFrontResponse, ListRemoveValueRequest,
+    ListRemoveValueResponse, MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetFetch,
+    SetFetchRequest, SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest,
+    SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest,
+    SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest, SetIfPresentRequest,
+    SetRemoveElements, SetRemoveElementsRequest, SetRequest, SortedSetFetch,
+    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetGetRank,
+    SortedSetGetRankRequest, SortedSetGetScore, SortedSetGetScoreRequest, SortedSetLength,
+    SortedSetLengthRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
+    SortedSetPutElements, SortedSetPutElementsRequest, SortedSetRemoveElements,
+    SortedSetRemoveElementsRequest, UpdateTtl, UpdateTtlRequest,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -1336,7 +1336,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::cache::Increment;
+    /// use momento::cache::IncrementResponse;
     /// use momento::MomentoErrorCode;
     ///
     /// match cache_client.increment(&cache_name, "key", 1).await {
@@ -1358,7 +1358,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         key: impl IntoBytes,
         amount: i64,
-    ) -> MomentoResult<Increment> {
+    ) -> MomentoResult<IncrementResponse> {
         let request = IncrementRequest::new(cache_name, key, amount);
         request.send(self).await
     }
