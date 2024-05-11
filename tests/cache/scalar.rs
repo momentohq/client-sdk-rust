@@ -1,8 +1,8 @@
 use momento::cache::{
     DeleteResponse, GetResponse, Set, SetIfAbsentOrEqualRequest, SetIfAbsentOrEqualResponse,
     SetIfAbsentRequest, SetIfAbsentResponse, SetIfEqualRequest, SetIfEqualResponse,
-    SetIfNotEqualRequest, SetIfNotEqualResponse, SetIfPresent, SetIfPresentAndNotEqualRequest,
-    SetIfPresentAndNotEqualResponse, SetIfPresentRequest, SetRequest,
+    SetIfNotEqualRequest, SetIfNotEqualResponse, SetIfPresentAndNotEqualRequest,
+    SetIfPresentAndNotEqualResponse, SetIfPresentRequest, SetIfPresentResponse, SetRequest,
 };
 use momento::{MomentoErrorCode, MomentoResult};
 use momento_test_util::{
@@ -333,7 +333,7 @@ mod set_if_present {
         let result = client
             .set_if_present(cache_name, item1.key(), item1.value())
             .await?;
-        assert_eq!(result, SetIfPresent::NotStored);
+        assert_eq!(result, SetIfPresentResponse::NotStored);
 
         let result = client.set(cache_name, item1.key(), item1.value()).await?;
         assert_eq!(result, Set {});
@@ -342,7 +342,7 @@ mod set_if_present {
         let result = client
             .set_if_present(cache_name, item1.key(), item2.value())
             .await?;
-        assert_eq!(result, SetIfPresent::Stored);
+        assert_eq!(result, SetIfPresentResponse::Stored);
         let result = client.get(cache_name, item1.key()).await?;
         assert_eq!(result, GetResponse::from(&item2));
 
@@ -362,7 +362,7 @@ mod set_if_present {
         let set_request = SetIfPresentRequest::new(cache_name, item.key(), "second_value")
             .ttl(Duration::from_secs(2));
         let result = client.send_request(set_request).await?;
-        assert_eq!(result, SetIfPresent::Stored);
+        assert_eq!(result, SetIfPresentResponse::Stored);
 
         // Should have remaining ttl > 0
         let result_ttl: Duration = client

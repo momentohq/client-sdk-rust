@@ -26,7 +26,7 @@ use std::time::Duration;
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::time::Duration;
-/// use momento::cache::{SetIfPresent, SetIfPresentRequest};
+/// use momento::cache::{SetIfPresentResponse, SetIfPresentRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
@@ -38,8 +38,8 @@ use std::time::Duration;
 ///
 /// match cache_client.send_request(set_request).await {
 ///     Ok(response) => match response {
-///         SetIfPresent::Stored => println!("Value stored"),
-///         SetIfPresent::NotStored => println!("Value not stored"),
+///         SetIfPresentResponse::Stored => println!("Value stored"),
+///         SetIfPresentResponse::NotStored => println!("Value not stored"),
 ///     }
 ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
 ///         println!("Cache not found: {}", &cache_name);
@@ -76,9 +76,9 @@ impl<K: IntoBytes, V: IntoBytes> SetIfPresentRequest<K, V> {
 }
 
 impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfPresentRequest<K, V> {
-    type Response = SetIfPresent;
+    type Response = SetIfPresentResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetIfPresent> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetIfPresentResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -97,8 +97,8 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfPresentRequest<K, V> {
             .await?
             .into_inner();
         match response.result {
-            Some(set_if_response::Result::Stored(_)) => Ok(SetIfPresent::Stored),
-            Some(set_if_response::Result::NotStored(_)) => Ok(SetIfPresent::NotStored),
+            Some(set_if_response::Result::Stored(_)) => Ok(SetIfPresentResponse::Stored),
+            Some(set_if_response::Result::NotStored(_)) => Ok(SetIfPresentResponse::NotStored),
             _ => Err(MomentoError::unknown_error(
                 "SetIfPresent",
                 Some(format!("{:#?}", response)),
@@ -108,7 +108,7 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfPresentRequest<K, V> {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum SetIfPresent {
+pub enum SetIfPresentResponse {
     Stored,
     NotStored,
 }

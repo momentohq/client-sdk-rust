@@ -25,9 +25,9 @@ use crate::cache::{
     ListPopFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse, MomentoRequest, Set,
     SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsentOrEqualRequest,
     SetIfAbsentOrEqualResponse, SetIfAbsentRequest, SetIfAbsentResponse, SetIfEqualRequest,
-    SetIfEqualResponse, SetIfNotEqualRequest, SetIfNotEqualResponse, SetIfPresent,
+    SetIfEqualResponse, SetIfNotEqualRequest, SetIfNotEqualResponse,
     SetIfPresentAndNotEqualRequest, SetIfPresentAndNotEqualResponse, SetIfPresentRequest,
-    SetRemoveElements, SetRemoveElementsRequest, SetRequest, SortedSetFetch,
+    SetIfPresentResponse, SetRemoveElements, SetRemoveElementsRequest, SetRequest, SortedSetFetch,
     SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetGetRank,
     SortedSetGetRankRequest, SortedSetGetScore, SortedSetGetScoreRequest, SortedSetLength,
     SortedSetLengthRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
@@ -1619,14 +1619,14 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::time::Duration;
-    /// use momento::cache::{SetIfPresent, SetIfPresentRequest};
+    /// use momento::cache::{SetIfPresentResponse, SetIfPresentRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.set_if_present(&cache_name, "key", "value1").await {
     ///     Ok(response) => match response {
-    ///         SetIfPresent::Stored => println!("Value stored"),
-    ///         SetIfPresent::NotStored => println!("Value not stored"),
+    ///         SetIfPresentResponse::Stored => println!("Value stored"),
+    ///         SetIfPresentResponse::NotStored => println!("Value not stored"),
     ///     }
     ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
@@ -1644,7 +1644,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         key: impl IntoBytes,
         value: impl IntoBytes,
-    ) -> MomentoResult<SetIfPresent> {
+    ) -> MomentoResult<SetIfPresentResponse> {
         let request = SetIfPresentRequest::new(cache_name, key, value);
         request.send(self).await
     }
