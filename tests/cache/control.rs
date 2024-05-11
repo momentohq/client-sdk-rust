@@ -1,4 +1,4 @@
-use momento::cache::{CreateCache, FlushCache, GetResponse, GetValue, Set};
+use momento::cache::{CreateCache, FlushCache, GetResponse, GetValue, SetResponse};
 use momento::MomentoErrorCode;
 use momento::MomentoResult;
 use momento_test_util::CACHE_TEST_STATE;
@@ -74,11 +74,11 @@ mod flush_cache {
         // Insert some elements
         let item1 = TestScalar::new();
         let set_result1 = client.set(cache_name, item1.key(), item1.value()).await?;
-        assert_eq!(set_result1, Set {});
+        assert_eq!(set_result1, SetResponse {});
 
         let item2 = TestScalar::new();
         let set_result2 = client.set(cache_name, item2.key(), item2.value()).await?;
-        assert_eq!(set_result2, Set {});
+        assert_eq!(set_result2, SetResponse {});
 
         // Verify that the elements are in the cache
         let get_result1 = client.get(cache_name, item1.key()).await?;

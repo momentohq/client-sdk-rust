@@ -22,13 +22,13 @@ use crate::cache::{
     ListConcatenateBackRequest, ListConcatenateBackResponse, ListConcatenateFrontRequest,
     ListConcatenateFrontResponse, ListFetchRequest, ListFetchResponse, ListLengthRequest,
     ListLengthResponse, ListPopBackRequest, ListPopBackResponse, ListPopFrontRequest,
-    ListPopFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse, MomentoRequest, Set,
+    ListPopFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse, MomentoRequest,
     SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsentOrEqualRequest,
     SetIfAbsentOrEqualResponse, SetIfAbsentRequest, SetIfAbsentResponse, SetIfEqualRequest,
     SetIfEqualResponse, SetIfNotEqualRequest, SetIfNotEqualResponse,
     SetIfPresentAndNotEqualRequest, SetIfPresentAndNotEqualResponse, SetIfPresentRequest,
-    SetIfPresentResponse, SetRemoveElements, SetRemoveElementsRequest, SetRequest, SortedSetFetch,
-    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetGetRank,
+    SetIfPresentResponse, SetRemoveElements, SetRemoveElementsRequest, SetRequest, SetResponse,
+    SortedSetFetch, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetGetRank,
     SortedSetGetRankRequest, SortedSetGetScore, SortedSetGetScoreRequest, SortedSetLength,
     SortedSetLengthRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
     SortedSetPutElements, SortedSetPutElementsRequest, SortedSetRemoveElements,
@@ -202,11 +202,11 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::cache::Set;
+    /// use momento::cache::SetResponse;
     /// use momento::MomentoErrorCode;
     ///
     /// match cache_client.set(&cache_name, "k1", "v1").await {
-    ///     Ok(_) => println!("Set successful"),
+    ///     Ok(_) => println!("SetResponse successful"),
     ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
     ///     } else {
@@ -224,7 +224,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         key: impl IntoBytes,
         value: impl IntoBytes,
-    ) -> MomentoResult<Set> {
+    ) -> MomentoResult<SetResponse> {
         let request = SetRequest::new(cache_name, key, value);
         request.send(self).await
     }
@@ -1453,7 +1453,7 @@ impl CacheClient {
     /// # cache_client.set(&cache_name, "key1", "value").await?;
     ///
     /// match(cache_client.update_ttl(&cache_name, "key1", Duration::from_secs(10)).await?) {
-    ///     UpdateTtl::Set => println!("TTL updated"),
+    ///     UpdateTtl::SetResponse => println!("TTL updated"),
     ///     UpdateTtl::Miss => return Err(anyhow::Error::msg("cache miss"))
     /// };
     /// # Ok(())
@@ -1490,8 +1490,8 @@ impl CacheClient {
     /// # cache_client.set(&cache_name, "key1", "value").await?;
     ///
     /// match(cache_client.increase_ttl(&cache_name, "key1", Duration::from_secs(5)).await?) {
-    ///     IncreaseTtlResponse::Set => println!("TTL updated"),
-    ///     IncreaseTtlResponse::NotSet => println!("unable to increase TTL"),
+    ///     IncreaseTtlResponse::SetResponse => println!("TTL updated"),
+    ///     IncreaseTtlResponse::NotSetResponse => println!("unable to increase TTL"),
     ///     IncreaseTtlResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
     /// };
     /// # Ok(())
@@ -1528,8 +1528,8 @@ impl CacheClient {
     /// # cache_client.set(&cache_name, "key1", "value").await?;
     ///
     /// match(cache_client.decrease_ttl(&cache_name, "key1", Duration::from_secs(3)).await?) {
-    ///     DecreaseTtlResponse::Set => println!("TTL updated"),
-    ///     DecreaseTtlResponse::NotSet => println!("unable to decrease TTL"),
+    ///     DecreaseTtlResponse::SetResponse => println!("TTL updated"),
+    ///     DecreaseTtlResponse::NotSetResponse => println!("unable to decrease TTL"),
     ///     DecreaseTtlResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
     /// };
     /// # Ok(())
