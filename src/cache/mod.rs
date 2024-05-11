@@ -38,7 +38,7 @@ pub use messages::dictionary::dictionary_set_fields::{
     IntoDictionaryFieldValuePairs,
 };
 
-pub use messages::scalar::decrease_ttl::{DecreaseTtl, DecreaseTtlRequest};
+pub use messages::scalar::decrease_ttl::{DecreaseTtlRequest, DecreaseTtlResponse};
 pub use messages::scalar::delete::{Delete, DeleteRequest};
 pub use messages::scalar::get::{Get, GetRequest, GetValue};
 pub use messages::scalar::increase_ttl::{IncreaseTtl, IncreaseTtlRequest};
