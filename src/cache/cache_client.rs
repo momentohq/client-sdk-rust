@@ -26,7 +26,7 @@ use crate::cache::{
     SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsentOrEqualRequest,
     SetIfAbsentOrEqualResponse, SetIfAbsentRequest, SetIfAbsentResponse, SetIfEqualRequest,
     SetIfEqualResponse, SetIfNotEqualRequest, SetIfNotEqualResponse, SetIfPresent,
-    SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest, SetIfPresentRequest,
+    SetIfPresentAndNotEqualRequest, SetIfPresentAndNotEqualResponse, SetIfPresentRequest,
     SetRemoveElements, SetRemoveElementsRequest, SetRequest, SortedSetFetch,
     SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetGetRank,
     SortedSetGetRankRequest, SortedSetGetScore, SortedSetGetScoreRequest, SortedSetLength,
@@ -1780,14 +1780,14 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::time::Duration;
-    /// use momento::cache::{SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest};
+    /// use momento::cache::{SetIfPresentAndNotEqualResponse, SetIfPresentAndNotEqualRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.set_if_present_and_not_equal(&cache_name, "key", "new-value", "cached-value").await {
     ///     Ok(response) => match response {
-    ///         SetIfPresentAndNotEqual::Stored => println!("Value stored"),
-    ///         SetIfPresentAndNotEqual::NotStored => println!("Value not stored"),
+    ///         SetIfPresentAndNotEqualResponse::Stored => println!("Value stored"),
+    ///         SetIfPresentAndNotEqualResponse::NotStored => println!("Value not stored"),
     ///     }
     ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
@@ -1806,7 +1806,7 @@ impl CacheClient {
         key: impl IntoBytes,
         value: impl IntoBytes,
         not_equal: impl IntoBytes,
-    ) -> MomentoResult<SetIfPresentAndNotEqual> {
+    ) -> MomentoResult<SetIfPresentAndNotEqualResponse> {
         let request = SetIfPresentAndNotEqualRequest::new(cache_name, key, value, not_equal);
         request.send(self).await
     }

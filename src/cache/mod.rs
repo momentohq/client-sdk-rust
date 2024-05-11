@@ -56,7 +56,7 @@ pub use messages::scalar::set_if_equal::{SetIfEqualRequest, SetIfEqualResponse};
 pub use messages::scalar::set_if_not_equal::{SetIfNotEqualRequest, SetIfNotEqualResponse};
 pub use messages::scalar::set_if_present::{SetIfPresent, SetIfPresentRequest};
 pub use messages::scalar::set_if_present_and_not_equal::{
-    SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,
+    SetIfPresentAndNotEqualRequest, SetIfPresentAndNotEqualResponse,
 };
 pub use messages::scalar::update_ttl::{UpdateTtl, UpdateTtlRequest};
 
