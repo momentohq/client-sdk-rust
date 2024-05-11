@@ -26,7 +26,7 @@ use std::time::Duration;
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::time::Duration;
-/// use momento::cache::{SetIfAbsent, SetIfAbsentRequest};
+/// use momento::cache::{SetIfAbsentResponse, SetIfAbsentRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
@@ -38,8 +38,8 @@ use std::time::Duration;
 ///
 /// match cache_client.send_request(set_request).await {
 ///     Ok(response) => match response {
-///         SetIfAbsent::Stored => println!("Value stored"),
-///         SetIfAbsent::NotStored => println!("Value not stored"),
+///         SetIfAbsentResponse::Stored => println!("Value stored"),
+///         SetIfAbsentResponse::NotStored => println!("Value not stored"),
 ///     }
 ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
 ///         println!("Cache not found: {}", &cache_name);
@@ -76,9 +76,9 @@ impl<K: IntoBytes, V: IntoBytes> SetIfAbsentRequest<K, V> {
 }
 
 impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfAbsentRequest<K, V> {
-    type Response = SetIfAbsent;
+    type Response = SetIfAbsentResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetIfAbsent> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetIfAbsentResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -97,8 +97,8 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfAbsentRequest<K, V> {
             .await?
             .into_inner();
         match response.result {
-            Some(set_if_response::Result::Stored(_)) => Ok(SetIfAbsent::Stored),
-            Some(set_if_response::Result::NotStored(_)) => Ok(SetIfAbsent::NotStored),
+            Some(set_if_response::Result::Stored(_)) => Ok(SetIfAbsentResponse::Stored),
+            Some(set_if_response::Result::NotStored(_)) => Ok(SetIfAbsentResponse::NotStored),
             _ => Err(MomentoError::unknown_error(
                 "SetIfAbsent",
                 Some(format!("{:#?}", response)),
@@ -108,7 +108,7 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfAbsentRequest<K, V> {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum SetIfAbsent {
+pub enum SetIfAbsentResponse {
     Stored,
     NotStored,
 }

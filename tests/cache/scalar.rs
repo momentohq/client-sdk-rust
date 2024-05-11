@@ -1,6 +1,6 @@
 use momento::cache::{
-    DeleteResponse, GetResponse, Set, SetIfAbsent, SetIfAbsentOrEqualRequest,
-    SetIfAbsentOrEqualResponse, SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual,
+    DeleteResponse, GetResponse, Set, SetIfAbsentOrEqualRequest, SetIfAbsentOrEqualResponse,
+    SetIfAbsentRequest, SetIfAbsentResponse, SetIfEqual, SetIfEqualRequest, SetIfNotEqual,
     SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,
     SetIfPresentRequest, SetRequest,
 };
@@ -251,7 +251,7 @@ mod set_if_absent {
         let result = client
             .set_if_absent(cache_name, item1.key(), item1.value())
             .await?;
-        assert_eq!(result, SetIfAbsent::Stored);
+        assert_eq!(result, SetIfAbsentResponse::Stored);
         let result = client.get(cache_name, item1.key()).await?;
         assert_eq!(result, GetResponse::from(&item1));
 
@@ -259,7 +259,7 @@ mod set_if_absent {
         let result = client
             .set_if_absent(cache_name, item1.key(), item2.value())
             .await?;
-        assert_eq!(result, SetIfAbsent::NotStored);
+        assert_eq!(result, SetIfAbsentResponse::NotStored);
         let result = client.get(cache_name, item1.key()).await?;
         assert_eq!(result, GetResponse::from(&item1));
 
@@ -276,7 +276,7 @@ mod set_if_absent {
         let set_request = SetIfAbsentRequest::new(cache_name, item.key(), item.value())
             .ttl(Duration::from_secs(2));
         let result = client.send_request(set_request).await?;
-        assert_eq!(result, SetIfAbsent::Stored);
+        assert_eq!(result, SetIfAbsentResponse::Stored);
 
         // Should have remaining ttl > 0
         let result_ttl: Duration = client

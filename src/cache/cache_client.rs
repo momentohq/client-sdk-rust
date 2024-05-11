@@ -23,8 +23,8 @@ use crate::cache::{
     ListConcatenateFrontResponse, ListFetchRequest, ListFetchResponse, ListLengthRequest,
     ListLengthResponse, ListPopBackRequest, ListPopBackResponse, ListPopFrontRequest,
     ListPopFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse, MomentoRequest, Set,
-    SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsent,
-    SetIfAbsentOrEqualRequest, SetIfAbsentOrEqualResponse, SetIfAbsentRequest, SetIfEqual,
+    SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsentOrEqualRequest,
+    SetIfAbsentOrEqualResponse, SetIfAbsentRequest, SetIfAbsentResponse, SetIfEqual,
     SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual,
     SetIfPresentAndNotEqualRequest, SetIfPresentRequest, SetRemoveElements,
     SetRemoveElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
@@ -1568,14 +1568,14 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::time::Duration;
-    /// use momento::cache::{SetIfAbsent, SetIfAbsentRequest};
+    /// use momento::cache::{SetIfAbsentResponse, SetIfAbsentRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.set_if_absent(&cache_name, "key", "value1").await {
     ///     Ok(response) => match response {
-    ///         SetIfAbsent::Stored => println!("Value stored"),
-    ///         SetIfAbsent::NotStored => println!("Value not stored"),
+    ///         SetIfAbsentResponse::Stored => println!("Value stored"),
+    ///         SetIfAbsentResponse::NotStored => println!("Value not stored"),
     ///     }
     ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
@@ -1593,7 +1593,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         key: impl IntoBytes,
         value: impl IntoBytes,
-    ) -> MomentoResult<SetIfAbsent> {
+    ) -> MomentoResult<SetIfAbsentResponse> {
         let request = SetIfAbsentRequest::new(cache_name, key, value);
         request.send(self).await
     }
