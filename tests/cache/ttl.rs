@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use momento::{
     cache::{
-        CollectionTtl, DecreaseTtlResponse, IncreaseTtlResponse, ItemGetTtl, SetRequest,
+        CollectionTtl, DecreaseTtlResponse, IncreaseTtlResponse, ItemGetTtlResponse, SetRequest,
         SortedSetPutElementsRequest, UpdateTtl,
     },
     MomentoErrorCode, MomentoResult,
@@ -38,7 +38,7 @@ mod item_get_ttl {
         let cache_name = CACHE_TEST_STATE.cache_name.as_str();
         let key = unique_key();
         let result = client.item_get_ttl(cache_name, key).await?;
-        assert_eq!(result, ItemGetTtl::Miss {});
+        assert_eq!(result, ItemGetTtlResponse::Miss {});
         Ok(())
     }
 
@@ -67,7 +67,7 @@ mod item_get_ttl {
 
         // Should get a MISS after ttl expires
         let result = client.item_get_ttl(cache_name, item.key()).await?;
-        assert_eq!(result, ItemGetTtl::Miss {});
+        assert_eq!(result, ItemGetTtlResponse::Miss {});
         Ok(())
     }
 
@@ -98,7 +98,7 @@ mod item_get_ttl {
 
         // Should get a MISS after ttl expires
         let result = client.item_get_ttl(cache_name, item.name()).await?;
-        assert_eq!(result, ItemGetTtl::Miss {});
+        assert_eq!(result, ItemGetTtlResponse::Miss {});
         Ok(())
     }
 }

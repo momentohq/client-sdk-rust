@@ -23,7 +23,7 @@ use crate::{
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// use std::convert::TryInto;
 /// use std::time::Duration;
-/// use momento::cache::{ItemGetTtl, ItemGetTtlRequest};
+/// use momento::cache::{ItemGetTtlResponse, ItemGetTtlRequest};
 /// # cache_client.set(&cache_name, "key1", "value").await?;
 ///
 /// let request = ItemGetTtlRequest::new(&cache_name, "key1");
@@ -49,9 +49,9 @@ impl<K: IntoBytes> ItemGetTtlRequest<K> {
 }
 
 impl<K: IntoBytes> MomentoRequest for ItemGetTtlRequest<K> {
-    type Response = ItemGetTtl;
+    type Response = ItemGetTtlResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ItemGetTtl> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ItemGetTtlResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -68,8 +68,8 @@ impl<K: IntoBytes> MomentoRequest for ItemGetTtlRequest<K> {
             .into_inner();
 
         match response.result {
-            Some(item_get_ttl_response::Result::Missing(_)) => Ok(ItemGetTtl::Miss),
-            Some(item_get_ttl_response::Result::Found(found)) => Ok(ItemGetTtl::Hit {
+            Some(item_get_ttl_response::Result::Missing(_)) => Ok(ItemGetTtlResponse::Miss),
+            Some(item_get_ttl_response::Result::Found(found)) => Ok(ItemGetTtlResponse::Hit {
                 remaining_ttl: Duration::from_millis(found.remaining_ttl_millis),
             }),
             _ => Err(MomentoError::unknown_error(
@@ -85,13 +85,13 @@ impl<K: IntoBytes> MomentoRequest for ItemGetTtlRequest<K> {
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::cache::ItemGetTtl;
+/// # use momento::cache::ItemGetTtlResponse;
 /// use std::convert::TryInto;
 /// use std::time::Duration;
-/// # let response = ItemGetTtl::Hit { remaining_ttl: Duration::from_secs(5) };
+/// # let response = ItemGetTtlResponse::Hit { remaining_ttl: Duration::from_secs(5) };
 /// let remaining_ttl: Duration = match response {
-///     ItemGetTtl::Hit { remaining_ttl } => remaining_ttl.try_into().expect("Expected an item ttl!"),
-///     ItemGetTtl::Miss => return // probably you'll do something else here
+///     ItemGetTtlResponse::Hit { remaining_ttl } => remaining_ttl.try_into().expect("Expected an item ttl!"),
+///     ItemGetTtlResponse::Miss => return // probably you'll do something else here
 /// };
 /// ```
 ///
@@ -102,25 +102,25 @@ impl<K: IntoBytes> MomentoRequest for ItemGetTtlRequest<K> {
 /// this is what you're after:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::cache::ItemGetTtl;
+/// # use momento::cache::ItemGetTtlResponse;
 /// use std::convert::TryInto;
 /// use std::time::Duration;
-/// # let response = ItemGetTtl::Hit { remaining_ttl: Duration::from_secs(1) };
+/// # let response = ItemGetTtlResponse::Hit { remaining_ttl: Duration::from_secs(1) };
 /// let remaining_ttl: MomentoResult<Duration> = response.try_into();
 /// ```
 #[derive(Debug, PartialEq, Eq)]
-pub enum ItemGetTtl {
+pub enum ItemGetTtlResponse {
     Hit { remaining_ttl: Duration },
     Miss,
 }
 
-impl TryFrom<ItemGetTtl> for Duration {
+impl TryFrom<ItemGetTtlResponse> for Duration {
     type Error = MomentoError;
 
-    fn try_from(value: ItemGetTtl) -> Result<Self, Self::Error> {
+    fn try_from(value: ItemGetTtlResponse) -> Result<Self, Self::Error> {
         match value {
-            ItemGetTtl::Hit { remaining_ttl } => Ok(remaining_ttl),
-            ItemGetTtl::Miss => Err(MomentoError::miss("ItemGetTtl")),
+            ItemGetTtlResponse::Hit { remaining_ttl } => Ok(remaining_ttl),
+            ItemGetTtlResponse::Miss => Err(MomentoError::miss("ItemGetTtl")),
         }
     }
 }

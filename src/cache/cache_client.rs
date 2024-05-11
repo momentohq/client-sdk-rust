@@ -16,8 +16,8 @@ use crate::cache::{
     DictionaryRemoveFieldsResponse, DictionarySetFieldRequest, DictionarySetFieldResponse,
     DictionarySetFieldsRequest, DictionarySetFieldsResponse, FlushCache, FlushCacheRequest,
     GetRequest, GetResponse, IncreaseTtlRequest, IncreaseTtlResponse, IncrementRequest,
-    IncrementResponse, IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl,
-    ItemGetTtlRequest, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist,
+    IncrementResponse, IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtlRequest,
+    ItemGetTtlResponse, ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist,
     KeysExistRequest, ListCaches, ListCachesRequest, ListConcatenateBackRequest,
     ListConcatenateBackResponse, ListConcatenateFrontRequest, ListConcatenateFrontResponse,
     ListFetchRequest, ListFetchResponse, ListLengthRequest, ListLengthResponse, ListPopBackRequest,
@@ -1413,7 +1413,7 @@ impl CacheClient {
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use std::convert::TryInto;
-    /// use momento::cache::ItemGetTtl;
+    /// use momento::cache::ItemGetTtlResponse;
     /// use std::time::Duration;
     /// # cache_client.set(&cache_name, "key1", "value").await?;
     ///
@@ -1428,7 +1428,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         key: impl IntoBytes,
-    ) -> MomentoResult<ItemGetTtl> {
+    ) -> MomentoResult<ItemGetTtlResponse> {
         let request = ItemGetTtlRequest::new(cache_name, key);
         request.send(self).await
     }
