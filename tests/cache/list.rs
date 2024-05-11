@@ -1,6 +1,7 @@
 use momento::cache::{
-    CollectionTtl, ListConcatenateBack, ListConcatenateBackRequest, ListConcatenateFront,
-    ListConcatenateFrontRequest, ListFetch, ListLength, ListPopBack, ListPopFront, ListRemoveValue,
+    CollectionTtl, ListConcatenateBackRequest, ListConcatenateBackResponse,
+    ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetchResponse,
+    ListLengthResponse, ListPopBackResponse, ListPopFrontResponse, ListRemoveValueResponse,
 };
 use momento::{MomentoErrorCode, MomentoResult};
 
@@ -9,8 +10,11 @@ use momento_test_util::{unique_cache_name, TestList, CACHE_TEST_STATE};
 use std::convert::TryInto;
 use std::time::Duration;
 
-fn assert_list_eq(list_fetch_result: ListFetch, expected: Vec<String>) -> MomentoResult<()> {
-    let expected: ListFetch = expected.into();
+fn assert_list_eq(
+    list_fetch_result: ListFetchResponse,
+    expected: Vec<String>,
+) -> MomentoResult<()> {
+    let expected: ListFetchResponse = expected.into();
     assert_eq!(
         list_fetch_result, expected,
         "Expected ListFetch::Hit to be equal to {:?}, but got {:?}",
@@ -46,7 +50,7 @@ mod list_concatenate_back {
         let result = client
             .list_concatenate_back(cache_name, test_list.name(), test_list.values().to_vec())
             .await?;
-        assert_eq!(result, ListConcatenateBack {});
+        assert_eq!(result, ListConcatenateBackResponse {});
         assert_list_eq(
             client.list_fetch(cache_name, test_list.name()).await?,
             test_list.values().to_vec(),
@@ -70,7 +74,7 @@ mod list_concatenate_back {
         .truncate_back_to_size(2)
         .ttl(CollectionTtl::new(Some(Duration::from_secs(3)), false));
         let result = client.send_request(request).await?;
-        assert_eq!(result, ListConcatenateBack {});
+        assert_eq!(result, ListConcatenateBackResponse {});
 
         // Should have truncated to only 2 elements
         assert_list_eq(
@@ -82,7 +86,7 @@ mod list_concatenate_back {
 
         // Expect a miss after collection ttl expires
         let result = client.list_fetch(cache_name, test_list.name()).await?;
-        assert_eq!(result, ListFetch::Miss);
+        assert_eq!(result, ListFetchResponse::Miss);
 
         Ok(())
     }
@@ -116,7 +120,7 @@ mod list_concatenate_front {
         let result = client
             .list_concatenate_front(cache_name, test_list.name(), test_list.values().to_vec())
             .await?;
-        assert_eq!(result, ListConcatenateFront {});
+        assert_eq!(result, ListConcatenateFrontResponse {});
         assert_list_eq(
             client.list_fetch(cache_name, test_list.name()).await?,
             test_list.values().to_vec(),
@@ -140,7 +144,7 @@ mod list_concatenate_front {
         .truncate_back_to_size(2)
         .ttl(CollectionTtl::new(Some(Duration::from_secs(3)), false));
         let result = client.send_request(request).await?;
-        assert_eq!(result, ListConcatenateFront {});
+        assert_eq!(result, ListConcatenateFrontResponse {});
 
         // Should have truncated to only 2 elements
         assert_list_eq(
@@ -152,7 +156,7 @@ mod list_concatenate_front {
 
         // Expect a miss after collection ttl expires
         let result = client.list_fetch(cache_name, test_list.name()).await?;
-        assert_eq!(result, ListFetch::Miss);
+        assert_eq!(result, ListFetchResponse::Miss);
 
         Ok(())
     }
@@ -181,7 +185,7 @@ mod list_length {
 
         let result = client.list_length(cache_name, list_name).await?;
 
-        assert_eq!(result, ListLength::Miss {});
+        assert_eq!(result, ListLengthResponse::Miss {});
 
         Ok(())
     }
@@ -196,11 +200,11 @@ mod list_length {
         let result = client
             .list_concatenate_back(cache_name, test_list.name(), test_list.values().to_vec())
             .await?;
-        assert_eq!(result, ListConcatenateBack {});
+        assert_eq!(result, ListConcatenateBackResponse {});
 
         // Fetch list length
         let result = client.list_length(cache_name, test_list.name()).await?;
-        assert_eq!(result, ListLength::Hit { length: 2 });
+        assert_eq!(result, ListLengthResponse::Hit { length: 2 });
 
         Ok(())
     }
@@ -231,7 +235,7 @@ mod list_fetch {
 
         let result = client.list_fetch(cache_name, list_name).await?;
 
-        assert_eq!(result, ListFetch::Miss {});
+        assert_eq!(result, ListFetchResponse::Miss {});
 
         Ok(())
     }
@@ -251,7 +255,7 @@ mod list_fetch {
                 [list1.values().to_vec(), list2.values().to_vec()].concat(),
             )
             .await?;
-        assert_eq!(result, ListConcatenateBack {});
+        assert_eq!(result, ListConcatenateBackResponse {});
 
         // Fetch entire list
         let fetch_full_list = client.list_fetch(cache_name, list1.name()).await?;
@@ -296,7 +300,7 @@ mod list_pop_back {
 
         let result = client.list_pop_back(cache_name, list_name).await?;
 
-        assert_eq!(result, ListPopBack::Miss {});
+        assert_eq!(result, ListPopBackResponse::Miss {});
 
         Ok(())
     }
@@ -311,7 +315,7 @@ mod list_pop_back {
         let result = client
             .list_concatenate_back(cache_name, test_list.name(), test_list.values().to_vec())
             .await?;
-        assert_eq!(result, ListConcatenateBack {});
+        assert_eq!(result, ListConcatenateBackResponse {});
 
         // Pop first value from the back
         let popped_first: String = client
@@ -359,7 +363,7 @@ mod list_pop_front {
 
         let result = client.list_pop_front(cache_name, list_name).await?;
 
-        assert_eq!(result, ListPopFront::Miss {});
+        assert_eq!(result, ListPopFrontResponse::Miss {});
 
         Ok(())
     }
@@ -374,7 +378,7 @@ mod list_pop_front {
         let result = client
             .list_concatenate_back(cache_name, test_list.name(), test_list.values().to_vec())
             .await?;
-        assert_eq!(result, ListConcatenateBack {});
+        assert_eq!(result, ListConcatenateBackResponse {});
 
         // Pop first value from the front
         let popped_first: String = client
@@ -430,7 +434,7 @@ mod list_remove {
             .list_remove_value(cache_name, list_name, "value")
             .await?;
 
-        assert_eq!(result, ListRemoveValue {});
+        assert_eq!(result, ListRemoveValueResponse {});
 
         Ok(())
     }
@@ -445,7 +449,7 @@ mod list_remove {
         let result = client
             .list_concatenate_back(cache_name, test_list.name(), test_list.values().to_vec())
             .await?;
-        assert_eq!(result, ListConcatenateBack {});
+        assert_eq!(result, ListConcatenateBackResponse {});
 
         let first_value = test_list
             .values()
@@ -462,7 +466,7 @@ mod list_remove {
         let result = client
             .list_remove_value(cache_name, test_list.name(), first_value)
             .await?;
-        assert_eq!(result, ListRemoveValue {});
+        assert_eq!(result, ListRemoveValueResponse {});
         assert_list_eq(
             client.list_fetch(cache_name, test_list.name()).await?,
             vec![second_value],

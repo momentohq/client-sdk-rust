@@ -18,19 +18,20 @@ use crate::cache::{
     GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest,
     IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest,
     ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest,
-    ListCaches, ListCachesRequest, ListConcatenateBack, ListConcatenateBackRequest,
-    ListConcatenateFront, ListConcatenateFrontRequest, ListFetch, ListFetchRequest, ListLength,
-    ListLengthRequest, ListPopBack, ListPopBackRequest, ListPopFront, ListPopFrontRequest,
-    ListRemoveValue, ListRemoveValueRequest, MomentoRequest, Set, SetAddElements,
-    SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsent, SetIfAbsentOrEqual,
-    SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual,
-    SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,
-    SetIfPresentRequest, SetRemoveElements, SetRemoveElementsRequest, SetRequest, SortedSetFetch,
-    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetGetRank,
-    SortedSetGetRankRequest, SortedSetGetScore, SortedSetGetScoreRequest, SortedSetLength,
-    SortedSetLengthRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
-    SortedSetPutElements, SortedSetPutElementsRequest, SortedSetRemoveElements,
-    SortedSetRemoveElementsRequest, UpdateTtl, UpdateTtlRequest,
+    ListCaches, ListCachesRequest, ListConcatenateBackRequest, ListConcatenateBackResponse,
+    ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetchRequest, ListFetchResponse,
+    ListLengthRequest, ListLengthResponse, ListPopBackRequest, ListPopBackResponse,
+    ListPopFrontRequest, ListPopFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse,
+    MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest,
+    SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual,
+    SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual,
+    SetIfPresentAndNotEqualRequest, SetIfPresentRequest, SetRemoveElements,
+    SetRemoveElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
+    SortedSetFetchByScoreRequest, SortedSetGetRank, SortedSetGetRankRequest, SortedSetGetScore,
+    SortedSetGetScoreRequest, SortedSetLength, SortedSetLengthRequest, SortedSetOrder,
+    SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements,
+    SortedSetPutElementsRequest, SortedSetRemoveElements, SortedSetRemoveElementsRequest,
+    UpdateTtl, UpdateTtlRequest,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -1876,7 +1877,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::convert::TryInto;
-    /// use momento::cache::ListLength;
+    /// use momento::cache::ListLengthResponse;
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let list_name = "list-name";
@@ -1892,7 +1893,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         list_name: impl IntoBytes,
-    ) -> MomentoResult<ListLength> {
+    ) -> MomentoResult<ListLengthResponse> {
         let request = ListLengthRequest::new(cache_name, list_name);
         request.send(self).await
     }
@@ -1917,7 +1918,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::ListConcatenateFront;
+    /// use momento::cache::ListConcatenateFrontResponse;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let list_name = "list-name";
     ///
@@ -1942,7 +1943,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         list_name: impl IntoBytes,
         values: impl IntoBytesIterable,
-    ) -> MomentoResult<ListConcatenateFront> {
+    ) -> MomentoResult<ListConcatenateFrontResponse> {
         let request = ListConcatenateFrontRequest::new(cache_name, list_name, values);
         request.send(self).await
     }
@@ -1967,7 +1968,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::ListConcatenateBack;
+    /// use momento::cache::ListConcatenateBackResponse;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let list_name = "list-name";
     ///
@@ -1992,7 +1993,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         list_name: impl IntoBytes,
         values: impl IntoBytesIterable,
-    ) -> MomentoResult<ListConcatenateBack> {
+    ) -> MomentoResult<ListConcatenateBackResponse> {
         let request = ListConcatenateBackRequest::new(cache_name, list_name, values);
         request.send(self).await
     }
@@ -2017,7 +2018,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::convert::TryInto;
-    /// use momento::cache::ListFetch;
+    /// use momento::cache::ListFetchResponse;
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let list_name = "list-name";
@@ -2034,7 +2035,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         list_name: impl IntoBytes,
-    ) -> MomentoResult<ListFetch> {
+    ) -> MomentoResult<ListFetchResponse> {
         let request = ListFetchRequest::new(cache_name, list_name);
         request.send(self).await
     }
@@ -2052,7 +2053,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::convert::TryInto;
-    /// use momento::cache::{ListPopBack, ListPopBackRequest};
+    /// use momento::cache::{ListPopBackResponse, ListPopBackRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let list_name = "list-name";
@@ -2068,7 +2069,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         list_name: impl IntoBytes,
-    ) -> MomentoResult<ListPopBack> {
+    ) -> MomentoResult<ListPopBackResponse> {
         let request = ListPopBackRequest::new(cache_name, list_name);
         request.send(self).await
     }
@@ -2086,7 +2087,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::convert::TryInto;
-    /// use momento::cache::{ListPopFront, ListPopFrontRequest};
+    /// use momento::cache::{ListPopFrontResponse, ListPopFrontRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let list_name = "list-name";
@@ -2102,7 +2103,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         list_name: impl IntoBytes,
-    ) -> MomentoResult<ListPopFront> {
+    ) -> MomentoResult<ListPopFrontResponse> {
         let request = ListPopFrontRequest::new(cache_name, list_name);
         request.send(self).await
     }
@@ -2120,14 +2121,14 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::{ListRemoveValue, ListRemoveValueRequest};
+    /// use momento::cache::{ListRemoveValueResponse, ListRemoveValueRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let list_name = "list-name";
     /// # cache_client.list_concatenate_front(&cache_name, list_name, vec!["value1", "value2"]).await;
     ///
     /// match cache_client.list_remove_value(cache_name, list_name, "value1").await {
-    ///     Ok(ListRemoveValue {}) => println!("Successfully removed value"),
+    ///     Ok(ListRemoveValueResponse {}) => println!("Successfully removed value"),
     ///     Err(e) => eprintln!("Error removing value: {:?}", e),
     /// }
     /// # Ok(())
@@ -2140,7 +2141,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         list_name: impl IntoBytes,
         value: impl IntoBytes,
-    ) -> MomentoResult<ListRemoveValue> {
+    ) -> MomentoResult<ListRemoveValueResponse> {
         let request = ListRemoveValueRequest::new(cache_name, list_name, value);
         request.send(self).await
     }

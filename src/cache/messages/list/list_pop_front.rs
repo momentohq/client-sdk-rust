@@ -21,7 +21,7 @@ use crate::{
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::convert::TryInto;
-/// use momento::cache::{ListPopFront, ListPopFrontRequest};
+/// use momento::cache::{ListPopFrontResponse, ListPopFrontRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let list_name = "list-name";
@@ -48,9 +48,9 @@ impl<L: IntoBytes> ListPopFrontRequest<L> {
 }
 
 impl<L: IntoBytes> MomentoRequest for ListPopFrontRequest<L> {
-    type Response = ListPopFront;
+    type Response = ListPopFrontResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListPopFront> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListPopFrontResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -67,8 +67,8 @@ impl<L: IntoBytes> MomentoRequest for ListPopFrontRequest<L> {
             .into_inner();
 
         match response.list {
-            Some(list_pop_front_response::List::Missing(_)) => Ok(ListPopFront::Miss),
-            Some(list_pop_front_response::List::Found(found)) => Ok(ListPopFront::Hit {
+            Some(list_pop_front_response::List::Missing(_)) => Ok(ListPopFrontResponse::Miss),
+            Some(list_pop_front_response::List::Found(found)) => Ok(ListPopFrontResponse::Hit {
                 value: ListPopFrontValue::new(found.front),
             }),
             _ => Err(MomentoError::unknown_error(
@@ -85,30 +85,30 @@ impl<L: IntoBytes> MomentoRequest for ListPopFrontRequest<L> {
 /// ```
 /// # use momento::MomentoResult;
 /// # use momento::cache::ListPopFrontValue;
-/// use momento::cache::ListPopFront;
+/// use momento::cache::ListPopFrontResponse;
 /// use std::convert::TryInto;
-/// # let response = ListPopFront::Hit { value: ListPopFrontValue::new("hi".into()) };
+/// # let response = ListPopFrontResponse::Hit { value: ListPopFrontValue::new("hi".into()) };
 /// let popped_value: String = match response {
-///     ListPopFront::Hit { value } => value.try_into().expect("Expected a valid UTF-8 string"),
-///     ListPopFront::Miss => return // probably you'll do something else here
+///     ListPopFrontResponse::Hit { value } => value.try_into().expect("Expected a valid UTF-8 string"),
+///     ListPopFrontResponse::Miss => return // probably you'll do something else here
 /// };
 /// ```
 ///
 /// You can cast your result directly into a Result<u32, MomentoError> suitable for
-/// ?-propagation if you know you are expecting a ListPopFront::Hit.
+/// ?-propagation if you know you are expecting a ListPopFrontResponse::Hit.
 ///
 /// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
 /// this is what you're after:
 /// ```
 /// # use momento::MomentoResult;
 /// # use momento::cache::ListPopFrontValue;
-/// use momento::cache::ListPopFront;
+/// use momento::cache::ListPopFrontResponse;
 /// use std::convert::TryInto;
-/// # let response = ListPopFront::Hit { value: ListPopFrontValue::new("hi".into()) };
+/// # let response = ListPopFrontResponse::Hit { value: ListPopFrontValue::new("hi".into()) };
 /// let popped_value: MomentoResult<String> = response.try_into();
 /// ```
 #[derive(Debug, PartialEq, Eq)]
-pub enum ListPopFront {
+pub enum ListPopFrontResponse {
     Hit { value: ListPopFrontValue },
     Miss,
 }
@@ -140,24 +140,24 @@ impl TryFrom<ListPopFrontValue> for String {
     }
 }
 
-impl TryFrom<ListPopFront> for Vec<u8> {
+impl TryFrom<ListPopFrontResponse> for Vec<u8> {
     type Error = MomentoError;
 
-    fn try_from(value: ListPopFront) -> Result<Self, Self::Error> {
+    fn try_from(value: ListPopFrontResponse) -> Result<Self, Self::Error> {
         match value {
-            ListPopFront::Hit { value } => Ok(value.try_into()?),
-            ListPopFront::Miss => Err(MomentoError::miss("ListPopFront")),
+            ListPopFrontResponse::Hit { value } => Ok(value.try_into()?),
+            ListPopFrontResponse::Miss => Err(MomentoError::miss("ListPopFront")),
         }
     }
 }
 
-impl TryFrom<ListPopFront> for String {
+impl TryFrom<ListPopFrontResponse> for String {
     type Error = MomentoError;
 
-    fn try_from(value: ListPopFront) -> Result<Self, Self::Error> {
+    fn try_from(value: ListPopFrontResponse) -> Result<Self, Self::Error> {
         match value {
-            ListPopFront::Hit { value } => Ok(value.try_into()?),
-            ListPopFront::Miss => Err(MomentoError::miss("ListPopFront")),
+            ListPopFrontResponse::Hit { value } => Ok(value.try_into()?),
+            ListPopFrontResponse::Miss => Err(MomentoError::miss("ListPopFront")),
         }
     }
 }

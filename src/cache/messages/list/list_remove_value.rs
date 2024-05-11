@@ -17,7 +17,7 @@ use crate::{
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{ListRemoveValue, ListRemoveValueRequest};
+/// use momento::cache::{ListRemoveValueResponse, ListRemoveValueRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let list_name = "list-name";
@@ -25,7 +25,7 @@ use crate::{
 ///
 /// let remove_request = ListRemoveValueRequest::new(cache_name, list_name, "value1");
 /// match cache_client.send_request(remove_request).await {
-///     Ok(ListRemoveValue {}) => println!("Successfully removed value"),
+///     Ok(ListRemoveValueResponse {}) => println!("Successfully removed value"),
 ///     Err(e) => eprintln!("Error removing value: {:?}", e),
 /// }
 /// # Ok(())
@@ -49,9 +49,9 @@ impl<L: IntoBytes, V: IntoBytes> ListRemoveValueRequest<L, V> {
 }
 
 impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListRemoveValueRequest<L, V> {
-    type Response = ListRemoveValue;
+    type Response = ListRemoveValueResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListRemoveValue> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListRemoveValueResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -67,9 +67,9 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListRemoveValueRequest<L, V>
             .list_remove(request)
             .await?
             .into_inner();
-        Ok(ListRemoveValue {})
+        Ok(ListRemoveValueResponse {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct ListRemoveValue {}
+pub struct ListRemoveValueResponse {}

@@ -25,7 +25,7 @@ use crate::{
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{ListConcatenateFront, ListConcatenateFrontRequest};
+/// use momento::cache::{ListConcatenateFrontResponse, ListConcatenateFrontRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let list_name = "list-name";
 /// let concat_front_request = ListConcatenateFrontRequest::new(cache_name, list_name, vec!["value1", "value2"]);
@@ -71,9 +71,9 @@ impl<L: IntoBytes, V: IntoBytesIterable> ListConcatenateFrontRequest<L, V> {
 }
 
 impl<L: IntoBytes, V: IntoBytesIterable> MomentoRequest for ListConcatenateFrontRequest<L, V> {
-    type Response = ListConcatenateFront;
+    type Response = ListConcatenateFrontResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListConcatenateFront> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListConcatenateFrontResponse> {
         let collection_ttl = self.collection_ttl.unwrap_or_default();
         let values = self.values;
         let list_name = self.list_name.into_bytes();
@@ -95,9 +95,9 @@ impl<L: IntoBytes, V: IntoBytesIterable> MomentoRequest for ListConcatenateFront
             .clone()
             .list_concatenate_front(request)
             .await?;
-        Ok(ListConcatenateFront {})
+        Ok(ListConcatenateFrontResponse {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct ListConcatenateFront {}
+pub struct ListConcatenateFrontResponse {}

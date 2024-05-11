@@ -20,7 +20,7 @@ use crate::{
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::convert::TryInto;
-/// use momento::cache::{ListLength, ListLengthRequest};
+/// use momento::cache::{ListLengthResponse, ListLengthRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let list_name = "list-name";
@@ -47,9 +47,9 @@ impl<L: IntoBytes> ListLengthRequest<L> {
 }
 
 impl<L: IntoBytes> MomentoRequest for ListLengthRequest<L> {
-    type Response = ListLength;
+    type Response = ListLengthResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListLength> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListLengthResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -66,8 +66,8 @@ impl<L: IntoBytes> MomentoRequest for ListLengthRequest<L> {
             .into_inner();
 
         match response.list {
-            Some(list_length_response::List::Missing(_)) => Ok(ListLength::Miss),
-            Some(list_length_response::List::Found(found)) => Ok(ListLength::Hit {
+            Some(list_length_response::List::Missing(_)) => Ok(ListLengthResponse::Miss),
+            Some(list_length_response::List::Found(found)) => Ok(ListLengthResponse::Hit {
                 length: found.length,
             }),
             _ => Err(MomentoError::unknown_error(
@@ -83,40 +83,40 @@ impl<L: IntoBytes> MomentoRequest for ListLengthRequest<L> {
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// # use momento::MomentoResult;
-/// use momento::cache::ListLength;
+/// use momento::cache::ListLengthResponse;
 /// use std::convert::TryInto;
-/// # let response = ListLength::Hit { length: 5 };
+/// # let response = ListLengthResponse::Hit { length: 5 };
 /// let length: u32 = match response {
-///     ListLength::Hit { length } => length.try_into().expect("Expected a list length!"),
-///     ListLength::Miss => return // probably you'll do something else here
+///     ListLengthResponse::Hit { length } => length.try_into().expect("Expected a list length!"),
+///     ListLengthResponse::Miss => return // probably you'll do something else here
 /// };
 /// ```
 ///
 /// You can cast your result directly into a Result<u32, MomentoError> suitable for
-/// ?-propagation if you know you are expecting a ListLength::Hit.
+/// ?-propagation if you know you are expecting a ListLengthResponse::Hit.
 ///
 /// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
 /// this is what you're after:
 /// ```
 /// # use momento::MomentoResult;
-/// use momento::cache::ListLength;
+/// use momento::cache::ListLengthResponse;
 /// use std::convert::TryInto;
-/// # let response = ListLength::Hit { length: 5 };
+/// # let response = ListLengthResponse::Hit { length: 5 };
 /// let length: MomentoResult<u32> = response.try_into();
 /// ```
 #[derive(Debug, PartialEq, Eq)]
-pub enum ListLength {
+pub enum ListLengthResponse {
     Hit { length: u32 },
     Miss,
 }
 
-impl TryFrom<ListLength> for u32 {
+impl TryFrom<ListLengthResponse> for u32 {
     type Error = MomentoError;
 
-    fn try_from(value: ListLength) -> Result<Self, Self::Error> {
+    fn try_from(value: ListLengthResponse) -> Result<Self, Self::Error> {
         match value {
-            ListLength::Hit { length } => Ok(length),
-            ListLength::Miss => Err(MomentoError::miss("ListLength")),
+            ListLengthResponse::Hit { length } => Ok(length),
+            ListLengthResponse::Miss => Err(MomentoError::miss("ListLength")),
         }
     }
 }

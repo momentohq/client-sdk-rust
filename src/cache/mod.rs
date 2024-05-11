@@ -80,15 +80,21 @@ pub use messages::sorted_set::sorted_set_remove_elements::{
     SortedSetRemoveElements, SortedSetRemoveElementsRequest,
 };
 
-pub use messages::list::list_concatenate_back::{ListConcatenateBack, ListConcatenateBackRequest};
-pub use messages::list::list_concatenate_front::{
-    ListConcatenateFront, ListConcatenateFrontRequest,
+pub use messages::list::list_concatenate_back::{
+    ListConcatenateBackRequest, ListConcatenateBackResponse,
 };
-pub use messages::list::list_fetch::{ListFetch, ListFetchRequest, ListFetchValue};
-pub use messages::list::list_length::{ListLength, ListLengthRequest};
-pub use messages::list::list_pop_back::{ListPopBack, ListPopBackRequest, ListPopBackValue};
-pub use messages::list::list_pop_front::{ListPopFront, ListPopFrontRequest, ListPopFrontValue};
-pub use messages::list::list_remove_value::{ListRemoveValue, ListRemoveValueRequest};
+pub use messages::list::list_concatenate_front::{
+    ListConcatenateFrontRequest, ListConcatenateFrontResponse,
+};
+pub use messages::list::list_fetch::{ListFetchRequest, ListFetchResponse, ListFetchValue};
+pub use messages::list::list_length::{ListLengthRequest, ListLengthResponse};
+pub use messages::list::list_pop_back::{
+    ListPopBackRequest, ListPopBackResponse, ListPopBackValue,
+};
+pub use messages::list::list_pop_front::{
+    ListPopFrontRequest, ListPopFrontResponse, ListPopFrontValue,
+};
+pub use messages::list::list_remove_value::{ListRemoveValueRequest, ListRemoveValueResponse};
 
 // Similar re-exporting with config::configuration and config::configurations
 // so import paths can be simpmlified to "momento::cache::Configuration" and
