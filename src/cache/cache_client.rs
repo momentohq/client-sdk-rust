@@ -17,21 +17,22 @@ use crate::cache::{
     DictionarySetFieldsRequest, DictionarySetFieldsResponse, FlushCache, FlushCacheRequest,
     GetRequest, GetResponse, IncreaseTtlRequest, IncreaseTtlResponse, IncrementRequest,
     IncrementResponse, IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtlRequest,
-    ItemGetTtlResponse, ItemGetTypeRequest, ItemGetTypeResponse, KeyExists, KeyExistsRequest,
-    KeysExist, KeysExistRequest, ListCaches, ListCachesRequest, ListConcatenateBackRequest,
-    ListConcatenateBackResponse, ListConcatenateFrontRequest, ListConcatenateFrontResponse,
-    ListFetchRequest, ListFetchResponse, ListLengthRequest, ListLengthResponse, ListPopBackRequest,
-    ListPopBackResponse, ListPopFrontRequest, ListPopFrontResponse, ListRemoveValueRequest,
-    ListRemoveValueResponse, MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetFetch,
-    SetFetchRequest, SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest,
-    SetIfAbsentRequest, SetIfEqual, SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest,
-    SetIfPresent, SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest, SetIfPresentRequest,
-    SetRemoveElements, SetRemoveElementsRequest, SetRequest, SortedSetFetch,
-    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetGetRank,
-    SortedSetGetRankRequest, SortedSetGetScore, SortedSetGetScoreRequest, SortedSetLength,
-    SortedSetLengthRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
-    SortedSetPutElements, SortedSetPutElementsRequest, SortedSetRemoveElements,
-    SortedSetRemoveElementsRequest, UpdateTtl, UpdateTtlRequest,
+    ItemGetTtlResponse, ItemGetTypeRequest, ItemGetTypeResponse, KeyExistsRequest,
+    KeyExistsResponse, KeysExist, KeysExistRequest, ListCaches, ListCachesRequest,
+    ListConcatenateBackRequest, ListConcatenateBackResponse, ListConcatenateFrontRequest,
+    ListConcatenateFrontResponse, ListFetchRequest, ListFetchResponse, ListLengthRequest,
+    ListLengthResponse, ListPopBackRequest, ListPopBackResponse, ListPopFrontRequest,
+    ListPopFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse, MomentoRequest, Set,
+    SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsent,
+    SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual,
+    SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual,
+    SetIfPresentAndNotEqualRequest, SetIfPresentRequest, SetRemoveElements,
+    SetRemoveElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
+    SortedSetFetchByScoreRequest, SortedSetGetRank, SortedSetGetRankRequest, SortedSetGetScore,
+    SortedSetGetScoreRequest, SortedSetLength, SortedSetLengthRequest, SortedSetOrder,
+    SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements,
+    SortedSetPutElementsRequest, SortedSetRemoveElements, SortedSetRemoveElementsRequest,
+    UpdateTtl, UpdateTtlRequest,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -1254,7 +1255,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::cache::KeyExists;
+    /// use momento::cache::KeyExistsResponse;
     ///
     /// let result = cache_client.key_exists(cache_name, "key").await?;
     /// if result.exists {
@@ -1271,7 +1272,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         key: impl IntoBytes,
-    ) -> MomentoResult<KeyExists> {
+    ) -> MomentoResult<KeyExistsResponse> {
         let request = KeyExistsRequest::new(cache_name, key);
         request.send(self).await
     }
