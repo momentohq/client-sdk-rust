@@ -64,12 +64,12 @@ impl TopicClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # tokio_test::block_on(async {
     /// use momento::{CredentialProvider, TopicClient};
-    /// use momento::topics::TopicPublish;
+    /// use momento::topics::TopicPublishResponse;
     /// # let (topic_client, cache_name) = momento_test_util::create_doctest_topic_client();
     ///
     /// // Publish to a topic
     /// match topic_client.publish(cache_name, "topic", "value").await? {
-    ///     TopicPublish {} => println!("Published message!"),
+    ///     TopicPublishResponse {} => println!("Published message!"),
     /// }
     /// # Ok(())
     /// # })
