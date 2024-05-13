@@ -103,9 +103,7 @@ pub use messages::data::list::list_concatenate_front::{
 };
 pub use messages::data::list::list_fetch::{ListFetchRequest, ListFetchResponse};
 pub use messages::data::list::list_length::{ListLengthRequest, ListLengthResponse};
-pub use messages::data::list::list_pop_back::{
-    ListPopBackRequest, ListPopBackResponse, ListPopBackValue,
-};
+pub use messages::data::list::list_pop_back::{ListPopBackRequest, ListPopBackResponse};
 pub use messages::data::list::list_pop_front::{
     ListPopFrontRequest, ListPopFrontResponse, ListPopFrontValue,
 };
