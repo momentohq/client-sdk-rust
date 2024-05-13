@@ -38,7 +38,7 @@ Note: you will only need to install `futures` if you use Momento Topics.
 Here is a quickstart you can use in your own project:
 
 ```rust
-use momento::cache::configurations::laptop;
+use momento::cache::configurations::Laptop;
 use momento::cache::Get;
 use momento::{CacheClient, CredentialProvider, MomentoError};
 use std::time::Duration;
@@ -49,7 +49,7 @@ const CACHE_NAME: &str = "cache";
 pub async fn main() -> Result<(), MomentoError> {
     let cache_client = CacheClient::builder()
         .default_ttl(Duration::from_secs(60))
-        .configuration(laptop::latest())
+        .configuration(Laptop::latest())
         .credential_provider(CredentialProvider::from_env_var(
             "MOMENTO_API_KEY".to_string(),
         )?)
