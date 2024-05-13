@@ -2,6 +2,7 @@ use std::{error::Error, fmt::Debug, str::from_utf8};
 
 use tonic::codegen::http;
 
+/// Error codes to indicate the type of error that occurred
 #[derive(Debug, Clone, PartialEq)]
 pub enum MomentoErrorCode {
     /// Invalid argument passed to Momento client
@@ -40,12 +41,20 @@ pub enum MomentoErrorCode {
     TypeError,
 }
 
+/// Contains details about the error from GRPC if such details are available
 #[derive(Debug, thiserror::Error)]
 #[error("{details}")]
 pub struct MomentoGrpcErrorDetails {
+    /// Error code from our backing library, Tonic
     pub code: tonic::Code,
+
+    /// Error details
     pub details: String,
+
+    /// Error message
     pub message: String,
+
+    /// Error metadata
     pub metadata: tonic::metadata::MetadataMap,
 }
 
@@ -60,13 +69,21 @@ impl From<tonic::Status> for MomentoGrpcErrorDetails {
     }
 }
 
+/// Base struct for all errors thrown by the SDK
 #[derive(Debug, thiserror::Error)]
 #[error("{message}")]
 pub struct MomentoError {
+    /// Error message
     pub message: String,
+
+    /// Error code indicating type of error that occurred
     pub error_code: MomentoErrorCode,
+
+    /// The source of the error if an inner source is provided
     #[source]
     pub inner_error: Option<ErrorSource>,
+
+    /// Contains details about the error from GRPC if such details are available
     pub details: Option<MomentoGrpcErrorDetails>,
 }
 
@@ -102,6 +119,7 @@ impl MomentoError {
     }
 }
 
+/// Indicates an error source
 #[derive(Debug, thiserror::Error)]
 pub enum ErrorSource {
     /// A source you will need to downcast if you need to do something with it.
