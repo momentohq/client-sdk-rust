@@ -7,7 +7,7 @@ use crate::topics::topic_client_builder::{NeedsConfiguration, TopicClientBuilder
 use crate::topics::{Configuration, IntoTopicValue, PublishRequest, Subscription};
 use crate::{MomentoError, MomentoResult};
 
-use crate::topics::messages::publish::TopicPublish;
+use crate::topics::messages::publish::TopicPublishResponse;
 use crate::topics::messages::subscribe::SubscribeRequest;
 
 type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
@@ -43,7 +43,7 @@ pub struct TopicClient {
 }
 
 impl TopicClient {
-    /* constructor */
+    /// Constructs a TopicClient to use Momento Topics
     pub fn builder() -> TopicClientBuilder<NeedsConfiguration> {
         TopicClientBuilder(NeedsConfiguration(()))
     }
@@ -64,12 +64,12 @@ impl TopicClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # tokio_test::block_on(async {
     /// use momento::{CredentialProvider, TopicClient};
-    /// use momento::topics::TopicPublish;
+    /// use momento::topics::TopicPublishResponse;
     /// # let (topic_client, cache_name) = momento_test_util::create_doctest_topic_client();
     ///
     /// // Publish to a topic
     /// match topic_client.publish(cache_name, "topic", "value").await? {
-    ///     TopicPublish {} => println!("Published message!"),
+    ///     TopicPublishResponse {} => println!("Published message!"),
     /// }
     /// # Ok(())
     /// # })
@@ -80,7 +80,7 @@ impl TopicClient {
         cache_name: impl Into<String>,
         topic: impl Into<String>,
         value: impl IntoTopicValue + std::marker::Send,
-    ) -> MomentoResult<TopicPublish> {
+    ) -> MomentoResult<TopicPublishResponse> {
         let request = PublishRequest::new(cache_name, topic, value);
         request.send(self).await
     }
@@ -108,7 +108,10 @@ impl TopicClient {
     ///
     /// // Consume messages from the subscription using `next()`
     /// while let Some(message) = subscription.next().await {
-    ///    println!("Received message: {:?}", message);
+    ///    match message.kind {
+    ///             momento::topics::ValueKind::Text(t) => println!("Received message as string: {:?}", t),
+    ///             momento::topics::ValueKind::Binary(b) => println!("Received message as bytes: {:?}", b),
+    ///         }
     /// }
     /// # Ok(())
     /// # })

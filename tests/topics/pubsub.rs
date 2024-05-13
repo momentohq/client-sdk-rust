@@ -1,5 +1,5 @@
 use futures::StreamExt;
-use momento::topics::TopicPublish;
+use momento::topics::TopicPublishResponse;
 use momento::{MomentoErrorCode, MomentoResult};
 use momento_test_util::CACHE_TEST_STATE;
 use momento_test_util::{unique_cache_name, unique_topic_name};
@@ -50,7 +50,7 @@ mod publish_and_subscribe {
         });
 
         let result = client.publish(cache_name, &topic_name, "value").await?;
-        assert_eq!(result, TopicPublish {});
+        assert_eq!(result, TopicPublishResponse {});
 
         subscription_handle.abort();
         Ok(())

@@ -1,7 +1,9 @@
 use crate::MomentoResult;
 use crate::TopicClient;
 
+/// A trait that allows Momento request types to define their interaction with the gRPC client.
 pub trait MomentoRequest {
+    /// The response type expected from the TopicClient
     type Response;
 
     /// An internal fn that allows Momento request types to define their interaction with

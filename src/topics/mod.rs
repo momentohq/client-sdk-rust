@@ -1,5 +1,5 @@
 mod messages;
-pub use messages::publish::{PublishRequest, TopicPublish};
+pub use messages::publish::{PublishRequest, TopicPublishResponse};
 pub use messages::subscribe::SubscribeRequest;
 pub use messages::subscription::*;
 pub use messages::MomentoRequest;
