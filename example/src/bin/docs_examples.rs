@@ -1,7 +1,26 @@
+// This is necessary because our docs currently only support finding an example function when the
+// signature for the example function appears entirely on one line. rustfmt really wants to add
+// line breaks to long function signatures, so we have to disable it.
+#![cfg_attr(rustfmt, rustfmt_skip)]
+
+/***************************************************************************************************
+ * NOTE
+ ***************************************************************************************************
+ *
+ * This file is consumed by the dev docs site to show Rust example snippets.
+ *
+ * The dev docs use some regexes to extract code from these files. Therefore, it's important that:
+ * - All functions in this file have their signature on a single line (no newlines to format arguments etc.)
+ * - All function bodies end with `Ok(())` on a line by itself.
+ *
+ **************************************************************************************************/
+
+
+
 use futures::StreamExt;
 use momento::cache::configurations::Laptop;
 use momento::cache::{
-    CreateCache, DecreaseTtl, DictionaryFetch, DictionaryGetField, DictionaryGetFields,
+    CreateCache, DecreaseTtl, DictionaryFetch, DictionaryGetField, DictionaryGetFields, Get,
     IncreaseTtl, ItemType, SetIfAbsent, SetIfAbsentOrEqual, SetIfEqual, SetIfNotEqual,
     SetIfPresent, SetIfPresentAndNotEqual, SortedSetFetch, SortedSetOrder, UpdateTtl,
 };
@@ -50,10 +69,7 @@ pub fn example_API_InstantiateCacheClient() -> Result<(), MomentoError> {
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_CreateCache(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_CreateCache(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     match cache_client.create_cache(cache_name).await? {
         CreateCache::Created => println!("Cache {} created", cache_name),
         CreateCache::AlreadyExists => println!("Cache {} already exists", cache_name),
@@ -69,70 +85,49 @@ pub async fn example_API_ListCaches(cache_client: &CacheClient) -> Result<(), Mo
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_FlushCache(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_FlushCache(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client.flush_cache(cache_name.to_string()).await?;
     println!("Cache {} flushed", cache_name);
     Ok(())
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_DeleteCache(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_DeleteCache(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client.delete_cache(cache_name).await?;
     println!("Cache {} deleted", cache_name);
     Ok(())
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_Set(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_Set(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client.set(cache_name, "key", "value").await?;
     println!("Value stored");
     Ok(())
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_Get(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_Get(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let response = cache_client.get(cache_name, "key").await?;
     let _item: String = response.try_into().expect("I stored a string!");
     Ok(())
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_Delete(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_Delete(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client.delete(cache_name, "key").await?;
     println!("Value deleted");
     Ok(())
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_Increment(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_Increment(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let response = cache_client.increment(cache_name, "key", 1).await?;
     println!("Value incremented to {}", response.value);
     Ok(())
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_ItemGetType(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_ItemGetType(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let _item_type: ItemType = cache_client
         .item_get_type(cache_name, "key")
         .await?
@@ -142,10 +137,7 @@ pub async fn example_API_ItemGetType(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_ItemGetTtl(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_ItemGetTtl(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let _remaining_ttl: Duration = cache_client
         .item_get_ttl(cache_name, "key")
         .await?
@@ -155,10 +147,7 @@ pub async fn example_API_ItemGetTtl(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_UpdateTtl(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_UpdateTtl(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     match cache_client
         .update_ttl(cache_name, "key", Duration::from_secs(10))
         .await?
@@ -170,10 +159,7 @@ pub async fn example_API_UpdateTtl(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_IncreaseTtl(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_IncreaseTtl(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     match cache_client
         .increase_ttl(cache_name, "key", Duration::from_secs(5))
         .await?
@@ -186,10 +172,7 @@ pub async fn example_API_IncreaseTtl(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_DecreaseTtl(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_DecreaseTtl(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     match cache_client
         .decrease_ttl(cache_name, "key", Duration::from_secs(3))
         .await?
@@ -202,10 +185,7 @@ pub async fn example_API_DecreaseTtl(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_SetIfAbsent(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_SetIfAbsent(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     match cache_client
         .set_if_absent(cache_name, "key", "value")
         .await?
@@ -217,10 +197,7 @@ pub async fn example_API_SetIfAbsent(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_SetIfPresent(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_SetIfPresent(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     match cache_client
         .set_if_present(cache_name, "key", "value")
         .await?
@@ -232,10 +209,7 @@ pub async fn example_API_SetIfPresent(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_SetIfEqual(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_SetIfEqual(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     match cache_client
         .set_if_equal(cache_name, "key", "new-value", "cached-value")
         .await?
@@ -247,10 +221,7 @@ pub async fn example_API_SetIfEqual(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_SetIfNotEqual(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_SetIfNotEqual(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     match cache_client
         .set_if_not_equal(cache_name, "key", "new-value", "cached-value")
         .await?
@@ -262,10 +233,7 @@ pub async fn example_API_SetIfNotEqual(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_SetIfPresentAndNotEqual(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_SetIfPresentAndNotEqual(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     match cache_client
         .set_if_present_and_not_equal(cache_name, "key", "new-value", "cached-value")
         .await?
@@ -277,10 +245,7 @@ pub async fn example_API_SetIfPresentAndNotEqual(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_SetIfAbsentOrEqual(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_SetIfAbsentOrEqual(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     match cache_client
         .set_if_absent_or_equal(cache_name, "key", "new-value", "cached-value")
         .await?
@@ -292,10 +257,7 @@ pub async fn example_API_SetIfAbsentOrEqual(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_ListConcatenateBack(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_ListConcatenateBack(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client
         .list_concatenate_back(cache_name, "list_name", vec!["value1", "value2"])
         .await?;
@@ -304,10 +266,7 @@ pub async fn example_API_ListConcatenateBack(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_ListConcatenateFront(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_ListConcatenateFront(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client
         .list_concatenate_front(cache_name, "list_name", vec!["value1", "value2"])
         .await?;
@@ -316,10 +275,7 @@ pub async fn example_API_ListConcatenateFront(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_ListLength(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_ListLength(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let _length: u32 = cache_client
         .list_length(cache_name, "list_name")
         .await?
@@ -329,10 +285,7 @@ pub async fn example_API_ListLength(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_ListFetch(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_ListFetch(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let _fetched_values: Vec<String> = cache_client
         .list_fetch(cache_name, "list_name")
         .await?
@@ -342,10 +295,7 @@ pub async fn example_API_ListFetch(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_ListPopBack(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_ListPopBack(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let _popped_value: String = cache_client
         .list_pop_back(cache_name, "list_name")
         .await?
@@ -355,10 +305,7 @@ pub async fn example_API_ListPopBack(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_ListPopFront(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_ListPopFront(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let _popped_value: String = cache_client
         .list_pop_front(cache_name, "list_name")
         .await?
@@ -368,10 +315,7 @@ pub async fn example_API_ListPopFront(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_ListRemoveValue(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_ListRemoveValue(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client
         .list_remove_value(cache_name, "list_name", "value1")
         .await?;
@@ -380,10 +324,7 @@ pub async fn example_API_ListRemoveValue(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_DictionaryIncrement(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_DictionaryIncrement(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let response = cache_client
         .dictionary_increment(cache_name, "dictionary_name", "field", 1)
         .await?;
@@ -392,10 +333,7 @@ pub async fn example_API_DictionaryIncrement(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_DictionarySetField(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_DictionarySetField(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client
         .dictionary_set_field(cache_name.to_string(), "dictionary_name", "field", "value")
         .await?;
@@ -404,10 +342,7 @@ pub async fn example_API_DictionarySetField(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_DictionarySetFields(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_DictionarySetFields(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client
         .dictionary_set_fields(
             cache_name.to_string(),
@@ -420,10 +355,7 @@ pub async fn example_API_DictionarySetFields(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_DictionaryFetch(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_DictionaryFetch(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let response = cache_client
         .dictionary_fetch(cache_name, "dictionary_name")
         .await?;
@@ -440,10 +372,7 @@ pub async fn example_API_DictionaryFetch(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_DictionaryLength(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_DictionaryLength(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let _length: u32 = cache_client
         .dictionary_length(cache_name, "dictionary_name")
         .await?
@@ -453,10 +382,7 @@ pub async fn example_API_DictionaryLength(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_DictionaryGetField(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_DictionaryGetField(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let response = cache_client
         .dictionary_get_field(cache_name, "dictionary_name", "field")
         .await?;
@@ -472,10 +398,7 @@ pub async fn example_API_DictionaryGetField(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_DictionaryGetFields(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_DictionaryGetFields(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let response = cache_client
         .dictionary_get_fields(cache_name, "dictionary_name", vec!["field1", "field2"])
         .await?;
@@ -493,10 +416,7 @@ pub async fn example_API_DictionaryGetFields(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_DictionaryRemoveField(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_DictionaryRemoveField(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client
         .dictionary_remove_field(cache_name, "dictionary_name", "field")
         .await?;
@@ -505,10 +425,7 @@ pub async fn example_API_DictionaryRemoveField(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_DictionaryRemoveFields(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_DictionaryRemoveFields(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client
         .dictionary_remove_fields(cache_name, "dictionary_name", vec!["field1", "field2"])
         .await?;
@@ -517,10 +434,7 @@ pub async fn example_API_DictionaryRemoveFields(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_SetAddElements(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_SetAddElements(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client
         .set_add_elements(cache_name, "set_name", vec!["value1", "value2"])
         .await?;
@@ -529,10 +443,7 @@ pub async fn example_API_SetAddElements(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_SetFetch(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_SetFetch(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let _fetched_elements: Vec<String> = cache_client
         .set_fetch(cache_name, "set_name")
         .await?
@@ -542,10 +453,7 @@ pub async fn example_API_SetFetch(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_SetRemoveElements(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_SetRemoveElements(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client
         .set_remove_elements(cache_name, "set_name", vec!["element1", "element2"])
         .await?;
@@ -554,10 +462,7 @@ pub async fn example_API_SetRemoveElements(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_SortedSetPutElement(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_SortedSetPutElement(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client
         .sorted_set_put_element(cache_name, "sorted_set_name", "value", 1.0)
         .await?;
@@ -566,10 +471,7 @@ pub async fn example_API_SortedSetPutElement(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_SortedSetPutElements(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_SortedSetPutElements(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client
         .sorted_set_put_elements(
             cache_name,
@@ -582,10 +484,7 @@ pub async fn example_API_SortedSetPutElements(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_SortedSetFetchByRank(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_SortedSetFetchByRank(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let response = cache_client
         .sorted_set_fetch_by_rank(
             cache_name,
@@ -611,10 +510,7 @@ pub async fn example_API_SortedSetFetchByRank(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_SortedSetFetchByScore(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_SortedSetFetchByScore(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let response = cache_client
         .sorted_set_fetch_by_score(cache_name, "sorted_set_name", SortedSetOrder::Ascending)
         .await?;
@@ -634,10 +530,7 @@ pub async fn example_API_SortedSetFetchByScore(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_SortedSetGetRank(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_SortedSetGetRank(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let _rank: u64 = cache_client
         .sorted_set_get_rank(cache_name, "sorted_set_name", "value1")
         .await?
@@ -647,10 +540,7 @@ pub async fn example_API_SortedSetGetRank(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_SortedSetGetScore(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_SortedSetGetScore(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let _score: f64 = cache_client
         .sorted_set_get_score(cache_name, "sorted_set_name", "value1")
         .await?
@@ -660,10 +550,7 @@ pub async fn example_API_SortedSetGetScore(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_SortedSetLength(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_SortedSetLength(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let _length: u32 = cache_client
         .sorted_set_length(cache_name, "sorted_set_name")
         .await?
@@ -673,10 +560,7 @@ pub async fn example_API_SortedSetLength(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_SortedSetRemoveElements(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_SortedSetRemoveElements(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client
         .sorted_set_remove_elements(cache_name, "sorted_set_name", vec!["value1", "value2"])
         .await?;
@@ -685,10 +569,7 @@ pub async fn example_API_SortedSetRemoveElements(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_KeyExists(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_KeyExists(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let result = cache_client.key_exists(cache_name, "key").await?;
     if result.exists {
         println!("Key exists!");
@@ -699,10 +580,7 @@ pub async fn example_API_KeyExists(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_KeysExist(
-    cache_client: &CacheClient,
-    cache_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_KeysExist(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     // Receive results as a HashMap
     let result_map: HashMap<String, bool> = cache_client
         .keys_exist(cache_name, vec!["key", "key1", "key2"])
@@ -729,11 +607,7 @@ pub fn example_API_InstantiateTopicClient() -> Result<(), MomentoError> {
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_TopicPublish(
-    topic_client: &TopicClient,
-    cache_name: &String,
-    topic_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_TopicPublish(topic_client: &TopicClient, cache_name: &String, topic_name: &String) -> Result<(), MomentoError> {
     topic_client
         .publish(cache_name, topic_name, "Hello, Momento!")
         .await?;
@@ -742,11 +616,7 @@ pub async fn example_API_TopicPublish(
 }
 
 #[allow(non_snake_case)]
-pub async fn example_API_TopicSubscribe(
-    topic_client: &TopicClient,
-    cache_name: &String,
-    topic_name: &String,
-) -> Result<(), MomentoError> {
+pub async fn example_API_TopicSubscribe(topic_client: &TopicClient, cache_name: &String, topic_name: &String) -> Result<(), MomentoError> {
     // Make a subscription
     let mut subscription = topic_client
         .subscribe(cache_name, topic_name)
@@ -757,6 +627,27 @@ pub async fn example_API_TopicSubscribe(
     while let Some(item) = subscription.next().await {
         println!("Received subscription item: {item:?}")
     }
+    Ok(())
+}
+
+pub async fn example_responsetypes_get_with_pattern_match(cache_client: &CacheClient, cache_name: &String) -> Result<(), anyhow::Error> {
+    let _item: String = match cache_client.get(cache_name, "key").await? {
+        Get::Hit { value } => value.try_into()?,
+        Get::Miss => return Err(anyhow::Error::msg("cache miss"))
+    };
+    Ok(())
+}
+
+pub async fn example_responsetypes_get_with_try_into(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
+    let _item: String = cache_client.get(cache_name, "key").await?.try_into()?;
+    Ok(())
+}
+
+pub async fn example_responsetypes_dictionary_with_try_into(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
+    let _item: HashMap<String, String> = cache_client
+        .dictionary_fetch(cache_name, "dictionary_key")
+        .await?
+        .try_into()?;
     Ok(())
 }
 
