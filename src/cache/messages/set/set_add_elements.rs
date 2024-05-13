@@ -24,7 +24,7 @@ use crate::{IntoBytes, IntoBytesIterable, MomentoResult};
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{CollectionTtl, SetAddElements, SetAddElementsRequest};
+/// use momento::cache::{CollectionTtl, SetAddElementsResponse, SetAddElementsRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let set_name = "set";
 ///
@@ -67,9 +67,9 @@ impl<S: IntoBytes, E: IntoBytesIterable> SetAddElementsRequest<S, E> {
 }
 
 impl<S: IntoBytes, E: IntoBytesIterable> MomentoRequest for SetAddElementsRequest<S, E> {
-    type Response = SetAddElements;
+    type Response = SetAddElementsResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetAddElements> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetAddElementsResponse> {
         let collection_ttl = self.collection_ttl.unwrap_or_default();
         let elements = self.elements.into_bytes();
         let set_name = self.set_name.into_bytes();
@@ -86,9 +86,9 @@ impl<S: IntoBytes, E: IntoBytesIterable> MomentoRequest for SetAddElementsReques
         )?;
 
         let _ = cache_client.data_client.clone().set_union(request).await?;
-        Ok(SetAddElements {})
+        Ok(SetAddElementsResponse {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct SetAddElements {}
+pub struct SetAddElementsResponse {}

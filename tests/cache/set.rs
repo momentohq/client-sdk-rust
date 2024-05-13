@@ -1,12 +1,17 @@
 use std::convert::TryInto;
 
-use momento::cache::{SetAddElements, SetAddElementsRequest, SetFetch, SetRemoveElements};
+use momento::cache::{
+    SetAddElementsRequest, SetAddElementsResponse, SetFetchResponse, SetRemoveElementsResponse,
+};
 use momento::{MomentoErrorCode, MomentoResult};
 
 use momento_test_util::{unique_cache_name, unique_value, TestSet, CACHE_TEST_STATE};
 
-fn assert_fetched_set_eq(set_fetch_result: SetFetch, expected: Vec<String>) -> MomentoResult<()> {
-    let expected: SetFetch = expected.into();
+fn assert_fetched_set_eq(
+    set_fetch_result: SetFetchResponse,
+    expected: Vec<String>,
+) -> MomentoResult<()> {
+    let expected: SetFetchResponse = expected.into();
     assert_eq!(
         set_fetch_result, expected,
         "Expected SetFetch::Hit to be equal to {:?}, but got {:?}",
@@ -16,7 +21,7 @@ fn assert_fetched_set_eq(set_fetch_result: SetFetch, expected: Vec<String>) -> M
 }
 
 fn assert_fetched_set_eq_after_sorting(
-    set_fetch_result: SetFetch,
+    set_fetch_result: SetFetchResponse,
     expected: Vec<String>,
 ) -> MomentoResult<()> {
     let sort_by_value = |a: &String, b: &String| -> std::cmp::Ordering {
@@ -24,10 +29,10 @@ fn assert_fetched_set_eq_after_sorting(
     };
 
     let set_fetch_result = match set_fetch_result {
-        SetFetch::Hit { values } => {
+        SetFetchResponse::Hit { values } => {
             let mut elements: Vec<String> = values.try_into()?;
             elements.sort_by(sort_by_value);
-            let new_set_fetch: SetFetch = elements.into();
+            let new_set_fetch: SetFetchResponse = elements.into();
             new_set_fetch
         }
         _ => set_fetch_result,
@@ -73,7 +78,7 @@ mod set_add_elements {
         let result = client
             .set_add_elements(cache_name, test_set.name(), test_set.value().to_vec())
             .await?;
-        assert_eq!(result, SetAddElements {});
+        assert_eq!(result, SetAddElementsResponse {});
         assert_fetched_set_eq_after_sorting(
             client.set_fetch(cache_name, test_set.name()).await?,
             test_set.value().to_vec(),
@@ -93,7 +98,7 @@ mod set_add_elements {
             SetAddElementsRequest::new(cache_name, test_set.name(), test_set.value().to_vec())
                 .ttl(CollectionTtl::new(Some(Duration::from_secs(10)), false));
         let result = client.send_request(request).await?;
-        assert_eq!(result, SetAddElements {});
+        assert_eq!(result, SetAddElementsResponse {});
 
         // only test_set elements should remain after 5 seconds
         tokio::time::sleep(Duration::from_secs(5)).await;
@@ -133,13 +138,13 @@ mod set_fetch {
 
         // Should miss before set exists
         let result = client.set_fetch(cache_name, test_set.name()).await?;
-        assert_eq!(result, SetFetch::Miss {});
+        assert_eq!(result, SetFetchResponse::Miss {});
 
         // Should hit after set exists
         let result = client
             .set_add_elements(cache_name, test_set.name(), test_set.value().to_vec())
             .await?;
-        assert_eq!(result, SetAddElements {});
+        assert_eq!(result, SetAddElementsResponse {});
         assert_fetched_set_eq_after_sorting(
             client.set_fetch(cache_name, test_set.name()).await?,
             test_set.value().to_vec(),
@@ -180,13 +185,13 @@ mod set_remove_elements {
         let result = client
             .set_add_elements(cache_name, test_set.name(), test_set.value().to_vec())
             .await?;
-        assert_eq!(result, SetAddElements {});
+        assert_eq!(result, SetAddElementsResponse {});
 
         // Should do nothing when elements don't exist
         let result = client
             .set_remove_elements(cache_name, test_set.name(), vec![unique_value()])
             .await?;
-        assert_eq!(result, SetRemoveElements {});
+        assert_eq!(result, SetRemoveElementsResponse {});
 
         // Should remove existing elements
         let result = client
@@ -196,7 +201,7 @@ mod set_remove_elements {
                 vec![test_set.value()[0].clone()],
             )
             .await?;
-        assert_eq!(result, SetRemoveElements {});
+        assert_eq!(result, SetRemoveElementsResponse {});
         assert_fetched_set_eq(
             client.set_fetch(cache_name, test_set.name()).await?,
             vec![test_set.value()[1].clone()],
@@ -210,9 +215,9 @@ mod set_remove_elements {
                 vec![test_set.value()[1].clone()],
             )
             .await?;
-        assert_eq!(result, SetRemoveElements {});
+        assert_eq!(result, SetRemoveElementsResponse {});
         let result = client.set_fetch(cache_name, test_set.name()).await?;
-        assert_eq!(result, SetFetch::Miss {});
+        assert_eq!(result, SetFetchResponse::Miss {});
 
         Ok(())
     }
