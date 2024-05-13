@@ -269,6 +269,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [GetRequest].
+    ///
+    /// For more examples of handling the response, see [GetResponse].
     pub async fn get(
         &self,
         cache_name: impl Into<String>,
@@ -357,6 +359,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to fetch a dictionary using a [DictionaryFetchRequest].
+    ///
+    /// For more examples of handling the response, see [DictionaryFetchResponse].
     pub async fn dictionary_fetch(
         &self,
         cache_name: impl Into<String>,
@@ -408,6 +412,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to get a field using a [DictionaryGetFieldRequest].
+    ///
+    /// For more examples of handling the response, see [DictionaryGetFieldResponse].
     pub async fn dictionary_get_field(
         &self,
         cache_name: impl Into<String>,
@@ -461,6 +467,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to get fields using a [DictionaryGetFieldsRequest].
+    ///
+    /// For more examples of handling the response, see [DictionaryGetFieldsResponse].
     pub async fn dictionary_get_fields<F: IntoBytesIterable + Clone>(
         &self,
         cache_name: impl Into<String>,
@@ -543,6 +551,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to get the length of a dictionary using a [DictionaryLengthRequest].
+    ///
+    /// For more examples of handling the response, see [DictionaryLengthResponse].
     pub async fn dictionary_length(
         &self,
         cache_name: impl Into<String>,
@@ -818,6 +828,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to fetch elements using a [SetFetchRequest].
+    ///
+    /// For more examples of handling the response, see [SetFetchResponse].
     pub async fn set_fetch(
         &self,
         cache_name: impl Into<String>,
@@ -1021,6 +1033,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to fetch elements using a [SortedSetFetchByRankRequest].
+    ///
+    /// For more examples of handling the response, see [SortedSetFetchResponse].
     pub async fn sorted_set_fetch_by_rank(
         &self,
         cache_name: impl Into<String>,
@@ -1098,6 +1112,8 @@ impl CacheClient {
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetFetchByScoreRequest]
     /// which will allow you to set [optional arguments](SortedSetFetchByScoreRequest#optional-arguments) as well.
+    ///
+    /// For more examples of handling the response, see [SortedSetFetchResponse].
     pub async fn sorted_set_fetch_by_score(
         &self,
         cache_name: impl Into<String>,
@@ -1176,6 +1192,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to get sorted set length using a [SortedSetLengthRequest].
+    ///
+    /// For more examples of handling the response, see [SortedSetLengthResponse].
     pub async fn sorted_set_length(
         &self,
         cache_name: impl Into<String>,
@@ -1213,6 +1231,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to get the rank of an element using a [SortedSetGetRankRequest].
+    ///
+    /// For more examples of handling the response, see [SortedSetGetRankResponse].
     pub async fn sorted_set_get_rank(
         &self,
         cache_name: impl Into<String>,
@@ -1251,6 +1271,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to get the score of an element using a [SortedSetGetScoreRequest].
+    ///
+    /// For more examples of handling the response, see [SortedSetGetScoreResponse].
     pub async fn sorted_set_get_score(
         &self,
         cache_name: impl Into<String>,
@@ -1410,6 +1432,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to get an item's type using a [ItemGetTypeRequest].
+    ///
+    /// For more examples of handling the response, see [ItemGetTypeResponse].
     pub async fn item_get_type(
         &self,
         cache_name: impl Into<String>,
@@ -1444,6 +1468,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to get an item's ttl using a [ItemGetTtlRequest].
+    ///
+    /// For more examples of handling the response, see [ItemGetTtlResponse].
     pub async fn item_get_ttl(
         &self,
         cache_name: impl Into<String>,
@@ -1909,6 +1935,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to get a list's length using a [ListLengthRequest].
+    ///
+    /// For more examples of handling the response, see [ListLengthResponse].
     pub async fn list_length(
         &self,
         cache_name: impl Into<String>,
@@ -2051,6 +2079,8 @@ impl CacheClient {
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to fetch a list using a [ListFetchRequest]
     /// which will allow you to set [optional arguments](ListFetchRequest#optional-arguments) as well.
+    ///
+    /// For more examples of handling the response, see [ListFetchResponse].
     pub async fn list_fetch(
         &self,
         cache_name: impl Into<String>,
@@ -2085,6 +2115,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to pop a value off the list using a [ListPopBackRequest].
+    ///
+    /// For more examples of handling the response, see [ListPopBackResponse].
     pub async fn list_pop_back(
         &self,
         cache_name: impl Into<String>,
@@ -2119,6 +2151,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to pop a value off the list using a [ListPopFrontRequest].
+    ///
+    /// For more examples of handling the response, see [ListPopFrontResponse].
     pub async fn list_pop_front(
         &self,
         cache_name: impl Into<String>,
