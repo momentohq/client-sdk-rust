@@ -2,10 +2,10 @@ mod messages;
 
 pub use messages::MomentoRequest;
 
-pub use messages::create_cache::{CreateCacheRequest, CreateCacheResponse};
-pub use messages::delete_cache::{DeleteCacheRequest, DeleteCacheResponse};
-pub use messages::flush_cache::{FlushCacheRequest, FlushCacheResponse};
-pub use messages::list_caches::{
+pub use messages::control::create_cache::{CreateCacheRequest, CreateCacheResponse};
+pub use messages::control::delete_cache::{DeleteCacheRequest, DeleteCacheResponse};
+pub use messages::control::flush_cache::{FlushCacheRequest, FlushCacheResponse};
+pub use messages::control::list_caches::{
     CacheInfo, CacheLimits, ListCachesRequest, ListCachesResponse, TopicLimits,
 };
 

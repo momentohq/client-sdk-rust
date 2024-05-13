@@ -1,8 +1,7 @@
-pub mod create_cache;
-pub mod delete_cache;
-pub mod flush_cache;
-pub mod list_caches;
+/// Control messages for the cache
+pub mod control;
 
+/// Data messages for the cache
 pub mod dictionary;
 pub mod list;
 pub mod scalar;
