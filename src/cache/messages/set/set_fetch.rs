@@ -51,9 +51,9 @@ impl<S: IntoBytes> SetFetchRequest<S> {
 }
 
 impl<S: IntoBytes> MomentoRequest for SetFetchRequest<S> {
-    type Response = SetFetch;
+    type Response = SetFetchResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetFetch> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetFetchResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -70,8 +70,8 @@ impl<S: IntoBytes> MomentoRequest for SetFetchRequest<S> {
             .into_inner();
 
         match response.set {
-            Some(set_fetch_response::Set::Missing(_)) => Ok(SetFetch::Miss),
-            Some(set_fetch_response::Set::Found(found)) => Ok(SetFetch::Hit {
+            Some(set_fetch_response::Set::Missing(_)) => Ok(SetFetchResponse::Miss),
+            Some(set_fetch_response::Set::Found(found)) => Ok(SetFetchResponse::Hit {
                 values: SetFetchValue {
                     raw_item: found.elements,
                 },
@@ -90,13 +90,13 @@ impl<S: IntoBytes> MomentoRequest for SetFetchRequest<S> {
 /// ```
 /// # use momento::MomentoResult;
 /// # use momento::cache::SetFetchValue;
-/// use momento::cache::SetFetch;
+/// use momento::cache::SetFetchResponse;
 /// use std::convert::TryInto;
 /// # let values = vec!["abc", "123"].iter().map(|s| s.as_bytes().to_vec()).collect();
-/// # let response = SetFetch::Hit { values: SetFetchValue::new(values) };
+/// # let response = SetFetchResponse::Hit { values: SetFetchValue::new(values) };
 /// let fetched_values: Vec<String> = match response {
-///     SetFetch::Hit { values } => values.try_into().expect("Expected to fetch a set!"),
-///     SetFetch::Miss => return // probably you'll do something else here
+///     SetFetchResponse::Hit { values } => values.try_into().expect("Expected to fetch a set!"),
+///     SetFetchResponse::Miss => return // probably you'll do something else here
 /// };
 /// ```
 ///
@@ -108,14 +108,14 @@ impl<S: IntoBytes> MomentoRequest for SetFetchRequest<S> {
 /// ```
 /// # use momento::MomentoResult;
 /// # use momento::cache::SetFetchValue;
-/// use momento::cache::SetFetch;
+/// use momento::cache::SetFetchResponse;
 /// use std::convert::TryInto;
 /// # let values = vec!["abc", "123"].iter().map(|s| s.as_bytes().to_vec()).collect();
-/// # let response = SetFetch::Hit { values: SetFetchValue::new(values) };
+/// # let response = SetFetchResponse::Hit { values: SetFetchValue::new(values) };
 /// let fetched_values: Vec<String> = response.try_into().expect("Expected to fetch a set!");
 /// ```
 #[derive(Debug, PartialEq, Eq)]
-pub enum SetFetch {
+pub enum SetFetchResponse {
     Hit { values: SetFetchValue },
     Miss,
 }
@@ -149,31 +149,31 @@ impl TryFrom<SetFetchValue> for Vec<String> {
     }
 }
 
-impl TryFrom<SetFetch> for Vec<Vec<u8>> {
+impl TryFrom<SetFetchResponse> for Vec<Vec<u8>> {
     type Error = MomentoError;
 
-    fn try_from(value: SetFetch) -> Result<Self, Self::Error> {
+    fn try_from(value: SetFetchResponse) -> Result<Self, Self::Error> {
         match value {
-            SetFetch::Hit { values } => Ok(values.into()),
-            SetFetch::Miss => Err(MomentoError::miss("SetFetch")),
+            SetFetchResponse::Hit { values } => Ok(values.into()),
+            SetFetchResponse::Miss => Err(MomentoError::miss("SetFetch")),
         }
     }
 }
 
-impl TryFrom<SetFetch> for Vec<String> {
+impl TryFrom<SetFetchResponse> for Vec<String> {
     type Error = MomentoError;
 
-    fn try_from(value: SetFetch) -> Result<Self, Self::Error> {
+    fn try_from(value: SetFetchResponse) -> Result<Self, Self::Error> {
         match value {
-            SetFetch::Hit { values } => Ok(values.try_into()?),
-            SetFetch::Miss => Err(MomentoError::miss("SetFetch")),
+            SetFetchResponse::Hit { values } => Ok(values.try_into()?),
+            SetFetchResponse::Miss => Err(MomentoError::miss("SetFetch")),
         }
     }
 }
 
-impl From<Vec<String>> for SetFetch {
+impl From<Vec<String>> for SetFetchResponse {
     fn from(values: Vec<String>) -> Self {
-        SetFetch::Hit {
+        SetFetchResponse::Hit {
             values: SetFetchValue::new(values.into_iter().map(|v| v.as_bytes().to_vec()).collect()),
         }
     }

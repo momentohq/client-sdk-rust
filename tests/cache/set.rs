@@ -1,12 +1,17 @@
 use std::convert::TryInto;
 
-use momento::cache::{SetAddElementsRequest, SetAddElementsResponse, SetFetch, SetRemoveElements};
+use momento::cache::{
+    SetAddElementsRequest, SetAddElementsResponse, SetFetchResponse, SetRemoveElements,
+};
 use momento::{MomentoErrorCode, MomentoResult};
 
 use momento_test_util::{unique_cache_name, unique_value, TestSet, CACHE_TEST_STATE};
 
-fn assert_fetched_set_eq(set_fetch_result: SetFetch, expected: Vec<String>) -> MomentoResult<()> {
-    let expected: SetFetch = expected.into();
+fn assert_fetched_set_eq(
+    set_fetch_result: SetFetchResponse,
+    expected: Vec<String>,
+) -> MomentoResult<()> {
+    let expected: SetFetchResponse = expected.into();
     assert_eq!(
         set_fetch_result, expected,
         "Expected SetFetch::Hit to be equal to {:?}, but got {:?}",
@@ -16,7 +21,7 @@ fn assert_fetched_set_eq(set_fetch_result: SetFetch, expected: Vec<String>) -> M
 }
 
 fn assert_fetched_set_eq_after_sorting(
-    set_fetch_result: SetFetch,
+    set_fetch_result: SetFetchResponse,
     expected: Vec<String>,
 ) -> MomentoResult<()> {
     let sort_by_value = |a: &String, b: &String| -> std::cmp::Ordering {
@@ -24,10 +29,10 @@ fn assert_fetched_set_eq_after_sorting(
     };
 
     let set_fetch_result = match set_fetch_result {
-        SetFetch::Hit { values } => {
+        SetFetchResponse::Hit { values } => {
             let mut elements: Vec<String> = values.try_into()?;
             elements.sort_by(sort_by_value);
-            let new_set_fetch: SetFetch = elements.into();
+            let new_set_fetch: SetFetchResponse = elements.into();
             new_set_fetch
         }
         _ => set_fetch_result,
@@ -133,7 +138,7 @@ mod set_fetch {
 
         // Should miss before set exists
         let result = client.set_fetch(cache_name, test_set.name()).await?;
-        assert_eq!(result, SetFetch::Miss {});
+        assert_eq!(result, SetFetchResponse::Miss {});
 
         // Should hit after set exists
         let result = client
@@ -212,7 +217,7 @@ mod set_remove_elements {
             .await?;
         assert_eq!(result, SetRemoveElements {});
         let result = client.set_fetch(cache_name, test_set.name()).await?;
-        assert_eq!(result, SetFetch::Miss {});
+        assert_eq!(result, SetFetchResponse::Miss {});
 
         Ok(())
     }
