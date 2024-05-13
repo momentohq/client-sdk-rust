@@ -16,7 +16,7 @@ use crate::{utils, CacheClient, MomentoResult};
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{FlushCache, FlushCacheRequest};
+/// use momento::cache::{FlushCacheResponse, FlushCacheRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
@@ -49,9 +49,9 @@ impl FlushCacheRequest {
 }
 
 impl MomentoRequest for FlushCacheRequest {
-    type Response = FlushCache;
+    type Response = FlushCacheResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<FlushCache> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<FlushCacheResponse> {
         let cache_name = &self.cache_name;
 
         utils::is_cache_name_valid(cache_name)?;
@@ -64,9 +64,9 @@ impl MomentoRequest for FlushCacheRequest {
             .clone()
             .flush_cache(request)
             .await?;
-        Ok(FlushCache {})
+        Ok(FlushCacheResponse {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct FlushCache {}
+pub struct FlushCacheResponse {}

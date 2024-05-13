@@ -17,14 +17,14 @@ use crate::{utils, CacheClient, MomentoResult};
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{CreateCache, CreateCacheRequest};
+/// use momento::cache::{CreateCacheResponse, CreateCacheRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
 /// let create_cache_request = CreateCacheRequest::new(&cache_name);
 ///
 /// match cache_client.send_request(create_cache_request).await? {
-///     CreateCache::Created => println!("Cache {} created", &cache_name),
-///     CreateCache::AlreadyExists => println!("Cache {} already exists", &cache_name),
+///     CreateCacheResponse::Created => println!("Cache {} created", &cache_name),
+///     CreateCacheResponse::AlreadyExists => println!("Cache {} already exists", &cache_name),
 /// }
 /// # Ok(())
 /// # })
@@ -43,9 +43,9 @@ impl CreateCacheRequest {
 }
 
 impl MomentoRequest for CreateCacheRequest {
-    type Response = CreateCache;
+    type Response = CreateCacheResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<CreateCache> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<CreateCacheResponse> {
         utils::is_cache_name_valid(&self.cache_name)?;
         let request = Request::new(control_client::CreateCacheRequest {
             cache_name: self.cache_name,
@@ -57,10 +57,10 @@ impl MomentoRequest for CreateCacheRequest {
             .create_cache(request)
             .await;
         match result {
-            Ok(_) => Ok(CreateCache::Created {}),
+            Ok(_) => Ok(CreateCacheResponse::Created {}),
             Err(e) => {
                 if e.code() == tonic::Code::AlreadyExists {
-                    return Ok(CreateCache::AlreadyExists {});
+                    return Ok(CreateCacheResponse::AlreadyExists {});
                 }
                 Err(status_to_error(e))
             }
@@ -69,7 +69,7 @@ impl MomentoRequest for CreateCacheRequest {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum CreateCache {
+pub enum CreateCacheResponse {
     Created,
     AlreadyExists,
 }
