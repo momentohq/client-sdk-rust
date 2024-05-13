@@ -56,9 +56,9 @@ impl<S: IntoBytes, E: IntoBytes> SetRemoveElementsRequest<S, E> {
 }
 
 impl<S: IntoBytes, E: IntoBytes> MomentoRequest for SetRemoveElementsRequest<S, E> {
-    type Response = SetRemoveElements;
+    type Response = SetRemoveElementsResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetRemoveElements> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetRemoveElementsResponse> {
         let elements = self.elements.into_iter().map(|e| e.into_bytes()).collect();
         let set_name = self.set_name.into_bytes();
         let cache_name = &self.cache_name;
@@ -78,9 +78,9 @@ impl<S: IntoBytes, E: IntoBytes> MomentoRequest for SetRemoveElementsRequest<S, 
             .clone()
             .set_difference(request)
             .await?;
-        Ok(SetRemoveElements {})
+        Ok(SetRemoveElementsResponse {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct SetRemoveElements {}
+pub struct SetRemoveElementsResponse {}

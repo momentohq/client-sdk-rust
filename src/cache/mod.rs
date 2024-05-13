@@ -62,7 +62,7 @@ pub use messages::scalar::update_ttl::{UpdateTtlRequest, UpdateTtlResponse};
 
 pub use messages::set::set_add_elements::{SetAddElementsRequest, SetAddElementsResponse};
 pub use messages::set::set_fetch::{SetFetchRequest, SetFetchResponse, SetFetchValue};
-pub use messages::set::set_remove_elements::{SetRemoveElements, SetRemoveElementsRequest};
+pub use messages::set::set_remove_elements::{SetRemoveElementsRequest, SetRemoveElementsResponse};
 
 pub use messages::sorted_set::sorted_set_fetch_by_rank::{
     SortedSetFetchByRankRequest, SortedSetOrder,

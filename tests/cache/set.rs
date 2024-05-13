@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 
 use momento::cache::{
-    SetAddElementsRequest, SetAddElementsResponse, SetFetchResponse, SetRemoveElements,
+    SetAddElementsRequest, SetAddElementsResponse, SetFetchResponse, SetRemoveElementsResponse,
 };
 use momento::{MomentoErrorCode, MomentoResult};
 
@@ -191,7 +191,7 @@ mod set_remove_elements {
         let result = client
             .set_remove_elements(cache_name, test_set.name(), vec![unique_value()])
             .await?;
-        assert_eq!(result, SetRemoveElements {});
+        assert_eq!(result, SetRemoveElementsResponse {});
 
         // Should remove existing elements
         let result = client
@@ -201,7 +201,7 @@ mod set_remove_elements {
                 vec![test_set.value()[0].clone()],
             )
             .await?;
-        assert_eq!(result, SetRemoveElements {});
+        assert_eq!(result, SetRemoveElementsResponse {});
         assert_fetched_set_eq(
             client.set_fetch(cache_name, test_set.name()).await?,
             vec![test_set.value()[1].clone()],
@@ -215,7 +215,7 @@ mod set_remove_elements {
                 vec![test_set.value()[1].clone()],
             )
             .await?;
-        assert_eq!(result, SetRemoveElements {});
+        assert_eq!(result, SetRemoveElementsResponse {});
         let result = client.set_fetch(cache_name, test_set.name()).await?;
         assert_eq!(result, SetFetchResponse::Miss {});
 
