@@ -3,7 +3,7 @@ use std::sync::Arc;
 use momento::cache::{
     IntoSortedSetElements, SortedSetElement, SortedSetElements, SortedSetFetchByRankRequest,
     SortedSetFetchByScoreRequest, SortedSetFetchResponse, SortedSetGetRankResponse,
-    SortedSetGetScoreResponse, SortedSetLength,
+    SortedSetGetScoreResponse, SortedSetLengthResponse,
     SortedSetOrder::{Ascending, Descending},
     SortedSetPutElements, SortedSetRemoveElements,
 };
@@ -612,7 +612,7 @@ mod sorted_set_length {
 
         // Miss before sorted set exists
         let result = client.sorted_set_length(cache_name, item.name()).await?;
-        assert_eq!(result, SortedSetLength::Miss);
+        assert_eq!(result, SortedSetLengthResponse::Miss);
 
         let result = client
             .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
@@ -621,7 +621,7 @@ mod sorted_set_length {
 
         // Nonzero length after sorted set exists
         let result = client.sorted_set_length(cache_name, item.name()).await?;
-        assert_eq!(result, SortedSetLength::Hit { length: 2 });
+        assert_eq!(result, SortedSetLengthResponse::Hit { length: 2 });
 
         Ok(())
     }

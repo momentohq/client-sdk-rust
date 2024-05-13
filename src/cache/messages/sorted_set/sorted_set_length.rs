@@ -20,7 +20,7 @@ use crate::{
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::convert::TryInto;
-/// use momento::cache::{SortedSetLength, SortedSetLengthRequest};
+/// use momento::cache::{SortedSetLengthResponse, SortedSetLengthRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
@@ -48,9 +48,9 @@ impl<L: IntoBytes> SortedSetLengthRequest<L> {
 }
 
 impl<L: IntoBytes> MomentoRequest for SortedSetLengthRequest<L> {
-    type Response = SortedSetLength;
+    type Response = SortedSetLengthResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SortedSetLength> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SortedSetLengthResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -67,10 +67,14 @@ impl<L: IntoBytes> MomentoRequest for SortedSetLengthRequest<L> {
             .into_inner();
 
         match response.sorted_set {
-            Some(sorted_set_length_response::SortedSet::Missing(_)) => Ok(SortedSetLength::Miss),
-            Some(sorted_set_length_response::SortedSet::Found(found)) => Ok(SortedSetLength::Hit {
-                length: found.length,
-            }),
+            Some(sorted_set_length_response::SortedSet::Missing(_)) => {
+                Ok(SortedSetLengthResponse::Miss)
+            }
+            Some(sorted_set_length_response::SortedSet::Found(found)) => {
+                Ok(SortedSetLengthResponse::Hit {
+                    length: found.length,
+                })
+            }
             _ => Err(MomentoError::unknown_error(
                 "SortedSetLength",
                 Some(format!("{:#?}", response)),
@@ -84,40 +88,40 @@ impl<L: IntoBytes> MomentoRequest for SortedSetLengthRequest<L> {
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// # use momento::MomentoResult;
-/// use momento::cache::SortedSetLength;
+/// use momento::cache::SortedSetLengthResponse;
 /// use std::convert::TryInto;
-/// # let response = SortedSetLength::Hit { length: 5 };
+/// # let response = SortedSetLengthResponse::Hit { length: 5 };
 /// let length: u32 = match response {
-///     SortedSetLength::Hit { length } => length.try_into().expect("Expected a list length!"),
-///     SortedSetLength::Miss => return // probably you'll do something else here
+///     SortedSetLengthResponse::Hit { length } => length.try_into().expect("Expected a list length!"),
+///     SortedSetLengthResponse::Miss => return // probably you'll do something else here
 /// };
 /// ```
 ///
 /// You can cast your result directly into a Result<u32, MomentoError> suitable for
-/// ?-propagation if you know you are expecting a SortedSetLength::Hit.
+/// ?-propagation if you know you are expecting a SortedSetLengthResponse::Hit.
 ///
 /// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
 /// this is what you're after:
 /// ```
 /// # use momento::MomentoResult;
-/// use momento::cache::SortedSetLength;
+/// use momento::cache::SortedSetLengthResponse;
 /// use std::convert::TryInto;
-/// # let response = SortedSetLength::Hit { length: 5 };
+/// # let response = SortedSetLengthResponse::Hit { length: 5 };
 /// let length: MomentoResult<u32> = response.try_into();
 /// ```
 #[derive(Debug, PartialEq, Eq)]
-pub enum SortedSetLength {
+pub enum SortedSetLengthResponse {
     Hit { length: u32 },
     Miss,
 }
 
-impl TryFrom<SortedSetLength> for u32 {
+impl TryFrom<SortedSetLengthResponse> for u32 {
     type Error = MomentoError;
 
-    fn try_from(value: SortedSetLength) -> Result<Self, Self::Error> {
+    fn try_from(value: SortedSetLengthResponse) -> Result<Self, Self::Error> {
         match value {
-            SortedSetLength::Hit { length } => Ok(length),
-            SortedSetLength::Miss => Err(MomentoError::miss("SortedSetLength")),
+            SortedSetLengthResponse::Hit { length } => Ok(length),
+            SortedSetLengthResponse::Miss => Err(MomentoError::miss("SortedSetLength")),
         }
     }
 }
