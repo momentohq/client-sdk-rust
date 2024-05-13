@@ -3,9 +3,9 @@ use momento_protos::cache_client::sorted_set_fetch_request::{by_score, ByScore, 
 use momento_protos::cache_client::SortedSetFetchRequest;
 use momento_protos::common::Unbounded;
 
-use crate::cache::messages::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder;
-use crate::cache::messages::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder::Ascending;
-use crate::cache::messages::sorted_set::sorted_set_fetch_response::SortedSetFetchResponse;
+use crate::cache::messages::data::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder;
+use crate::cache::messages::data::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder::Ascending;
+use crate::cache::messages::data::sorted_set::sorted_set_fetch_response::SortedSetFetchResponse;
 use crate::cache::messages::MomentoRequest;
 use crate::utils::prep_request_with_timeout;
 use crate::{CacheClient, IntoBytes, MomentoResult};

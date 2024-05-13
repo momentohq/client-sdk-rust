@@ -2,7 +2,7 @@ use momento_protos::cache_client::sorted_set_fetch_request::{by_index, ByIndex, 
 use momento_protos::cache_client::SortedSetFetchRequest;
 use momento_protos::common::Unbounded;
 
-use crate::cache::messages::sorted_set::sorted_set_fetch_response::SortedSetFetchResponse;
+use crate::cache::messages::data::sorted_set::sorted_set_fetch_response::SortedSetFetchResponse;
 use crate::cache::messages::MomentoRequest;
 use crate::utils::prep_request_with_timeout;
 use crate::{CacheClient, IntoBytes, MomentoResult};

@@ -1,13 +1,8 @@
-pub mod create_cache;
-pub mod delete_cache;
-pub mod flush_cache;
-pub mod list_caches;
+/// Control messages for the cache
+pub mod control;
 
-pub mod dictionary;
-pub mod list;
-pub mod scalar;
-pub mod set;
-pub mod sorted_set;
+/// Data messages for the cache
+pub mod data;
 
 mod momento_request;
 
