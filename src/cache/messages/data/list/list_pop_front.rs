@@ -69,7 +69,7 @@ impl<L: IntoBytes> MomentoRequest for ListPopFrontRequest<L> {
         match response.list {
             Some(list_pop_front_response::List::Missing(_)) => Ok(ListPopFrontResponse::Miss),
             Some(list_pop_front_response::List::Found(found)) => Ok(ListPopFrontResponse::Hit {
-                value: ListPopFrontValue::new(found.front),
+                value: Value::new(found.front),
             }),
             _ => Err(MomentoError::unknown_error(
                 "ListPopFront",
@@ -84,10 +84,9 @@ impl<L: IntoBytes> MomentoRequest for ListPopFrontRequest<L> {
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::cache::ListPopFrontValue;
 /// use momento::cache::ListPopFrontResponse;
 /// use std::convert::TryInto;
-/// # let response = ListPopFrontResponse::Hit { value: ListPopFrontValue::new("hi".into()) };
+/// # let response: ListPopFrontResponse = "hi".into();
 /// let popped_value: String = match response {
 ///     ListPopFrontResponse::Hit { value } => value.try_into().expect("Expected a valid UTF-8 string"),
 ///     ListPopFrontResponse::Miss => return // probably you'll do something else here
@@ -101,41 +100,48 @@ impl<L: IntoBytes> MomentoRequest for ListPopFrontRequest<L> {
 /// this is what you're after:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::cache::ListPopFrontValue;
 /// use momento::cache::ListPopFrontResponse;
 /// use std::convert::TryInto;
-/// # let response = ListPopFrontResponse::Hit { value: ListPopFrontValue::new("hi".into()) };
+/// # let response: ListPopFrontResponse = "hi".into();
 /// let popped_value: MomentoResult<String> = response.try_into();
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum ListPopFrontResponse {
-    Hit { value: ListPopFrontValue },
+    Hit { value: Value },
     Miss,
 }
 
+impl<I: IntoBytes> From<I> for ListPopFrontResponse {
+    fn from(value: I) -> Self {
+        ListPopFrontResponse::Hit {
+            value: Value::new(value.into_bytes()),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
-pub struct ListPopFrontValue {
+pub struct Value {
     pub(crate) raw_item: Vec<u8>,
 }
 
-impl ListPopFrontValue {
+impl Value {
     pub fn new(raw_item: Vec<u8>) -> Self {
         Self { raw_item }
     }
 }
 
-impl TryFrom<ListPopFrontValue> for Vec<u8> {
+impl TryFrom<Value> for Vec<u8> {
     type Error = MomentoError;
 
-    fn try_from(value: ListPopFrontValue) -> Result<Self, Self::Error> {
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
         Ok(value.raw_item)
     }
 }
 
-impl TryFrom<ListPopFrontValue> for String {
+impl TryFrom<Value> for String {
     type Error = MomentoError;
 
-    fn try_from(value: ListPopFrontValue) -> Result<Self, Self::Error> {
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
         Ok(parse_string(value.raw_item).expect("expected a valid UTF-8 string"))
     }
 }
