@@ -22,7 +22,7 @@ use crate::{CacheClient, MomentoResult};
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
-/// use momento::cache::{KeysExist, KeysExistRequest};
+/// use momento::cache::{KeysExistResponse, KeysExistRequest};
 /// use std::collections::HashMap;
 ///
 /// let request = KeysExistRequest::new(
@@ -43,7 +43,7 @@ use crate::{CacheClient, MomentoResult};
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
-/// use momento::cache::{KeysExist, KeysExistRequest};
+/// use momento::cache::{KeysExistResponse, KeysExistRequest};
 /// use std::collections::HashMap;
 ///
 /// let request = KeysExistRequest::new(
@@ -72,9 +72,9 @@ impl<K: IntoBytesIterable> KeysExistRequest<K> {
 }
 
 impl<K: IntoBytesIterable> MomentoRequest for KeysExistRequest<K> {
-    type Response = KeysExist;
+    type Response = KeysExistResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<KeysExist> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<KeysExistResponse> {
         // consume self.keys once to convert all keys to bytes
         let byte_keys: Vec<Vec<u8>> = self.keys.into_bytes();
 
@@ -99,7 +99,7 @@ impl<K: IntoBytesIterable> MomentoRequest for KeysExistRequest<K> {
             .await?
             .into_inner();
 
-        Ok(KeysExist {
+        Ok(KeysExistResponse {
             exists: response.exists.clone(),
             exists_dictionary: string_keys
                 .into_iter()
@@ -117,7 +117,7 @@ impl<K: IntoBytesIterable> MomentoRequest for KeysExistRequest<K> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
-/// use momento::cache::KeysExist;
+/// use momento::cache::KeysExistResponse;
 /// use std::collections::HashMap;
 ///
 /// let result_list: Vec<bool> = cache_client.keys_exist(&cache_name, vec!["key1", "key2", "key3"]).await?.into();
@@ -128,19 +128,19 @@ impl<K: IntoBytesIterable> MomentoRequest for KeysExistRequest<K> {
 /// # }
 /// ```
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct KeysExist {
+pub struct KeysExistResponse {
     exists: Vec<bool>,
     exists_dictionary: HashMap<String, bool>,
 }
 
-impl From<KeysExist> for Vec<bool> {
-    fn from(response: KeysExist) -> Self {
+impl From<KeysExistResponse> for Vec<bool> {
+    fn from(response: KeysExistResponse) -> Self {
         response.exists
     }
 }
 
-impl From<KeysExist> for HashMap<String, bool> {
-    fn from(response: KeysExist) -> Self {
+impl From<KeysExistResponse> for HashMap<String, bool> {
+    fn from(response: KeysExistResponse) -> Self {
         response.exists_dictionary
     }
 }

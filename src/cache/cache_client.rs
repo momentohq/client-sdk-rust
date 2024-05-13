@@ -7,32 +7,33 @@ use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
 
 use crate::cache::{
-    Configuration, CreateCache, CreateCacheRequest, DecreaseTtl, DecreaseTtlRequest, Delete,
-    DeleteCache, DeleteCacheRequest, DeleteRequest, DictionaryFetchRequest,
+    Configuration, CreateCache, CreateCacheRequest, DecreaseTtlRequest, DecreaseTtlResponse,
+    DeleteCache, DeleteCacheRequest, DeleteRequest, DeleteResponse, DictionaryFetchRequest,
     DictionaryFetchResponse, DictionaryGetFieldRequest, DictionaryGetFieldResponse,
     DictionaryGetFieldsRequest, DictionaryGetFieldsResponse, DictionaryIncrementRequest,
     DictionaryIncrementResponse, DictionaryLengthRequest, DictionaryLengthResponse,
     DictionaryRemoveFieldRequest, DictionaryRemoveFieldResponse, DictionaryRemoveFieldsRequest,
     DictionaryRemoveFieldsResponse, DictionarySetFieldRequest, DictionarySetFieldResponse,
-    DictionarySetFieldsRequest, DictionarySetFieldsResponse, FlushCache, FlushCacheRequest, Get,
-    GetRequest, IncreaseTtl, IncreaseTtlRequest, Increment, IncrementRequest,
-    IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtl, ItemGetTtlRequest,
-    ItemGetType, ItemGetTypeRequest, KeyExists, KeyExistsRequest, KeysExist, KeysExistRequest,
-    ListCaches, ListCachesRequest, ListConcatenateBackRequest, ListConcatenateBackResponse,
-    ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetchRequest, ListFetchResponse,
-    ListLengthRequest, ListLengthResponse, ListPopBackRequest, ListPopBackResponse,
-    ListPopFrontRequest, ListPopFrontResponse, ListPushBackRequest, ListPushBackResponse,
-    ListPushFrontRequest, ListPushFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse,
-    MomentoRequest, Set, SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest,
-    SetIfAbsent, SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest, SetIfAbsentRequest, SetIfEqual,
-    SetIfEqualRequest, SetIfNotEqual, SetIfNotEqualRequest, SetIfPresent, SetIfPresentAndNotEqual,
-    SetIfPresentAndNotEqualRequest, SetIfPresentRequest, SetRemoveElements,
-    SetRemoveElementsRequest, SetRequest, SortedSetFetch, SortedSetFetchByRankRequest,
-    SortedSetFetchByScoreRequest, SortedSetGetRank, SortedSetGetRankRequest, SortedSetGetScore,
-    SortedSetGetScoreRequest, SortedSetLength, SortedSetLengthRequest, SortedSetOrder,
-    SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements,
-    SortedSetPutElementsRequest, SortedSetRemoveElements, SortedSetRemoveElementsRequest,
-    UpdateTtl, UpdateTtlRequest,
+    DictionarySetFieldsRequest, DictionarySetFieldsResponse, FlushCache, FlushCacheRequest,
+    GetRequest, GetResponse, IncreaseTtlRequest, IncreaseTtlResponse, IncrementRequest,
+    IncrementResponse, IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtlRequest,
+    ItemGetTtlResponse, ItemGetTypeRequest, ItemGetTypeResponse, KeyExistsRequest,
+    KeyExistsResponse, KeysExistRequest, KeysExistResponse, ListCaches, ListCachesRequest,
+    ListConcatenateBackRequest, ListConcatenateBackResponse, ListConcatenateFrontRequest,
+    ListConcatenateFrontResponse, ListFetchRequest, ListFetchResponse, ListLengthRequest,
+    ListLengthResponse, ListPopBackRequest, ListPopBackResponse, ListPopFrontRequest,
+    ListPopFrontResponse, ListPushBackRequest, ListPushBackResponse, ListPushFrontRequest,
+    ListPushFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse, MomentoRequest,
+    SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsentOrEqualRequest,
+    SetIfAbsentOrEqualResponse, SetIfAbsentRequest, SetIfAbsentResponse, SetIfEqualRequest,
+    SetIfEqualResponse, SetIfNotEqualRequest, SetIfNotEqualResponse,
+    SetIfPresentAndNotEqualRequest, SetIfPresentAndNotEqualResponse, SetIfPresentRequest,
+    SetIfPresentResponse, SetRemoveElements, SetRemoveElementsRequest, SetRequest, SetResponse,
+    SortedSetFetch, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetGetRank,
+    SortedSetGetRankRequest, SortedSetGetScore, SortedSetGetScoreRequest, SortedSetLength,
+    SortedSetLengthRequest, SortedSetOrder, SortedSetPutElement, SortedSetPutElementRequest,
+    SortedSetPutElements, SortedSetPutElementsRequest, SortedSetRemoveElements,
+    SortedSetRemoveElementsRequest, UpdateTtlRequest, UpdateTtlResponse,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -202,11 +203,11 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::cache::Set;
+    /// use momento::cache::SetResponse;
     /// use momento::MomentoErrorCode;
     ///
     /// match cache_client.set(&cache_name, "k1", "v1").await {
-    ///     Ok(_) => println!("Set successful"),
+    ///     Ok(_) => println!("SetResponse successful"),
     ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
     ///     } else {
@@ -224,7 +225,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         key: impl IntoBytes,
         value: impl IntoBytes,
-    ) -> MomentoResult<Set> {
+    ) -> MomentoResult<SetResponse> {
         let request = SetRequest::new(cache_name, key, value);
         request.send(self).await
     }
@@ -244,12 +245,12 @@ impl CacheClient {
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use std::convert::TryInto;
-    /// use momento::cache::Get;
+    /// use momento::cache::GetResponse;
     /// # cache_client.set(&cache_name, "key", "value").await?;
     ///
     /// let item: String = match(cache_client.get(&cache_name, "key").await?) {
-    ///     Get::Hit { value } => value.try_into().expect("I stored a string!"),
-    ///     Get::Miss => return Err(anyhow::Error::msg("cache miss"))
+    ///     GetResponse::Hit { value } => value.try_into().expect("I stored a string!"),
+    ///     GetResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
     /// };
     /// # assert_eq!(item, "value");
     /// # Ok(())
@@ -261,7 +262,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         key: impl IntoBytes,
-    ) -> MomentoResult<Get> {
+    ) -> MomentoResult<GetResponse> {
         let request = GetRequest::new(cache_name, key);
         request.send(self).await
     }
@@ -280,11 +281,11 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::cache::Delete;
+    /// use momento::cache::DeleteResponse;
     /// use momento::MomentoErrorCode;
     ///
     /// match cache_client.delete(&cache_name, "key").await {
-    ///     Ok(_) => println!("Delete successful"),
+    ///     Ok(_) => println!("DeleteResponse successful"),
     ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
     ///     } else {
@@ -300,7 +301,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         key: impl IntoBytes,
-    ) -> MomentoResult<Delete> {
+    ) -> MomentoResult<DeleteResponse> {
         let request = DeleteRequest::new(cache_name, key);
         request.send(self).await
     }
@@ -1138,7 +1139,7 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Get the number of entries in a sorted set collection.
+    /// GetResponse the number of entries in a sorted set collection.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
@@ -1173,7 +1174,7 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Get the rank (position) of a specific element in a sorted set.
+    /// GetResponse the rank (position) of a specific element in a sorted set.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
@@ -1211,7 +1212,7 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Get the score of a specific element in a sorted set.
+    /// GetResponse the score of a specific element in a sorted set.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
@@ -1262,7 +1263,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::cache::KeyExists;
+    /// use momento::cache::KeyExistsResponse;
     ///
     /// let result = cache_client.key_exists(cache_name, "key").await?;
     /// if result.exists {
@@ -1279,7 +1280,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         key: impl IntoBytes,
-    ) -> MomentoResult<KeyExists> {
+    ) -> MomentoResult<KeyExistsResponse> {
         let request = KeyExistsRequest::new(cache_name, key);
         request.send(self).await
     }
@@ -1298,7 +1299,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::cache::KeysExist;
+    /// use momento::cache::KeysExistResponse;
     /// use std::collections::HashMap;
     ///
     /// // Receive results as a HashMap
@@ -1317,7 +1318,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         keys: impl IntoBytesIterable,
-    ) -> MomentoResult<KeysExist> {
+    ) -> MomentoResult<KeysExistResponse> {
         let request = KeysExistRequest::new(cache_name, keys);
         request.send(self).await
     }
@@ -1344,7 +1345,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
-    /// use momento::cache::Increment;
+    /// use momento::cache::IncrementResponse;
     /// use momento::MomentoErrorCode;
     ///
     /// match cache_client.increment(&cache_name, "key", 1).await {
@@ -1366,7 +1367,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         key: impl IntoBytes,
         amount: i64,
-    ) -> MomentoResult<Increment> {
+    ) -> MomentoResult<IncrementResponse> {
         let request = IncrementRequest::new(cache_name, key, amount);
         request.send(self).await
     }
@@ -1385,12 +1386,12 @@ impl CacheClient {
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use std::convert::TryInto;
-    /// use momento::cache::{ItemGetType, ItemType};
+    /// use momento::cache::{ItemGetTypeResponse, ItemType};
     /// # cache_client.set(&cache_name, "key1", "value").await?;
     ///
     /// let item: ItemType = match(cache_client.item_get_type(&cache_name, "key1").await?) {
-    ///     ItemGetType::Hit { key_type } => key_type.try_into().expect("Expected an item type!"),
-    ///     ItemGetType::Miss => return Err(anyhow::Error::msg("cache miss"))
+    ///     ItemGetTypeResponse::Hit { key_type } => key_type.try_into().expect("Expected an item type!"),
+    ///     ItemGetTypeResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
     /// };
     /// # assert_eq!(item, ItemType::Scalar);
     /// # Ok(())
@@ -1402,7 +1403,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         key: impl IntoBytes,
-    ) -> MomentoResult<ItemGetType> {
+    ) -> MomentoResult<ItemGetTypeResponse> {
         let request = ItemGetTypeRequest::new(cache_name, key);
         request.send(self).await
     }
@@ -1421,7 +1422,7 @@ impl CacheClient {
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use std::convert::TryInto;
-    /// use momento::cache::ItemGetTtl;
+    /// use momento::cache::ItemGetTtlResponse;
     /// use std::time::Duration;
     /// # cache_client.set(&cache_name, "key1", "value").await?;
     ///
@@ -1436,7 +1437,7 @@ impl CacheClient {
         &self,
         cache_name: impl Into<String>,
         key: impl IntoBytes,
-    ) -> MomentoResult<ItemGetTtl> {
+    ) -> MomentoResult<ItemGetTtlResponse> {
         let request = ItemGetTtlRequest::new(cache_name, key);
         request.send(self).await
     }
@@ -1456,12 +1457,12 @@ impl CacheClient {
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use std::time::Duration;
-    /// use momento::cache::UpdateTtl;
+    /// use momento::cache::UpdateTtlResponse;
     /// # cache_client.set(&cache_name, "key1", "value").await?;
     ///
     /// match(cache_client.update_ttl(&cache_name, "key1", Duration::from_secs(10)).await?) {
-    ///     UpdateTtl::Set => println!("TTL updated"),
-    ///     UpdateTtl::Miss => return Err(anyhow::Error::msg("cache miss"))
+    ///     UpdateTtlResponse::Set => println!("TTL updated"),
+    ///     UpdateTtlResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
     /// };
     /// # Ok(())
     /// # })
@@ -1473,7 +1474,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         key: impl IntoBytes,
         ttl: Duration,
-    ) -> MomentoResult<UpdateTtl> {
+    ) -> MomentoResult<UpdateTtlResponse> {
         let request = UpdateTtlRequest::new(cache_name, key, ttl);
         request.send(self).await
     }
@@ -1493,13 +1494,13 @@ impl CacheClient {
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use std::time::Duration;
-    /// use momento::cache::IncreaseTtl;
+    /// use momento::cache::IncreaseTtlResponse;
     /// # cache_client.set(&cache_name, "key1", "value").await?;
     ///
     /// match(cache_client.increase_ttl(&cache_name, "key1", Duration::from_secs(5)).await?) {
-    ///     IncreaseTtl::Set => println!("TTL updated"),
-    ///     IncreaseTtl::NotSet => println!("unable to increase TTL"),
-    ///     IncreaseTtl::Miss => return Err(anyhow::Error::msg("cache miss"))
+    ///     IncreaseTtlResponse::Set => println!("TTL updated"),
+    ///     IncreaseTtlResponse::NotSet => println!("unable to increase TTL"),
+    ///     IncreaseTtlResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
     /// };
     /// # Ok(())
     /// # })
@@ -1511,7 +1512,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         key: impl IntoBytes,
         ttl: Duration,
-    ) -> MomentoResult<IncreaseTtl> {
+    ) -> MomentoResult<IncreaseTtlResponse> {
         let request = IncreaseTtlRequest::new(cache_name, key, ttl);
         request.send(self).await
     }
@@ -1531,13 +1532,13 @@ impl CacheClient {
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use std::time::Duration;
-    /// use momento::cache::DecreaseTtl;
+    /// use momento::cache::DecreaseTtlResponse;
     /// # cache_client.set(&cache_name, "key1", "value").await?;
     ///
     /// match(cache_client.decrease_ttl(&cache_name, "key1", Duration::from_secs(3)).await?) {
-    ///     DecreaseTtl::Set => println!("TTL updated"),
-    ///     DecreaseTtl::NotSet => println!("unable to decrease TTL"),
-    ///     DecreaseTtl::Miss => return Err(anyhow::Error::msg("cache miss"))
+    ///     DecreaseTtlResponse::Set => println!("TTL updated"),
+    ///     DecreaseTtlResponse::NotSet => println!("unable to decrease TTL"),
+    ///     DecreaseTtlResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
     /// };
     /// # Ok(())
     /// # })
@@ -1549,7 +1550,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         key: impl IntoBytes,
         ttl: Duration,
-    ) -> MomentoResult<DecreaseTtl> {
+    ) -> MomentoResult<DecreaseTtlResponse> {
         let request = DecreaseTtlRequest::new(cache_name, key, ttl);
         request.send(self).await
     }
@@ -1575,14 +1576,14 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::time::Duration;
-    /// use momento::cache::{SetIfAbsent, SetIfAbsentRequest};
+    /// use momento::cache::{SetIfAbsentResponse, SetIfAbsentRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.set_if_absent(&cache_name, "key", "value1").await {
     ///     Ok(response) => match response {
-    ///         SetIfAbsent::Stored => println!("Value stored"),
-    ///         SetIfAbsent::NotStored => println!("Value not stored"),
+    ///         SetIfAbsentResponse::Stored => println!("Value stored"),
+    ///         SetIfAbsentResponse::NotStored => println!("Value not stored"),
     ///     }
     ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
@@ -1600,7 +1601,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         key: impl IntoBytes,
         value: impl IntoBytes,
-    ) -> MomentoResult<SetIfAbsent> {
+    ) -> MomentoResult<SetIfAbsentResponse> {
         let request = SetIfAbsentRequest::new(cache_name, key, value);
         request.send(self).await
     }
@@ -1626,14 +1627,14 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::time::Duration;
-    /// use momento::cache::{SetIfPresent, SetIfPresentRequest};
+    /// use momento::cache::{SetIfPresentResponse, SetIfPresentRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.set_if_present(&cache_name, "key", "value1").await {
     ///     Ok(response) => match response {
-    ///         SetIfPresent::Stored => println!("Value stored"),
-    ///         SetIfPresent::NotStored => println!("Value not stored"),
+    ///         SetIfPresentResponse::Stored => println!("Value stored"),
+    ///         SetIfPresentResponse::NotStored => println!("Value not stored"),
     ///     }
     ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
@@ -1651,7 +1652,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         key: impl IntoBytes,
         value: impl IntoBytes,
-    ) -> MomentoResult<SetIfPresent> {
+    ) -> MomentoResult<SetIfPresentResponse> {
         let request = SetIfPresentRequest::new(cache_name, key, value);
         request.send(self).await
     }
@@ -1679,14 +1680,14 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::time::Duration;
-    /// use momento::cache::{SetIfEqual, SetIfEqualRequest};
+    /// use momento::cache::{SetIfEqualResponse, SetIfEqualRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.set_if_equal(&cache_name, "key", "new-value", "cached-value").await {
     ///     Ok(response) => match response {
-    ///         SetIfEqual::Stored => println!("Value stored"),
-    ///         SetIfEqual::NotStored => println!("Value not stored"),
+    ///         SetIfEqualResponse::Stored => println!("Value stored"),
+    ///         SetIfEqualResponse::NotStored => println!("Value not stored"),
     ///     }
     ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
@@ -1705,7 +1706,7 @@ impl CacheClient {
         key: impl IntoBytes,
         value: impl IntoBytes,
         equal: impl IntoBytes,
-    ) -> MomentoResult<SetIfEqual> {
+    ) -> MomentoResult<SetIfEqualResponse> {
         let request = SetIfEqualRequest::new(cache_name, key, value, equal);
         request.send(self).await
     }
@@ -1733,14 +1734,14 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::time::Duration;
-    /// use momento::cache::{SetIfNotEqual, SetIfNotEqualRequest};
+    /// use momento::cache::{SetIfNotEqualResponse, SetIfNotEqualRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.set_if_not_equal(&cache_name, "key", "new-value", "cached-value").await {
     ///     Ok(response) => match response {
-    ///         SetIfNotEqual::Stored => println!("Value stored"),
-    ///         SetIfNotEqual::NotStored => println!("Value not stored"),
+    ///         SetIfNotEqualResponse::Stored => println!("Value stored"),
+    ///         SetIfNotEqualResponse::NotStored => println!("Value not stored"),
     ///     }
     ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
@@ -1759,7 +1760,7 @@ impl CacheClient {
         key: impl IntoBytes,
         value: impl IntoBytes,
         not_equal: impl IntoBytes,
-    ) -> MomentoResult<SetIfNotEqual> {
+    ) -> MomentoResult<SetIfNotEqualResponse> {
         let request = SetIfNotEqualRequest::new(cache_name, key, value, not_equal);
         request.send(self).await
     }
@@ -1787,14 +1788,14 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::time::Duration;
-    /// use momento::cache::{SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest};
+    /// use momento::cache::{SetIfPresentAndNotEqualResponse, SetIfPresentAndNotEqualRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.set_if_present_and_not_equal(&cache_name, "key", "new-value", "cached-value").await {
     ///     Ok(response) => match response {
-    ///         SetIfPresentAndNotEqual::Stored => println!("Value stored"),
-    ///         SetIfPresentAndNotEqual::NotStored => println!("Value not stored"),
+    ///         SetIfPresentAndNotEqualResponse::Stored => println!("Value stored"),
+    ///         SetIfPresentAndNotEqualResponse::NotStored => println!("Value not stored"),
     ///     }
     ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
@@ -1813,7 +1814,7 @@ impl CacheClient {
         key: impl IntoBytes,
         value: impl IntoBytes,
         not_equal: impl IntoBytes,
-    ) -> MomentoResult<SetIfPresentAndNotEqual> {
+    ) -> MomentoResult<SetIfPresentAndNotEqualResponse> {
         let request = SetIfPresentAndNotEqualRequest::new(cache_name, key, value, not_equal);
         request.send(self).await
     }
@@ -1841,14 +1842,14 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::time::Duration;
-    /// use momento::cache::{SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest};
+    /// use momento::cache::{SetIfAbsentOrEqualResponse, SetIfAbsentOrEqualRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.set_if_absent_or_equal(&cache_name, "key", "new-value", "cached-value").await {
     ///     Ok(response) => match response {
-    ///         SetIfAbsentOrEqual::Stored => println!("Value stored"),
-    ///         SetIfAbsentOrEqual::NotStored => println!("Value not stored"),
+    ///         SetIfAbsentOrEqualResponse::Stored => println!("Value stored"),
+    ///         SetIfAbsentOrEqualResponse::NotStored => println!("Value not stored"),
     ///     }
     ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
@@ -1867,7 +1868,7 @@ impl CacheClient {
         key: impl IntoBytes,
         value: impl IntoBytes,
         equal: impl IntoBytes,
-    ) -> MomentoResult<SetIfAbsentOrEqual> {
+    ) -> MomentoResult<SetIfAbsentOrEqualResponse> {
         let request = SetIfAbsentOrEqualRequest::new(cache_name, key, value, equal);
         request.send(self).await
     }

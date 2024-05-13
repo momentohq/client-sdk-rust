@@ -38,25 +38,27 @@ pub use messages::dictionary::dictionary_set_fields::{
     IntoDictionaryFieldValuePairs,
 };
 
-pub use messages::scalar::decrease_ttl::{DecreaseTtl, DecreaseTtlRequest};
-pub use messages::scalar::delete::{Delete, DeleteRequest};
-pub use messages::scalar::get::{Get, GetRequest, GetValue};
-pub use messages::scalar::increase_ttl::{IncreaseTtl, IncreaseTtlRequest};
-pub use messages::scalar::increment::{Increment, IncrementRequest};
-pub use messages::scalar::item_get_ttl::{ItemGetTtl, ItemGetTtlRequest};
-pub use messages::scalar::item_get_type::{ItemGetType, ItemGetTypeRequest, ItemType};
-pub use messages::scalar::key_exists::{KeyExists, KeyExistsRequest};
-pub use messages::scalar::keys_exist::{KeysExist, KeysExistRequest};
-pub use messages::scalar::set::{Set, SetRequest};
-pub use messages::scalar::set_if_absent::{SetIfAbsent, SetIfAbsentRequest};
-pub use messages::scalar::set_if_absent_or_equal::{SetIfAbsentOrEqual, SetIfAbsentOrEqualRequest};
-pub use messages::scalar::set_if_equal::{SetIfEqual, SetIfEqualRequest};
-pub use messages::scalar::set_if_not_equal::{SetIfNotEqual, SetIfNotEqualRequest};
-pub use messages::scalar::set_if_present::{SetIfPresent, SetIfPresentRequest};
-pub use messages::scalar::set_if_present_and_not_equal::{
-    SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest,
+pub use messages::scalar::decrease_ttl::{DecreaseTtlRequest, DecreaseTtlResponse};
+pub use messages::scalar::delete::{DeleteRequest, DeleteResponse};
+pub use messages::scalar::get::{GetRequest, GetResponse, GetValue};
+pub use messages::scalar::increase_ttl::{IncreaseTtlRequest, IncreaseTtlResponse};
+pub use messages::scalar::increment::{IncrementRequest, IncrementResponse};
+pub use messages::scalar::item_get_ttl::{ItemGetTtlRequest, ItemGetTtlResponse};
+pub use messages::scalar::item_get_type::{ItemGetTypeRequest, ItemGetTypeResponse, ItemType};
+pub use messages::scalar::key_exists::{KeyExistsRequest, KeyExistsResponse};
+pub use messages::scalar::keys_exist::{KeysExistRequest, KeysExistResponse};
+pub use messages::scalar::set::{SetRequest, SetResponse};
+pub use messages::scalar::set_if_absent::{SetIfAbsentRequest, SetIfAbsentResponse};
+pub use messages::scalar::set_if_absent_or_equal::{
+    SetIfAbsentOrEqualRequest, SetIfAbsentOrEqualResponse,
 };
-pub use messages::scalar::update_ttl::{UpdateTtl, UpdateTtlRequest};
+pub use messages::scalar::set_if_equal::{SetIfEqualRequest, SetIfEqualResponse};
+pub use messages::scalar::set_if_not_equal::{SetIfNotEqualRequest, SetIfNotEqualResponse};
+pub use messages::scalar::set_if_present::{SetIfPresentRequest, SetIfPresentResponse};
+pub use messages::scalar::set_if_present_and_not_equal::{
+    SetIfPresentAndNotEqualRequest, SetIfPresentAndNotEqualResponse,
+};
+pub use messages::scalar::update_ttl::{UpdateTtlRequest, UpdateTtlResponse};
 
 pub use messages::set::set_add_elements::{SetAddElements, SetAddElementsRequest};
 pub use messages::set::set_fetch::{SetFetch, SetFetchRequest, SetFetchValue};

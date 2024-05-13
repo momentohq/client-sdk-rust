@@ -21,14 +21,14 @@ use crate::{
 /// # tokio_test::block_on(async {
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// use std::convert::TryInto;
-/// use momento::cache::{ItemGetType, ItemType};
+/// use momento::cache::{ItemGetTypeResponse, ItemType};
 /// # cache_client.set(&cache_name, "key1", "value").await?;
 ///
 /// let request = momento::cache::ItemGetTypeRequest::new(&cache_name, "key1");
 ///
 /// let item: ItemType = match(cache_client.send_request(request).await?) {
-///     ItemGetType::Hit { key_type } => key_type.try_into().expect("Expected an item type!"),
-///     ItemGetType::Miss => return Err(anyhow::Error::msg("cache miss"))
+///     ItemGetTypeResponse::Hit { key_type } => key_type.try_into().expect("Expected an item type!"),
+///     ItemGetTypeResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
 /// };
 /// # assert_eq!(item, ItemType::Scalar);
 /// # Ok(())
@@ -50,9 +50,9 @@ impl<K: IntoBytes> ItemGetTypeRequest<K> {
 }
 
 impl<K: IntoBytes> MomentoRequest for ItemGetTypeRequest<K> {
-    type Response = ItemGetType;
+    type Response = ItemGetTypeResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ItemGetType> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ItemGetTypeResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -69,8 +69,8 @@ impl<K: IntoBytes> MomentoRequest for ItemGetTypeRequest<K> {
             .into_inner();
 
         match response.result {
-            Some(item_get_type_response::Result::Missing(_)) => Ok(ItemGetType::Miss),
-            Some(item_get_type_response::Result::Found(found)) => Ok(ItemGetType::Hit {
+            Some(item_get_type_response::Result::Missing(_)) => Ok(ItemGetTypeResponse::Miss),
+            Some(item_get_type_response::Result::Found(found)) => Ok(ItemGetTypeResponse::Hit {
                 key_type: match found.item_type() {
                     momento_protos::cache_client::item_get_type_response::ItemType::Scalar => {
                         ItemType::Scalar
@@ -111,12 +111,12 @@ pub enum ItemType {
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::cache::{ItemGetType, ItemType};
+/// # use momento::cache::{ItemGetTypeResponse, ItemType};
 /// use std::convert::TryInto;
-/// # let response = ItemGetType::Hit { key_type: ItemType::Scalar };
+/// # let response = ItemGetTypeResponse::Hit { key_type: ItemType::Scalar };
 /// let item: ItemType = match response {
-///     ItemGetType::Hit { key_type } => key_type.try_into().expect("Expected an item type!"),
-///     ItemGetType::Miss => return // probably you'll do something else here
+///     ItemGetTypeResponse::Hit { key_type } => key_type.try_into().expect("Expected an item type!"),
+///     ItemGetTypeResponse::Miss => return // probably you'll do something else here
 /// };
 /// ```
 ///
@@ -127,24 +127,24 @@ pub enum ItemType {
 /// this is what you're after:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::cache::{ItemGetType, ItemType};
+/// # use momento::cache::{ItemGetTypeResponse, ItemType};
 /// use std::convert::TryInto;
-/// # let response = ItemGetType::Hit { key_type: ItemType::Scalar };
+/// # let response = ItemGetTypeResponse::Hit { key_type: ItemType::Scalar };
 /// let itemType: MomentoResult<ItemType> = response.try_into();
 /// ```
 #[derive(Debug, PartialEq, Eq)]
-pub enum ItemGetType {
+pub enum ItemGetTypeResponse {
     Hit { key_type: ItemType },
     Miss,
 }
 
-impl TryFrom<ItemGetType> for ItemType {
+impl TryFrom<ItemGetTypeResponse> for ItemType {
     type Error = MomentoError;
 
-    fn try_from(value: ItemGetType) -> Result<Self, Self::Error> {
+    fn try_from(value: ItemGetTypeResponse) -> Result<Self, Self::Error> {
         match value {
-            ItemGetType::Hit { key_type } => Ok(key_type),
-            ItemGetType::Miss => Err(MomentoError::miss("ItemGetType")),
+            ItemGetTypeResponse::Hit { key_type } => Ok(key_type),
+            ItemGetTypeResponse::Miss => Err(MomentoError::miss("ItemGetType")),
         }
     }
 }

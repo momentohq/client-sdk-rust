@@ -23,7 +23,7 @@ use std::time::Duration;
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::time::Duration;
-/// use momento::cache::{Set, SetRequest};
+/// use momento::cache::{SetResponse, SetRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
@@ -34,7 +34,7 @@ use std::time::Duration;
 /// ).ttl(Duration::from_secs(60));
 ///
 /// match cache_client.send_request(set_request).await {
-///     Ok(_) => println!("Set successful"),
+///     Ok(_) => println!("SetResponse successful"),
 ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
 ///         println!("Cache not found: {}", &cache_name);
 ///     } else {
@@ -70,9 +70,9 @@ impl<K: IntoBytes, V: IntoBytes> SetRequest<K, V> {
 }
 
 impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetRequest<K, V> {
-    type Response = Set;
+    type Response = SetResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<Set> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -84,9 +84,9 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetRequest<K, V> {
         )?;
 
         let _ = cache_client.data_client.clone().set(request).await?;
-        Ok(Set {})
+        Ok(SetResponse {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct Set {}
+pub struct SetResponse {}

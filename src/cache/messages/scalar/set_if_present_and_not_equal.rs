@@ -28,7 +28,7 @@ use std::time::Duration;
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::time::Duration;
-/// use momento::cache::{SetIfPresentAndNotEqual, SetIfPresentAndNotEqualRequest};
+/// use momento::cache::{SetIfPresentAndNotEqualResponse, SetIfPresentAndNotEqualRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
@@ -41,8 +41,8 @@ use std::time::Duration;
 ///
 /// match cache_client.send_request(set_request).await {
 ///     Ok(response) => match response {
-///         SetIfPresentAndNotEqual::Stored => println!("Value stored"),
-///         SetIfPresentAndNotEqual::NotStored => println!("Value not stored"),
+///         SetIfPresentAndNotEqualResponse::Stored => println!("Value stored"),
+///         SetIfPresentAndNotEqualResponse::NotStored => println!("Value not stored"),
 ///     }
 ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
 ///         println!("Cache not found: {}", &cache_name);
@@ -83,9 +83,12 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> SetIfPresentAndNotEqualRequest<K,
 impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest
     for SetIfPresentAndNotEqualRequest<K, V, E>
 {
-    type Response = SetIfPresentAndNotEqual;
+    type Response = SetIfPresentAndNotEqualResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetIfPresentAndNotEqual> {
+    async fn send(
+        self,
+        cache_client: &CacheClient,
+    ) -> MomentoResult<SetIfPresentAndNotEqualResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -108,8 +111,10 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest
             .await?
             .into_inner();
         match response.result {
-            Some(set_if_response::Result::Stored(_)) => Ok(SetIfPresentAndNotEqual::Stored),
-            Some(set_if_response::Result::NotStored(_)) => Ok(SetIfPresentAndNotEqual::NotStored),
+            Some(set_if_response::Result::Stored(_)) => Ok(SetIfPresentAndNotEqualResponse::Stored),
+            Some(set_if_response::Result::NotStored(_)) => {
+                Ok(SetIfPresentAndNotEqualResponse::NotStored)
+            }
             _ => Err(MomentoError::unknown_error(
                 "SetIfPresentAndNotEqual",
                 Some(format!("{:#?}", response)),
@@ -119,7 +124,7 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum SetIfPresentAndNotEqual {
+pub enum SetIfPresentAndNotEqualResponse {
     Stored,
     NotStored,
 }

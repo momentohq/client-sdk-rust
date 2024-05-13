@@ -23,14 +23,14 @@ use crate::{
 /// # tokio_test::block_on(async {
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// use std::time::Duration;
-/// use momento::cache::{UpdateTtl, UpdateTtlRequest};
+/// use momento::cache::{UpdateTtlResponse, UpdateTtlRequest};
 /// # cache_client.set(&cache_name, "key1", "value").await?;
 ///
 /// let request = UpdateTtlRequest::new(&cache_name, "key1", Duration::from_secs(10));
 ///
 /// match(cache_client.send_request(request).await?) {
-///     UpdateTtl::Set => println!("TTL updated"),
-///     UpdateTtl::Miss => return Err(anyhow::Error::msg("cache miss"))
+///     UpdateTtlResponse::Set => println!("TTL updated"),
+///     UpdateTtlResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
 /// };
 /// # Ok(())
 /// # })
@@ -53,9 +53,9 @@ impl<K: IntoBytes> UpdateTtlRequest<K> {
 }
 
 impl<K: IntoBytes> MomentoRequest for UpdateTtlRequest<K> {
-    type Response = UpdateTtl;
+    type Response = UpdateTtlResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<UpdateTtl> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<UpdateTtlResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -75,8 +75,8 @@ impl<K: IntoBytes> MomentoRequest for UpdateTtlRequest<K> {
             .into_inner();
 
         match response.result {
-            Some(update_ttl_response::Result::Missing(_)) => Ok(UpdateTtl::Miss),
-            Some(update_ttl_response::Result::Set(_)) => Ok(UpdateTtl::Set),
+            Some(update_ttl_response::Result::Missing(_)) => Ok(UpdateTtlResponse::Miss),
+            Some(update_ttl_response::Result::Set(_)) => Ok(UpdateTtlResponse::Set),
             _ => Err(MomentoError::unknown_error(
                 "UpdateTtl",
                 Some(format!("{:#?}", response)),
@@ -86,7 +86,7 @@ impl<K: IntoBytes> MomentoRequest for UpdateTtlRequest<K> {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum UpdateTtl {
+pub enum UpdateTtlResponse {
     Set,
     Miss,
 }

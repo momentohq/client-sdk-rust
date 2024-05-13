@@ -24,7 +24,7 @@ use crate::{
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
-/// use momento::cache::{Increment, IncrementRequest};
+/// use momento::cache::{IncrementResponse, IncrementRequest};
 /// use std::time::Duration;
 /// use momento::MomentoErrorCode;
 ///
@@ -71,9 +71,9 @@ impl<K: IntoBytes> IncrementRequest<K> {
 }
 
 impl<K: IntoBytes> MomentoRequest for IncrementRequest<K> {
-    type Response = Increment;
+    type Response = IncrementResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<Increment> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<IncrementResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -90,18 +90,18 @@ impl<K: IntoBytes> MomentoRequest for IncrementRequest<K> {
             .increment(request)
             .await?
             .into_inner();
-        Ok(Increment {
+        Ok(IncrementResponse {
             value: response.value,
         })
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct Increment {
+pub struct IncrementResponse {
     pub value: i64,
 }
 
-impl Increment {
+impl IncrementResponse {
     pub fn value(self) -> i64 {
         self.value
     }

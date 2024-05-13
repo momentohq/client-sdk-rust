@@ -23,15 +23,15 @@ use crate::{
 /// # tokio_test::block_on(async {
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// use std::time::Duration;
-/// use momento::cache::{IncreaseTtl, IncreaseTtlRequest};
+/// use momento::cache::{IncreaseTtlResponse, IncreaseTtlRequest};
 /// # cache_client.set(&cache_name, "key1", "value").await?;
 ///
 /// let request = IncreaseTtlRequest::new(&cache_name, "key1", Duration::from_secs(5));
 ///
 /// match(cache_client.send_request(request).await?) {
-///     IncreaseTtl::Set => println!("TTL updated"),
-///     IncreaseTtl::NotSet => println!("unable to increase TTL"),
-///     IncreaseTtl::Miss => return Err(anyhow::Error::msg("cache miss"))
+///     IncreaseTtlResponse::Set => println!("TTL updated"),
+///     IncreaseTtlResponse::NotSet => println!("unable to increase TTL"),
+///     IncreaseTtlResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
 /// };
 /// # Ok(())
 /// # })
@@ -54,9 +54,9 @@ impl<K: IntoBytes> IncreaseTtlRequest<K> {
 }
 
 impl<K: IntoBytes> MomentoRequest for IncreaseTtlRequest<K> {
-    type Response = IncreaseTtl;
+    type Response = IncreaseTtlResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<IncreaseTtl> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<IncreaseTtlResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -76,9 +76,9 @@ impl<K: IntoBytes> MomentoRequest for IncreaseTtlRequest<K> {
             .into_inner();
 
         match response.result {
-            Some(update_ttl_response::Result::Missing(_)) => Ok(IncreaseTtl::Miss),
-            Some(update_ttl_response::Result::Set(_)) => Ok(IncreaseTtl::Set),
-            Some(update_ttl_response::Result::NotSet(_)) => Ok(IncreaseTtl::NotSet),
+            Some(update_ttl_response::Result::Missing(_)) => Ok(IncreaseTtlResponse::Miss),
+            Some(update_ttl_response::Result::Set(_)) => Ok(IncreaseTtlResponse::Set),
+            Some(update_ttl_response::Result::NotSet(_)) => Ok(IncreaseTtlResponse::NotSet),
             _ => Err(MomentoError::unknown_error(
                 "IncreaseTtl",
                 Some(format!("{:#?}", response)),
@@ -88,7 +88,7 @@ impl<K: IntoBytes> MomentoRequest for IncreaseTtlRequest<K> {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum IncreaseTtl {
+pub enum IncreaseTtlResponse {
     Set,
     NotSet,
     Miss,

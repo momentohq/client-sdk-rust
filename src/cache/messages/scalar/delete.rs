@@ -16,7 +16,7 @@ use crate::{
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
-/// use momento::cache::{Delete, DeleteRequest};
+/// use momento::cache::{DeleteResponse, DeleteRequest};
 /// use momento::MomentoErrorCode;
 ///
 /// let delete_request = DeleteRequest::new(
@@ -25,7 +25,7 @@ use crate::{
 /// );
 ///
 /// match cache_client.send_request(delete_request).await {
-///     Ok(_) => println!("Delete successful"),
+///     Ok(_) => println!("DeleteResponse successful"),
 ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
 ///         println!("Cache not found: {}", &cache_name);
 ///     } else {
@@ -51,9 +51,9 @@ impl<K: IntoBytes> DeleteRequest<K> {
 }
 
 impl<K: IntoBytes> MomentoRequest for DeleteRequest<K> {
-    type Response = Delete;
+    type Response = DeleteResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<Delete> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<DeleteResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -63,9 +63,9 @@ impl<K: IntoBytes> MomentoRequest for DeleteRequest<K> {
         )?;
 
         let _ = cache_client.data_client.clone().delete(request).await?;
-        Ok(Delete {})
+        Ok(DeleteResponse {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct Delete {}
+pub struct DeleteResponse {}

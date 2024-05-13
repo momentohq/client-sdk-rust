@@ -15,7 +15,7 @@ use crate::{CacheClient, IntoBytes, MomentoError, MomentoResult};
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
-/// use momento::cache::{KeyExists, KeyExistsRequest};
+/// use momento::cache::{KeyExistsResponse, KeyExistsRequest};
 ///
 /// let request = KeyExistsRequest::new(
 ///     cache_name,
@@ -47,9 +47,9 @@ impl<K: IntoBytes> KeyExistsRequest<K> {
 }
 
 impl<K: IntoBytes> MomentoRequest for KeyExistsRequest<K> {
-    type Response = KeyExists;
+    type Response = KeyExistsResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<KeyExists> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<KeyExistsResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -66,7 +66,7 @@ impl<K: IntoBytes> MomentoRequest for KeyExistsRequest<K> {
             .into_inner();
 
         match response.exists.first() {
-            Some(exists) => Ok(KeyExists { exists: *exists }),
+            Some(exists) => Ok(KeyExistsResponse { exists: *exists }),
             _ => Err(MomentoError::unknown_error(
                 "KeyExists",
                 Some(format!("{:#?}", response)),
@@ -76,11 +76,11 @@ impl<K: IntoBytes> MomentoRequest for KeyExistsRequest<K> {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct KeyExists {
+pub struct KeyExistsResponse {
     pub exists: bool,
 }
 
-impl KeyExists {
+impl KeyExistsResponse {
     pub fn exists(self) -> bool {
         self.exists
     }

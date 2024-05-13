@@ -23,15 +23,15 @@ use crate::{
 /// # tokio_test::block_on(async {
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// use std::time::Duration;
-/// use momento::cache::{DecreaseTtl, DecreaseTtlRequest};
+/// use momento::cache::{DecreaseTtlResponse, DecreaseTtlRequest};
 /// # cache_client.set(&cache_name, "key1", "value").await?;
 ///
 /// let request = DecreaseTtlRequest::new(&cache_name, "key1", Duration::from_secs(3));
 ///
 /// match(cache_client.send_request(request).await?) {
-///     DecreaseTtl::Set => println!("TTL updated"),
-///     DecreaseTtl::NotSet => println!("unable to decrease TTL"),
-///     DecreaseTtl::Miss => return Err(anyhow::Error::msg("cache miss"))
+///     DecreaseTtlResponse::Set => println!("TTL updated"),
+///     DecreaseTtlResponse::NotSet => println!("unable to decrease TTL"),
+///     DecreaseTtlResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
 /// };
 /// # Ok(())
 /// # })
@@ -54,9 +54,9 @@ impl<K: IntoBytes> DecreaseTtlRequest<K> {
 }
 
 impl<K: IntoBytes> MomentoRequest for DecreaseTtlRequest<K> {
-    type Response = DecreaseTtl;
+    type Response = DecreaseTtlResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<DecreaseTtl> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<DecreaseTtlResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -76,9 +76,9 @@ impl<K: IntoBytes> MomentoRequest for DecreaseTtlRequest<K> {
             .into_inner();
 
         match response.result {
-            Some(update_ttl_response::Result::Missing(_)) => Ok(DecreaseTtl::Miss),
-            Some(update_ttl_response::Result::Set(_)) => Ok(DecreaseTtl::Set),
-            Some(update_ttl_response::Result::NotSet(_)) => Ok(DecreaseTtl::NotSet),
+            Some(update_ttl_response::Result::Missing(_)) => Ok(DecreaseTtlResponse::Miss),
+            Some(update_ttl_response::Result::Set(_)) => Ok(DecreaseTtlResponse::Set),
+            Some(update_ttl_response::Result::NotSet(_)) => Ok(DecreaseTtlResponse::NotSet),
             _ => Err(MomentoError::unknown_error(
                 "DecreaseTtl",
                 Some(format!("{:#?}", response)),
@@ -88,7 +88,7 @@ impl<K: IntoBytes> MomentoRequest for DecreaseTtlRequest<K> {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum DecreaseTtl {
+pub enum DecreaseTtlResponse {
     Set,
     NotSet,
     Miss,
