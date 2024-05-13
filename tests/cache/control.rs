@@ -27,7 +27,7 @@ mod create_delete_list_cache {
 }
 
 mod flush_cache {
-    use momento::cache::DeleteCache;
+    use momento::cache::DeleteCacheResponse;
 
     use super::*;
 
@@ -108,7 +108,7 @@ mod flush_cache {
 
         // Delete the cache
         let delete_result = client.delete_cache(cache_name).await?;
-        assert_eq!(delete_result, DeleteCache {});
+        assert_eq!(delete_result, DeleteCacheResponse {});
 
         Ok(())
     }

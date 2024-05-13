@@ -16,7 +16,7 @@ use crate::{utils, CacheClient, MomentoResult};
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{DeleteCache, DeleteCacheRequest};
+/// use momento::cache::{DeleteCacheResponse, DeleteCacheRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
@@ -47,9 +47,9 @@ impl DeleteCacheRequest {
 }
 
 impl MomentoRequest for DeleteCacheRequest {
-    type Response = DeleteCache;
+    type Response = DeleteCacheResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<DeleteCache> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<DeleteCacheResponse> {
         let cache_name = &self.cache_name;
 
         utils::is_cache_name_valid(cache_name)?;
@@ -62,9 +62,9 @@ impl MomentoRequest for DeleteCacheRequest {
             .clone()
             .delete_cache(request)
             .await?;
-        Ok(DeleteCache {})
+        Ok(DeleteCacheResponse {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct DeleteCache {}
+pub struct DeleteCacheResponse {}

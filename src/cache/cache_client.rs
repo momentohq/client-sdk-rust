@@ -8,7 +8,7 @@ use tonic::transport::Channel;
 
 use crate::cache::{
     Configuration, CreateCacheRequest, CreateCacheResponse, DecreaseTtlRequest,
-    DecreaseTtlResponse, DeleteCache, DeleteCacheRequest, DeleteRequest, DeleteResponse,
+    DecreaseTtlResponse, DeleteCacheRequest, DeleteCacheResponse, DeleteRequest, DeleteResponse,
     DictionaryFetchRequest, DictionaryFetchResponse, DictionaryGetFieldRequest,
     DictionaryGetFieldResponse, DictionaryGetFieldsRequest, DictionaryGetFieldsResponse,
     DictionaryIncrementRequest, DictionaryIncrementResponse, DictionaryLengthRequest,
@@ -104,7 +104,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::DeleteCache;
+    /// use momento::cache::DeleteCacheResponse;
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
@@ -121,7 +121,10 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to delete a cache using a [DeleteCacheRequest].
-    pub async fn delete_cache(&self, cache_name: impl Into<String>) -> MomentoResult<DeleteCache> {
+    pub async fn delete_cache(
+        &self,
+        cache_name: impl Into<String>,
+    ) -> MomentoResult<DeleteCacheResponse> {
         let request = DeleteCacheRequest::new(cache_name);
         request.send(self).await
     }
