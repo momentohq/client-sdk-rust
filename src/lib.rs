@@ -62,11 +62,11 @@
 //! # tokio_test::block_on(async {
 //! # let (cache_client, cache_name) = create_doctest_cache_client();
 //! # use std::convert::TryInto;
-//! # use momento::cache::Get;
+//! # use momento::cache::GetResponse;
 //! # cache_client.set(&cache_name, "key", "value").await?;
 //! let item: String = match(cache_client.get(&cache_name, "key").await?) {
-//!     Get::Hit { value } => value.try_into()?,
-//!     Get::Miss => return Err(anyhow::Error::msg("cache miss"))
+//!     GetResponse::Hit { value } => value.try_into()?,
+//!     GetResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
 //! };
 //! # assert_eq!(item, "value");
 //! # Ok(())
