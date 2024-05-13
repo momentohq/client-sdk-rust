@@ -8,7 +8,7 @@ async fn main() -> Result<(), MomentoError> {
     // Initializing Momento
     let cache_client = match CacheClient::builder()
         .default_ttl(Duration::from_secs(60))
-        .configuration(configurations::laptop::latest())
+        .configuration(configurations::Laptop::latest())
         .credential_provider(
             CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
                 .expect("auth token should be valid"),
