@@ -5,7 +5,7 @@ use momento::cache::{
     SortedSetFetchByScoreRequest, SortedSetFetchResponse, SortedSetGetRankResponse,
     SortedSetGetScoreResponse, SortedSetLengthResponse,
     SortedSetOrder::{Ascending, Descending},
-    SortedSetPutElementsResponse, SortedSetRemoveElements,
+    SortedSetPutElementsResponse, SortedSetRemoveElementsResponse,
 };
 use momento::{CacheClient, MomentoErrorCode, MomentoResult};
 
@@ -418,7 +418,7 @@ mod sorted_set_remove_elements {
                 vec![unique_value(), unique_value()],
             )
             .await?;
-        assert_eq!(result, SortedSetRemoveElements {});
+        assert_eq!(result, SortedSetRemoveElementsResponse {});
         assert_fetched_sorted_set_eq(
             client
                 .sorted_set_fetch_by_score(cache_name, item.name(), Ascending)
@@ -431,7 +431,7 @@ mod sorted_set_remove_elements {
         let result = client
             .sorted_set_remove_elements(cache_name, item.name(), values)
             .await?;
-        assert_eq!(result, SortedSetRemoveElements {});
+        assert_eq!(result, SortedSetRemoveElementsResponse {});
         assert_fetched_sorted_set_eq(
             client
                 .sorted_set_fetch_by_score(cache_name, item.name(), Ascending)
@@ -466,7 +466,7 @@ mod sorted_set_remove_elements {
         let result = client
             .sorted_set_remove_elements(cache_name, sorted_set_name, vec!["element1", "element2"])
             .await?;
-        assert_eq!(result, SortedSetRemoveElements {});
+        assert_eq!(result, SortedSetRemoveElementsResponse {});
         Ok(())
     }
 }

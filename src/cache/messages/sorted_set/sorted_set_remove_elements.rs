@@ -53,9 +53,12 @@ impl<S: IntoBytes, V: IntoBytesIterable> SortedSetRemoveElementsRequest<S, V> {
 }
 
 impl<S: IntoBytes, V: IntoBytesIterable> MomentoRequest for SortedSetRemoveElementsRequest<S, V> {
-    type Response = SortedSetRemoveElements;
+    type Response = SortedSetRemoveElementsResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SortedSetRemoveElements> {
+    async fn send(
+        self,
+        cache_client: &CacheClient,
+    ) -> MomentoResult<SortedSetRemoveElementsResponse> {
         let values = self.values.into_bytes();
         let set_name = self.sorted_set_name.into_bytes();
         let cache_name = &self.cache_name;
@@ -73,9 +76,9 @@ impl<S: IntoBytes, V: IntoBytesIterable> MomentoRequest for SortedSetRemoveEleme
             .clone()
             .sorted_set_remove(request)
             .await?;
-        Ok(SortedSetRemoveElements {})
+        Ok(SortedSetRemoveElementsResponse {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct SortedSetRemoveElements {}
+pub struct SortedSetRemoveElementsResponse {}

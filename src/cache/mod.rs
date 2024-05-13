@@ -88,7 +88,7 @@ pub use messages::sorted_set::sorted_set_put_elements::{
     SortedSetPutElementsResponse,
 };
 pub use messages::sorted_set::sorted_set_remove_elements::{
-    SortedSetRemoveElements, SortedSetRemoveElementsRequest,
+    SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse,
 };
 
 pub use messages::list::list_concatenate_back::{

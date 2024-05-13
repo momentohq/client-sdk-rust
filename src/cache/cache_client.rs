@@ -33,7 +33,7 @@ use crate::cache::{
     SortedSetGetRankRequest, SortedSetGetRankResponse, SortedSetGetScoreRequest,
     SortedSetGetScoreResponse, SortedSetLengthRequest, SortedSetLengthResponse, SortedSetOrder,
     SortedSetPutElementRequest, SortedSetPutElementResponse, SortedSetPutElementsRequest,
-    SortedSetPutElementsResponse, SortedSetRemoveElements, SortedSetRemoveElementsRequest,
+    SortedSetPutElementsResponse, SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse,
     UpdateTtlRequest, UpdateTtlResponse,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
@@ -1111,7 +1111,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::SortedSetRemoveElements;
+    /// use momento::cache::SortedSetRemoveElementsResponse;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let sorted_set_name = "sorted_set";
     ///
@@ -1135,7 +1135,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         sorted_set_name: impl IntoBytes,
         values: V,
-    ) -> MomentoResult<SortedSetRemoveElements> {
+    ) -> MomentoResult<SortedSetRemoveElementsResponse> {
         let request = SortedSetRemoveElementsRequest::new(cache_name, sorted_set_name, values);
         request.send(self).await
     }
