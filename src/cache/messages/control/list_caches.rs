@@ -46,25 +46,38 @@ impl MomentoRequest for ListCachesRequest {
     }
 }
 
+/// Limits for a cache.
 #[derive(Debug, PartialEq, Eq)]
 pub struct CacheLimits {
+    /// The maximum traffic rate in requests per second.
     pub max_traffic_rate: u32,
+    /// The maximum throughput in kilobytes per second.
     pub max_throughput_kbps: u32,
+    /// The maximum item size in kilobytes.
     pub max_item_size_kb: u32,
+    /// The maximum time-to-live in seconds.
     pub max_ttl_seconds: u64,
 }
 
+/// Limits for topics in a cache.
 #[derive(Debug, PartialEq, Eq)]
 pub struct TopicLimits {
+    /// The maximum publish rate in requests per second.
     pub max_publish_rate: u32,
+    /// The maximum number of subscriptions.
     pub max_subscription_count: u32,
+    /// The maximum publish message size in kilobytes.
     pub max_publish_message_size_kb: u32,
 }
 
+/// Information about a cache.
 #[derive(Debug, PartialEq, Eq)]
 pub struct CacheInfo {
+    /// The name of the cache.
     pub name: String,
+    /// The limits for the cache.
     pub cache_limits: CacheLimits,
+    /// The limits for topics in the cache.
     pub topic_limits: TopicLimits,
 }
 

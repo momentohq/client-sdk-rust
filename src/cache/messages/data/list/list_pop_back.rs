@@ -69,7 +69,7 @@ impl<L: IntoBytes> MomentoRequest for ListPopBackRequest<L> {
         match response.list {
             Some(list_pop_back_response::List::Missing(_)) => Ok(ListPopBackResponse::Miss),
             Some(list_pop_back_response::List::Found(found)) => Ok(ListPopBackResponse::Hit {
-                value: ListPopBackValue::new(found.back),
+                value: Value::new(found.back),
             }),
             _ => Err(MomentoError::unknown_error(
                 "ListPopBack",
@@ -84,10 +84,9 @@ impl<L: IntoBytes> MomentoRequest for ListPopBackRequest<L> {
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::cache::ListPopBackValue;
 /// use momento::cache::ListPopBackResponse;
 /// use std::convert::TryInto;
-/// # let response = ListPopBackResponse::Hit { value: ListPopBackValue::new("hi".into()) };
+/// # let response: ListPopBackResponse = "hi".into();
 /// let popped_value: String = match response {
 ///     ListPopBackResponse::Hit { value } => value.try_into().expect("Expected a popped list value!"),
 ///     ListPopBackResponse::Miss => return // probably you'll do something else here
@@ -101,41 +100,48 @@ impl<L: IntoBytes> MomentoRequest for ListPopBackRequest<L> {
 /// this is what you're after:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::cache::ListPopBackValue;
 /// use momento::cache::ListPopBackResponse;
 /// use std::convert::TryInto;
-/// # let response = ListPopBackResponse::Hit { value: ListPopBackValue::new("hi".into()) };
+/// # let response: ListPopBackResponse = "hi".into();
 /// let popped_value: MomentoResult<String> = response.try_into();
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum ListPopBackResponse {
-    Hit { value: ListPopBackValue },
+    Hit { value: Value },
     Miss,
 }
 
+impl<I: IntoBytes> From<I> for ListPopBackResponse {
+    fn from(value: I) -> Self {
+        ListPopBackResponse::Hit {
+            value: Value::new(value.into_bytes()),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
-pub struct ListPopBackValue {
+pub struct Value {
     pub(crate) raw_item: Vec<u8>,
 }
 
-impl ListPopBackValue {
+impl Value {
     pub fn new(raw_item: Vec<u8>) -> Self {
         Self { raw_item }
     }
 }
 
-impl TryFrom<ListPopBackValue> for Vec<u8> {
+impl TryFrom<Value> for Vec<u8> {
     type Error = MomentoError;
 
-    fn try_from(value: ListPopBackValue) -> Result<Self, Self::Error> {
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
         Ok(value.raw_item)
     }
 }
 
-impl TryFrom<ListPopBackValue> for String {
+impl TryFrom<Value> for String {
     type Error = MomentoError;
 
-    fn try_from(value: ListPopBackValue) -> Result<Self, Self::Error> {
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
         parse_string(value.raw_item)
     }
 }

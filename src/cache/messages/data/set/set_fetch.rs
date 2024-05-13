@@ -5,7 +5,7 @@ use momento_protos::cache_client::set_fetch_response;
 use crate::{
     cache::MomentoRequest,
     utils::{parse_string, prep_request_with_timeout},
-    CacheClient, IntoBytes, MomentoError, MomentoResult,
+    CacheClient, IntoBytes, IntoBytesIterable, MomentoError, MomentoResult,
 };
 
 /// Fetch the elements in the given set.
@@ -72,7 +72,7 @@ impl<S: IntoBytes> MomentoRequest for SetFetchRequest<S> {
         match response.set {
             Some(set_fetch_response::Set::Missing(_)) => Ok(SetFetchResponse::Miss),
             Some(set_fetch_response::Set::Found(found)) => Ok(SetFetchResponse::Hit {
-                values: SetFetchValue {
+                values: Value {
                     raw_item: found.elements,
                 },
             }),
@@ -89,11 +89,9 @@ impl<S: IntoBytes> MomentoRequest for SetFetchRequest<S> {
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::cache::SetFetchValue;
 /// use momento::cache::SetFetchResponse;
 /// use std::convert::TryInto;
-/// # let values = vec!["abc", "123"].iter().map(|s| s.as_bytes().to_vec()).collect();
-/// # let response = SetFetchResponse::Hit { values: SetFetchValue::new(values) };
+/// # let response = SetFetchResponse::from(vec!["abc", "123"]);
 /// let fetched_values: Vec<String> = match response {
 ///     SetFetchResponse::Hit { values } => values.try_into().expect("Expected to fetch a set!"),
 ///     SetFetchResponse::Miss => return // probably you'll do something else here
@@ -107,40 +105,46 @@ impl<S: IntoBytes> MomentoRequest for SetFetchRequest<S> {
 /// this is what you're after:
 /// ```
 /// # use momento::MomentoResult;
-/// # use momento::cache::SetFetchValue;
 /// use momento::cache::SetFetchResponse;
 /// use std::convert::TryInto;
-/// # let values = vec!["abc", "123"].iter().map(|s| s.as_bytes().to_vec()).collect();
-/// # let response = SetFetchResponse::Hit { values: SetFetchValue::new(values) };
+/// # let response = SetFetchResponse::from(vec!["abc", "123"]);
 /// let fetched_values: Vec<String> = response.try_into().expect("Expected to fetch a set!");
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum SetFetchResponse {
-    Hit { values: SetFetchValue },
+    Hit { values: Value },
     Miss,
 }
 
+impl<I: IntoBytesIterable> From<I> for SetFetchResponse {
+    fn from(values: I) -> Self {
+        SetFetchResponse::Hit {
+            values: Value::new(values.into_bytes()),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
-pub struct SetFetchValue {
+pub struct Value {
     pub(crate) raw_item: Vec<Vec<u8>>,
 }
 
-impl SetFetchValue {
+impl Value {
     pub fn new(raw_item: Vec<Vec<u8>>) -> Self {
         Self { raw_item }
     }
 }
 
-impl From<SetFetchValue> for Vec<Vec<u8>> {
-    fn from(value: SetFetchValue) -> Self {
+impl From<Value> for Vec<Vec<u8>> {
+    fn from(value: Value) -> Self {
         value.raw_item
     }
 }
 
-impl TryFrom<SetFetchValue> for Vec<String> {
+impl TryFrom<Value> for Vec<String> {
     type Error = MomentoError;
 
-    fn try_from(value: SetFetchValue) -> Result<Self, Self::Error> {
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
         value.raw_item.into_iter().map(parse_string).collect()
     }
 }
@@ -163,14 +167,6 @@ impl TryFrom<SetFetchResponse> for Vec<String> {
         match value {
             SetFetchResponse::Hit { values } => Ok(values.try_into()?),
             SetFetchResponse::Miss => Err(MomentoError::miss("SetFetch")),
-        }
-    }
-}
-
-impl From<Vec<String>> for SetFetchResponse {
-    fn from(values: Vec<String>) -> Self {
-        SetFetchResponse::Hit {
-            values: SetFetchValue::new(values.into_iter().map(|v| v.as_bytes().to_vec()).collect()),
         }
     }
 }

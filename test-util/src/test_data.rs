@@ -1,10 +1,4 @@
-use momento::{
-    cache::{
-        GetResponse, GetValue, ListFetchResponse, ListFetchValue, SortedSetElements,
-        SortedSetFetchResponse,
-    },
-    IntoBytes,
-};
+use momento::cache::{GetResponse, ListFetchResponse, SortedSetElements, SortedSetFetchResponse};
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -59,9 +53,7 @@ impl Default for TestScalar {
 
 impl From<&TestScalar> for GetResponse {
     fn from(test_scalar: &TestScalar) -> Self {
-        GetResponse::Hit {
-            value: GetValue::new(test_scalar.value().into_bytes()),
-        }
+        test_scalar.value().into()
     }
 }
 
@@ -202,14 +194,12 @@ impl Default for TestList {
 
 impl From<&TestList> for ListFetchResponse {
     fn from(test_list: &TestList) -> Self {
-        ListFetchResponse::Hit {
-            values: ListFetchValue::new(
-                test_list
-                    .values()
-                    .iter()
-                    .map(|v| v.as_bytes().to_vec())
-                    .collect(),
-            ),
-        }
+        test_list.into()
+    }
+}
+
+impl From<TestList> for ListFetchResponse {
+    fn from(test_list: TestList) -> Self {
+        test_list.values().clone().into()
     }
 }

@@ -96,7 +96,7 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryGetFieldRequest<D,
                 match responses.pop() {
                     Some(value) => match value.result() {
                         ECacheResult::Hit => Ok(DictionaryGetFieldResponse::Hit {
-                            value: DictionaryGetFieldValue::new(value.cache_body),
+                            value: Value::new(value.cache_body),
                         }),
                         ECacheResult::Miss => Ok(DictionaryGetFieldResponse::Miss),
                         _ => Err(MomentoError::unknown_error(
@@ -118,14 +118,14 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryGetFieldRequest<D,
     }
 }
 
-/// Response object for a [DictionaryGetFieldRequest](crate::cache::DictionaryGetFieldRequest).
+/// Response object for a [DictionaryGetFieldRequest].
 ///
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// fn main() -> anyhow::Result<()> {
-/// # use momento::cache::DictionaryGetFieldResponse;
+/// # use momento::cache::{DictionaryGetFieldResponse, messages::data::dictionary::dictionary_get_field::Value};
 /// # use momento::MomentoResult;
-/// # let fetch_response: DictionaryGetFieldResponse = DictionaryGetFieldResponse::default();
+/// # let fetch_response: DictionaryGetFieldResponse = DictionaryGetFieldResponse::Hit { value: Value::default() };
 /// use std::convert::TryInto;
 /// let item: String = match fetch_response {
 ///    DictionaryGetFieldResponse::Hit { value } => value.try_into().expect("I stored a string!"),
@@ -137,9 +137,9 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryGetFieldRequest<D,
 ///
 /// Or if you're storing raw bytes you can get at them simply:
 /// ```
-/// # use momento::cache::DictionaryGetFieldResponse;
+/// # use momento::cache::{DictionaryGetFieldResponse, messages::data::dictionary::dictionary_get_field::Value};
 /// # use momento::MomentoResult;
-/// # let fetch_response: DictionaryGetFieldResponse = DictionaryGetFieldResponse::default();
+/// # let fetch_response: DictionaryGetFieldResponse = DictionaryGetFieldResponse::Hit { value: Value::default() };
 /// use std::convert::TryInto;
 /// let item: Vec<u8> = match fetch_response {
 ///   DictionaryGetFieldResponse::Hit { value } => value.into(),
@@ -153,33 +153,25 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryGetFieldRequest<D,
 /// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
 /// this is what you're after:
 /// ```
-/// # use momento::cache::DictionaryGetFieldResponse;
+/// # use momento::cache::{DictionaryGetFieldResponse, messages::data::dictionary::dictionary_get_field::Value};
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryGetFieldResponse::default();
+/// # let fetch_response: DictionaryGetFieldResponse = DictionaryGetFieldResponse::Hit { value: Value::default() };
 /// use std::convert::TryInto;
 /// let item: MomentoResult<String> = fetch_response.try_into();
 /// ```
 ///
 /// You can also go straight into a `Vec<u8>` if you prefer:
 /// ```
-/// # use momento::cache::DictionaryGetFieldResponse;
+/// # use momento::cache::{DictionaryGetFieldResponse, messages::data::dictionary::dictionary_get_field::Value};
 /// # use momento::MomentoResult;
-/// # let fetch_response: DictionaryGetFieldResponse = DictionaryGetFieldResponse::default();
+/// # let fetch_response: DictionaryGetFieldResponse = DictionaryGetFieldResponse::Hit { value: Value::default() };
 /// use std::convert::TryInto;
 /// let item: MomentoResult<Vec<u8>> = fetch_response.try_into();
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum DictionaryGetFieldResponse {
-    Hit { value: DictionaryGetFieldValue },
+    Hit { value: Value },
     Miss,
-}
-
-impl Default for DictionaryGetFieldResponse {
-    fn default() -> Self {
-        DictionaryGetFieldResponse::Hit {
-            value: DictionaryGetFieldValue::new(Vec::new()),
-        }
-    }
 }
 
 impl TryFrom<DictionaryGetFieldResponse> for String {
@@ -204,27 +196,27 @@ impl TryFrom<DictionaryGetFieldResponse> for Vec<u8> {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct DictionaryGetFieldValue {
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct Value {
     pub(crate) raw_item: Vec<u8>,
 }
 
-impl DictionaryGetFieldValue {
+impl Value {
     pub fn new(raw_item: Vec<u8>) -> Self {
         Self { raw_item }
     }
 }
 
-impl TryFrom<DictionaryGetFieldValue> for String {
+impl TryFrom<Value> for String {
     type Error = MomentoError;
 
-    fn try_from(value: DictionaryGetFieldValue) -> Result<Self, Self::Error> {
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
         parse_string(value.raw_item)
     }
 }
 
-impl From<DictionaryGetFieldValue> for Vec<u8> {
-    fn from(value: DictionaryGetFieldValue) -> Self {
+impl From<Value> for Vec<u8> {
+    fn from(value: Value) -> Self {
         value.raw_item
     }
 }

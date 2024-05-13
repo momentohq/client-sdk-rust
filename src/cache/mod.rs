@@ -1,4 +1,4 @@
-mod messages;
+pub mod messages;
 
 pub use messages::MomentoRequest;
 
@@ -10,7 +10,7 @@ pub use messages::control::list_caches::{
 };
 
 pub use messages::data::dictionary::dictionary_fetch::{
-    DictionaryFetchRequest, DictionaryFetchResponse, DictionaryFetchValue,
+    DictionaryFetchRequest, DictionaryFetchResponse,
 };
 pub use messages::data::dictionary::dictionary_get_field::{
     DictionaryGetFieldRequest, DictionaryGetFieldResponse,
@@ -40,7 +40,7 @@ pub use messages::data::dictionary::dictionary_set_fields::{
 
 pub use messages::data::scalar::decrease_ttl::{DecreaseTtlRequest, DecreaseTtlResponse};
 pub use messages::data::scalar::delete::{DeleteRequest, DeleteResponse};
-pub use messages::data::scalar::get::{GetRequest, GetResponse, GetValue};
+pub use messages::data::scalar::get::{GetRequest, GetResponse};
 pub use messages::data::scalar::increase_ttl::{IncreaseTtlRequest, IncreaseTtlResponse};
 pub use messages::data::scalar::increment::{IncrementRequest, IncrementResponse};
 pub use messages::data::scalar::item_get_ttl::{ItemGetTtlRequest, ItemGetTtlResponse};
@@ -63,7 +63,7 @@ pub use messages::data::scalar::set_if_present_and_not_equal::{
 pub use messages::data::scalar::update_ttl::{UpdateTtlRequest, UpdateTtlResponse};
 
 pub use messages::data::set::set_add_elements::{SetAddElementsRequest, SetAddElementsResponse};
-pub use messages::data::set::set_fetch::{SetFetchRequest, SetFetchResponse, SetFetchValue};
+pub use messages::data::set::set_fetch::{SetFetchRequest, SetFetchResponse};
 pub use messages::data::set::set_remove_elements::{
     SetRemoveElementsRequest, SetRemoveElementsResponse,
 };
@@ -101,14 +101,10 @@ pub use messages::data::list::list_concatenate_back::{
 pub use messages::data::list::list_concatenate_front::{
     ListConcatenateFrontRequest, ListConcatenateFrontResponse,
 };
-pub use messages::data::list::list_fetch::{ListFetchRequest, ListFetchResponse, ListFetchValue};
+pub use messages::data::list::list_fetch::{ListFetchRequest, ListFetchResponse};
 pub use messages::data::list::list_length::{ListLengthRequest, ListLengthResponse};
-pub use messages::data::list::list_pop_back::{
-    ListPopBackRequest, ListPopBackResponse, ListPopBackValue,
-};
-pub use messages::data::list::list_pop_front::{
-    ListPopFrontRequest, ListPopFrontResponse, ListPopFrontValue,
-};
+pub use messages::data::list::list_pop_back::{ListPopBackRequest, ListPopBackResponse};
+pub use messages::data::list::list_pop_front::{ListPopFrontRequest, ListPopFrontResponse};
 pub use messages::data::list::list_push_back::{ListPushBackRequest, ListPushBackResponse};
 pub use messages::data::list::list_push_front::{ListPushFrontRequest, ListPushFrontResponse};
 pub use messages::data::list::list_remove_value::{
