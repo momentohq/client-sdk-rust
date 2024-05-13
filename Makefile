@@ -59,7 +59,7 @@ build-examples:
 .PHONY: run-examples
 ## Run example code
 run-examples:
-	cd example && make lint && cargo run --bin=basic && cargo run --bin=readme && cargo run --bin=docs_examples
+	cd example && make lint && cargo run --bin=cache && cargo run --bin=readme && cargo run --bin=docs_examples && cargo run --bin=topics
 
 # See <https://gist.github.com/klmr/575726c7e05d8780505a> for explanation.
 .PHONY: help
