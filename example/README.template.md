@@ -36,4 +36,3 @@ MOMENTO_API_KEY=<YOUR API KEY> cargo run --bin=topics
 Example Code: [topics.rs](src/topics.rs)
 
 {{ ossFooter }}
-
