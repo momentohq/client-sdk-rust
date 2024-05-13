@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use momento::cache::{
     IntoSortedSetElements, SortedSetElement, SortedSetElements, SortedSetFetchByRankRequest,
-    SortedSetFetchByScoreRequest, SortedSetFetchResponse, SortedSetGetRank, SortedSetGetScore,
-    SortedSetLength,
+    SortedSetFetchByScoreRequest, SortedSetFetchResponse, SortedSetGetRankResponse,
+    SortedSetGetScore, SortedSetLength,
     SortedSetOrder::{Ascending, Descending},
     SortedSetPutElements, SortedSetRemoveElements,
 };
@@ -291,13 +291,13 @@ mod sorted_set_get_rank {
         let result = client
             .sorted_set_get_rank(cache_name, item.name(), item.value[0].0.as_str())
             .await?;
-        assert_eq!(result, SortedSetGetRank::Hit { rank: 0 });
+        assert_eq!(result, SortedSetGetRankResponse::Hit { rank: 0 });
 
         // Miss for nonexistent value
         let result = client
             .sorted_set_get_rank(cache_name, item.name(), "nonexistent")
             .await?;
-        assert_eq!(result, SortedSetGetRank::Miss);
+        assert_eq!(result, SortedSetGetRankResponse::Miss);
 
         Ok(())
     }
@@ -326,7 +326,7 @@ mod sorted_set_get_rank {
         let result = client
             .sorted_set_get_rank(cache_name, sorted_set_name, "element1")
             .await?;
-        assert_eq!(result, SortedSetGetRank::Miss);
+        assert_eq!(result, SortedSetGetRankResponse::Miss);
         Ok(())
     }
 }

@@ -21,7 +21,7 @@ use crate::{
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::convert::TryInto;
-/// use momento::cache::{SortedSetGetRank, SortedSetGetRankRequest};
+/// use momento::cache::{SortedSetGetRankResponse, SortedSetGetRankRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
@@ -52,9 +52,9 @@ impl<L: IntoBytes, V: IntoBytes> SortedSetGetRankRequest<L, V> {
 }
 
 impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetRankRequest<L, V> {
-    type Response = SortedSetGetRank;
+    type Response = SortedSetGetRankResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SortedSetGetRank> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SortedSetGetRankResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -75,12 +75,12 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetRankRequest<L, V
         match response.rank {
             Some(Rank::ElementRank(found)) => {
                 if found.result == ECacheResult::Hit as i32 {
-                    Ok(SortedSetGetRank::Hit { rank: found.rank })
+                    Ok(SortedSetGetRankResponse::Hit { rank: found.rank })
                 } else {
-                    Ok(SortedSetGetRank::Miss)
+                    Ok(SortedSetGetRankResponse::Miss)
                 }
             }
-            Some(Rank::Missing(_)) => Ok(SortedSetGetRank::Miss),
+            Some(Rank::Missing(_)) => Ok(SortedSetGetRankResponse::Miss),
             _ => Err(MomentoError::unknown_error(
                 "SortedSetGetRank",
                 Some(format!("{:#?}", response)),
@@ -94,40 +94,40 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetRankRequest<L, V
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// # use momento::MomentoResult;
-/// use momento::cache::SortedSetGetRank;
+/// use momento::cache::SortedSetGetRankResponse;
 /// use std::convert::TryInto;
-/// # let response = SortedSetGetRank::Hit { rank: 5 };
+/// # let response = SortedSetGetRankResponse::Hit { rank: 5 };
 /// let rank: u64 = match response {
-///     SortedSetGetRank::Hit { rank } => rank.try_into().expect("Expected a rank!"),
-///     SortedSetGetRank::Miss => return // probably you'll do something else here
+///     SortedSetGetRankResponse::Hit { rank } => rank.try_into().expect("Expected a rank!"),
+///     SortedSetGetRankResponse::Miss => return // probably you'll do something else here
 /// };
 /// ```
 ///
 /// You can cast your result directly into a Result<u64, MomentoError> suitable for
-/// ?-propagation if you know you are expecting a SortedSetGetRank::Hit.
+/// ?-propagation if you know you are expecting a SortedSetGetRankResponse::Hit.
 ///
 /// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
 /// this is what you're after:
 /// ```
 /// # use momento::MomentoResult;
-/// use momento::cache::SortedSetGetRank;
+/// use momento::cache::SortedSetGetRankResponse;
 /// use std::convert::TryInto;
-/// # let response = SortedSetGetRank::Hit { rank: 5 };
+/// # let response = SortedSetGetRankResponse::Hit { rank: 5 };
 /// let rank: MomentoResult<u64> = response.try_into();
 /// ```
 #[derive(Debug, PartialEq, Eq)]
-pub enum SortedSetGetRank {
+pub enum SortedSetGetRankResponse {
     Hit { rank: u64 },
     Miss,
 }
 
-impl TryFrom<SortedSetGetRank> for u64 {
+impl TryFrom<SortedSetGetRankResponse> for u64 {
     type Error = MomentoError;
 
-    fn try_from(value: SortedSetGetRank) -> Result<Self, Self::Error> {
+    fn try_from(value: SortedSetGetRankResponse) -> Result<Self, Self::Error> {
         match value {
-            SortedSetGetRank::Hit { rank } => Ok(rank),
-            SortedSetGetRank::Miss => Err(MomentoError::miss("SortedSetGetRank")),
+            SortedSetGetRankResponse::Hit { rank } => Ok(rank),
+            SortedSetGetRankResponse::Miss => Err(MomentoError::miss("SortedSetGetRank")),
         }
     }
 }
