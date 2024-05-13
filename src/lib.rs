@@ -6,7 +6,7 @@
 //! `TopicClient` for interacting with serverless Momento Topics (pub/sub messaging). For more detailed
 //! information see the [Momento documentation](https://docs.momentohq.com).
 //!
-//! Construct instances of these clients using `CacheClient::builder()` and `TopicClient::builder()`.
+//! Construct instances of these clients using [CacheClient::builder()] and [TopicClient::builder()].
 //!
 //! A few conventions you will find in the SDK that are worth knowing about:
 //!
