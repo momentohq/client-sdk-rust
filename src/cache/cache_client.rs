@@ -22,7 +22,8 @@ use crate::cache::{
     ListConcatenateBackRequest, ListConcatenateBackResponse, ListConcatenateFrontRequest,
     ListConcatenateFrontResponse, ListFetchRequest, ListFetchResponse, ListLengthRequest,
     ListLengthResponse, ListPopBackRequest, ListPopBackResponse, ListPopFrontRequest,
-    ListPopFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse, MomentoRequest,
+    ListPopFrontResponse, ListPushBackRequest, ListPushBackResponse, ListPushFrontRequest,
+    ListPushFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse, MomentoRequest,
     SetAddElements, SetAddElementsRequest, SetFetch, SetFetchRequest, SetIfAbsentOrEqualRequest,
     SetIfAbsentOrEqualResponse, SetIfAbsentRequest, SetIfAbsentResponse, SetIfEqualRequest,
     SetIfEqualResponse, SetIfNotEqualRequest, SetIfNotEqualResponse,
@@ -395,6 +396,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get a field using a [DictionaryGetFieldRequest].
     pub async fn dictionary_get_field(
         &self,
         cache_name: impl Into<String>,
@@ -447,6 +449,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get fields using a [DictionaryGetFieldsRequest].
     pub async fn dictionary_get_fields<F: IntoBytesIterable + Clone>(
         &self,
         cache_name: impl Into<String>,
@@ -491,6 +494,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to increment a field using a [DictionaryIncrementRequest].
     pub async fn dictionary_increment(
         &self,
         cache_name: impl Into<String>,
@@ -527,6 +531,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get the length of a dictionary using a [DictionaryLengthRequest].
     pub async fn dictionary_length(
         &self,
         cache_name: impl Into<String>,
@@ -565,6 +570,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to remove a field using a [DictionaryRemoveFieldRequest].
     pub async fn dictionary_remove_field(
         &self,
         cache_name: impl Into<String>,
@@ -610,6 +616,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to remove fields using a [DictionaryRemoveFieldsRequest].
     pub async fn dictionary_remove_fields<F: IntoBytesIterable>(
         &self,
         cache_name: impl Into<String>,
@@ -711,6 +718,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to set fields using a [DictionarySetFieldsRequest]
     pub async fn dictionary_set_fields<F: IntoBytes, V: IntoBytes>(
         &self,
         cache_name: impl Into<String>,
@@ -1231,7 +1239,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get the rank of an element using a [SortedSetGetScoreRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to get the score of an element using a [SortedSetGetScoreRequest].
     pub async fn sorted_set_get_score(
         &self,
         cache_name: impl Into<String>,
@@ -1267,7 +1275,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [KeyExistsRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to check if a key exists using a [KeyExistsRequest].
     pub async fn key_exists(
         &self,
         cache_name: impl Into<String>,
@@ -1305,7 +1313,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [KeysExistRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to check if the keys exist using a [KeysExistRequest].
     pub async fn keys_exist(
         &self,
         cache_name: impl Into<String>,
@@ -1352,7 +1360,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using an [IncrementRequest]
+    /// You can also use the [send_request](CacheClient::send_request) method to increment an item using an [IncrementRequest]
     /// which will allow you to set [optional arguments](IncrementRequest#optional-arguments) as well.
     pub async fn increment(
         &self,
@@ -2147,11 +2155,99 @@ impl CacheClient {
         request.send(self).await
     }
 
+    /// Adds an element to the back of the given list. Creates the list if it does not already exist.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    /// * `value` - value to append to list
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to add to a list using a [ListPushBackRequest],
+    /// you can also provide the following optional arguments:
+    ///
+    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
+    /// * `truncate_front_to_size` - If the list exceeds this length, remove excess from the front of the list.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{ListPushBackResponse, ListPushBackRequest};
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    ///
+    /// match cache_client.list_push_back(cache_name, list_name, "value").await {
+    ///     Ok(_) => println!("Element added to list"),
+    ///     Err(e) => eprintln!("Error adding element to list: {}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to add to a list using a [ListPushBackRequest]
+    /// which will allow you to set [optional arguments](ListPushBackRequest#optional-arguments) as well.
+    pub async fn list_push_back(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+        value: impl IntoBytes,
+    ) -> MomentoResult<ListPushBackResponse> {
+        let request = ListPushBackRequest::new(cache_name, list_name, value);
+        request.send(self).await
+    }
+
+    /// Adds an element to the front of the given list. Creates the list if it does not already exist.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    /// * `value` - value to prepend to list
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to add to a list using a [ListPushFrontRequest],
+    /// you can also provide the following optional arguments:
+    ///
+    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
+    /// * `truncate_back_to_size` - If the list exceeds this length, remove excess from the back of the list.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{ListPushFrontResponse, ListPushFrontRequest};
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    ///
+    /// match cache_client.list_push_front(cache_name, list_name, "value").await {
+    ///     Ok(_) => println!("Element added to list"),
+    ///     Err(e) => eprintln!("Error adding element to list: {}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to add to a list using a [ListPushFrontRequest]
+    /// which will allow you to set [optional arguments](ListPushFrontRequest#optional-arguments) as well.
+    pub async fn list_push_front(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+        value: impl IntoBytes,
+    ) -> MomentoResult<ListPushFrontResponse> {
+        let request = ListPushFrontRequest::new(cache_name, list_name, value);
+        request.send(self).await
+    }
+
     /// Lower-level API to send any type of MomentoRequest to the server. This is used for cases when
     /// you want to set optional fields on a request that are not supported by the short-hand API for
     /// that request type.
     ///
-    /// See [SortedSetFetchByRankRequest] for an example of creating a request with optional fields.
+    /// See [SortedSetFetchByScoreRequest] for an example of creating a request with optional fields.
     pub async fn send_request<R: MomentoRequest>(&self, request: R) -> MomentoResult<R::Response> {
         request.send(self).await
     }

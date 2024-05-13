@@ -4,4 +4,6 @@ pub mod list_fetch;
 pub mod list_length;
 pub mod list_pop_back;
 pub mod list_pop_front;
+pub mod list_push_back;
+pub mod list_push_front;
 pub mod list_remove_value;

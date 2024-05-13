@@ -4,7 +4,7 @@ use base64::Engine;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
 use std::env;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct JwtClaims {
@@ -30,6 +30,27 @@ pub struct CredentialProvider {
     pub(crate) control_endpoint: String,
     pub(crate) cache_endpoint: String,
     pub(crate) token_endpoint: String,
+}
+
+impl Display for CredentialProvider {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "CredentialProvider {{ auth_token: <redacted>, cache_endpoint: {}, control_endpoint: {}, token_endpoint: {} }}",
+            self.cache_endpoint, self.control_endpoint, self.token_endpoint
+        )
+    }
+}
+
+impl Debug for CredentialProvider {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CredentialProvider")
+            .field("auth_token", &"<redacted>")
+            .field("cache_endpoint", &self.cache_endpoint)
+            .field("control_endpoint", &self.control_endpoint)
+            .field("token_endpoint", &self.token_endpoint)
+            .finish()
+    }
 }
 
 impl CredentialProvider {
@@ -114,16 +135,6 @@ impl CredentialProvider {
         self.cache_endpoint = https_endpoint(get_cache_endpoint(endpoint));
         self.token_endpoint = https_endpoint(get_token_endpoint(endpoint));
         self
-    }
-}
-
-impl Debug for CredentialProvider {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("CredentialProvider")
-            .field("auth_token", &"<redacted>")
-            .field("cache_endpoint", &self.cache_endpoint)
-            .field("control_endpoint", &self.control_endpoint)
-            .finish()
     }
 }
 

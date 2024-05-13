@@ -1,7 +1,8 @@
 use momento::cache::{
     CollectionTtl, ListConcatenateBackRequest, ListConcatenateBackResponse,
     ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetchResponse,
-    ListLengthResponse, ListPopBackResponse, ListPopFrontResponse, ListRemoveValueResponse,
+    ListLengthResponse, ListPopBackResponse, ListPopFrontResponse, ListPushBackRequest,
+    ListPushBackResponse, ListPushFrontRequest, ListPushFrontResponse, ListRemoveValueResponse,
 };
 use momento::{MomentoErrorCode, MomentoResult};
 
@@ -17,7 +18,7 @@ fn assert_list_eq(
     let expected: ListFetchResponse = expected.into();
     assert_eq!(
         list_fetch_result, expected,
-        "Expected ListFetch::Hit to be equal to {:?}, but got {:?}",
+        "Expected ListFetchResponse::Hit to be equal to {:?}, but got {:?}",
         expected, list_fetch_result
     );
     Ok(())
@@ -71,7 +72,7 @@ mod list_concatenate_back {
             test_list.name(),
             [test_list.values().to_vec(), test_list.values().to_vec()].concat(),
         )
-        .truncate_back_to_size(2)
+        .truncate_front_to_size(2)
         .ttl(CollectionTtl::new(Some(Duration::from_secs(3)), false));
         let result = client.send_request(request).await?;
         assert_eq!(result, ListConcatenateBackResponse {});
@@ -401,6 +402,164 @@ mod list_pop_front {
             popped_second,
             test_list.values().last().unwrap().to_string()
         );
+
+        Ok(())
+    }
+}
+
+mod list_push_back {
+    use super::*;
+
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_cache_name();
+
+        let result = client
+            .list_push_back(cache_name, "list", "value")
+            .await
+            .unwrap_err();
+
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let test_list = TestList::default();
+
+        let one_value = test_list.values()[0].to_string();
+        let result = client
+            .list_push_back(cache_name, test_list.name(), one_value.clone())
+            .await?;
+        assert_eq!(result, ListPushBackResponse {});
+        assert_list_eq(
+            client.list_fetch(cache_name, test_list.name()).await?,
+            vec![one_value],
+        )?;
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn happy_path_with_optional_arguments() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let test_list = TestList::default();
+
+        // Add more values first
+        let result = client
+            .list_concatenate_back(cache_name, test_list.name(), test_list.values().to_vec())
+            .await?;
+        assert_eq!(result, ListConcatenateBackResponse {});
+
+        // Push back with truncation and collection ttl
+        let request = ListPushBackRequest::new(
+            cache_name.to_string(),
+            test_list.name(),
+            test_list.values()[0].to_string(),
+        )
+        .truncate_front_to_size(2)
+        .ttl(CollectionTtl::new(Some(Duration::from_secs(3)), true));
+        let result = client.send_request(request).await?;
+        assert_eq!(result, ListPushBackResponse {});
+
+        // Should have truncated to only 2 elements
+        assert_list_eq(
+            client.list_fetch(cache_name, test_list.name()).await?,
+            vec![
+                test_list.values()[1].to_string(),
+                test_list.values()[0].to_string(),
+            ],
+        )?;
+
+        tokio::time::sleep(Duration::from_secs(3)).await;
+
+        // Expect a miss after collection ttl expires
+        let result = client.list_fetch(cache_name, test_list.name()).await?;
+        assert_eq!(result, ListFetchResponse::Miss);
+
+        Ok(())
+    }
+}
+
+mod list_push_front {
+    use super::*;
+
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_cache_name();
+
+        let result = client
+            .list_push_front(cache_name, "list", "value")
+            .await
+            .unwrap_err();
+
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let test_list = TestList::default();
+
+        let one_value = test_list.values()[0].to_string();
+        let result = client
+            .list_push_front(cache_name, test_list.name(), one_value.clone())
+            .await?;
+        assert_eq!(result, ListPushFrontResponse {});
+        assert_list_eq(
+            client.list_fetch(cache_name, test_list.name()).await?,
+            vec![one_value],
+        )?;
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn happy_path_with_optional_arguments() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let test_list = TestList::default();
+
+        // Add more values first
+        let result = client
+            .list_concatenate_back(cache_name, test_list.name(), test_list.values().to_vec())
+            .await?;
+        assert_eq!(result, ListConcatenateBackResponse {});
+
+        // Push back with truncation and collection ttl
+        let request = ListPushFrontRequest::new(
+            cache_name.to_string(),
+            test_list.name(),
+            test_list.values()[0].to_string(),
+        )
+        .truncate_back_to_size(2)
+        .ttl(CollectionTtl::new(Some(Duration::from_secs(3)), true));
+        let result = client.send_request(request).await?;
+        assert_eq!(result, ListPushFrontResponse {});
+
+        // Should have truncated to only 2 elements
+        assert_list_eq(
+            client.list_fetch(cache_name, test_list.name()).await?,
+            vec![
+                test_list.values()[0].to_string(),
+                test_list.values()[0].to_string(),
+            ],
+        )?;
+
+        tokio::time::sleep(Duration::from_secs(3)).await;
+
+        // Expect a miss after collection ttl expires
+        let result = client.list_fetch(cache_name, test_list.name()).await?;
+        assert_eq!(result, ListFetchResponse::Miss);
 
         Ok(())
     }

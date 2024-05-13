@@ -1,18 +1,15 @@
 use crate::{
     cache::{CollectionTtl, MomentoRequest},
     utils::prep_request_with_timeout,
-    CacheClient, IntoBytes, IntoBytesIterable, MomentoResult,
+    CacheClient, IntoBytes, MomentoResult,
 };
 
-/// Adds multiple elements to the front of the given list. Creates the list if it does not already exist.
-///
-/// Prepends the supplied list to the front of a list. For example, if you have a list [1, 2, 3]
-/// and listConcatenateFront [4, 5, 6], you will create [4, 5, 6, 1, 2, 3].
+/// Adds an element to the front of the given list. Creates the list if it does not already exist.
 ///
 /// # Arguments
 /// * `cache_name` - name of cache
 /// * `list_name` - name of the list
-/// * `values` - list of values to add to the front of the list
+/// * `value` - value to prepend to list
 ///
 /// # Optional Arguments
 ///
@@ -25,35 +22,35 @@ use crate::{
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{ListConcatenateFrontResponse, ListConcatenateFrontRequest, CollectionTtl};
+/// use momento::cache::{ListPushFrontResponse, ListPushFrontRequest, CollectionTtl};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let list_name = "list-name";
-/// let concat_front_request = ListConcatenateFrontRequest::new(cache_name, list_name, vec!["value1", "value2"])
+/// let push_front_request = ListPushFrontRequest::new(cache_name, list_name, "value1")
 ///     .ttl(CollectionTtl::default())
 ///     .truncate_back_to_size(10);
 ///
-/// match cache_client.send_request(concat_front_request).await {
-///     Ok(_) => println!("Elements added to list"),
-///     Err(e) => eprintln!("Error adding elements to list: {}", e),
+/// match cache_client.send_request(push_front_request).await {
+///     Ok(_) => println!("Element added to list"),
+///     Err(e) => eprintln!("Error adding element to list: {}", e),
 /// }
 /// # Ok(())
 /// # })
 /// # }
 /// ```
-pub struct ListConcatenateFrontRequest<L: IntoBytes, V: IntoBytesIterable> {
+pub struct ListPushFrontRequest<L: IntoBytes, V: IntoBytes> {
     cache_name: String,
     list_name: L,
-    values: V,
+    value: V,
     collection_ttl: Option<CollectionTtl>,
     truncate_back_to_size: Option<u32>,
 }
 
-impl<L: IntoBytes, V: IntoBytesIterable> ListConcatenateFrontRequest<L, V> {
-    pub fn new(cache_name: impl Into<String>, list_name: L, values: V) -> Self {
+impl<L: IntoBytes, V: IntoBytes> ListPushFrontRequest<L, V> {
+    pub fn new(cache_name: impl Into<String>, list_name: L, value: V) -> Self {
         Self {
             cache_name: cache_name.into(),
             list_name,
-            values,
+            value,
             collection_ttl: None,
             truncate_back_to_size: None,
         }
@@ -65,27 +62,27 @@ impl<L: IntoBytes, V: IntoBytesIterable> ListConcatenateFrontRequest<L, V> {
         self
     }
 
-    /// If the list exceeds this length, remove excess from the back of the list.
+    /// If the list exceeds this length, remove excess from the front of the list.
     pub fn truncate_back_to_size(mut self, truncate_back_to_size: u32) -> Self {
         self.truncate_back_to_size = Some(truncate_back_to_size);
         self
     }
 }
 
-impl<L: IntoBytes, V: IntoBytesIterable> MomentoRequest for ListConcatenateFrontRequest<L, V> {
-    type Response = ListConcatenateFrontResponse;
+impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListPushFrontRequest<L, V> {
+    type Response = ListPushFrontResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListConcatenateFrontResponse> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListPushFrontResponse> {
         let collection_ttl = self.collection_ttl.unwrap_or_default();
-        let values = self.values;
+        let value = self.value.into_bytes();
         let list_name = self.list_name.into_bytes();
         let cache_name = &self.cache_name;
         let request = prep_request_with_timeout(
             cache_name,
             cache_client.configuration.deadline_millis(),
-            momento_protos::cache_client::ListConcatenateFrontRequest {
+            momento_protos::cache_client::ListPushFrontRequest {
                 list_name,
-                values: values.into_bytes(),
+                value,
                 ttl_milliseconds: cache_client.expand_ttl_ms(collection_ttl.ttl())?,
                 refresh_ttl: collection_ttl.refresh(),
                 truncate_back_to_size: self.truncate_back_to_size.unwrap_or(0),
@@ -95,11 +92,11 @@ impl<L: IntoBytes, V: IntoBytesIterable> MomentoRequest for ListConcatenateFront
         let _ = cache_client
             .data_client
             .clone()
-            .list_concatenate_front(request)
+            .list_push_front(request)
             .await?;
-        Ok(ListConcatenateFrontResponse {})
+        Ok(ListPushFrontResponse {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct ListConcatenateFrontResponse {}
+pub struct ListPushFrontResponse {}

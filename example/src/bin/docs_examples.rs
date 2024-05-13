@@ -1,5 +1,5 @@
 use futures::StreamExt;
-use momento::cache::configurations::laptop;
+use momento::cache::configurations::Laptop;
 use momento::cache::{
     CreateCache, DecreaseTtl, DictionaryFetch, DictionaryGetField, DictionaryGetFields,
     IncreaseTtl, ItemType, SetIfAbsent, SetIfAbsentOrEqual, SetIfEqual, SetIfNotEqual,
@@ -19,29 +19,29 @@ pub fn example_API_CredentialProviderFromString() {
 
 #[allow(non_snake_case)]
 pub fn example_API_ConfigurationLaptop() {
-    let _config = momento::cache::configurations::laptop::latest();
+    let _config = momento::cache::configurations::Laptop::latest();
 }
 
 #[allow(non_snake_case)]
 pub fn example_API_ConfigurationInRegionDefaultLatest() {
-    let _config = momento::cache::configurations::in_region::latest();
+    let _config = momento::cache::configurations::InRegion::latest();
 }
 
 #[allow(non_snake_case)]
 pub fn example_API_ConfigurationInRegionLowLatency() {
-    let _config = momento::cache::configurations::low_latency::latest();
+    let _config = momento::cache::configurations::LowLatency::latest();
 }
 
 #[allow(non_snake_case)]
 pub fn example_API_ConfigurationLambdaLatest() {
-    let _config = momento::cache::configurations::lambda::latest();
+    let _config = momento::cache::configurations::Lambda::latest();
 }
 
 #[allow(non_snake_case)]
 pub fn example_API_InstantiateCacheClient() -> Result<(), MomentoError> {
     let _cache_client = CacheClient::builder()
         .default_ttl(Duration::from_secs(60))
-        .configuration(laptop::latest())
+        .configuration(Laptop::latest())
         .credential_provider(CredentialProvider::from_env_var(
             "MOMENTO_API_KEY".to_string(),
         )?)
@@ -722,7 +722,7 @@ pub async fn example_API_KeysExist(
 #[allow(non_snake_case)]
 pub fn example_API_InstantiateTopicClient() -> Result<(), MomentoError> {
     let _topic_client = TopicClient::builder()
-        .configuration(momento::topics::configurations::laptop::latest())
+        .configuration(momento::topics::configurations::Laptop::latest())
         .credential_provider(CredentialProvider::from_env_var("MOMENTO_API_KEY")?)
         .build()?;
     Ok(())
@@ -772,7 +772,7 @@ pub async fn main() -> Result<(), MomentoError> {
 
     let cache_client = CacheClient::builder()
         .default_ttl(Duration::from_secs(60))
-        .configuration(laptop::latest())
+        .configuration(Laptop::latest())
         .credential_provider(CredentialProvider::from_env_var(
             "MOMENTO_API_KEY".to_string(),
         )?)
@@ -836,7 +836,7 @@ pub async fn main() -> Result<(), MomentoError> {
     example_API_InstantiateTopicClient()?;
 
     let topic_client = TopicClient::builder()
-        .configuration(momento::topics::configurations::laptop::latest())
+        .configuration(momento::topics::configurations::Laptop::latest())
         .credential_provider(CredentialProvider::from_env_var("MOMENTO_API_KEY")?)
         .build()?;
     let topic_name = format!("{}-{}", "docs-examples-topic", Uuid::new_v4());
