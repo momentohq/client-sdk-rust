@@ -21,7 +21,7 @@ use crate::{
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::convert::TryInto;
-/// use momento::cache::{SortedSetGetScore, SortedSetGetScoreRequest};
+/// use momento::cache::{SortedSetGetScoreResponse, SortedSetGetScoreRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
@@ -52,9 +52,9 @@ impl<L: IntoBytes, V: IntoBytes> SortedSetGetScoreRequest<L, V> {
 }
 
 impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetScoreRequest<L, V> {
-    type Response = SortedSetGetScore;
+    type Response = SortedSetGetScoreResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SortedSetGetScore> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SortedSetGetScoreResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
@@ -78,15 +78,15 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetScoreRequest<L, 
                     .first()
                     .expect("Expected to receive one element");
                 if found_element.result == ECacheResult::Hit as i32 {
-                    Ok(SortedSetGetScore::Hit {
+                    Ok(SortedSetGetScoreResponse::Hit {
                         score: found_element.score,
                     })
                 } else {
-                    Ok(SortedSetGetScore::Miss)
+                    Ok(SortedSetGetScoreResponse::Miss)
                 }
             }
             Some(sorted_set_get_score_response::SortedSet::Missing(_)) => {
-                Ok(SortedSetGetScore::Miss)
+                Ok(SortedSetGetScoreResponse::Miss)
             }
             _ => Err(MomentoError::unknown_error(
                 "SortedSetGetScore",
@@ -101,40 +101,40 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetScoreRequest<L, 
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// # use momento::MomentoResult;
-/// use momento::cache::SortedSetGetScore;
+/// use momento::cache::SortedSetGetScoreResponse;
 /// use std::convert::TryInto;
-/// # let response = SortedSetGetScore::Hit { score: 5.0 };
+/// # let response = SortedSetGetScoreResponse::Hit { score: 5.0 };
 /// let score: f64 = match response {
-///     SortedSetGetScore::Hit { score } => score.try_into().expect("Expected a score!"),
-///     SortedSetGetScore::Miss => return // probably you'll do something else here
+///     SortedSetGetScoreResponse::Hit { score } => score.try_into().expect("Expected a score!"),
+///     SortedSetGetScoreResponse::Miss => return // probably you'll do something else here
 /// };
 /// ```
 ///
 /// You can cast your result directly into a Result<f64, MomentoError> suitable for
-/// ?-propagation if you know you are expecting a SortedSetGetScore::Hit.
+/// ?-propagation if you know you are expecting a SortedSetGetScoreResponse::Hit.
 ///
 /// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
 /// this is what you're after:
 /// ```
 /// # use momento::MomentoResult;
-/// use momento::cache::SortedSetGetScore;
+/// use momento::cache::SortedSetGetScoreResponse;
 /// use std::convert::TryInto;
-/// # let response = SortedSetGetScore::Hit { score: 5.0 };
+/// # let response = SortedSetGetScoreResponse::Hit { score: 5.0 };
 /// let score: MomentoResult<f64> = response.try_into();
 /// ```
 #[derive(Debug, PartialEq)]
-pub enum SortedSetGetScore {
+pub enum SortedSetGetScoreResponse {
     Hit { score: f64 },
     Miss,
 }
 
-impl TryFrom<SortedSetGetScore> for f64 {
+impl TryFrom<SortedSetGetScoreResponse> for f64 {
     type Error = MomentoError;
 
-    fn try_from(value: SortedSetGetScore) -> Result<Self, Self::Error> {
+    fn try_from(value: SortedSetGetScoreResponse) -> Result<Self, Self::Error> {
         match value {
-            SortedSetGetScore::Hit { score } => Ok(score),
-            SortedSetGetScore::Miss => Err(MomentoError::miss("SortedSetGetScore")),
+            SortedSetGetScoreResponse::Hit { score } => Ok(score),
+            SortedSetGetScoreResponse::Miss => Err(MomentoError::miss("SortedSetGetScore")),
         }
     }
 }

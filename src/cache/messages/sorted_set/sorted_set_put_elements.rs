@@ -123,7 +123,7 @@ impl<V: IntoBytes> IntoSortedSetElements<V> for HashMap<V, f64> {
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{CollectionTtl, SortedSetPutElements, SortedSetPutElementsRequest};
+/// use momento::cache::{CollectionTtl, SortedSetPutElementsResponse, SortedSetPutElementsRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
 ///
@@ -172,9 +172,9 @@ impl<S: IntoBytes, V: IntoBytes, E: IntoSortedSetElements<V>> SortedSetPutElemen
 impl<S: IntoBytes, V: IntoBytes, E: IntoSortedSetElements<V>> MomentoRequest
     for SortedSetPutElementsRequest<S, V, E>
 {
-    type Response = SortedSetPutElements;
+    type Response = SortedSetPutElementsResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SortedSetPutElements> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SortedSetPutElementsResponse> {
         let collection_ttl = self.collection_ttl.unwrap_or_default();
         let elements = self.elements.into_sorted_set_elements();
         let set_name = self.sorted_set_name.into_bytes();
@@ -201,9 +201,9 @@ impl<S: IntoBytes, V: IntoBytes, E: IntoSortedSetElements<V>> MomentoRequest
             .clone()
             .sorted_set_put(request)
             .await?;
-        Ok(SortedSetPutElements {})
+        Ok(SortedSetPutElementsResponse {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct SortedSetPutElements {}
+pub struct SortedSetPutElementsResponse {}

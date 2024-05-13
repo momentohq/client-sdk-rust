@@ -1,6 +1,7 @@
 use momento::{
     cache::{
-        GetResponse, GetValue, ListFetchResponse, ListFetchValue, SortedSetElements, SortedSetFetch,
+        GetResponse, GetValue, ListFetchResponse, ListFetchValue, SortedSetElements,
+        SortedSetFetchResponse,
     },
     IntoBytes,
 };
@@ -156,9 +157,9 @@ impl Default for TestSortedSet {
     }
 }
 
-impl From<&TestSortedSet> for SortedSetFetch {
+impl From<&TestSortedSet> for SortedSetFetchResponse {
     fn from(test_sorted_set: &TestSortedSet) -> Self {
-        SortedSetFetch::Hit {
+        SortedSetFetchResponse::Hit {
             value: SortedSetElements::new(
                 test_sorted_set
                     .value()

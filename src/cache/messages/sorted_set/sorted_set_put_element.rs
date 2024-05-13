@@ -25,7 +25,7 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{CollectionTtl, SortedSetPutElement, SortedSetPutElementRequest};
+/// use momento::cache::{CollectionTtl, SortedSetPutElementResponse, SortedSetPutElementRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
 ///
@@ -71,9 +71,9 @@ impl<S: IntoBytes, V: IntoBytes> SortedSetPutElementRequest<S, V> {
 }
 
 impl<S: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetPutElementRequest<S, V> {
-    type Response = SortedSetPutElement;
+    type Response = SortedSetPutElementResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SortedSetPutElement> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SortedSetPutElementResponse> {
         let collection_ttl = self.collection_ttl.unwrap_or_default();
         let element = SortedSetElement {
             value: self.value.into_bytes(),
@@ -97,9 +97,9 @@ impl<S: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetPutElementRequest<S
             .clone()
             .sorted_set_put(request)
             .await?;
-        Ok(SortedSetPutElement {})
+        Ok(SortedSetPutElementResponse {})
     }
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct SortedSetPutElement {}
+pub struct SortedSetPutElementResponse {}

@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
 use momento::cache::{
-    IntoSortedSetElements, SortedSetElement, SortedSetElements, SortedSetFetch,
-    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetGetRank, SortedSetGetScore,
-    SortedSetLength,
+    IntoSortedSetElements, SortedSetElement, SortedSetElements, SortedSetFetchByRankRequest,
+    SortedSetFetchByScoreRequest, SortedSetFetchResponse, SortedSetGetRankResponse,
+    SortedSetGetScoreResponse, SortedSetLengthResponse,
     SortedSetOrder::{Ascending, Descending},
-    SortedSetPutElements, SortedSetRemoveElements,
+    SortedSetPutElementsResponse, SortedSetRemoveElementsResponse,
 };
 use momento::{CacheClient, MomentoErrorCode, MomentoResult};
 
@@ -14,10 +14,10 @@ use momento_test_util::{
 };
 
 fn assert_fetched_sorted_set_eq(
-    sorted_set_fetch_result: SortedSetFetch,
+    sorted_set_fetch_result: SortedSetFetchResponse,
     expected: Vec<(String, f64)>,
 ) -> MomentoResult<()> {
-    let expected: SortedSetFetch = expected.into();
+    let expected: SortedSetFetchResponse = expected.into();
     assert_eq!(
         sorted_set_fetch_result, expected,
         "Expected SortedSetFetch::Hit to be equal to {:?}, but got {:?}",
@@ -27,7 +27,7 @@ fn assert_fetched_sorted_set_eq(
 }
 
 fn assert_fetched_sorted_set_eq_after_sorting(
-    sorted_set_fetch_result: SortedSetFetch,
+    sorted_set_fetch_result: SortedSetFetchResponse,
     expected: Vec<(String, f64)>,
 ) -> MomentoResult<()> {
     let sort_by_score = |a: &(_, f64), b: &(_, f64)| -> std::cmp::Ordering {
@@ -36,10 +36,10 @@ fn assert_fetched_sorted_set_eq_after_sorting(
     };
 
     let sorted_set_fetch_result = match sorted_set_fetch_result {
-        SortedSetFetch::Hit { value } => {
+        SortedSetFetchResponse::Hit { value } => {
             let mut elements = value.elements.clone();
             elements.sort_by(sort_by_score);
-            SortedSetFetch::Hit {
+            SortedSetFetchResponse::Hit {
                 value: SortedSetElements { elements },
             }
         }
@@ -75,7 +75,7 @@ mod sorted_set_fetch_by_rank {
         let result = client
             .sorted_set_fetch_by_rank(cache_name, item.name(), Ascending, None, None)
             .await?;
-        assert_eq!(result, SortedSetFetch::Miss);
+        assert_eq!(result, SortedSetFetchResponse::Miss);
 
         client
             .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
@@ -174,7 +174,7 @@ mod sorted_set_fetch_by_score {
         let result = client
             .sorted_set_fetch_by_score(cache_name, item.name(), Ascending)
             .await?;
-        assert_eq!(result, SortedSetFetch::Miss);
+        assert_eq!(result, SortedSetFetchResponse::Miss);
 
         client
             .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
@@ -285,19 +285,19 @@ mod sorted_set_get_rank {
         let result = client
             .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
             .await?;
-        assert_eq!(result, SortedSetPutElements {});
+        assert_eq!(result, SortedSetPutElementsResponse {});
 
         // Hit for existing value
         let result = client
             .sorted_set_get_rank(cache_name, item.name(), item.value[0].0.as_str())
             .await?;
-        assert_eq!(result, SortedSetGetRank::Hit { rank: 0 });
+        assert_eq!(result, SortedSetGetRankResponse::Hit { rank: 0 });
 
         // Miss for nonexistent value
         let result = client
             .sorted_set_get_rank(cache_name, item.name(), "nonexistent")
             .await?;
-        assert_eq!(result, SortedSetGetRank::Miss);
+        assert_eq!(result, SortedSetGetRankResponse::Miss);
 
         Ok(())
     }
@@ -326,7 +326,7 @@ mod sorted_set_get_rank {
         let result = client
             .sorted_set_get_rank(cache_name, sorted_set_name, "element1")
             .await?;
-        assert_eq!(result, SortedSetGetRank::Miss);
+        assert_eq!(result, SortedSetGetRankResponse::Miss);
         Ok(())
     }
 }
@@ -343,19 +343,19 @@ mod sorted_set_get_score {
         let result = client
             .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
             .await?;
-        assert_eq!(result, SortedSetPutElements {});
+        assert_eq!(result, SortedSetPutElementsResponse {});
 
         // Hit for existing value
         let result = client
             .sorted_set_get_score(cache_name, item.name(), item.value[0].0.as_str())
             .await?;
-        assert_eq!(result, SortedSetGetScore::Hit { score: 1.0 });
+        assert_eq!(result, SortedSetGetScoreResponse::Hit { score: 1.0 });
 
         // Miss for nonexistent value
         let result = client
             .sorted_set_get_score(cache_name, item.name(), unique_value())
             .await?;
-        assert_eq!(result, SortedSetGetScore::Miss);
+        assert_eq!(result, SortedSetGetScoreResponse::Miss);
 
         Ok(())
     }
@@ -384,7 +384,7 @@ mod sorted_set_get_score {
         let result = client
             .sorted_set_get_score(cache_name, sorted_set_name, "element1")
             .await?;
-        assert_eq!(result, SortedSetGetScore::Miss);
+        assert_eq!(result, SortedSetGetScoreResponse::Miss);
         Ok(())
     }
 }
@@ -408,7 +408,7 @@ mod sorted_set_remove_elements {
         let result = client
             .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
             .await?;
-        assert_eq!(result, SortedSetPutElements {});
+        assert_eq!(result, SortedSetPutElementsResponse {});
 
         // does nothing for nonexistent values
         let result = client
@@ -418,7 +418,7 @@ mod sorted_set_remove_elements {
                 vec![unique_value(), unique_value()],
             )
             .await?;
-        assert_eq!(result, SortedSetRemoveElements {});
+        assert_eq!(result, SortedSetRemoveElementsResponse {});
         assert_fetched_sorted_set_eq(
             client
                 .sorted_set_fetch_by_score(cache_name, item.name(), Ascending)
@@ -431,7 +431,7 @@ mod sorted_set_remove_elements {
         let result = client
             .sorted_set_remove_elements(cache_name, item.name(), values)
             .await?;
-        assert_eq!(result, SortedSetRemoveElements {});
+        assert_eq!(result, SortedSetRemoveElementsResponse {});
         assert_fetched_sorted_set_eq(
             client
                 .sorted_set_fetch_by_score(cache_name, item.name(), Ascending)
@@ -466,7 +466,7 @@ mod sorted_set_remove_elements {
         let result = client
             .sorted_set_remove_elements(cache_name, sorted_set_name, vec!["element1", "element2"])
             .await?;
-        assert_eq!(result, SortedSetRemoveElements {});
+        assert_eq!(result, SortedSetRemoveElementsResponse {});
         Ok(())
     }
 }
@@ -483,7 +483,7 @@ mod sorted_set_put_element {
         let result = client
             .sorted_set_fetch_by_rank(cache_name, item.name(), Ascending, None, None)
             .await?;
-        assert_eq!(result, SortedSetFetch::Miss);
+        assert_eq!(result, SortedSetFetchResponse::Miss);
 
         client
             .sorted_set_put_element(
@@ -612,16 +612,16 @@ mod sorted_set_length {
 
         // Miss before sorted set exists
         let result = client.sorted_set_length(cache_name, item.name()).await?;
-        assert_eq!(result, SortedSetLength::Miss);
+        assert_eq!(result, SortedSetLengthResponse::Miss);
 
         let result = client
             .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
             .await?;
-        assert_eq!(result, SortedSetPutElements {});
+        assert_eq!(result, SortedSetPutElementsResponse {});
 
         // Nonzero length after sorted set exists
         let result = client.sorted_set_length(cache_name, item.name()).await?;
-        assert_eq!(result, SortedSetLength::Hit { length: 2 });
+        assert_eq!(result, SortedSetLengthResponse::Hit { length: 2 });
 
         Ok(())
     }

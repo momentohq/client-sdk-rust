@@ -68,18 +68,27 @@ pub use messages::sorted_set::sorted_set_fetch_by_rank::{
     SortedSetFetchByRankRequest, SortedSetOrder,
 };
 pub use messages::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
-pub use messages::sorted_set::sorted_set_fetch_response::{SortedSetElements, SortedSetFetch};
-pub use messages::sorted_set::sorted_set_get_rank::{SortedSetGetRank, SortedSetGetRankRequest};
-pub use messages::sorted_set::sorted_set_get_score::{SortedSetGetScore, SortedSetGetScoreRequest};
-pub use messages::sorted_set::sorted_set_length::{SortedSetLength, SortedSetLengthRequest};
+pub use messages::sorted_set::sorted_set_fetch_response::{
+    SortedSetElements, SortedSetFetchResponse,
+};
+pub use messages::sorted_set::sorted_set_get_rank::{
+    SortedSetGetRankRequest, SortedSetGetRankResponse,
+};
+pub use messages::sorted_set::sorted_set_get_score::{
+    SortedSetGetScoreRequest, SortedSetGetScoreResponse,
+};
+pub use messages::sorted_set::sorted_set_length::{
+    SortedSetLengthRequest, SortedSetLengthResponse,
+};
 pub use messages::sorted_set::sorted_set_put_element::{
-    SortedSetPutElement, SortedSetPutElementRequest,
+    SortedSetPutElementRequest, SortedSetPutElementResponse,
 };
 pub use messages::sorted_set::sorted_set_put_elements::{
-    IntoSortedSetElements, SortedSetElement, SortedSetPutElements, SortedSetPutElementsRequest,
+    IntoSortedSetElements, SortedSetElement, SortedSetPutElementsRequest,
+    SortedSetPutElementsResponse,
 };
 pub use messages::sorted_set::sorted_set_remove_elements::{
-    SortedSetRemoveElements, SortedSetRemoveElementsRequest,
+    SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse,
 };
 
 pub use messages::list::list_concatenate_back::{
