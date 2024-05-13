@@ -394,6 +394,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get a field using a [DictionaryGetFieldRequest].
     pub async fn dictionary_get_field(
         &self,
         cache_name: impl Into<String>,
@@ -446,6 +447,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get fields using a [DictionaryGetFieldsRequest].
     pub async fn dictionary_get_fields<F: IntoBytesIterable + Clone>(
         &self,
         cache_name: impl Into<String>,
@@ -490,6 +492,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to increment a field using a [DictionaryIncrementRequest].
     pub async fn dictionary_increment(
         &self,
         cache_name: impl Into<String>,
@@ -526,6 +529,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get the length of a dictionary using a [DictionaryLengthRequest].
     pub async fn dictionary_length(
         &self,
         cache_name: impl Into<String>,
@@ -564,6 +568,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to remove a field using a [DictionaryRemoveFieldRequest].
     pub async fn dictionary_remove_field(
         &self,
         cache_name: impl Into<String>,
@@ -609,6 +614,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to remove fields using a [DictionaryRemoveFieldsRequest].
     pub async fn dictionary_remove_fields<F: IntoBytesIterable>(
         &self,
         cache_name: impl Into<String>,
@@ -710,6 +716,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to set fields using a [DictionarySetFieldsRequest]
     pub async fn dictionary_set_fields<F: IntoBytes, V: IntoBytes>(
         &self,
         cache_name: impl Into<String>,
@@ -1230,7 +1237,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get the rank of an element using a [SortedSetGetScoreRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to get the score of an element using a [SortedSetGetScoreRequest].
     pub async fn sorted_set_get_score(
         &self,
         cache_name: impl Into<String>,
@@ -1266,7 +1273,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [KeyExistsRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to check if a key exists using a [KeyExistsRequest].
     pub async fn key_exists(
         &self,
         cache_name: impl Into<String>,
@@ -1304,7 +1311,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [KeysExistRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to check if the keys exist using a [KeysExistRequest].
     pub async fn keys_exist(
         &self,
         cache_name: impl Into<String>,
@@ -1351,7 +1358,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using an [IncrementRequest]
+    /// You can also use the [send_request](CacheClient::send_request) method to increment an item using an [IncrementRequest]
     /// which will allow you to set [optional arguments](IncrementRequest#optional-arguments) as well.
     pub async fn increment(
         &self,
@@ -2150,7 +2157,7 @@ impl CacheClient {
     /// you want to set optional fields on a request that are not supported by the short-hand API for
     /// that request type.
     ///
-    /// See [SortedSetFetchByRankRequest] for an example of creating a request with optional fields.
+    /// See [SortedSetFetchByScoreRequest] for an example of creating a request with optional fields.
     pub async fn send_request<R: MomentoRequest>(&self, request: R) -> MomentoResult<R::Response> {
         request.send(self).await
     }
