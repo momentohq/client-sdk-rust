@@ -63,7 +63,7 @@ pub use messages::data::scalar::set_if_present_and_not_equal::{
 pub use messages::data::scalar::update_ttl::{UpdateTtlRequest, UpdateTtlResponse};
 
 pub use messages::data::set::set_add_elements::{SetAddElementsRequest, SetAddElementsResponse};
-pub use messages::data::set::set_fetch::{SetFetchRequest, SetFetchResponse, SetFetchValue};
+pub use messages::data::set::set_fetch::{SetFetchRequest, SetFetchResponse};
 pub use messages::data::set::set_remove_elements::{
     SetRemoveElementsRequest, SetRemoveElementsResponse,
 };
