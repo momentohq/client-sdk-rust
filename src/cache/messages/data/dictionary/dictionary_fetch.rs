@@ -87,7 +87,7 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
                     .map(|element| (element.field, element.value))
                     .collect();
                 Ok(DictionaryFetchResponse::Hit {
-                    value: DictionaryFetchValue::new(raw_item),
+                    value: Value::new(raw_item),
                 })
             }
             _ => Err(MomentoError::unknown_error(
@@ -104,9 +104,9 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
 /// ```
 /// fn main() -> anyhow::Result<()> {
 /// # use std::collections::HashMap;
-/// # use momento::cache::{DictionaryFetchResponse, DictionaryFetchValue};
+/// # use momento::cache::DictionaryFetchResponse;
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryFetchResponse::Hit { value: DictionaryFetchValue::default() };
+/// # let fetch_response = DictionaryFetchResponse::default();
 /// use std::convert::TryInto;
 /// let item: HashMap<String, String> = match fetch_response {
 ///    DictionaryFetchResponse::Hit { value } => value.try_into().expect("I stored strings!"),
@@ -119,9 +119,9 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
 /// Or, if you're storing raw bytes you can get at them simply:
 /// ```
 /// # use std::collections::HashMap;
-/// # use momento::cache::{DictionaryFetchResponse, DictionaryFetchValue};
+/// # use momento::cache::DictionaryFetchResponse;
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryFetchResponse::Hit { value: DictionaryFetchValue::default() };
+/// # let fetch_response = DictionaryFetchResponse::default();
 /// use std::convert::TryInto;
 /// let item: HashMap<Vec<u8>, Vec<u8>> = match fetch_response {
 ///   DictionaryFetchResponse::Hit { value } => value.into(),
@@ -136,9 +136,9 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
 /// this is what you're after:
 /// ```
 /// # use std::collections::HashMap;
-/// # use momento::cache::{DictionaryFetchResponse, DictionaryFetchValue};
+/// # use momento::cache::DictionaryFetchResponse;
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryFetchResponse::Hit { value: DictionaryFetchValue::default() };
+/// # let fetch_response = DictionaryFetchResponse::default();
 /// use std::convert::TryInto;
 /// let item: MomentoResult<HashMap<String, String>> = fetch_response.try_into();
 /// ```
@@ -146,33 +146,42 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
 /// You can also go straight into a `HashMap<Vec<u8>, Vec<u8>>` if you prefer:
 /// ```
 /// # use std::collections::HashMap;
-/// # use momento::cache::{DictionaryFetchResponse, DictionaryFetchValue};
+/// # use momento::cache::DictionaryFetchResponse;
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryFetchResponse::Hit { value: DictionaryFetchValue::default() };
+/// # let fetch_response = DictionaryFetchResponse::default();
 /// use std::convert::TryInto;
 /// let item: MomentoResult<HashMap<Vec<u8>, Vec<u8>>> = fetch_response.try_into();
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum DictionaryFetchResponse {
-    Hit { value: DictionaryFetchValue },
+    Hit { value: Value },
     Miss,
 }
 
+impl Default for DictionaryFetchResponse {
+    fn default() -> Self {
+        DictionaryFetchResponse::Hit {
+            value: Value::default(),
+        }
+    }
+}
+
+/// A dictionary fetched from a cache.
 #[derive(Debug, PartialEq, Eq, Default)]
-pub struct DictionaryFetchValue {
+pub struct Value {
     pub(crate) raw_item: HashMap<Vec<u8>, Vec<u8>>,
 }
 
-impl DictionaryFetchValue {
+impl Value {
     pub fn new(raw_item: HashMap<Vec<u8>, Vec<u8>>) -> Self {
         Self { raw_item }
     }
 }
 
-impl TryFrom<DictionaryFetchValue> for HashMap<String, String> {
+impl TryFrom<Value> for HashMap<String, String> {
     type Error = MomentoError;
 
-    fn try_from(value: DictionaryFetchValue) -> Result<Self, Self::Error> {
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
         let mut result = HashMap::new();
         for (key, value) in value.raw_item {
             let key = parse_string(key)?;
@@ -183,8 +192,8 @@ impl TryFrom<DictionaryFetchValue> for HashMap<String, String> {
     }
 }
 
-impl From<DictionaryFetchValue> for HashMap<Vec<u8>, Vec<u8>> {
-    fn from(value: DictionaryFetchValue) -> Self {
+impl From<Value> for HashMap<Vec<u8>, Vec<u8>> {
+    fn from(value: Value) -> Self {
         value.raw_item
     }
 }
