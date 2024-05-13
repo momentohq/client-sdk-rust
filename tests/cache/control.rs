@@ -1,4 +1,4 @@
-use momento::cache::{CreateCache, FlushCache, GetResponse, GetValue, SetResponse};
+use momento::cache::{CreateCacheResponse, FlushCache, GetResponse, GetValue, SetResponse};
 use momento::MomentoErrorCode;
 use momento::MomentoResult;
 use momento_test_util::CACHE_TEST_STATE;
@@ -21,7 +21,7 @@ mod create_delete_list_cache {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = &CACHE_TEST_STATE.cache_name;
         let result = client.create_cache(cache_name).await?;
-        assert_eq!(result, CreateCache::AlreadyExists {});
+        assert_eq!(result, CreateCacheResponse::AlreadyExists {});
         Ok(())
     }
 }
@@ -69,7 +69,7 @@ mod flush_cache {
 
         // Create isolated cache for this test
         let create_result = client.create_cache(cache_name).await?;
-        assert_eq!(create_result, CreateCache::Created {});
+        assert_eq!(create_result, CreateCacheResponse::Created {});
 
         // Insert some elements
         let item1 = TestScalar::new();

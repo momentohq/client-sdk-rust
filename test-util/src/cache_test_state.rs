@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use momento::cache::CreateCache;
+use momento::cache::CreateCacheResponse;
 use once_cell::sync::Lazy;
 use tokio::sync::watch::channel;
 
@@ -47,8 +47,8 @@ impl CacheTestState {
 
             match cache_client.clone().create_cache(thread_cache_name).await {
                 Ok(ok) => match ok {
-                    CreateCache::Created => println!("Cache created."),
-                    CreateCache::AlreadyExists => println!("Cache already exists."),
+                    CreateCacheResponse::Created => println!("Cache created."),
+                    CreateCacheResponse::AlreadyExists => println!("Cache already exists."),
                 },
                 Err(e) => panic!("Failed to create cache: {:?}", e),
             }

@@ -7,34 +7,35 @@ use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
 
 use crate::cache::{
-    Configuration, CreateCache, CreateCacheRequest, DecreaseTtlRequest, DecreaseTtlResponse,
-    DeleteCache, DeleteCacheRequest, DeleteRequest, DeleteResponse, DictionaryFetchRequest,
-    DictionaryFetchResponse, DictionaryGetFieldRequest, DictionaryGetFieldResponse,
-    DictionaryGetFieldsRequest, DictionaryGetFieldsResponse, DictionaryIncrementRequest,
-    DictionaryIncrementResponse, DictionaryLengthRequest, DictionaryLengthResponse,
-    DictionaryRemoveFieldRequest, DictionaryRemoveFieldResponse, DictionaryRemoveFieldsRequest,
-    DictionaryRemoveFieldsResponse, DictionarySetFieldRequest, DictionarySetFieldResponse,
-    DictionarySetFieldsRequest, DictionarySetFieldsResponse, FlushCache, FlushCacheRequest,
-    GetRequest, GetResponse, IncreaseTtlRequest, IncreaseTtlResponse, IncrementRequest,
-    IncrementResponse, IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtlRequest,
-    ItemGetTtlResponse, ItemGetTypeRequest, ItemGetTypeResponse, KeyExistsRequest,
-    KeyExistsResponse, KeysExistRequest, KeysExistResponse, ListCaches, ListCachesRequest,
-    ListConcatenateBackRequest, ListConcatenateBackResponse, ListConcatenateFrontRequest,
-    ListConcatenateFrontResponse, ListFetchRequest, ListFetchResponse, ListLengthRequest,
-    ListLengthResponse, ListPopBackRequest, ListPopBackResponse, ListPopFrontRequest,
-    ListPopFrontResponse, ListPushBackRequest, ListPushBackResponse, ListPushFrontRequest,
-    ListPushFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse, MomentoRequest,
-    SetAddElementsRequest, SetAddElementsResponse, SetFetchRequest, SetFetchResponse,
-    SetIfAbsentOrEqualRequest, SetIfAbsentOrEqualResponse, SetIfAbsentRequest, SetIfAbsentResponse,
-    SetIfEqualRequest, SetIfEqualResponse, SetIfNotEqualRequest, SetIfNotEqualResponse,
-    SetIfPresentAndNotEqualRequest, SetIfPresentAndNotEqualResponse, SetIfPresentRequest,
-    SetIfPresentResponse, SetRemoveElementsRequest, SetRemoveElementsResponse, SetRequest,
-    SetResponse, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetFetchResponse,
-    SortedSetGetRankRequest, SortedSetGetRankResponse, SortedSetGetScoreRequest,
-    SortedSetGetScoreResponse, SortedSetLengthRequest, SortedSetLengthResponse, SortedSetOrder,
-    SortedSetPutElementRequest, SortedSetPutElementResponse, SortedSetPutElementsRequest,
-    SortedSetPutElementsResponse, SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse,
-    UpdateTtlRequest, UpdateTtlResponse,
+    Configuration, CreateCacheRequest, CreateCacheResponse, DecreaseTtlRequest,
+    DecreaseTtlResponse, DeleteCache, DeleteCacheRequest, DeleteRequest, DeleteResponse,
+    DictionaryFetchRequest, DictionaryFetchResponse, DictionaryGetFieldRequest,
+    DictionaryGetFieldResponse, DictionaryGetFieldsRequest, DictionaryGetFieldsResponse,
+    DictionaryIncrementRequest, DictionaryIncrementResponse, DictionaryLengthRequest,
+    DictionaryLengthResponse, DictionaryRemoveFieldRequest, DictionaryRemoveFieldResponse,
+    DictionaryRemoveFieldsRequest, DictionaryRemoveFieldsResponse, DictionarySetFieldRequest,
+    DictionarySetFieldResponse, DictionarySetFieldsRequest, DictionarySetFieldsResponse,
+    FlushCache, FlushCacheRequest, GetRequest, GetResponse, IncreaseTtlRequest,
+    IncreaseTtlResponse, IncrementRequest, IncrementResponse, IntoDictionaryFieldValuePairs,
+    IntoSortedSetElements, ItemGetTtlRequest, ItemGetTtlResponse, ItemGetTypeRequest,
+    ItemGetTypeResponse, KeyExistsRequest, KeyExistsResponse, KeysExistRequest, KeysExistResponse,
+    ListCaches, ListCachesRequest, ListConcatenateBackRequest, ListConcatenateBackResponse,
+    ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetchRequest, ListFetchResponse,
+    ListLengthRequest, ListLengthResponse, ListPopBackRequest, ListPopBackResponse,
+    ListPopFrontRequest, ListPopFrontResponse, ListPushBackRequest, ListPushBackResponse,
+    ListPushFrontRequest, ListPushFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse,
+    MomentoRequest, SetAddElementsRequest, SetAddElementsResponse, SetFetchRequest,
+    SetFetchResponse, SetIfAbsentOrEqualRequest, SetIfAbsentOrEqualResponse, SetIfAbsentRequest,
+    SetIfAbsentResponse, SetIfEqualRequest, SetIfEqualResponse, SetIfNotEqualRequest,
+    SetIfNotEqualResponse, SetIfPresentAndNotEqualRequest, SetIfPresentAndNotEqualResponse,
+    SetIfPresentRequest, SetIfPresentResponse, SetRemoveElementsRequest, SetRemoveElementsResponse,
+    SetRequest, SetResponse, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest,
+    SortedSetFetchResponse, SortedSetGetRankRequest, SortedSetGetRankResponse,
+    SortedSetGetScoreRequest, SortedSetGetScoreResponse, SortedSetLengthRequest,
+    SortedSetLengthResponse, SortedSetOrder, SortedSetPutElementRequest,
+    SortedSetPutElementResponse, SortedSetPutElementsRequest, SortedSetPutElementsResponse,
+    SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse, UpdateTtlRequest,
+    UpdateTtlResponse,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -71,19 +72,22 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::CreateCache;
+    /// use momento::cache::CreateCacheResponse;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.create_cache(&cache_name).await? {
-    ///     CreateCache::Created => println!("Cache {} created", &cache_name),
-    ///     CreateCache::AlreadyExists => println!("Cache {} already exists", &cache_name),
+    ///     CreateCacheResponse::Created => println!("Cache {} created", &cache_name),
+    ///     CreateCacheResponse::AlreadyExists => println!("Cache {} already exists", &cache_name),
     /// }
     /// # Ok(())
     /// # })
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to create a cache using a [CreateCacheRequest].
-    pub async fn create_cache(&self, cache_name: impl Into<String>) -> MomentoResult<CreateCache> {
+    pub async fn create_cache(
+        &self,
+        cache_name: impl Into<String>,
+    ) -> MomentoResult<CreateCacheResponse> {
         let request = CreateCacheRequest::new(cache_name);
         request.send(self).await
     }
