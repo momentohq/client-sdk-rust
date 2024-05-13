@@ -11,9 +11,9 @@ use crate::{ErrorSource, MomentoError, MomentoErrorCode, MomentoResult};
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// fn main() -> anyhow::Result<()> {
-/// # use momento::cache::SortedSetFetchResponse;
+/// # use momento::cache::{SortedSetFetchResponse, SortedSetElements};
 /// # use momento::MomentoResult;
-/// # let fetch_response = SortedSetFetchResponse::default();
+/// # let fetch_response = SortedSetFetchResponse::Hit { value: SortedSetElements::default() };
 /// use std::convert::TryInto;
 /// let item: Vec<(String, f64)> = match fetch_response {
 ///   SortedSetFetchResponse::Hit { value } => value.try_into().expect("I stored strings!"),
@@ -25,9 +25,9 @@ use crate::{ErrorSource, MomentoError, MomentoErrorCode, MomentoResult};
 ///
 /// Or, if you're storing raw bytes you can get at them simply:
 /// ```
-/// # use momento::cache::SortedSetFetchResponse;
+/// # use momento::cache::{SortedSetFetchResponse, SortedSetElements};
 /// # use momento::MomentoResult;
-/// # let fetch_response = SortedSetFetchResponse::default();
+/// # let fetch_response = SortedSetFetchResponse::Hit { value: SortedSetElements::default() };
 /// use std::convert::TryInto;
 /// let item: Vec<(Vec<u8>, f64)> = match fetch_response {
 ///  SortedSetFetchResponse::Hit { value } => value.into(),
@@ -41,18 +41,18 @@ use crate::{ErrorSource, MomentoError, MomentoErrorCode, MomentoResult};
 /// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
 /// this is what you're after:
 /// ```
-/// # use momento::cache::SortedSetFetchResponse;
+/// # use momento::cache::{SortedSetFetchResponse, SortedSetElements};
 /// # use momento::MomentoResult;
-/// # let fetch_response = SortedSetFetchResponse::default();
+/// # let fetch_response = SortedSetFetchResponse::Hit { value: SortedSetElements::default() };
 /// use std::convert::TryInto;
 /// let item: MomentoResult<Vec<(String, f64)>> = fetch_response.try_into();
 /// ```
 ///
 /// You can also go straight into a `Vec<(Vec<u8>, f64)>` if you prefer:
 /// ```
-/// # use momento::cache::SortedSetFetchResponse;
+/// # use momento::cache::{SortedSetFetchResponse, SortedSetElements};
 /// # use momento::MomentoResult;
-/// # let fetch_response = SortedSetFetchResponse::default();
+/// # let fetch_response = SortedSetFetchResponse::Hit { value: SortedSetElements::default() };
 /// use std::convert::TryInto;
 /// let item: MomentoResult<Vec<(Vec<u8>, f64)>> = fetch_response.try_into();
 /// ```
@@ -103,14 +103,6 @@ impl SortedSetFetchResponse {
                 "SortedSetFetch",
                 Some(format!("{:#?}", response)),
             )),
-        }
-    }
-}
-
-impl Default for SortedSetFetchResponse {
-    fn default() -> Self {
-        SortedSetFetchResponse::Hit {
-            value: SortedSetElements::new(Vec::new()),
         }
     }
 }

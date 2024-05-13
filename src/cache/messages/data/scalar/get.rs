@@ -89,9 +89,9 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
 ///
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
-/// # use momento::cache::GetResponse;
+/// # use momento::cache::{GetResponse, messages::data::scalar::get::Value};
 /// # use momento::MomentoResult;
-/// # let get_response = GetResponse::default();
+/// # let get_response = GetResponse::Hit { value: Value::default() };
 /// use std::convert::TryInto;
 /// let item: String = match get_response {
 ///     GetResponse::Hit { value } => value.try_into().expect("I stored a string!"),
@@ -101,9 +101,9 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
 ///
 /// Or, if you're storing raw bytes you can get at them simply:
 /// ```
-/// # use momento::cache::GetResponse;
+/// # use momento::cache::{GetResponse, messages::data::scalar::get::Value};
 /// # use momento::MomentoResult;
-/// # let get_response = GetResponse::default();
+/// # let get_response = GetResponse::Hit { value: Value::default() };
 /// let item: Vec<u8> = match get_response {
 ///     GetResponse::Hit { value } => value.into(),
 ///     GetResponse::Miss => return // probably you'll do something else here
@@ -116,18 +116,18 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
 /// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
 /// this is what you're after:
 /// ```
-/// # use momento::cache::GetResponse;
+/// # use momento::cache::{GetResponse, messages::data::scalar::get::Value};
 /// # use momento::MomentoResult;
-/// # let get_response = GetResponse::default();
+/// # let get_response = GetResponse::Hit { value: Value::default() };
 /// use std::convert::TryInto;
 /// let item: MomentoResult<String> = get_response.try_into();
 /// ```
 ///
 /// You can also go straight into a `Vec<u8>` if you prefer:
 /// ```
-/// # use momento::cache::GetResponse;
+/// # use momento::cache::{GetResponse, messages::data::scalar::get::Value};
 /// # use momento::MomentoResult;
-/// # let get_response = GetResponse::default();
+/// # let get_response = GetResponse::Hit { value: Value::default() };
 /// use std::convert::TryInto;
 /// let item: MomentoResult<Vec<u8>> = get_response.try_into();
 /// ```
@@ -135,14 +135,6 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
 pub enum GetResponse {
     Hit { value: Value },
     Miss,
-}
-
-impl Default for GetResponse {
-    fn default() -> Self {
-        GetResponse::Hit {
-            value: Value::default(),
-        }
-    }
 }
 
 impl<I: IntoBytes> From<I> for GetResponse {

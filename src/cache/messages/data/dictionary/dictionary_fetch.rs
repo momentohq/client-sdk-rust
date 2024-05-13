@@ -104,9 +104,9 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
 /// ```
 /// fn main() -> anyhow::Result<()> {
 /// # use std::collections::HashMap;
-/// # use momento::cache::DictionaryFetchResponse;
+/// # use momento::cache::{DictionaryFetchResponse, messages::data::dictionary::dictionary_fetch::Value};
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryFetchResponse::default();
+/// # let fetch_response = DictionaryFetchResponse::Hit { value: Value::default() };
 /// use std::convert::TryInto;
 /// let item: HashMap<String, String> = match fetch_response {
 ///    DictionaryFetchResponse::Hit { value } => value.try_into().expect("I stored strings!"),
@@ -119,9 +119,9 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
 /// Or, if you're storing raw bytes you can get at them simply:
 /// ```
 /// # use std::collections::HashMap;
-/// # use momento::cache::DictionaryFetchResponse;
+/// # use momento::cache::{DictionaryFetchResponse, messages::data::dictionary::dictionary_fetch::Value};
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryFetchResponse::default();
+/// # let fetch_response = DictionaryFetchResponse::Hit { value: Value::default() };
 /// use std::convert::TryInto;
 /// let item: HashMap<Vec<u8>, Vec<u8>> = match fetch_response {
 ///   DictionaryFetchResponse::Hit { value } => value.into(),
@@ -136,9 +136,9 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
 /// this is what you're after:
 /// ```
 /// # use std::collections::HashMap;
-/// # use momento::cache::DictionaryFetchResponse;
+/// # use momento::cache::{DictionaryFetchResponse, messages::data::dictionary::dictionary_fetch::Value};
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryFetchResponse::default();
+/// # let fetch_response = DictionaryFetchResponse::Hit { value: Value::default() };
 /// use std::convert::TryInto;
 /// let item: MomentoResult<HashMap<String, String>> = fetch_response.try_into();
 /// ```
@@ -146,9 +146,9 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
 /// You can also go straight into a `HashMap<Vec<u8>, Vec<u8>>` if you prefer:
 /// ```
 /// # use std::collections::HashMap;
-/// # use momento::cache::DictionaryFetchResponse;
+/// # use momento::cache::{DictionaryFetchResponse, messages::data::dictionary::dictionary_fetch::Value};
 /// # use momento::MomentoResult;
-/// # let fetch_response = DictionaryFetchResponse::default();
+/// # let fetch_response = DictionaryFetchResponse::Hit { value: Value::default() };
 /// use std::convert::TryInto;
 /// let item: MomentoResult<HashMap<Vec<u8>, Vec<u8>>> = fetch_response.try_into();
 /// ```
@@ -156,14 +156,6 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
 pub enum DictionaryFetchResponse {
     Hit { value: Value },
     Miss,
-}
-
-impl Default for DictionaryFetchResponse {
-    fn default() -> Self {
-        DictionaryFetchResponse::Hit {
-            value: Value::default(),
-        }
-    }
 }
 
 /// A dictionary fetched from a cache.
