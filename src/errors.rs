@@ -102,31 +102,6 @@ impl MomentoError {
     }
 }
 
-trait ErrorDetails {
-    fn message(&self) -> &String;
-    fn error_code(&self) -> &MomentoErrorCode;
-    fn inner_error(&self) -> Option<&ErrorSource>;
-    fn details(&self) -> Option<&MomentoGrpcErrorDetails>;
-}
-
-impl ErrorDetails for MomentoError {
-    fn message(&self) -> &String {
-        &self.message
-    }
-
-    fn error_code(&self) -> &MomentoErrorCode {
-        &self.error_code
-    }
-
-    fn inner_error(&self) -> Option<&ErrorSource> {
-        self.inner_error.as_ref()
-    }
-
-    fn details(&self) -> Option<&MomentoGrpcErrorDetails> {
-        self.details.as_ref()
-    }
-}
-
 #[derive(Debug, thiserror::Error)]
 pub enum ErrorSource {
     /// A source you will need to downcast if you need to do something with it.
