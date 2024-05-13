@@ -3,9 +3,12 @@
 all: precommit
 
 .PHONY: lint
+## Check the formatting of all files, run clippy on the source code, then run
+## clippy on the tests (but allow expect to be used in tests)
 lint:
 	cargo fmt -- --check
-	cargo clippy --all-targets --all-features -- -D warnings -W clippy::unwrap_used
+	cargo clippy --all-features -- -D warnings -W clippy::unwrap_used -W clippy::expect_used
+	cargo clippy --tests -- -D warnings -W clippy::unwrap_used
 
 .PHONY: build
 ## Build project

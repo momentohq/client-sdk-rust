@@ -136,7 +136,7 @@ impl TryFrom<ListPopBackValue> for String {
     type Error = MomentoError;
 
     fn try_from(value: ListPopBackValue) -> Result<Self, Self::Error> {
-        Ok(parse_string(value.raw_item).expect("expected a valid UTF-8 string"))
+        parse_string(value.raw_item)
     }
 }
 
