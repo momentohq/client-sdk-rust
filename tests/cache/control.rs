@@ -1,4 +1,4 @@
-use momento::cache::{CreateCacheResponse, FlushCache, GetResponse, GetValue, SetResponse};
+use momento::cache::{CreateCacheResponse, FlushCacheResponse, GetResponse, GetValue, SetResponse};
 use momento::MomentoErrorCode;
 use momento::MomentoResult;
 use momento_test_util::CACHE_TEST_STATE;
@@ -98,7 +98,7 @@ mod flush_cache {
 
         // Flush the cache
         let result = client.flush_cache(cache_name).await?;
-        assert_eq!(result, FlushCache {});
+        assert_eq!(result, FlushCacheResponse {});
 
         // Verify that the elements were flushed from the cache
         let get_result3 = client.get(cache_name, item1.key()).await?;

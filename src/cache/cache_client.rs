@@ -15,7 +15,7 @@ use crate::cache::{
     DictionaryLengthResponse, DictionaryRemoveFieldRequest, DictionaryRemoveFieldResponse,
     DictionaryRemoveFieldsRequest, DictionaryRemoveFieldsResponse, DictionarySetFieldRequest,
     DictionarySetFieldResponse, DictionarySetFieldsRequest, DictionarySetFieldsResponse,
-    FlushCache, FlushCacheRequest, GetRequest, GetResponse, IncreaseTtlRequest,
+    FlushCacheRequest, FlushCacheResponse, GetRequest, GetResponse, IncreaseTtlRequest,
     IncreaseTtlResponse, IncrementRequest, IncrementResponse, IntoDictionaryFieldValuePairs,
     IntoSortedSetElements, ItemGetTtlRequest, ItemGetTtlResponse, ItemGetTypeRequest,
     ItemGetTypeResponse, KeyExistsRequest, KeyExistsResponse, KeysExistRequest, KeysExistResponse,
@@ -166,7 +166,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::FlushCache;
+    /// use momento::cache::FlushCacheResponse;
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
@@ -185,7 +185,10 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to delete a cache using a [FlushCacheRequest].
-    pub async fn flush_cache(&self, cache_name: impl Into<String>) -> MomentoResult<FlushCache> {
+    pub async fn flush_cache(
+        &self,
+        cache_name: impl Into<String>,
+    ) -> MomentoResult<FlushCacheResponse> {
         let request = FlushCacheRequest::new(cache_name);
         request.send(self).await
     }
