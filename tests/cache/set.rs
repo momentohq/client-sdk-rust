@@ -1,6 +1,6 @@
 use std::convert::TryInto;
 
-use momento::cache::{SetAddElements, SetAddElementsRequest, SetFetch, SetRemoveElements};
+use momento::cache::{SetAddElementsRequest, SetAddElementsResponse, SetFetch, SetRemoveElements};
 use momento::{MomentoErrorCode, MomentoResult};
 
 use momento_test_util::{unique_cache_name, unique_value, TestSet, CACHE_TEST_STATE};
@@ -73,7 +73,7 @@ mod set_add_elements {
         let result = client
             .set_add_elements(cache_name, test_set.name(), test_set.value().to_vec())
             .await?;
-        assert_eq!(result, SetAddElements {});
+        assert_eq!(result, SetAddElementsResponse {});
         assert_fetched_set_eq_after_sorting(
             client.set_fetch(cache_name, test_set.name()).await?,
             test_set.value().to_vec(),
@@ -93,7 +93,7 @@ mod set_add_elements {
             SetAddElementsRequest::new(cache_name, test_set.name(), test_set.value().to_vec())
                 .ttl(CollectionTtl::new(Some(Duration::from_secs(10)), false));
         let result = client.send_request(request).await?;
-        assert_eq!(result, SetAddElements {});
+        assert_eq!(result, SetAddElementsResponse {});
 
         // only test_set elements should remain after 5 seconds
         tokio::time::sleep(Duration::from_secs(5)).await;
@@ -139,7 +139,7 @@ mod set_fetch {
         let result = client
             .set_add_elements(cache_name, test_set.name(), test_set.value().to_vec())
             .await?;
-        assert_eq!(result, SetAddElements {});
+        assert_eq!(result, SetAddElementsResponse {});
         assert_fetched_set_eq_after_sorting(
             client.set_fetch(cache_name, test_set.name()).await?,
             test_set.value().to_vec(),
@@ -180,7 +180,7 @@ mod set_remove_elements {
         let result = client
             .set_add_elements(cache_name, test_set.name(), test_set.value().to_vec())
             .await?;
-        assert_eq!(result, SetAddElements {});
+        assert_eq!(result, SetAddElementsResponse {});
 
         // Should do nothing when elements don't exist
         let result = client
