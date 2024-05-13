@@ -2,7 +2,7 @@ use std::convert::{TryFrom, TryInto};
 
 use momento_protos::cache_client::sorted_set_fetch_response::found::Elements;
 use momento_protos::cache_client::sorted_set_fetch_response::SortedSet;
-use momento_protos::cache_client::SortedSetFetchResponse;
+use momento_protos::cache_client::SortedSetFetchResponse as ProtoSortedSetFetchResponse;
 
 use crate::{ErrorSource, MomentoError, MomentoErrorCode, MomentoResult};
 
@@ -11,13 +11,13 @@ use crate::{ErrorSource, MomentoError, MomentoErrorCode, MomentoResult};
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
 /// fn main() -> anyhow::Result<()> {
-/// # use momento::cache::{SortedSetFetch, SortedSetElements};
+/// # use momento::cache::{SortedSetFetchResponse, SortedSetElements};
 /// # use momento::MomentoResult;
-/// # let fetch_response = SortedSetFetch::Hit { value: SortedSetElements::default() };
+/// # let fetch_response = SortedSetFetchResponse::Hit { value: SortedSetElements::default() };
 /// use std::convert::TryInto;
 /// let item: Vec<(String, f64)> = match fetch_response {
-///   SortedSetFetch::Hit { value } => value.try_into().expect("I stored strings!"),
-///   SortedSetFetch::Miss => panic!("I expected a hit!"),
+///   SortedSetFetchResponse::Hit { value } => value.try_into().expect("I stored strings!"),
+///   SortedSetFetchResponse::Miss => panic!("I expected a hit!"),
 /// };
 /// # Ok(())
 /// }
@@ -25,13 +25,13 @@ use crate::{ErrorSource, MomentoError, MomentoErrorCode, MomentoResult};
 ///
 /// Or, if you're storing raw bytes you can get at them simply:
 /// ```
-/// # use momento::cache::{SortedSetFetch, SortedSetElements};
+/// # use momento::cache::{SortedSetFetchResponse, SortedSetElements};
 /// # use momento::MomentoResult;
-/// # let fetch_response = SortedSetFetch::Hit { value: SortedSetElements::default() };
+/// # let fetch_response = SortedSetFetchResponse::Hit { value: SortedSetElements::default() };
 /// use std::convert::TryInto;
 /// let item: Vec<(Vec<u8>, f64)> = match fetch_response {
-///  SortedSetFetch::Hit { value } => value.into(),
-///  SortedSetFetch::Miss => panic!("I expected a hit!"),
+///  SortedSetFetchResponse::Hit { value } => value.into(),
+///  SortedSetFetchResponse::Miss => panic!("I expected a hit!"),
 /// };
 /// ```
 ///
@@ -41,33 +41,35 @@ use crate::{ErrorSource, MomentoError, MomentoErrorCode, MomentoResult};
 /// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
 /// this is what you're after:
 /// ```
-/// # use momento::cache::{SortedSetFetch, SortedSetElements};
+/// # use momento::cache::{SortedSetFetchResponse, SortedSetElements};
 /// # use momento::MomentoResult;
-/// # let fetch_response = SortedSetFetch::Hit { value: SortedSetElements::default() };
+/// # let fetch_response = SortedSetFetchResponse::Hit { value: SortedSetElements::default() };
 /// use std::convert::TryInto;
 /// let item: MomentoResult<Vec<(String, f64)>> = fetch_response.try_into();
 /// ```
 ///
 /// You can also go straight into a `Vec<(Vec<u8>, f64)>` if you prefer:
 /// ```
-/// # use momento::cache::{SortedSetFetch, SortedSetElements};
+/// # use momento::cache::{SortedSetFetchResponse, SortedSetElements};
 /// # use momento::MomentoResult;
-/// # let fetch_response = SortedSetFetch::Hit { value: SortedSetElements::default() };
+/// # let fetch_response = SortedSetFetchResponse::Hit { value: SortedSetElements::default() };
 /// use std::convert::TryInto;
 /// let item: MomentoResult<Vec<(Vec<u8>, f64)>> = fetch_response.try_into();
 /// ```
 #[derive(Debug, PartialEq)]
-pub enum SortedSetFetch {
+pub enum SortedSetFetchResponse {
     Hit { value: SortedSetElements },
     Miss,
 }
 
-impl SortedSetFetch {
-    pub(crate) fn from_fetch_response(response: SortedSetFetchResponse) -> MomentoResult<Self> {
+impl SortedSetFetchResponse {
+    pub(crate) fn from_fetch_response(
+        response: ProtoSortedSetFetchResponse,
+    ) -> MomentoResult<Self> {
         match response.sorted_set {
-            Some(SortedSet::Missing(_)) => Ok(SortedSetFetch::Miss),
+            Some(SortedSet::Missing(_)) => Ok(SortedSetFetchResponse::Miss),
             Some(SortedSet::Found(elements)) => match elements.elements {
-                None => Ok(SortedSetFetch::Hit {
+                None => Ok(SortedSetFetchResponse::Hit {
                     value: SortedSetElements::new(Vec::new()),
                 }),
                 Some(elements) => match elements {
@@ -77,7 +79,7 @@ impl SortedSetFetch {
                             .into_iter()
                             .map(|element| (element.value, element.score))
                             .collect();
-                        Ok(SortedSetFetch::Hit {
+                        Ok(SortedSetFetchResponse::Hit {
                             value: SortedSetElements::new(elements),
                         })
                     }
@@ -105,31 +107,31 @@ impl SortedSetFetch {
     }
 }
 
-impl TryFrom<SortedSetFetch> for Vec<(Vec<u8>, f64)> {
+impl TryFrom<SortedSetFetchResponse> for Vec<(Vec<u8>, f64)> {
     type Error = MomentoError;
 
-    fn try_from(value: SortedSetFetch) -> Result<Self, Self::Error> {
+    fn try_from(value: SortedSetFetchResponse) -> Result<Self, Self::Error> {
         match value {
-            SortedSetFetch::Hit { value: elements } => Ok(elements.elements),
-            SortedSetFetch::Miss => Err(MomentoError::miss("SortedSetFetch")),
+            SortedSetFetchResponse::Hit { value: elements } => Ok(elements.elements),
+            SortedSetFetchResponse::Miss => Err(MomentoError::miss("SortedSetFetch")),
         }
     }
 }
 
-impl TryFrom<SortedSetFetch> for Vec<(String, f64)> {
+impl TryFrom<SortedSetFetchResponse> for Vec<(String, f64)> {
     type Error = MomentoError;
 
-    fn try_from(value: SortedSetFetch) -> Result<Self, Self::Error> {
+    fn try_from(value: SortedSetFetchResponse) -> Result<Self, Self::Error> {
         match value {
-            SortedSetFetch::Hit { value: elements } => elements.into_strings(),
-            SortedSetFetch::Miss => Err(MomentoError::miss("SortedSetFetch")),
+            SortedSetFetchResponse::Hit { value: elements } => elements.into_strings(),
+            SortedSetFetchResponse::Miss => Err(MomentoError::miss("SortedSetFetch")),
         }
     }
 }
 
-impl From<Vec<(String, f64)>> for SortedSetFetch {
+impl From<Vec<(String, f64)>> for SortedSetFetchResponse {
     fn from(elements: Vec<(String, f64)>) -> Self {
-        SortedSetFetch::Hit {
+        SortedSetFetchResponse::Hit {
             value: SortedSetElements::new(
                 elements
                     .into_iter()

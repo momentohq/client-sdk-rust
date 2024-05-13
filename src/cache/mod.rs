@@ -68,7 +68,9 @@ pub use messages::sorted_set::sorted_set_fetch_by_rank::{
     SortedSetFetchByRankRequest, SortedSetOrder,
 };
 pub use messages::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
-pub use messages::sorted_set::sorted_set_fetch_response::{SortedSetElements, SortedSetFetch};
+pub use messages::sorted_set::sorted_set_fetch_response::{
+    SortedSetElements, SortedSetFetchResponse,
+};
 pub use messages::sorted_set::sorted_set_get_rank::{SortedSetGetRank, SortedSetGetRankRequest};
 pub use messages::sorted_set::sorted_set_get_score::{SortedSetGetScore, SortedSetGetScoreRequest};
 pub use messages::sorted_set::sorted_set_length::{SortedSetLength, SortedSetLengthRequest};

@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use momento::cache::{
-    IntoSortedSetElements, SortedSetElement, SortedSetElements, SortedSetFetch,
-    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetGetRank, SortedSetGetScore,
+    IntoSortedSetElements, SortedSetElement, SortedSetElements, SortedSetFetchByRankRequest,
+    SortedSetFetchByScoreRequest, SortedSetFetchResponse, SortedSetGetRank, SortedSetGetScore,
     SortedSetLength,
     SortedSetOrder::{Ascending, Descending},
     SortedSetPutElements, SortedSetRemoveElements,
@@ -14,10 +14,10 @@ use momento_test_util::{
 };
 
 fn assert_fetched_sorted_set_eq(
-    sorted_set_fetch_result: SortedSetFetch,
+    sorted_set_fetch_result: SortedSetFetchResponse,
     expected: Vec<(String, f64)>,
 ) -> MomentoResult<()> {
-    let expected: SortedSetFetch = expected.into();
+    let expected: SortedSetFetchResponse = expected.into();
     assert_eq!(
         sorted_set_fetch_result, expected,
         "Expected SortedSetFetch::Hit to be equal to {:?}, but got {:?}",
@@ -27,7 +27,7 @@ fn assert_fetched_sorted_set_eq(
 }
 
 fn assert_fetched_sorted_set_eq_after_sorting(
-    sorted_set_fetch_result: SortedSetFetch,
+    sorted_set_fetch_result: SortedSetFetchResponse,
     expected: Vec<(String, f64)>,
 ) -> MomentoResult<()> {
     let sort_by_score = |a: &(_, f64), b: &(_, f64)| -> std::cmp::Ordering {
@@ -36,10 +36,10 @@ fn assert_fetched_sorted_set_eq_after_sorting(
     };
 
     let sorted_set_fetch_result = match sorted_set_fetch_result {
-        SortedSetFetch::Hit { value } => {
+        SortedSetFetchResponse::Hit { value } => {
             let mut elements = value.elements.clone();
             elements.sort_by(sort_by_score);
-            SortedSetFetch::Hit {
+            SortedSetFetchResponse::Hit {
                 value: SortedSetElements { elements },
             }
         }
@@ -75,7 +75,7 @@ mod sorted_set_fetch_by_rank {
         let result = client
             .sorted_set_fetch_by_rank(cache_name, item.name(), Ascending, None, None)
             .await?;
-        assert_eq!(result, SortedSetFetch::Miss);
+        assert_eq!(result, SortedSetFetchResponse::Miss);
 
         client
             .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
@@ -174,7 +174,7 @@ mod sorted_set_fetch_by_score {
         let result = client
             .sorted_set_fetch_by_score(cache_name, item.name(), Ascending)
             .await?;
-        assert_eq!(result, SortedSetFetch::Miss);
+        assert_eq!(result, SortedSetFetchResponse::Miss);
 
         client
             .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
@@ -483,7 +483,7 @@ mod sorted_set_put_element {
         let result = client
             .sorted_set_fetch_by_rank(cache_name, item.name(), Ascending, None, None)
             .await?;
-        assert_eq!(result, SortedSetFetch::Miss);
+        assert_eq!(result, SortedSetFetchResponse::Miss);
 
         client
             .sorted_set_put_element(

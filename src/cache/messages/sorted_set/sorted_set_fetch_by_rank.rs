@@ -2,7 +2,7 @@ use momento_protos::cache_client::sorted_set_fetch_request::{by_index, ByIndex, 
 use momento_protos::cache_client::SortedSetFetchRequest;
 use momento_protos::common::Unbounded;
 
-use crate::cache::messages::sorted_set::sorted_set_fetch_response::SortedSetFetch;
+use crate::cache::messages::sorted_set::sorted_set_fetch_response::SortedSetFetchResponse;
 use crate::cache::messages::MomentoRequest;
 use crate::utils::prep_request_with_timeout;
 use crate::{CacheClient, IntoBytes, MomentoResult};
@@ -37,7 +37,7 @@ pub enum SortedSetOrder {
 /// # use std::convert::TryInto;
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{SortedSetOrder, SortedSetFetch, SortedSetFetchByRankRequest};
+/// use momento::cache::{SortedSetOrder, SortedSetFetchResponse, SortedSetFetchByRankRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
 ///
@@ -100,9 +100,9 @@ impl<S: IntoBytes> SortedSetFetchByRankRequest<S> {
 }
 
 impl<S: IntoBytes> MomentoRequest for SortedSetFetchByRankRequest<S> {
-    type Response = SortedSetFetch;
+    type Response = SortedSetFetchResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SortedSetFetch> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<SortedSetFetchResponse> {
         let set_name = self.sorted_set_name.into_bytes();
         let cache_name = &self.cache_name;
 
@@ -137,6 +137,6 @@ impl<S: IntoBytes> MomentoRequest for SortedSetFetchByRankRequest<S> {
             .await?
             .into_inner();
 
-        SortedSetFetch::from_fetch_response(response)
+        SortedSetFetchResponse::from_fetch_response(response)
     }
 }
