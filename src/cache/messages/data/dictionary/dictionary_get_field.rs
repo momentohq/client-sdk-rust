@@ -96,7 +96,7 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryGetFieldRequest<D,
                 match responses.pop() {
                     Some(value) => match value.result() {
                         ECacheResult::Hit => Ok(DictionaryGetFieldResponse::Hit {
-                            value: DictionaryGetFieldValue::new(value.cache_body),
+                            value: Value::new(value.cache_body),
                         }),
                         ECacheResult::Miss => Ok(DictionaryGetFieldResponse::Miss),
                         _ => Err(MomentoError::unknown_error(
@@ -167,14 +167,14 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryGetFieldRequest<D,
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum DictionaryGetFieldResponse {
-    Hit { value: DictionaryGetFieldValue },
+    Hit { value: Value },
     Miss,
 }
 
 impl Default for DictionaryGetFieldResponse {
     fn default() -> Self {
         DictionaryGetFieldResponse::Hit {
-            value: DictionaryGetFieldValue::new(Vec::new()),
+            value: Value::new(Vec::new()),
         }
     }
 }
@@ -202,26 +202,26 @@ impl TryFrom<DictionaryGetFieldResponse> for Vec<u8> {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct DictionaryGetFieldValue {
+pub struct Value {
     pub(crate) raw_item: Vec<u8>,
 }
 
-impl DictionaryGetFieldValue {
+impl Value {
     pub fn new(raw_item: Vec<u8>) -> Self {
         Self { raw_item }
     }
 }
 
-impl TryFrom<DictionaryGetFieldValue> for String {
+impl TryFrom<Value> for String {
     type Error = MomentoError;
 
-    fn try_from(value: DictionaryGetFieldValue) -> Result<Self, Self::Error> {
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
         parse_string(value.raw_item)
     }
 }
 
-impl From<DictionaryGetFieldValue> for Vec<u8> {
-    fn from(value: DictionaryGetFieldValue) -> Self {
+impl From<Value> for Vec<u8> {
+    fn from(value: Value) -> Self {
         value.raw_item
     }
 }

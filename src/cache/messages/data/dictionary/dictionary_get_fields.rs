@@ -1,4 +1,4 @@
-use super::dictionary_get_field::{DictionaryGetFieldResponse, DictionaryGetFieldValue};
+use super::dictionary_get_field::{DictionaryGetFieldResponse, Value};
 use crate::cache::messages::MomentoRequest;
 use crate::utils::{parse_string, prep_request_with_timeout};
 use crate::{
@@ -100,7 +100,7 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
                     .into_iter()
                     .map(|value| match value.result() {
                         ECacheResult::Hit => Ok(DictionaryGetFieldResponse::Hit {
-                            value: DictionaryGetFieldValue::new(value.cache_body),
+                            value: Value::new(value.cache_body),
                         }),
                         ECacheResult::Miss => Ok(DictionaryGetFieldResponse::Miss),
                         _ => Err(MomentoError::unknown_error(
