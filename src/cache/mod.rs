@@ -84,7 +84,8 @@ pub use messages::sorted_set::sorted_set_put_element::{
     SortedSetPutElementRequest, SortedSetPutElementResponse,
 };
 pub use messages::sorted_set::sorted_set_put_elements::{
-    IntoSortedSetElements, SortedSetElement, SortedSetPutElements, SortedSetPutElementsRequest,
+    IntoSortedSetElements, SortedSetElement, SortedSetPutElementsRequest,
+    SortedSetPutElementsResponse,
 };
 pub use messages::sorted_set::sorted_set_remove_elements::{
     SortedSetRemoveElements, SortedSetRemoveElementsRequest,

@@ -5,7 +5,7 @@ use momento::cache::{
     SortedSetFetchByScoreRequest, SortedSetFetchResponse, SortedSetGetRankResponse,
     SortedSetGetScoreResponse, SortedSetLengthResponse,
     SortedSetOrder::{Ascending, Descending},
-    SortedSetPutElements, SortedSetRemoveElements,
+    SortedSetPutElementsResponse, SortedSetRemoveElements,
 };
 use momento::{CacheClient, MomentoErrorCode, MomentoResult};
 
@@ -285,7 +285,7 @@ mod sorted_set_get_rank {
         let result = client
             .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
             .await?;
-        assert_eq!(result, SortedSetPutElements {});
+        assert_eq!(result, SortedSetPutElementsResponse {});
 
         // Hit for existing value
         let result = client
@@ -343,7 +343,7 @@ mod sorted_set_get_score {
         let result = client
             .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
             .await?;
-        assert_eq!(result, SortedSetPutElements {});
+        assert_eq!(result, SortedSetPutElementsResponse {});
 
         // Hit for existing value
         let result = client
@@ -408,7 +408,7 @@ mod sorted_set_remove_elements {
         let result = client
             .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
             .await?;
-        assert_eq!(result, SortedSetPutElements {});
+        assert_eq!(result, SortedSetPutElementsResponse {});
 
         // does nothing for nonexistent values
         let result = client
@@ -617,7 +617,7 @@ mod sorted_set_length {
         let result = client
             .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
             .await?;
-        assert_eq!(result, SortedSetPutElements {});
+        assert_eq!(result, SortedSetPutElementsResponse {});
 
         // Nonzero length after sorted set exists
         let result = client.sorted_set_length(cache_name, item.name()).await?;
