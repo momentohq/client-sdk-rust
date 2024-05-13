@@ -7,6 +7,14 @@ edition = "2021"
 
 [workspace]
 
+[[bin]]
+name = "cheat_sheet_client_instantiation"
+path = "src/docs_examples/cheat_sheet_client_instantiation.rs"
+
+[[bin]]
+name = "docs_examples"
+path = "src/docs_examples/docs_examples.rs"
+
 [dependencies]
 futures = "0.3.30"
 momento = { version = "0.38.0" }
