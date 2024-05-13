@@ -9,105 +9,111 @@ pub use messages::control::list_caches::{
     CacheInfo, CacheLimits, ListCachesRequest, ListCachesResponse, TopicLimits,
 };
 
-pub use messages::dictionary::dictionary_fetch::{
+pub use messages::data::dictionary::dictionary_fetch::{
     DictionaryFetchRequest, DictionaryFetchResponse, DictionaryFetchValue,
 };
-pub use messages::dictionary::dictionary_get_field::{
+pub use messages::data::dictionary::dictionary_get_field::{
     DictionaryGetFieldRequest, DictionaryGetFieldResponse,
 };
-pub use messages::dictionary::dictionary_get_fields::{
+pub use messages::data::dictionary::dictionary_get_fields::{
     DictionaryGetFieldsRequest, DictionaryGetFieldsResponse,
 };
-pub use messages::dictionary::dictionary_increment::{
+pub use messages::data::dictionary::dictionary_increment::{
     DictionaryIncrementRequest, DictionaryIncrementResponse,
 };
-pub use messages::dictionary::dictionary_length::{
+pub use messages::data::dictionary::dictionary_length::{
     DictionaryLengthRequest, DictionaryLengthResponse,
 };
-pub use messages::dictionary::dictionary_remove_field::{
+pub use messages::data::dictionary::dictionary_remove_field::{
     DictionaryRemoveFieldRequest, DictionaryRemoveFieldResponse,
 };
-pub use messages::dictionary::dictionary_remove_fields::{
+pub use messages::data::dictionary::dictionary_remove_fields::{
     DictionaryRemoveFieldsRequest, DictionaryRemoveFieldsResponse,
 };
-pub use messages::dictionary::dictionary_set_field::{
+pub use messages::data::dictionary::dictionary_set_field::{
     DictionarySetFieldRequest, DictionarySetFieldResponse,
 };
-pub use messages::dictionary::dictionary_set_fields::{
+pub use messages::data::dictionary::dictionary_set_fields::{
     DictionaryFieldValuePair, DictionarySetFieldsRequest, DictionarySetFieldsResponse,
     IntoDictionaryFieldValuePairs,
 };
 
-pub use messages::scalar::decrease_ttl::{DecreaseTtlRequest, DecreaseTtlResponse};
-pub use messages::scalar::delete::{DeleteRequest, DeleteResponse};
-pub use messages::scalar::get::{GetRequest, GetResponse, GetValue};
-pub use messages::scalar::increase_ttl::{IncreaseTtlRequest, IncreaseTtlResponse};
-pub use messages::scalar::increment::{IncrementRequest, IncrementResponse};
-pub use messages::scalar::item_get_ttl::{ItemGetTtlRequest, ItemGetTtlResponse};
-pub use messages::scalar::item_get_type::{ItemGetTypeRequest, ItemGetTypeResponse, ItemType};
-pub use messages::scalar::key_exists::{KeyExistsRequest, KeyExistsResponse};
-pub use messages::scalar::keys_exist::{KeysExistRequest, KeysExistResponse};
-pub use messages::scalar::set::{SetRequest, SetResponse};
-pub use messages::scalar::set_if_absent::{SetIfAbsentRequest, SetIfAbsentResponse};
-pub use messages::scalar::set_if_absent_or_equal::{
+pub use messages::data::scalar::decrease_ttl::{DecreaseTtlRequest, DecreaseTtlResponse};
+pub use messages::data::scalar::delete::{DeleteRequest, DeleteResponse};
+pub use messages::data::scalar::get::{GetRequest, GetResponse, GetValue};
+pub use messages::data::scalar::increase_ttl::{IncreaseTtlRequest, IncreaseTtlResponse};
+pub use messages::data::scalar::increment::{IncrementRequest, IncrementResponse};
+pub use messages::data::scalar::item_get_ttl::{ItemGetTtlRequest, ItemGetTtlResponse};
+pub use messages::data::scalar::item_get_type::{
+    ItemGetTypeRequest, ItemGetTypeResponse, ItemType,
+};
+pub use messages::data::scalar::key_exists::{KeyExistsRequest, KeyExistsResponse};
+pub use messages::data::scalar::keys_exist::{KeysExistRequest, KeysExistResponse};
+pub use messages::data::scalar::set::{SetRequest, SetResponse};
+pub use messages::data::scalar::set_if_absent::{SetIfAbsentRequest, SetIfAbsentResponse};
+pub use messages::data::scalar::set_if_absent_or_equal::{
     SetIfAbsentOrEqualRequest, SetIfAbsentOrEqualResponse,
 };
-pub use messages::scalar::set_if_equal::{SetIfEqualRequest, SetIfEqualResponse};
-pub use messages::scalar::set_if_not_equal::{SetIfNotEqualRequest, SetIfNotEqualResponse};
-pub use messages::scalar::set_if_present::{SetIfPresentRequest, SetIfPresentResponse};
-pub use messages::scalar::set_if_present_and_not_equal::{
+pub use messages::data::scalar::set_if_equal::{SetIfEqualRequest, SetIfEqualResponse};
+pub use messages::data::scalar::set_if_not_equal::{SetIfNotEqualRequest, SetIfNotEqualResponse};
+pub use messages::data::scalar::set_if_present::{SetIfPresentRequest, SetIfPresentResponse};
+pub use messages::data::scalar::set_if_present_and_not_equal::{
     SetIfPresentAndNotEqualRequest, SetIfPresentAndNotEqualResponse,
 };
-pub use messages::scalar::update_ttl::{UpdateTtlRequest, UpdateTtlResponse};
+pub use messages::data::scalar::update_ttl::{UpdateTtlRequest, UpdateTtlResponse};
 
-pub use messages::set::set_add_elements::{SetAddElementsRequest, SetAddElementsResponse};
-pub use messages::set::set_fetch::{SetFetchRequest, SetFetchResponse, SetFetchValue};
-pub use messages::set::set_remove_elements::{SetRemoveElementsRequest, SetRemoveElementsResponse};
+pub use messages::data::set::set_add_elements::{SetAddElementsRequest, SetAddElementsResponse};
+pub use messages::data::set::set_fetch::{SetFetchRequest, SetFetchResponse, SetFetchValue};
+pub use messages::data::set::set_remove_elements::{
+    SetRemoveElementsRequest, SetRemoveElementsResponse,
+};
 
-pub use messages::sorted_set::sorted_set_fetch_by_rank::{
+pub use messages::data::sorted_set::sorted_set_fetch_by_rank::{
     SortedSetFetchByRankRequest, SortedSetOrder,
 };
-pub use messages::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
-pub use messages::sorted_set::sorted_set_fetch_response::{
+pub use messages::data::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
+pub use messages::data::sorted_set::sorted_set_fetch_response::{
     SortedSetElements, SortedSetFetchResponse,
 };
-pub use messages::sorted_set::sorted_set_get_rank::{
+pub use messages::data::sorted_set::sorted_set_get_rank::{
     SortedSetGetRankRequest, SortedSetGetRankResponse,
 };
-pub use messages::sorted_set::sorted_set_get_score::{
+pub use messages::data::sorted_set::sorted_set_get_score::{
     SortedSetGetScoreRequest, SortedSetGetScoreResponse,
 };
-pub use messages::sorted_set::sorted_set_length::{
+pub use messages::data::sorted_set::sorted_set_length::{
     SortedSetLengthRequest, SortedSetLengthResponse,
 };
-pub use messages::sorted_set::sorted_set_put_element::{
+pub use messages::data::sorted_set::sorted_set_put_element::{
     SortedSetPutElementRequest, SortedSetPutElementResponse,
 };
-pub use messages::sorted_set::sorted_set_put_elements::{
+pub use messages::data::sorted_set::sorted_set_put_elements::{
     IntoSortedSetElements, SortedSetElement, SortedSetPutElementsRequest,
     SortedSetPutElementsResponse,
 };
-pub use messages::sorted_set::sorted_set_remove_elements::{
+pub use messages::data::sorted_set::sorted_set_remove_elements::{
     SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse,
 };
 
-pub use messages::list::list_concatenate_back::{
+pub use messages::data::list::list_concatenate_back::{
     ListConcatenateBackRequest, ListConcatenateBackResponse,
 };
-pub use messages::list::list_concatenate_front::{
+pub use messages::data::list::list_concatenate_front::{
     ListConcatenateFrontRequest, ListConcatenateFrontResponse,
 };
-pub use messages::list::list_fetch::{ListFetchRequest, ListFetchResponse, ListFetchValue};
-pub use messages::list::list_length::{ListLengthRequest, ListLengthResponse};
-pub use messages::list::list_pop_back::{
+pub use messages::data::list::list_fetch::{ListFetchRequest, ListFetchResponse, ListFetchValue};
+pub use messages::data::list::list_length::{ListLengthRequest, ListLengthResponse};
+pub use messages::data::list::list_pop_back::{
     ListPopBackRequest, ListPopBackResponse, ListPopBackValue,
 };
-pub use messages::list::list_pop_front::{
+pub use messages::data::list::list_pop_front::{
     ListPopFrontRequest, ListPopFrontResponse, ListPopFrontValue,
 };
-pub use messages::list::list_push_back::{ListPushBackRequest, ListPushBackResponse};
-pub use messages::list::list_push_front::{ListPushFrontRequest, ListPushFrontResponse};
-pub use messages::list::list_remove_value::{ListRemoveValueRequest, ListRemoveValueResponse};
+pub use messages::data::list::list_push_back::{ListPushBackRequest, ListPushBackResponse};
+pub use messages::data::list::list_push_front::{ListPushFrontRequest, ListPushFrontResponse};
+pub use messages::data::list::list_remove_value::{
+    ListRemoveValueRequest, ListRemoveValueResponse,
+};
 
 // Similar re-exporting with config::configuration and config::configurations
 // so import paths can be simpmlified to "momento::cache::Configuration" and

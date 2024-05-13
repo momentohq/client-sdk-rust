@@ -2,11 +2,7 @@
 pub mod control;
 
 /// Data messages for the cache
-pub mod dictionary;
-pub mod list;
-pub mod scalar;
-pub mod set;
-pub mod sorted_set;
+pub mod data;
 
 mod momento_request;
 
