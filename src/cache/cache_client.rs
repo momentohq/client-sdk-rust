@@ -30,10 +30,11 @@ use crate::cache::{
     SetIfPresentAndNotEqualRequest, SetIfPresentAndNotEqualResponse, SetIfPresentRequest,
     SetIfPresentResponse, SetRemoveElementsRequest, SetRemoveElementsResponse, SetRequest,
     SetResponse, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetFetchResponse,
-    SortedSetGetRankRequest, SortedSetGetRankResponse, SortedSetGetScore, SortedSetGetScoreRequest,
-    SortedSetLength, SortedSetLengthRequest, SortedSetOrder, SortedSetPutElement,
-    SortedSetPutElementRequest, SortedSetPutElements, SortedSetPutElementsRequest,
-    SortedSetRemoveElements, SortedSetRemoveElementsRequest, UpdateTtlRequest, UpdateTtlResponse,
+    SortedSetGetRankRequest, SortedSetGetRankResponse, SortedSetGetScoreRequest,
+    SortedSetGetScoreResponse, SortedSetLength, SortedSetLengthRequest, SortedSetOrder,
+    SortedSetPutElement, SortedSetPutElementRequest, SortedSetPutElements,
+    SortedSetPutElementsRequest, SortedSetRemoveElements, SortedSetRemoveElementsRequest,
+    UpdateTtlRequest, UpdateTtlResponse,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -1226,7 +1227,7 @@ impl CacheClient {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
     /// use std::convert::TryInto;
-    /// use momento::cache::{SortedSetGetScore, SortedSetGetScoreRequest};
+    /// use momento::cache::{SortedSetGetScoreResponse, SortedSetGetScoreRequest};
     /// use momento::MomentoErrorCode;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// let sorted_set_name = "sorted_set";
@@ -1245,7 +1246,7 @@ impl CacheClient {
         cache_name: impl Into<String>,
         sorted_set_name: impl IntoBytes,
         value: impl IntoBytes,
-    ) -> MomentoResult<SortedSetGetScore> {
+    ) -> MomentoResult<SortedSetGetScoreResponse> {
         let request = SortedSetGetScoreRequest::new(cache_name, sorted_set_name, value);
         request.send(self).await
     }

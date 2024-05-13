@@ -3,7 +3,7 @@ use std::sync::Arc;
 use momento::cache::{
     IntoSortedSetElements, SortedSetElement, SortedSetElements, SortedSetFetchByRankRequest,
     SortedSetFetchByScoreRequest, SortedSetFetchResponse, SortedSetGetRankResponse,
-    SortedSetGetScore, SortedSetLength,
+    SortedSetGetScoreResponse, SortedSetLength,
     SortedSetOrder::{Ascending, Descending},
     SortedSetPutElements, SortedSetRemoveElements,
 };
@@ -349,13 +349,13 @@ mod sorted_set_get_score {
         let result = client
             .sorted_set_get_score(cache_name, item.name(), item.value[0].0.as_str())
             .await?;
-        assert_eq!(result, SortedSetGetScore::Hit { score: 1.0 });
+        assert_eq!(result, SortedSetGetScoreResponse::Hit { score: 1.0 });
 
         // Miss for nonexistent value
         let result = client
             .sorted_set_get_score(cache_name, item.name(), unique_value())
             .await?;
-        assert_eq!(result, SortedSetGetScore::Miss);
+        assert_eq!(result, SortedSetGetScoreResponse::Miss);
 
         Ok(())
     }
@@ -384,7 +384,7 @@ mod sorted_set_get_score {
         let result = client
             .sorted_set_get_score(cache_name, sorted_set_name, "element1")
             .await?;
-        assert_eq!(result, SortedSetGetScore::Miss);
+        assert_eq!(result, SortedSetGetScoreResponse::Miss);
         Ok(())
     }
 }

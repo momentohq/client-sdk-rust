@@ -74,7 +74,9 @@ pub use messages::sorted_set::sorted_set_fetch_response::{
 pub use messages::sorted_set::sorted_set_get_rank::{
     SortedSetGetRankRequest, SortedSetGetRankResponse,
 };
-pub use messages::sorted_set::sorted_set_get_score::{SortedSetGetScore, SortedSetGetScoreRequest};
+pub use messages::sorted_set::sorted_set_get_score::{
+    SortedSetGetScoreRequest, SortedSetGetScoreResponse,
+};
 pub use messages::sorted_set::sorted_set_length::{SortedSetLength, SortedSetLengthRequest};
 pub use messages::sorted_set::sorted_set_put_element::{
     SortedSetPutElement, SortedSetPutElementRequest,
