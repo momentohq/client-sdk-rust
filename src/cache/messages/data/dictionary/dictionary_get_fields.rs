@@ -126,7 +126,7 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
     }
 }
 
-/// Response object for a [DictionaryGetFieldsRequest](crate::cache::DictionaryGetFieldsRequest).
+/// Response object for a [DictionaryGetFieldsRequest].
 ///
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
