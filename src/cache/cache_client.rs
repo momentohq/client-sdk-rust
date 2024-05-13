@@ -19,7 +19,7 @@ use crate::cache::{
     IncreaseTtlResponse, IncrementRequest, IncrementResponse, IntoDictionaryFieldValuePairs,
     IntoSortedSetElements, ItemGetTtlRequest, ItemGetTtlResponse, ItemGetTypeRequest,
     ItemGetTypeResponse, KeyExistsRequest, KeyExistsResponse, KeysExistRequest, KeysExistResponse,
-    ListCaches, ListCachesRequest, ListConcatenateBackRequest, ListConcatenateBackResponse,
+    ListCachesRequest, ListCachesResponse, ListConcatenateBackRequest, ListConcatenateBackResponse,
     ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetchRequest, ListFetchResponse,
     ListLengthRequest, ListLengthResponse, ListPopBackRequest, ListPopBackResponse,
     ListPopFrontRequest, ListPopFrontResponse, ListPushBackRequest, ListPushBackResponse,
@@ -137,7 +137,7 @@ impl CacheClient {
     /// # fn main() -> anyhow::Result<()> {
     /// # use momento_test_util::create_doctest_cache_client;
     /// # tokio_test::block_on(async {
-    /// use momento::cache::ListCaches;
+    /// use momento::cache::ListCachesResponse;
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     ///
     /// match cache_client.list_caches().await {
@@ -149,7 +149,7 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to list caches using a [ListCachesRequest].
-    pub async fn list_caches(&self) -> MomentoResult<ListCaches> {
+    pub async fn list_caches(&self) -> MomentoResult<ListCachesResponse> {
         let request = ListCachesRequest {};
         request.send(self).await
     }

@@ -6,7 +6,7 @@ pub use messages::create_cache::{CreateCacheRequest, CreateCacheResponse};
 pub use messages::delete_cache::{DeleteCacheRequest, DeleteCacheResponse};
 pub use messages::flush_cache::{FlushCacheRequest, FlushCacheResponse};
 pub use messages::list_caches::{
-    CacheInfo, CacheLimits, ListCaches, ListCachesRequest, TopicLimits,
+    CacheInfo, CacheLimits, ListCachesRequest, ListCachesResponse, TopicLimits,
 };
 
 pub use messages::dictionary::dictionary_fetch::{

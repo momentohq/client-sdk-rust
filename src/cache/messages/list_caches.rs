@@ -12,7 +12,7 @@ use crate::{CacheClient, MomentoResult};
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
-/// use momento::cache::{ListCaches, ListCachesRequest};
+/// use momento::cache::{ListCachesResponse, ListCachesRequest};
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 ///
 /// let list_caches_request = ListCachesRequest {};
@@ -28,9 +28,9 @@ use crate::{CacheClient, MomentoResult};
 pub struct ListCachesRequest {}
 
 impl MomentoRequest for ListCachesRequest {
-    type Response = ListCaches;
+    type Response = ListCachesResponse;
 
-    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListCaches> {
+    async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListCachesResponse> {
         let request = Request::new(control_client::ListCachesRequest {
             next_token: "".to_string(),
         });
@@ -42,7 +42,7 @@ impl MomentoRequest for ListCachesRequest {
             .await?
             .into_inner();
 
-        Ok(ListCaches::from_response(response))
+        Ok(ListCachesResponse::from_response(response))
     }
 }
 
@@ -73,19 +73,19 @@ pub struct CacheInfo {
 /// You can cast your result directly into a `Result<Vec<CacheInfo>, MomentoError>` suitable for
 /// ?-propagation if you know you are expecting a `Vec<CacheInfo>` item.
 /// ```
-/// # use momento::cache::{CacheInfo, ListCaches};
+/// # use momento::cache::{CacheInfo, ListCachesResponse};
 /// # use momento::MomentoResult;
-/// # let list_caches_response = ListCaches { caches: vec![] };
+/// # let list_caches_response = ListCachesResponse { caches: vec![] };
 /// let caches: Vec<CacheInfo> = list_caches_response.into();
 /// ```
 #[derive(Debug, PartialEq, Eq)]
-pub struct ListCaches {
+pub struct ListCachesResponse {
     pub caches: Vec<CacheInfo>,
 }
 
-/// Convert a ListCachesResponse from the server into a ListCaches.
-impl ListCaches {
-    pub fn from_response(response: control_client::ListCachesResponse) -> ListCaches {
+/// Convert a ListCachesResponse from the server into a ListCachesResponse.
+impl ListCachesResponse {
+    pub fn from_response(response: control_client::ListCachesResponse) -> ListCachesResponse {
         let mut caches = Vec::new();
         for cache in response.cache {
             let cache_limits = cache.cache_limits.clone().unwrap_or_default();
@@ -105,12 +105,12 @@ impl ListCaches {
                 },
             });
         }
-        ListCaches { caches }
+        ListCachesResponse { caches }
     }
 }
 
-impl From<ListCaches> for Vec<CacheInfo> {
-    fn from(response: ListCaches) -> Self {
+impl From<ListCachesResponse> for Vec<CacheInfo> {
+    fn from(response: ListCachesResponse) -> Self {
         response.caches
     }
 }
