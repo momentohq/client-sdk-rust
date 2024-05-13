@@ -200,14 +200,6 @@ impl From<&TestList> for ListFetchResponse {
 
 impl From<TestList> for ListFetchResponse {
     fn from(test_list: TestList) -> Self {
-        ListFetchResponse::Hit {
-            values: momento::cache::messages::data::list::list_fetch::Value::new(
-                test_list
-                    .values()
-                    .iter()
-                    .map(|element| element.as_bytes().to_vec())
-                    .collect(),
-            ),
-        }
+        test_list.values().clone().into()
     }
 }
