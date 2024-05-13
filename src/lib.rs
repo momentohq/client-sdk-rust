@@ -34,8 +34,8 @@
 //! The [CredentialProvider] struct is used to provide the API key for the Momento service. The two
 //! most common factory functions for creating a `CredentialProvider` are:
 //!
-//! - `CredentialProvider::from_env_var` - reads the API key from an environment variable
-//! - `CredentialProvider::from_string` - takes the API key as a string; can be used when retrieving the key from a secret manager, etc.
+//! - [CredentialProvider::from_env_var] - reads the API key from an environment variable
+//! - [CredentialProvider::from_string] - takes the API key as a string; can be used when retrieving the key from a secret manager, etc.
 //!
 //! ## Error Handling
 //!
