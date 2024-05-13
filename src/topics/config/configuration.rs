@@ -37,6 +37,7 @@ pub struct Configuration {
 }
 
 impl Configuration {
+    /// First level of constructing a TopicClient. Must provide a [TransportStrategy] to continue.
     pub fn builder() -> ConfigurationBuilder<NeedsTransportStrategy> {
         ConfigurationBuilder(NeedsTransportStrategy(()))
     }

@@ -35,7 +35,10 @@ use crate::{
 ///
 /// // Consume messages from the subscription using `next()`
 /// while let Some(message) = subscription.next().await {
-///    println!("Received message: {:?}", message);
+///    match message.kind {
+///             momento::topics::ValueKind::Text(t) => println!("Received message as string: {:?}", t),
+///             momento::topics::ValueKind::Binary(b) => println!("Received message as bytes: {:?}", b),
+///         }
 /// }
 /// # Ok(())
 /// # })
@@ -50,6 +53,7 @@ pub struct SubscribeRequest {
 }
 
 impl SubscribeRequest {
+    /// Create a new SubscribeRequest.
     pub fn new(
         cache_name: impl Into<String>,
         topic: impl Into<String>,

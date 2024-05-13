@@ -21,13 +21,13 @@ use crate::{
 /// # fn main() -> anyhow::Result<()> {
 /// # tokio_test::block_on(async {
 /// use momento::{CredentialProvider, TopicClient};
-/// use momento::topics::{TopicPublish, PublishRequest};
+/// use momento::topics::{TopicPublishResponse, PublishRequest};
 /// # let (topic_client, cache_name) = momento_test_util::create_doctest_topic_client();
 ///
 /// // Publish to a topic
 /// let request = PublishRequest::new(cache_name, "topic", "value");
 /// match topic_client.send_request(request).await? {
-///     TopicPublish {} => println!("Published message!"),
+///     TopicPublishResponse {} => println!("Published message!"),
 /// }
 /// # Ok(())
 /// # })
@@ -40,6 +40,7 @@ pub struct PublishRequest<V: IntoTopicValue> {
 }
 
 impl<V: IntoTopicValue> PublishRequest<V> {
+    /// Create a new PublishRequest.
     pub fn new(cache_name: impl Into<String>, topic: impl Into<String>, value: V) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -50,9 +51,9 @@ impl<V: IntoTopicValue> PublishRequest<V> {
 }
 
 impl<V: IntoTopicValue + std::marker::Send> MomentoRequest for PublishRequest<V> {
-    type Response = TopicPublish;
+    type Response = TopicPublishResponse;
 
-    async fn send(self, topic_client: &TopicClient) -> MomentoResult<TopicPublish> {
+    async fn send(self, topic_client: &TopicClient) -> MomentoResult<TopicPublishResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name.to_string(),
             topic_client.configuration.deadline_millis(),
@@ -66,9 +67,10 @@ impl<V: IntoTopicValue + std::marker::Send> MomentoRequest for PublishRequest<V>
         )?;
 
         let _ = topic_client.client.clone().publish(request).await?;
-        Ok(TopicPublish {})
+        Ok(TopicPublishResponse {})
     }
 }
 
+/// The response type for a successful publish request.
 #[derive(Debug, PartialEq, Eq)]
-pub struct TopicPublish {}
+pub struct TopicPublishResponse {}

@@ -1,5 +1,5 @@
 use core::str;
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryFrom;
 
 use futures::future::BoxFuture;
 use futures::{Future, FutureExt};
@@ -17,7 +17,7 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 /// This will run more or less forever and yield items as long as you're
 /// subscribed and someone is publishing.
 ///
-/// A Subscription is a `futures::Stream<SubscriptionItem>`. It will try to
+/// A Subscription is a `futures::Stream<SubscriptionValue>`. It will try to
 /// stay connected for as long as you try to consume it.
 ///
 /// # Examples
@@ -36,7 +36,10 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 /// let subscriber_handle = tokio::spawn(async move {
 ///     println!("Subscriber should keep receiving until thread is killed");
 ///     while let Some(message) = subscription.next().await {
-///         println!("[1] Received message: {:?}", message);
+///         match message.kind {
+///             momento::topics::ValueKind::Text(t) => println!("Received message as string: {:?}", t),
+///             momento::topics::ValueKind::Binary(b) => println!("Received message as bytes: {:?}", b),
+///         }
 ///     }
 /// });
 ///
@@ -60,8 +63,12 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 /// tokio::spawn(async move {
 ///     println!("Subscriber should receive 10 messages then exist");
 ///     for _ in 0..10 {
-///         let message = subscription.next().await;
-///         println!("[2] Received message: {:?}", message);
+///         if let Some(message) = subscription.next().await {
+///             match message.kind {
+///                 momento::topics::ValueKind::Text(t) => println!("Received message as string: {:?}", t),
+///                 momento::topics::ValueKind::Binary(b) => println!("Received message as bytes: {:?}", b),
+///             }
+///         }
 ///     }
 /// });
 /// # Ok(())
@@ -81,9 +88,14 @@ type SubscriptionFuture = BoxFuture<
     Result<tonic::Response<tonic::Streaming<pubsub::SubscriptionItem>>, tonic::Status>,
 >;
 
+/// Indicates whether the subscription is still connected or resubscribing
 pub enum SubscriptionState {
+    /// The subscription is still connected and receiving items.
     Subscribed(tonic::Streaming<pubsub::SubscriptionItem>),
+
+    /// The subscription is resubscribing.
     Resubscribing {
+        #[allow(missing_docs)]
         subscription_future: SubscriptionFuture,
     },
 }
@@ -95,6 +107,7 @@ enum MapKind {
 }
 
 impl Subscription {
+    /// Creates a new subscription.
     pub fn new(
         client: PubsubClient<ChannelType>,
         cache_name: String,
@@ -179,7 +192,7 @@ impl Subscription {
 }
 
 impl futures::Stream for Subscription {
-    type Item = SubscriptionItem;
+    type Item = SubscriptionValue;
 
     fn poll_next(
         mut self: std::pin::Pin<&mut Self>,
@@ -197,13 +210,15 @@ impl futures::Stream for Subscription {
                                         match &item {
                                             SubscriptionItem::Value(v) => {
                                                 self.current_sequence_number =
-                                                    v.topic_sequence_number
+                                                    v.topic_sequence_number;
+                                                // We return only SubscriptionValues here
+                                                break std::task::Poll::Ready(Some(v.clone()));
                                             }
                                             SubscriptionItem::Discontinuity(d) => {
+                                                log::debug!("discontinuity! Updating sequence number and continuing...");
                                                 self.current_sequence_number = d.new_sequence_number
                                             }
                                         }
-                                        break std::task::Poll::Ready(Some(item));
                                     }
                                     MapKind::Heartbeat => {
                                         log::trace!("received a heartbeat - skipping...");
@@ -266,30 +281,22 @@ impl futures::Stream for Subscription {
 
 /// An item from a topic.
 #[derive(Debug, PartialEq)]
-pub enum SubscriptionItem {
+pub(crate) enum SubscriptionItem {
+    /// Subsctiption item that was a binary or text value.
     Value(SubscriptionValue),
+
     /// Sometimes something will break in a subscription. It is an unfortunate reality
     /// of network programming that errors occur. We do our best to tell you what we
     /// know about those errors when they occur.
     /// You might not care about these, and that's okay! It's probably a good idea to
     /// log them though, so you can reach out for help if you notice something naughty
     /// that hurts your users.
+    /// We currently do not expose discontinuities to the end user.
     Discontinuity(Discontinuity),
 }
 
-impl TryFrom<SubscriptionItem> for String {
-    type Error = MomentoError;
-
-    fn try_from(value: SubscriptionItem) -> Result<Self, Self::Error> {
-        match value {
-            SubscriptionItem::Value(v) => v.try_into(),
-            SubscriptionItem::Discontinuity(_) => Err(MomentoError::discontinuity()),
-        }
-    }
-}
-
 /// An actual published value from a topic.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct SubscriptionValue {
     /// The published value.
     pub kind: ValueKind,
@@ -309,7 +316,8 @@ impl TryFrom<SubscriptionValue> for String {
     }
 }
 
-#[derive(Debug, PartialEq)]
+/// Indicates whether a received [SubscriptionValue] is a text or binary value.
+#[derive(Debug, PartialEq, Clone)]
 pub enum ValueKind {
     /// A value that was published to the topic as a string.
     Text(String),
