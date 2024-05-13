@@ -144,6 +144,7 @@ pub(crate) fn parse_string(raw: Vec<u8>) -> MomentoResult<String> {
 /// Convenience trait for converting strings into bytes and allowing
 /// methods to accept either string or byte values.
 pub trait IntoBytes: Send {
+    /// Convert an IntoBytes value into a list of byte values.
     fn into_bytes(self) -> Vec<u8>;
 }
 
@@ -159,6 +160,7 @@ where
 /// Convenience trait for converting a list of IntoBytes items into
 /// a list of byte values.
 pub trait IntoBytesIterable: Send {
+    /// Convert a list of IntoBytes items into a list of byte values.
     fn into_bytes(self) -> Vec<Vec<u8>>;
 }
 
