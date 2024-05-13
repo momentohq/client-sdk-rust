@@ -72,7 +72,7 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
             .into_inner();
         match response.result() {
             ECacheResult::Hit => Ok(GetResponse::Hit {
-                value: GetValue {
+                value: Value {
                     raw_item: response.cache_body,
                 },
             }),
@@ -89,9 +89,9 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
 ///
 /// If you'd like to handle misses you can simply match and handle your response:
 /// ```
-/// # use momento::cache::{GetResponse, GetValue};
+/// # use momento::cache::GetResponse;
 /// # use momento::MomentoResult;
-/// # let get_response = GetResponse::Hit { value: GetValue::new(vec![]) };
+/// # let get_response = GetResponse::default();
 /// use std::convert::TryInto;
 /// let item: String = match get_response {
 ///     GetResponse::Hit { value } => value.try_into().expect("I stored a string!"),
@@ -101,9 +101,9 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
 ///
 /// Or, if you're storing raw bytes you can get at them simply:
 /// ```
-/// # use momento::cache::{GetResponse, GetValue};
+/// # use momento::cache::GetResponse;
 /// # use momento::MomentoResult;
-/// # let get_response = GetResponse::Hit { value: GetValue::new(vec![]) };
+/// # let get_response = GetResponse::default();
 /// let item: Vec<u8> = match get_response {
 ///     GetResponse::Hit { value } => value.into(),
 ///     GetResponse::Miss => return // probably you'll do something else here
@@ -116,47 +116,70 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
 /// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
 /// this is what you're after:
 /// ```
-/// # use momento::cache::{GetResponse, GetValue};
+/// # use momento::cache::GetResponse;
 /// # use momento::MomentoResult;
-/// # let get_response = GetResponse::Hit { value: GetValue::new(vec![]) };
+/// # let get_response = GetResponse::default();
 /// use std::convert::TryInto;
 /// let item: MomentoResult<String> = get_response.try_into();
 /// ```
 ///
 /// You can also go straight into a `Vec<u8>` if you prefer:
 /// ```
-/// # use momento::cache::{GetResponse, GetValue};
+/// # use momento::cache::GetResponse;
 /// # use momento::MomentoResult;
-/// # let get_response = GetResponse::Hit { value: GetValue::new(vec![]) };
+/// # let get_response = GetResponse::default();
 /// use std::convert::TryInto;
 /// let item: MomentoResult<Vec<u8>> = get_response.try_into();
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum GetResponse {
-    Hit { value: GetValue },
+    Hit { value: Value },
     Miss,
 }
 
+impl Default for GetResponse {
+    fn default() -> Self {
+        GetResponse::Hit {
+            value: Value::default(),
+        }
+    }
+}
+
+impl<I: IntoBytes> From<I> for GetResponse {
+    fn from(value: I) -> Self {
+        GetResponse::Hit {
+            value: Value::new(value.into_bytes()),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
-pub struct GetValue {
+pub struct Value {
     pub(crate) raw_item: Vec<u8>,
 }
-impl GetValue {
+
+impl Value {
     pub fn new(raw_item: Vec<u8>) -> Self {
         Self { raw_item }
     }
 }
 
-impl TryFrom<GetValue> for String {
+impl Default for Value {
+    fn default() -> Self {
+        Value::new(Vec::new())
+    }
+}
+
+impl TryFrom<Value> for String {
     type Error = MomentoError;
 
-    fn try_from(value: GetValue) -> Result<Self, Self::Error> {
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
         parse_string(value.raw_item)
     }
 }
 
-impl From<GetValue> for Vec<u8> {
-    fn from(value: GetValue) -> Self {
+impl From<Value> for Vec<u8> {
+    fn from(value: Value) -> Self {
         value.raw_item
     }
 }

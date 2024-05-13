@@ -1,7 +1,4 @@
-use momento::{
-    cache::{GetResponse, GetValue, ListFetchResponse, SortedSetElements, SortedSetFetchResponse},
-    IntoBytes,
-};
+use momento::cache::{GetResponse, ListFetchResponse, SortedSetElements, SortedSetFetchResponse};
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -56,9 +53,7 @@ impl Default for TestScalar {
 
 impl From<&TestScalar> for GetResponse {
     fn from(test_scalar: &TestScalar) -> Self {
-        GetResponse::Hit {
-            value: GetValue::new(test_scalar.value().into_bytes()),
-        }
+        test_scalar.value().into()
     }
 }
 
