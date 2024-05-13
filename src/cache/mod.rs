@@ -1,4 +1,4 @@
-mod messages;
+pub mod messages;
 
 pub use messages::MomentoRequest;
 
@@ -101,7 +101,7 @@ pub use messages::data::list::list_concatenate_back::{
 pub use messages::data::list::list_concatenate_front::{
     ListConcatenateFrontRequest, ListConcatenateFrontResponse,
 };
-pub use messages::data::list::list_fetch::{ListFetchRequest, ListFetchResponse, ListFetchValue};
+pub use messages::data::list::list_fetch::{ListFetchRequest, ListFetchResponse};
 pub use messages::data::list::list_length::{ListLengthRequest, ListLengthResponse};
 pub use messages::data::list::list_pop_back::{
     ListPopBackRequest, ListPopBackResponse, ListPopBackValue,
