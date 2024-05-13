@@ -148,7 +148,7 @@ impl TryFrom<Value> for Vec<String> {
         Ok(value
             .raw_item
             .into_iter()
-            .map(|v| parse_string(v).expect("expected a valid UTF-8 string"))
+            .map(parse_string)
             .collect())
     }
 }

@@ -5,6 +5,7 @@ use momento::CacheClient;
 use momento_test_util::{get_test_cache_name, get_test_credential_provider};
 
 #[tokio::main]
+#[allow(clippy::expect_used)] // we want to panic if teardown cannot complete
 async fn main() {
     let cache_name = get_test_cache_name();
     let credential_provider = get_test_credential_provider();

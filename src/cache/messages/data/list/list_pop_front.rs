@@ -142,7 +142,7 @@ impl TryFrom<Value> for String {
     type Error = MomentoError;
 
     fn try_from(value: Value) -> Result<Self, Self::Error> {
-        Ok(parse_string(value.raw_item).expect("expected a valid UTF-8 string"))
+        Ok(parse_string(value.raw_item))
     }
 }
 

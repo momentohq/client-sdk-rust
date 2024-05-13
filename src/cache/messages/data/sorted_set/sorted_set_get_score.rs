@@ -1,6 +1,9 @@
 use std::convert::TryFrom;
 
-use momento_protos::cache_client::{sorted_set_get_score_response, ECacheResult};
+use momento_protos::cache_client::{
+    sorted_set_get_score_response::{self, SortedSetGetScoreResponsePart},
+    ECacheResult,
+};
 
 use crate::{
     cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
@@ -73,16 +76,23 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetScoreRequest<L, 
 
         match response.sorted_set {
             Some(sorted_set_get_score_response::SortedSet::Found(found)) => {
-                let found_element = found
-                    .elements
-                    .first()
-                    .expect("Expected to receive one element");
-                if found_element.result == ECacheResult::Hit as i32 {
-                    Ok(SortedSetGetScoreResponse::Hit {
-                        score: found_element.score,
-                    })
-                } else {
-                    Ok(SortedSetGetScoreResponse::Miss)
+                let mut responses: Vec<SortedSetGetScoreResponsePart> =
+                    found.elements.into_iter().collect();
+
+                match responses.pop() {
+                    Some(element) => {
+                        if element.result == ECacheResult::Hit as i32 {
+                            Ok(SortedSetGetScoreResponse::Hit {
+                                score: element.score,
+                            })
+                        } else {
+                            Ok(SortedSetGetScoreResponse::Miss)
+                        }
+                    }
+                    None => Err(MomentoError::unknown_error(
+                        "SortedSetGetScore",
+                        Some("Expected to receive one element".to_string()),
+                    )),
                 }
             }
             Some(sorted_set_get_score_response::SortedSet::Missing(_)) => {
