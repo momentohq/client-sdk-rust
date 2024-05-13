@@ -145,7 +145,7 @@ impl TryFrom<Value> for Vec<String> {
     type Error = MomentoError;
 
     fn try_from(value: Value) -> Result<Self, Self::Error> {
-        Ok(value.raw_item.into_iter().map(parse_string).collect())
+        value.raw_item.into_iter().map(parse_string).collect()
     }
 }
 
