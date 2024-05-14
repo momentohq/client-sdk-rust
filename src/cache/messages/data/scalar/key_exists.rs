@@ -38,6 +38,7 @@ pub struct KeyExistsRequest<K: IntoBytes> {
 }
 
 impl<K: IntoBytes> KeyExistsRequest<K> {
+    /// Constructs a new KeyExistsRequest.
     pub fn new(cache_name: impl Into<String>, key: K) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -75,12 +76,15 @@ impl<K: IntoBytes> MomentoRequest for KeyExistsRequest<K> {
     }
 }
 
+/// Response for a key exists operation.
 #[derive(Debug, PartialEq, Eq)]
 pub struct KeyExistsResponse {
+    /// True if the key exists in the cache.
     pub exists: bool,
 }
 
 impl KeyExistsResponse {
+    /// Returns true if the key exists in the cache.
     pub fn exists(self) -> bool {
         self.exists
     }

@@ -7,7 +7,7 @@ all: precommit
 ## clippy on the tests (but allow expect to be used in tests)
 lint:
 	cargo fmt -- --check
-	cargo clippy --all-features -- -D warnings -W clippy::unwrap_used -W clippy::expect_used
+	cargo clippy --all-features -- -D warnings -W clippy::unwrap_used -W clippy::expect_used -W missing_docs
 	cargo clippy --tests -- -D warnings -W clippy::unwrap_used
 
 .PHONY: build

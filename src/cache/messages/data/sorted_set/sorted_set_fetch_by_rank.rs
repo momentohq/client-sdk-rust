@@ -7,9 +7,14 @@ use crate::cache::messages::MomentoRequest;
 use crate::utils::prep_request_with_timeout;
 use crate::{CacheClient, IntoBytes, MomentoResult};
 
+/// The order with which to sort the elements by score in the sorted set.
+/// The sort order determines the rank of the elements.
+/// The elements with same score are ordered lexicographically.
 #[repr(i32)]
 pub enum SortedSetOrder {
+    /// Scores are ordered from low to high. This is the default order.
     Ascending = 0,
+    /// Scores are ordered from high to low.
     Descending = 1,
 }
 
@@ -70,6 +75,7 @@ pub struct SortedSetFetchByRankRequest<S: IntoBytes> {
 }
 
 impl<S: IntoBytes> SortedSetFetchByRankRequest<S> {
+    /// Constructs a new SortedSetFetchByRankRequest.
     pub fn new(cache_name: impl Into<String>, sorted_set_name: S) -> Self {
         Self {
             cache_name: cache_name.into(),

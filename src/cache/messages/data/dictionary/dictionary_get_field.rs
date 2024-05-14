@@ -58,6 +58,7 @@ pub struct DictionaryGetFieldRequest<D: IntoBytes, F: IntoBytes> {
 }
 
 impl<D: IntoBytes, F: IntoBytes> DictionaryGetFieldRequest<D, F> {
+    /// Constructs a new DictionaryGetFieldRequest.
     pub fn new(cache_name: impl Into<String>, dictionary_name: D, field: F) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -170,7 +171,12 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryGetFieldRequest<D,
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum DictionaryGetFieldResponse {
-    Hit { value: Value },
+    /// The dictionary was found.
+    Hit {
+        /// The value of the field.
+        value: Value,
+    },
+    /// The dictionary was not found.
     Miss,
 }
 
@@ -196,12 +202,15 @@ impl TryFrom<DictionaryGetFieldResponse> for Vec<u8> {
     }
 }
 
+/// Represents the value of a field in a dictionary.
 #[derive(Debug, PartialEq, Eq, Default)]
 pub struct Value {
+    /// The raw bytes of the value.
     pub(crate) raw_item: Vec<u8>,
 }
 
 impl Value {
+    /// Constructs a new Value.
     pub fn new(raw_item: Vec<u8>) -> Self {
         Self { raw_item }
     }

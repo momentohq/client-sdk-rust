@@ -54,6 +54,7 @@ pub struct IncrementRequest<K: IntoBytes> {
 }
 
 impl<K: IntoBytes> IncrementRequest<K> {
+    /// Constructs a new IncrementRequest.
     pub fn new(cache_name: impl Into<String>, key: K, amount: i64) -> Self {
         let ttl = None;
         Self {
@@ -64,6 +65,7 @@ impl<K: IntoBytes> IncrementRequest<K> {
         }
     }
 
+    /// Set the time-to-live for the item.
     pub fn ttl(mut self, ttl: Duration) -> Self {
         self.ttl = Some(ttl);
         self
@@ -96,12 +98,15 @@ impl<K: IntoBytes> MomentoRequest for IncrementRequest<K> {
     }
 }
 
+/// The response type for a successful increment request.
 #[derive(Debug, PartialEq, Eq)]
 pub struct IncrementResponse {
+    /// The new value of the item after the increment operation.
     pub value: i64,
 }
 
 impl IncrementResponse {
+    /// Returns the new value of the item after the increment operation.
     pub fn value(self) -> i64 {
         self.value
     }

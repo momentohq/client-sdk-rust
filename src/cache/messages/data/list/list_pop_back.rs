@@ -39,6 +39,7 @@ pub struct ListPopBackRequest<L: IntoBytes> {
 }
 
 impl<L: IntoBytes> ListPopBackRequest<L> {
+    /// Constructs a new ListPopBackRequest.
     pub fn new(cache_name: impl Into<String>, list_name: L) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -107,7 +108,12 @@ impl<L: IntoBytes> MomentoRequest for ListPopBackRequest<L> {
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum ListPopBackResponse {
-    Hit { value: Value },
+    /// The list was found.
+    Hit {
+        /// The value that was popped.
+        value: Value,
+    },
+    /// The list was not found.
     Miss,
 }
 
@@ -119,12 +125,15 @@ impl<I: IntoBytes> From<I> for ListPopBackResponse {
     }
 }
 
+/// The value of a list pop back operation.
 #[derive(Debug, PartialEq, Eq)]
 pub struct Value {
+    /// The raw bytes of the value.
     pub(crate) raw_item: Vec<u8>,
 }
 
 impl Value {
+    /// Constructs a new Value.
     pub fn new(raw_item: Vec<u8>) -> Self {
         Self { raw_item }
     }

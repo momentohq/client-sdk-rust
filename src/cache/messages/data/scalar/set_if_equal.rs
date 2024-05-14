@@ -63,6 +63,7 @@ pub struct SetIfEqualRequest<K: IntoBytes, V: IntoBytes, E: IntoBytes> {
 }
 
 impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> SetIfEqualRequest<K, V, E> {
+    /// Constructs a new SetIfEqualRequest.
     pub fn new(cache_name: impl Into<String>, key: K, value: V, equal: E) -> Self {
         let ttl = None;
         Self {
@@ -74,6 +75,7 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> SetIfEqualRequest<K, V, E> {
         }
     }
 
+    /// Set the time-to-live for the item.
     pub fn ttl(mut self, ttl: Duration) -> Self {
         self.ttl = Some(ttl);
         self
@@ -114,8 +116,12 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest for SetIfEqualRequ
     }
 }
 
+/// Response for a set if equal request.
 #[derive(Debug, PartialEq, Eq)]
 pub enum SetIfEqualResponse {
+    /// The value was successfully stored.
     Stored,
+    /// The value was not stored because the key was not present in
+    /// the cache or the value was not equal to the supplied value.
     NotStored,
 }

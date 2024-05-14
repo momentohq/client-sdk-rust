@@ -40,6 +40,7 @@ pub struct ItemGetTtlRequest<K: IntoBytes> {
 }
 
 impl<K: IntoBytes> ItemGetTtlRequest<K> {
+    /// Constructs a new ItemGetTtlRequest.
     pub fn new(cache_name: impl Into<String>, key: K) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -110,7 +111,12 @@ impl<K: IntoBytes> MomentoRequest for ItemGetTtlRequest<K> {
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum ItemGetTtlResponse {
-    Hit { remaining_ttl: Duration },
+    /// The item was found in the cache.
+    Hit {
+        /// The remaining time-to-live of the item.
+        remaining_ttl: Duration,
+    },
+    /// The item was not found in the cache.
     Miss,
 }
 

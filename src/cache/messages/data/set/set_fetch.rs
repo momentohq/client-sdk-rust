@@ -42,6 +42,7 @@ pub struct SetFetchRequest<S: IntoBytes> {
 }
 
 impl<S: IntoBytes> SetFetchRequest<S> {
+    /// Constructs a new SetFetchRequest.
     pub fn new(cache_name: impl Into<String>, set_name: S) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -112,7 +113,12 @@ impl<S: IntoBytes> MomentoRequest for SetFetchRequest<S> {
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum SetFetchResponse {
-    Hit { values: Value },
+    /// The set was found.
+    Hit {
+        /// The values in the set.
+        values: Value,
+    },
+    /// The set was not found.
     Miss,
 }
 
@@ -124,12 +130,15 @@ impl<I: IntoBytesIterable> From<I> for SetFetchResponse {
     }
 }
 
+/// Represents the values in a set.
 #[derive(Debug, PartialEq, Eq)]
 pub struct Value {
+    /// The raw values in the set.
     pub(crate) raw_item: Vec<Vec<u8>>,
 }
 
 impl Value {
+    /// Constructs a new Value.
     pub fn new(raw_item: Vec<Vec<u8>>) -> Self {
         Self { raw_item }
     }

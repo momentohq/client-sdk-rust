@@ -44,6 +44,7 @@ pub struct DecreaseTtlRequest<K: IntoBytes> {
 }
 
 impl<K: IntoBytes> DecreaseTtlRequest<K> {
+    /// Constructs a new DecreaseTtlRequest.
     pub fn new(cache_name: impl Into<String>, key: K, ttl: Duration) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -87,9 +88,13 @@ impl<K: IntoBytes> MomentoRequest for DecreaseTtlRequest<K> {
     }
 }
 
+/// Response for a decrease ttl operation.
 #[derive(Debug, PartialEq, Eq)]
 pub enum DecreaseTtlResponse {
+    /// The ttl was successfully decreased.
     Set,
+    /// The ttl could not be decreased because a precondition was not met.
     NotSet,
+    /// The item was not found in the cache.
     Miss,
 }

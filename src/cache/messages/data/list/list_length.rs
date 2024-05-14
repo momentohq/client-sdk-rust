@@ -38,6 +38,7 @@ pub struct ListLengthRequest<L: IntoBytes> {
 }
 
 impl<L: IntoBytes> ListLengthRequest<L> {
+    /// Constructs a new ListLengthRequest.
     pub fn new(cache_name: impl Into<String>, list_name: L) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -106,7 +107,12 @@ impl<L: IntoBytes> MomentoRequest for ListLengthRequest<L> {
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum ListLengthResponse {
-    Hit { length: u32 },
+    /// The list was found.
+    Hit {
+        /// The length of the list.
+        length: u32,
+    },
+    /// The list was not found.
     Miss,
 }
 

@@ -61,6 +61,7 @@ pub struct DictionaryGetFieldsRequest<D: IntoBytes, F: IntoBytesIterable + Clone
 }
 
 impl<D: IntoBytes, F: IntoBytesIterable + Clone> DictionaryGetFieldsRequest<D, F> {
+    /// Constructs a new DictionaryGetFieldsRequest.
     pub fn new(cache_name: impl Into<String>, dictionary_name: D, fields: F) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -182,10 +183,14 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum DictionaryGetFieldsResponse<F: IntoBytesIterable> {
+    /// The dictionary was found.
     Hit {
+        /// The fields that were requested.
         fields: F,
+        /// The responses for each field.
         responses: Vec<DictionaryGetFieldResponse>,
     },
+    /// The dictionary was not found.
     Miss,
 }
 

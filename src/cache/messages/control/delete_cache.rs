@@ -35,10 +35,12 @@ use crate::{utils, CacheClient, MomentoResult};
 /// # }
 /// ```
 pub struct DeleteCacheRequest {
+    /// The name of the cache to be deleted.
     pub cache_name: String,
 }
 
 impl DeleteCacheRequest {
+    /// Constructs a new DeleteCacheRequest.
     pub fn new(cache_name: impl Into<String>) -> Self {
         DeleteCacheRequest {
             cache_name: cache_name.into(),
@@ -66,5 +68,6 @@ impl MomentoRequest for DeleteCacheRequest {
     }
 }
 
+/// The response type for a successful delete cache request
 #[derive(Debug, PartialEq, Eq)]
 pub struct DeleteCacheResponse {}

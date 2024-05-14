@@ -55,6 +55,7 @@ pub struct DictionaryIncrementRequest<D: IntoBytes, F: IntoBytes> {
 }
 
 impl<D: IntoBytes, F: IntoBytes> DictionaryIncrementRequest<D, F> {
+    /// Constructs a new DictionaryIncrementRequest.
     pub fn new(cache_name: impl Into<String>, dictionary_name: D, field: F, amount: i64) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
@@ -66,6 +67,7 @@ impl<D: IntoBytes, F: IntoBytes> DictionaryIncrementRequest<D, F> {
         }
     }
 
+    /// Set the time-to-live for the collection.
     pub fn ttl(mut self, collection_ttl: CollectionTtl) -> Self {
         self.collection_ttl = Some(collection_ttl);
         self
@@ -101,12 +103,15 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryIncrementRequest<D
     }
 }
 
+/// The response type for a successful dictionary increment request.
 #[derive(Debug, PartialEq, Eq)]
 pub struct DictionaryIncrementResponse {
+    /// The new value of the field.
     pub value: i64,
 }
 
 impl DictionaryIncrementResponse {
+    /// Returns the new value of the field.
     pub fn value(self) -> i64 {
         self.value
     }

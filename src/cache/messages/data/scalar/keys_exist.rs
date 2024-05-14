@@ -63,6 +63,7 @@ pub struct KeysExistRequest<K: IntoBytesIterable> {
 }
 
 impl<K: IntoBytesIterable> KeysExistRequest<K> {
+    /// Constructs a new KeysExistRequest.
     pub fn new(cache_name: impl Into<String>, keys: K) -> Self {
         Self {
             cache_name: cache_name.into(),

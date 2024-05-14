@@ -44,6 +44,7 @@ pub struct IncreaseTtlRequest<K: IntoBytes> {
 }
 
 impl<K: IntoBytes> IncreaseTtlRequest<K> {
+    /// Constructs a new IncreaseTtlRequest.
     pub fn new(cache_name: impl Into<String>, key: K, ttl: Duration) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -87,9 +88,13 @@ impl<K: IntoBytes> MomentoRequest for IncreaseTtlRequest<K> {
     }
 }
 
+/// Response for an increase ttl operation.
 #[derive(Debug, PartialEq, Eq)]
 pub enum IncreaseTtlResponse {
+    /// The ttl was updated successfully.
     Set,
+    /// The ttl was not updated because a precondition was not met.
     NotSet,
+    /// The item was not found in the cache.
     Miss,
 }

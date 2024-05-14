@@ -63,6 +63,7 @@ pub struct SetIfPresentAndNotEqualRequest<K: IntoBytes, V: IntoBytes, E: IntoByt
 }
 
 impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> SetIfPresentAndNotEqualRequest<K, V, E> {
+    /// Constructs a new SetIfPresentAndNotEqualRequest.
     pub fn new(cache_name: impl Into<String>, key: K, value: V, not_equal: E) -> Self {
         let ttl = None;
         Self {
@@ -74,6 +75,7 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> SetIfPresentAndNotEqualRequest<K,
         }
     }
 
+    /// Set the time-to-live for the item.
     pub fn ttl(mut self, ttl: Duration) -> Self {
         self.ttl = Some(ttl);
         self
@@ -123,8 +125,12 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest
     }
 }
 
+/// Response for a set if present and not equal operation.
 #[derive(Debug, PartialEq, Eq)]
 pub enum SetIfPresentAndNotEqualResponse {
+    /// The value was successfully stored.
     Stored,
+    /// The value was not stored because the key was not present
+    /// or the value was equal to the supplied value.
     NotStored,
 }

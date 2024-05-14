@@ -37,10 +37,12 @@ use crate::{utils, CacheClient, MomentoResult};
 /// # }
 /// ```
 pub struct FlushCacheRequest {
+    /// The name of the cache to be flushed
     pub cache_name: String,
 }
 
 impl FlushCacheRequest {
+    /// Constructs a new FlushCacheRequest.
     pub fn new(cache_name: impl Into<String>) -> Self {
         FlushCacheRequest {
             cache_name: cache_name.into(),
@@ -68,5 +70,6 @@ impl MomentoRequest for FlushCacheRequest {
     }
 }
 
+/// The response type for a successful flush cache request
 #[derive(Debug, PartialEq, Eq)]
 pub struct FlushCacheResponse {}

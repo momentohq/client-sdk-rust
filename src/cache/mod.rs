@@ -1,3 +1,4 @@
+/// Contains the request and response types for cache operations.
 pub mod messages;
 
 pub use messages::MomentoRequest;

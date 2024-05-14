@@ -59,6 +59,7 @@ pub struct SetIfAbsentRequest<K: IntoBytes, V: IntoBytes> {
 }
 
 impl<K: IntoBytes, V: IntoBytes> SetIfAbsentRequest<K, V> {
+    /// Construct a new SetIfAbsentRequest.
     pub fn new(cache_name: impl Into<String>, key: K, value: V) -> Self {
         let ttl = None;
         Self {
@@ -69,6 +70,7 @@ impl<K: IntoBytes, V: IntoBytes> SetIfAbsentRequest<K, V> {
         }
     }
 
+    /// Set the time-to-live for the item.
     pub fn ttl(mut self, ttl: Duration) -> Self {
         self.ttl = Some(ttl);
         self
@@ -107,8 +109,11 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfAbsentRequest<K, V> {
     }
 }
 
+/// Response for a set if absent request.
 #[derive(Debug, PartialEq, Eq)]
 pub enum SetIfAbsentResponse {
+    /// The value was successfully stored.
     Stored,
+    /// The item was not stored because the key was already present in the cache.
     NotStored,
 }

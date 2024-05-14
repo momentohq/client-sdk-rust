@@ -52,6 +52,7 @@ pub struct SortedSetPutElementRequest<S: IntoBytes, V: IntoBytes> {
 }
 
 impl<S: IntoBytes, V: IntoBytes> SortedSetPutElementRequest<S, V> {
+    /// Constructs a new SortedSetPutElementRequest.
     pub fn new(cache_name: impl Into<String>, sorted_set_name: S, value: V, score: f64) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
@@ -101,5 +102,6 @@ impl<S: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetPutElementRequest<S
     }
 }
 
+/// The response type for a successful sorted set put element request.
 #[derive(Debug, PartialEq, Eq)]
 pub struct SortedSetPutElementResponse {}

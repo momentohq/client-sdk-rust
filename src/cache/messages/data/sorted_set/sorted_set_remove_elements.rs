@@ -43,6 +43,7 @@ pub struct SortedSetRemoveElementsRequest<S: IntoBytes, V: IntoBytesIterable> {
 }
 
 impl<S: IntoBytes, V: IntoBytesIterable> SortedSetRemoveElementsRequest<S, V> {
+    /// Constructs a new SortedSetRemoveElementsRequest.
     pub fn new(cache_name: impl Into<String>, sorted_set_name: S, values: V) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -80,5 +81,6 @@ impl<S: IntoBytes, V: IntoBytesIterable> MomentoRequest for SortedSetRemoveEleme
     }
 }
 
+/// The response type for a successful sorted set remove elements request.
 #[derive(Debug, PartialEq, Eq)]
 pub struct SortedSetRemoveElementsResponse {}

@@ -44,6 +44,7 @@ pub struct GetRequest<K: IntoBytes> {
 }
 
 impl<K: IntoBytes> GetRequest<K> {
+    /// Constructs a new GetRequest.
     pub fn new(cache_name: impl Into<String>, key: K) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -133,7 +134,12 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum GetResponse {
-    Hit { value: Value },
+    /// The item was found in the cache.
+    Hit {
+        /// The value of the item.
+        value: Value,
+    },
+    /// The item was not found in the cache.
     Miss,
 }
 
@@ -145,12 +151,15 @@ impl<I: IntoBytes> From<I> for GetResponse {
     }
 }
 
+/// Represents a value retrieved from the cache.
 #[derive(Debug, PartialEq, Eq)]
 pub struct Value {
+    /// The raw bytes of the item.
     pub(crate) raw_item: Vec<u8>,
 }
 
 impl Value {
+    /// Constructs a new Value.
     pub fn new(raw_item: Vec<u8>) -> Self {
         Self { raw_item }
     }

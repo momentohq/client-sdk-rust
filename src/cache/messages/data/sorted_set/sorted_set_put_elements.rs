@@ -15,11 +15,13 @@ pub trait IntoSortedSetElements<V: IntoBytes>: Send {
     fn into_sorted_set_elements(self) -> Vec<SortedSetElement<V>>;
 }
 
-// This should be used by the various sorted set fetch methods.
-// That way we have named access to value and score.
+/// Represents an element in a sorted set.
+/// Used by the various sorted set fetch methods to allow named access to value and score.
 #[derive(Debug, PartialEq, Clone)]
 pub struct SortedSetElement<V: IntoBytes> {
+    /// The value to be stored in the sorted set.
     pub value: V,
+    /// The score associated with the value.
     pub score: f64,
 }
 
@@ -151,6 +153,7 @@ pub struct SortedSetPutElementsRequest<S: IntoBytes, V: IntoBytes, E: IntoSorted
 }
 
 impl<S: IntoBytes, V: IntoBytes, E: IntoSortedSetElements<V>> SortedSetPutElementsRequest<S, V, E> {
+    /// Constructs a new SortedSetPutElementsRequest.
     pub fn new(cache_name: impl Into<String>, sorted_set_name: S, elements: E) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
@@ -205,5 +208,6 @@ impl<S: IntoBytes, V: IntoBytes, E: IntoSortedSetElements<V>> MomentoRequest
     }
 }
 
+/// The response type for a successful sorted set put elements request.
 #[derive(Debug, PartialEq, Eq)]
 pub struct SortedSetPutElementsResponse {}

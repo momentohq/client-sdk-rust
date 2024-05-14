@@ -39,6 +39,7 @@ pub struct SortedSetLengthRequest<L: IntoBytes> {
 }
 
 impl<L: IntoBytes> SortedSetLengthRequest<L> {
+    /// Constructs a new SortedSetLengthRequest.
     pub fn new(cache_name: impl Into<String>, sorted_set_name: L) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -111,7 +112,12 @@ impl<L: IntoBytes> MomentoRequest for SortedSetLengthRequest<L> {
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum SortedSetLengthResponse {
-    Hit { length: u32 },
+    /// The sorted set was found.
+    Hit {
+        /// The number of elements in the sorted set.
+        length: u32,
+    },
+    /// The sorted set was not found.
     Miss,
 }
 

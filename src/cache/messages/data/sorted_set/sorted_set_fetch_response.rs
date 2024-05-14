@@ -58,7 +58,12 @@ use crate::{ErrorSource, MomentoError, MomentoErrorCode, MomentoResult};
 /// ```
 #[derive(Debug, PartialEq)]
 pub enum SortedSetFetchResponse {
-    Hit { value: SortedSetElements },
+    /// The sorted set was found.
+    Hit {
+        /// The elements in the sorted set.
+        value: SortedSetElements,
+    },
+    /// The sorted set was not found.
     Miss,
 }
 
@@ -142,24 +147,30 @@ impl From<Vec<(String, f64)>> for SortedSetFetchResponse {
     }
 }
 
+/// A collection of elements from a sorted set.
 #[derive(Debug, PartialEq, Default)]
 pub struct SortedSetElements {
+    /// The elements in the sorted set.
     pub elements: Vec<(Vec<u8>, f64)>,
 }
 
 impl SortedSetElements {
+    /// Constructs a new SortedSetElements from the given (value, score) pairs.
     pub fn new(elements: Vec<(Vec<u8>, f64)>) -> Self {
         SortedSetElements { elements }
     }
 
+    /// Converts the elements into a Vec<(String, f64)>.
     pub fn into_strings(self) -> MomentoResult<Vec<(String, f64)>> {
         self.try_into()
     }
 
+    /// Returns the number of elements in the sorted set.
     pub fn len(&self) -> usize {
         self.elements.len()
     }
 
+    /// Returns true if the sorted set is empty.
     pub fn is_empty(&self) -> bool {
         self.elements.is_empty()
     }

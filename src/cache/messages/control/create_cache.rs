@@ -31,10 +31,12 @@ use crate::{utils, CacheClient, MomentoResult};
 /// # }
 /// ```
 pub struct CreateCacheRequest {
+    /// The name of the cache to create.
     pub cache_name: String,
 }
 
 impl CreateCacheRequest {
+    /// Constructs a new CreateCacheRequest.
     pub fn new(cache_name: impl Into<String>) -> Self {
         CreateCacheRequest {
             cache_name: cache_name.into(),
@@ -68,8 +70,11 @@ impl MomentoRequest for CreateCacheRequest {
     }
 }
 
+/// The response type for a successful create cache request
 #[derive(Debug, PartialEq, Eq)]
 pub enum CreateCacheResponse {
+    /// The cache was created.
     Created,
+    /// The cache already exists.
     AlreadyExists,
 }

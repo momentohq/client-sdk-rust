@@ -42,6 +42,7 @@ pub struct DeleteRequest<K: IntoBytes> {
 }
 
 impl<K: IntoBytes> DeleteRequest<K> {
+    /// Constructs a new DeleteRequest.
     pub fn new(cache_name: impl Into<String>, key: K) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -67,5 +68,6 @@ impl<K: IntoBytes> MomentoRequest for DeleteRequest<K> {
     }
 }
 
+/// The response type for a successful delete request
 #[derive(Debug, PartialEq, Eq)]
 pub struct DeleteResponse {}
