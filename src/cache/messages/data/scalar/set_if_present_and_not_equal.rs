@@ -128,7 +128,7 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest
 /// Response for a set if present and not equal operation.
 #[derive(Debug, PartialEq, Eq)]
 pub enum SetIfPresentAndNotEqualResponse {
-    /// The value was successfully stored
+    /// The value was successfully stored.
     Stored,
     /// The value was not stored because the key was not present
     /// or the value was equal to the supplied value.
