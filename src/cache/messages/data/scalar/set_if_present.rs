@@ -112,7 +112,7 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfPresentRequest<K, V> {
 /// Response for a set if present operation.
 #[derive(Debug, PartialEq, Eq)]
 pub enum SetIfPresentResponse {
-    /// The value was successfully stored
+    /// The value was successfully stored.
     Stored,
     /// The key was not present in the cache.
     NotStored,
