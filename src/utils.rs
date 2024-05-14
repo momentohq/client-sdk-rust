@@ -185,7 +185,7 @@ mod tests {
         let mut request = tonic::Request::new(());
         let cache_name = "my_cache";
         let result = request_meta_data(&mut request, cache_name);
-        assert!(result.is_ok());
+        assert!(result.is_ok(), "Expected Ok, but got {:?}", result);
         assert_eq!(
             request.metadata().get("cache"),
             Some(&tonic::metadata::AsciiMetadataValue::from_str(cache_name).unwrap())
@@ -196,7 +196,7 @@ mod tests {
     fn test_is_ttl_valid() {
         let ttl = Duration::from_secs(10);
         let result = is_ttl_valid(ttl);
-        assert!(result.is_ok());
+        assert!(result.is_ok(), "Expected Ok, but got {:?}", result);
     }
 
     #[test]
@@ -220,14 +220,14 @@ mod tests {
     fn test_is_cache_name_valid() {
         let cache_name = "my_cache";
         let result = is_cache_name_valid(cache_name);
-        assert!(result.is_ok());
+        assert!(result.is_ok(), "Expected Ok, but got {:?}", result);
     }
 
     #[test]
     fn test_is_cache_name_valid_empty() {
         let cache_name = "";
         let result = is_cache_name_valid(cache_name);
-        assert!(result.is_err());
+        assert!(result.is_err(), "Expected Err, but got {:?}", result);
         let error = result.unwrap_err();
         assert_eq!(error.error_code, MomentoErrorCode::InvalidArgumentError);
         assert_eq!(error.message, "Cache name cannot be empty");
@@ -237,7 +237,7 @@ mod tests {
     async fn test_connect_channel_lazily() {
         let uri_string = "http://localhost:50051";
         let result = connect_channel_lazily(uri_string);
-        assert!(result.is_ok());
+        assert!(result.is_ok(), "Expected Ok, but got {:?}", result);
     }
 
     #[tokio::test]
@@ -250,7 +250,7 @@ mod tests {
             deadline: Duration::from_secs(30),
         };
         let result = connect_channel_lazily_configurable(uri_string, grpc_config);
-        assert!(result.is_ok());
+        assert!(result.is_ok(), "Expected Ok, but got {:?}", result);
     }
 
     #[test]
@@ -265,8 +265,9 @@ mod tests {
     fn test_parse_string() {
         let raw = vec![104, 101, 108, 108, 111];
         let result = parse_string(raw);
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "hello");
+        assert!(result.is_ok(), "Expected Ok, but got {:?}", result);
+        let parsed_string = result.expect("Expected a string");
+        assert_eq!(parsed_string, "hello");
     }
 
     #[test]
