@@ -64,6 +64,7 @@ where
     F: IntoBytes,
     V: IntoBytes,
 {
+    /// Constructs a new DictionarySetFieldRequest.
     pub fn new(cache_name: impl Into<String>, dictionary_name: D, field: F, value: V) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
@@ -75,6 +76,7 @@ where
         }
     }
 
+    /// Set the time-to-live for the dictionary.
     pub fn ttl(mut self, collection_ttl: CollectionTtl) -> Self {
         self.collection_ttl = Some(collection_ttl);
         self
@@ -115,5 +117,6 @@ where
     }
 }
 
+/// The response type for a successful dictionary set field request.
 #[derive(Debug, PartialEq, Eq)]
 pub struct DictionarySetFieldResponse {}

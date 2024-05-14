@@ -49,6 +49,7 @@ pub struct ListConcatenateFrontRequest<L: IntoBytes, V: IntoBytesIterable> {
 }
 
 impl<L: IntoBytes, V: IntoBytesIterable> ListConcatenateFrontRequest<L, V> {
+    /// Constructs a new ListConcatenateFrontRequest.
     pub fn new(cache_name: impl Into<String>, list_name: L, values: V) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -101,5 +102,6 @@ impl<L: IntoBytes, V: IntoBytesIterable> MomentoRequest for ListConcatenateFront
     }
 }
 
+/// The response type for a successful list concatenate front request.
 #[derive(Debug, PartialEq, Eq)]
 pub struct ListConcatenateFrontResponse {}

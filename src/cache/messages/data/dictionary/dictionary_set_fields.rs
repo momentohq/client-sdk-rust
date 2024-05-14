@@ -17,9 +17,12 @@ pub trait IntoDictionaryFieldValuePairs<F: IntoBytes, V: IntoBytes>: Send {
     fn into_dictionary_field_value_pairs(self) -> Vec<DictionaryFieldValuePair<F, V>>;
 }
 
+/// Represents a field-value pair in a dictionary.
 #[derive(Debug, PartialEq, Eq)]
 pub struct DictionaryFieldValuePair<F: IntoBytes, V: IntoBytes> {
+    /// The field to be stored in the dictionary.
     pub field: F,
+    /// The value to be stored in the dictionary.
     pub value: V,
 }
 
@@ -108,6 +111,7 @@ where
     V: IntoBytes,
     E: IntoDictionaryFieldValuePairs<F, V>,
 {
+    /// Constructs a new DictionarySetFieldsRequest.
     pub fn new(cache_name: impl Into<String>, dictionary_name: D, elements: E) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
@@ -120,6 +124,7 @@ where
         }
     }
 
+    /// Set the time-to-live for the collection.
     pub fn ttl(mut self, collection_ttl: CollectionTtl) -> Self {
         self.collection_ttl = Some(collection_ttl);
         self
@@ -166,5 +171,6 @@ where
     }
 }
 
+/// The response type for a successful dictionary set fields request.
 #[derive(Debug, PartialEq, Eq)]
 pub struct DictionarySetFieldsResponse {}

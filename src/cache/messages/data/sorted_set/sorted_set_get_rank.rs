@@ -42,6 +42,7 @@ pub struct SortedSetGetRankRequest<L: IntoBytes, V: IntoBytes> {
 }
 
 impl<L: IntoBytes, V: IntoBytes> SortedSetGetRankRequest<L, V> {
+    /// Constructs a new SortedSetGetRankRequest.
     pub fn new(cache_name: impl Into<String>, sorted_set_name: L, value: V) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -117,7 +118,12 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetRankRequest<L, V
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum SortedSetGetRankResponse {
-    Hit { rank: u64 },
+    /// The sorted set was found.
+    Hit {
+        /// The rank of the element in the sorted set.
+        rank: u64,
+    },
+    /// The sorted set was not found.
     Miss,
 }
 

@@ -52,6 +52,7 @@ pub struct ListFetchRequest<L: IntoBytes> {
 }
 
 impl<L: IntoBytes> ListFetchRequest<L> {
+    /// Constructs a new ListFetchRequest.
     pub fn new(cache_name: impl Into<String>, list_name: L) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -146,7 +147,12 @@ impl<L: IntoBytes> MomentoRequest for ListFetchRequest<L> {
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum ListFetchResponse {
-    Hit { values: Value },
+    /// The list was found.
+    Hit {
+        /// The list values.
+        values: Value,
+    },
+    /// The list was not found.
     Miss,
 }
 
@@ -158,12 +164,15 @@ impl<I: IntoBytesIterable> From<I> for ListFetchResponse {
     }
 }
 
+/// Represents the values of a list fetch operation.
 #[derive(Debug, PartialEq, Eq)]
 pub struct Value {
+    /// The raw list values.
     pub(crate) raw_item: Vec<Vec<u8>>,
 }
 
 impl Value {
+    /// Constructs a new Value.
     pub fn new(raw_item: Vec<Vec<u8>>) -> Self {
         Self { raw_item }
     }

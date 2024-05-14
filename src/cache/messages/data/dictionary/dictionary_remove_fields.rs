@@ -46,6 +46,7 @@ pub struct DictionaryRemoveFieldsRequest<D: IntoBytes, F: IntoBytesIterable> {
 }
 
 impl<D: IntoBytes, F: IntoBytesIterable> DictionaryRemoveFieldsRequest<D, F> {
+    /// Constructs a new DictionaryRemoveFieldsRequest.
     pub fn new(cache_name: impl Into<String>, dictionary_name: D, fields: F) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -82,5 +83,6 @@ impl<D: IntoBytes, F: IntoBytesIterable> MomentoRequest for DictionaryRemoveFiel
     }
 }
 
+/// The response type for a successful dictionary remove fields request.
 #[derive(Debug, PartialEq, Eq)]
 pub struct DictionaryRemoveFieldsResponse {}

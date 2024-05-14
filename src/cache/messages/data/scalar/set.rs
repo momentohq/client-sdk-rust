@@ -53,6 +53,7 @@ pub struct SetRequest<K: IntoBytes, V: IntoBytes> {
 }
 
 impl<K: IntoBytes, V: IntoBytes> SetRequest<K, V> {
+    /// Construct a new SetRequest.
     pub fn new(cache_name: impl Into<String>, key: K, value: V) -> Self {
         let ttl = None;
         Self {
@@ -63,6 +64,7 @@ impl<K: IntoBytes, V: IntoBytes> SetRequest<K, V> {
         }
     }
 
+    /// Set the time-to-live for the item.
     pub fn ttl(mut self, ttl: Duration) -> Self {
         self.ttl = Some(ttl);
         self
@@ -88,5 +90,6 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetRequest<K, V> {
     }
 }
 
+/// The response type for a successful set request.
 #[derive(Debug, PartialEq, Eq)]
 pub struct SetResponse {}

@@ -63,6 +63,7 @@ pub struct SetIfAbsentOrEqualRequest<K: IntoBytes, V: IntoBytes, E: IntoBytes> {
 }
 
 impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> SetIfAbsentOrEqualRequest<K, V, E> {
+    /// Constructs a new SetIfAbsentOrEqualRequest.
     pub fn new(cache_name: impl Into<String>, key: K, value: V, equal: E) -> Self {
         let ttl = None;
         Self {
@@ -74,6 +75,7 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> SetIfAbsentOrEqualRequest<K, V, E
         }
     }
 
+    /// Set the time-to-live for the item.
     pub fn ttl(mut self, ttl: Duration) -> Self {
         self.ttl = Some(ttl);
         self
@@ -118,8 +120,12 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest
     }
 }
 
+/// Response for a set if absent or equal request.
 #[derive(Debug, PartialEq, Eq)]
 pub enum SetIfAbsentOrEqualResponse {
+    /// The value was successfully stored
     Stored,
+    /// The value was not stored because the key already exists in the cache and the value
+    /// is not equal to the supplied `equal` value.
     NotStored,
 }

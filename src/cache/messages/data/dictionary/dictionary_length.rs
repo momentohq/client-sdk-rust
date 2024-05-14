@@ -40,6 +40,7 @@ pub struct DictionaryLengthRequest<D: IntoBytes> {
 }
 
 impl<D: IntoBytes> DictionaryLengthRequest<D> {
+    /// Constructs a new DictionaryLengthRequest.
     pub fn new(cache_name: impl Into<String>, dictionary_name: D) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -112,7 +113,12 @@ impl<D: IntoBytes> MomentoRequest for DictionaryLengthRequest<D> {
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum DictionaryLengthResponse {
-    Hit { length: u32 },
+    /// The dictionary was found.
+    Hit {
+        /// The number of elements in the dictionary.
+        length: u32,
+    },
+    /// The dictionary was not found.
     Miss,
 }
 

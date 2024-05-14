@@ -39,6 +39,7 @@ pub struct ListRemoveValueRequest<L: IntoBytes, V: IntoBytes> {
 }
 
 impl<L: IntoBytes, V: IntoBytes> ListRemoveValueRequest<L, V> {
+    /// Constructs a new ListRemoveValueRequest.
     pub fn new(cache_name: impl Into<String>, list_name: L, value: V) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -71,5 +72,6 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListRemoveValueRequest<L, V>
     }
 }
 
+/// The response type for a successful list remove value request.
 #[derive(Debug, PartialEq, Eq)]
 pub struct ListRemoveValueResponse {}

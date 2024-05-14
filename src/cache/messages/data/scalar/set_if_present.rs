@@ -59,6 +59,7 @@ pub struct SetIfPresentRequest<K: IntoBytes, V: IntoBytes> {
 }
 
 impl<K: IntoBytes, V: IntoBytes> SetIfPresentRequest<K, V> {
+    /// Constructs a new SetIfPresentRequest.
     pub fn new(cache_name: impl Into<String>, key: K, value: V) -> Self {
         let ttl = None;
         Self {
@@ -69,6 +70,7 @@ impl<K: IntoBytes, V: IntoBytes> SetIfPresentRequest<K, V> {
         }
     }
 
+    /// Set the time-to-live for the item.
     pub fn ttl(mut self, ttl: Duration) -> Self {
         self.ttl = Some(ttl);
         self
@@ -107,8 +109,11 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfPresentRequest<K, V> {
     }
 }
 
+/// Response for a set if present operation.
 #[derive(Debug, PartialEq, Eq)]
 pub enum SetIfPresentResponse {
+    /// The value was successfully stored
     Stored,
+    /// The key was not present in the cache.
     NotStored,
 }

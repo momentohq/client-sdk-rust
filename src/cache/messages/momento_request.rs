@@ -1,7 +1,9 @@
 use crate::CacheClient;
 use crate::MomentoResult;
 
+/// A trait that allows Momento request types to define their interaction with the gRPC client.
 pub trait MomentoRequest {
+    #[allow(missing_docs)]
     type Response;
 
     /// An internal fn that allows Momento request types to define their interaction with

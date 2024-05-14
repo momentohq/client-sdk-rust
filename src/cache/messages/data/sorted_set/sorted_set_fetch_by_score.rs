@@ -72,6 +72,7 @@ pub struct SortedSetFetchByScoreRequest<S: IntoBytes> {
 }
 
 impl<S: IntoBytes> SortedSetFetchByScoreRequest<S> {
+    /// Constructs a new SortedSetFetchByScoreRequest.
     pub fn new(cache_name: impl Into<String>, sorted_set_name: S) -> Self {
         Self {
             cache_name: cache_name.into(),

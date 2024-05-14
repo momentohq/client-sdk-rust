@@ -41,6 +41,7 @@ pub struct ItemGetTypeRequest<K: IntoBytes> {
 }
 
 impl<K: IntoBytes> ItemGetTypeRequest<K> {
+    /// Constructs a new ItemGetTypeRequest.
     pub fn new(cache_name: impl Into<String>, key: K) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -97,12 +98,18 @@ impl<K: IntoBytes> MomentoRequest for ItemGetTypeRequest<K> {
     }
 }
 
+/// The type of an item in the cache.
 #[derive(Debug, PartialEq, Eq)]
 pub enum ItemType {
+    /// The item is a scalar value.
     Scalar = 0,
+    /// The item is a dictionary.
     Dictionary = 1,
+    /// The item is a list.
     List = 2,
+    /// The item is a set.
     Set = 3,
+    /// The item is a sorted set.
     SortedSet = 4,
 }
 
@@ -134,7 +141,12 @@ pub enum ItemType {
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum ItemGetTypeResponse {
-    Hit { key_type: ItemType },
+    /// The item was found.
+    Hit {
+        /// The type of the item (e.g. type of collection, scalar value, etc)
+        key_type: ItemType,
+    },
+    /// The item was not found.
     Miss,
 }
 

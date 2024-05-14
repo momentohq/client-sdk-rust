@@ -46,6 +46,7 @@ pub struct ListPushFrontRequest<L: IntoBytes, V: IntoBytes> {
 }
 
 impl<L: IntoBytes, V: IntoBytes> ListPushFrontRequest<L, V> {
+    /// Constructs a new ListPushFrontRequest.
     pub fn new(cache_name: impl Into<String>, list_name: L, value: V) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -98,5 +99,6 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListPushFrontRequest<L, V> {
     }
 }
 
+/// The response type for a successful list push front request.
 #[derive(Debug, PartialEq, Eq)]
 pub struct ListPushFrontResponse {}

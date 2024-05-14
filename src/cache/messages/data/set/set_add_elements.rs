@@ -50,6 +50,7 @@ pub struct SetAddElementsRequest<S: IntoBytes, E: IntoBytesIterable> {
 }
 
 impl<S: IntoBytes, E: IntoBytesIterable> SetAddElementsRequest<S, E> {
+    /// Constructs a new SetAddElementsRequest.
     pub fn new(cache_name: impl Into<String>, set_name: S, elements: E) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
@@ -60,6 +61,7 @@ impl<S: IntoBytes, E: IntoBytesIterable> SetAddElementsRequest<S, E> {
         }
     }
 
+    /// Set the time-to-live for the collection.
     pub fn ttl(mut self, collection_ttl: CollectionTtl) -> Self {
         self.collection_ttl = Some(collection_ttl);
         self
@@ -90,5 +92,6 @@ impl<S: IntoBytes, E: IntoBytesIterable> MomentoRequest for SetAddElementsReques
     }
 }
 
+/// The response type for a successful set add elements request.
 #[derive(Debug, PartialEq, Eq)]
 pub struct SetAddElementsResponse {}

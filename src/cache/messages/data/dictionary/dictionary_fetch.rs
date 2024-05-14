@@ -51,6 +51,7 @@ pub struct DictionaryFetchRequest<D: IntoBytes> {
 }
 
 impl<D: IntoBytes> DictionaryFetchRequest<D> {
+    /// Constructs a new DictionaryFetchRequest.
     pub fn new(cache_name: impl Into<String>, dictionary_name: D) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -154,17 +155,24 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub enum DictionaryFetchResponse {
-    Hit { value: Value },
+    /// The dictionary was found.
+    Hit {
+        /// The dictionary values.
+        value: Value,
+    },
+    /// The dictionary was not found.
     Miss,
 }
 
 /// A dictionary fetched from a cache.
 #[derive(Debug, PartialEq, Eq, Default)]
 pub struct Value {
+    /// The raw dictionary item.
     pub(crate) raw_item: HashMap<Vec<u8>, Vec<u8>>,
 }
 
 impl Value {
+    /// Constructs a new Value.
     pub fn new(raw_item: HashMap<Vec<u8>, Vec<u8>>) -> Self {
         Self { raw_item }
     }

@@ -46,6 +46,7 @@ pub struct SetRemoveElementsRequest<S: IntoBytes, E: IntoBytes> {
 }
 
 impl<S: IntoBytes, E: IntoBytes> SetRemoveElementsRequest<S, E> {
+    /// Constructs a new SetRemoveElementsRequest.
     pub fn new(cache_name: impl Into<String>, set_name: S, elements: Vec<E>) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -82,5 +83,6 @@ impl<S: IntoBytes, E: IntoBytes> MomentoRequest for SetRemoveElementsRequest<S, 
     }
 }
 
+/// The response type for a successful set remove elements request.
 #[derive(Debug, PartialEq, Eq)]
 pub struct SetRemoveElementsResponse {}

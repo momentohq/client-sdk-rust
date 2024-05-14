@@ -93,11 +93,12 @@ pub struct CacheInfo {
 /// ```
 #[derive(Debug, PartialEq, Eq)]
 pub struct ListCachesResponse {
+    /// The caches in your account.
     pub caches: Vec<CacheInfo>,
 }
 
-/// Convert a ListCachesResponse from the server into a ListCachesResponse.
 impl ListCachesResponse {
+    /// Convert a ListCachesResponse from the server into a ListCachesResponse.
     pub fn from_response(response: control_client::ListCachesResponse) -> ListCachesResponse {
         let mut caches = Vec::new();
         for cache in response.cache {
