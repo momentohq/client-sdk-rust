@@ -72,14 +72,5 @@ async fn main() -> Result<(), MomentoError> {
             eprintln!("{err}");
         }
     };
-    // Permanently deletes cache
-    match cache_client.delete_cache(&cache_name).await {
-        Ok(_) => {
-            println!("Permanently deleted cache named, {cache_name}");
-        }
-        Err(err) => {
-            eprintln!("{err}");
-        }
-    };
     Ok(())
 }
