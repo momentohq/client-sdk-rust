@@ -60,7 +60,11 @@ mod item_get_ttl {
             .await?
             .try_into()
             .expect("Expected an item ttl!");
-        assert!(ttl.as_secs() > 0);
+        assert!(
+            ttl.as_secs() > 0,
+            "Expected ttl to be positive, got {:?}",
+            ttl
+        );
 
         // Sleep for 2 seconds
         tokio::time::sleep(Duration::from_secs(2)).await;
@@ -91,7 +95,11 @@ mod item_get_ttl {
             .await?
             .try_into()
             .expect("Expected an item ttl!");
-        assert!(ttl.as_secs() > 0);
+        assert!(
+            ttl.as_secs() > 0,
+            "Expected ttl to be positive, got {:?}",
+            ttl
+        );
 
         // Sleep for 2 seconds
         tokio::time::sleep(Duration::from_secs(2)).await;
@@ -160,7 +168,11 @@ mod increase_ttl {
             .await?
             .try_into()
             .expect("Expected an item ttl!");
-        assert!(ttl_before.as_secs() > 0 && ttl_before.as_secs() < 5);
+        assert!(
+            ttl_before.as_secs() > 0 && ttl_before.as_secs() < 5,
+            "Expected ttl to be <5 seconds, got {:?}",
+            ttl_before
+        );
 
         // Set a higher TTL
         let result = client
@@ -173,7 +185,11 @@ mod increase_ttl {
             .await?
             .try_into()
             .expect("Expected an item ttl!");
-        assert!(ttl_after.as_secs() > 15 && ttl_after.as_secs() < 20);
+        assert!(
+            ttl_after.as_secs() > 15 && ttl_after.as_secs() < 20,
+            "Expected ttl to be >15 and <20 seconds, got {:?}",
+            ttl_after
+        );
 
         // Setting TTL lower than current TTL should not change the TTL
         let result = client
@@ -186,7 +202,11 @@ mod increase_ttl {
             .await?
             .try_into()
             .expect("Expected an item ttl!");
-        assert!(ttl_lower.as_secs() > 15 && ttl_lower.as_secs() < 20);
+        assert!(
+            ttl_lower.as_secs() > 15 && ttl_lower.as_secs() < 20,
+            "Expected ttl to be >15 and <20 seconds, got {:?}",
+            ttl_lower
+        );
         Ok(())
     }
 }
@@ -247,7 +267,11 @@ mod decrease_ttl {
             .await?
             .try_into()
             .expect("Expected an item ttl!");
-        assert!(ttl_before.as_secs() > 15 && ttl_before.as_secs() < 20);
+        assert!(
+            ttl_before.as_secs() > 15 && ttl_before.as_secs() < 20,
+            "Expected ttl to be >15 and <20 seconds, got {:?}",
+            ttl_before
+        );
 
         // Set a lower TTL
         let result = client
@@ -260,7 +284,11 @@ mod decrease_ttl {
             .await?
             .try_into()
             .expect("Expected an item ttl!");
-        assert!(ttl_after.as_secs() > 0 && ttl_after.as_secs() < 5);
+        assert!(
+            ttl_after.as_secs() > 0 && ttl_after.as_secs() < 5,
+            "Expected ttl to be <5 seconds, got {:?}",
+            ttl_after
+        );
 
         // Setting TTL higher than current TTL should not change the TTL
         let result = client
@@ -273,7 +301,11 @@ mod decrease_ttl {
             .await?
             .try_into()
             .expect("Expected an item ttl!");
-        assert!(ttl_lower.as_secs() > 0 && ttl_lower.as_secs() < 5);
+        assert!(
+            ttl_lower.as_secs() > 0 && ttl_lower.as_secs() < 5,
+            "Expected ttl to be <5 seconds, got {:?}",
+            ttl_lower
+        );
         Ok(())
     }
 }
@@ -333,7 +365,11 @@ mod update_ttl {
             .await?
             .try_into()
             .expect("Expected an item ttl!");
-        assert!(ttl_before.as_secs() > 0 && ttl_before.as_secs() < 10);
+        assert!(
+            ttl_before.as_secs() > 0 && ttl_before.as_secs() < 10,
+            "Expected ttl to be <10 seconds, got {:?}",
+            ttl_before
+        );
 
         client
             .update_ttl(cache_name, item.key(), Duration::from_secs(20))
@@ -344,7 +380,11 @@ mod update_ttl {
             .await?
             .try_into()
             .expect("Expected an item ttl!");
-        assert!(ttl_after.as_secs() > 10 && ttl_after.as_secs() < 20);
+        assert!(
+            ttl_after.as_secs() > 10 && ttl_after.as_secs() < 20,
+            "Expected ttl to be >10 and <20 seconds, got {:?}",
+            ttl_after
+        );
         Ok(())
     }
 }

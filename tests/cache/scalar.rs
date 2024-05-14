@@ -283,8 +283,13 @@ mod set_if_absent {
         let result_ttl: Duration = client
             .item_get_ttl(cache_name, item.key())
             .await?
-            .try_into()?;
-        assert!(result_ttl.as_millis() > 0);
+            .try_into()
+            .expect("Expected to get an item ttl");
+        assert!(
+            result_ttl.as_millis() > 0,
+            "Expected ttl > 0, got {:?}",
+            result_ttl
+        );
 
         // Wait for ttl to expire
         tokio::time::sleep(Duration::from_secs(2)).await;
@@ -369,8 +374,13 @@ mod set_if_present {
         let result_ttl: Duration = client
             .item_get_ttl(cache_name, item.key())
             .await?
-            .try_into()?;
-        assert!(result_ttl.as_millis() > 0);
+            .try_into()
+            .expect("Expected to get an item ttl");
+        assert!(
+            result_ttl.as_millis() > 0,
+            "Expected ttl > 0, got {:?}",
+            result_ttl
+        );
 
         // Wait for ttl to expire
         tokio::time::sleep(Duration::from_secs(2)).await;
@@ -466,7 +476,11 @@ mod set_if_equal {
             .await?
             .try_into()
             .expect("Expected to get an item ttl");
-        assert!(result_ttl.as_millis() > 0);
+        assert!(
+            result_ttl.as_millis() > 0,
+            "Expected ttl > 0, got {:?}",
+            result_ttl
+        );
 
         // Wait for ttl to expire
         tokio::time::sleep(Duration::from_secs(2)).await;
@@ -560,8 +574,13 @@ mod set_if_not_equal {
         let result_ttl: Duration = client
             .item_get_ttl(cache_name, item.key())
             .await?
-            .try_into()?;
-        assert!(result_ttl.as_millis() > 0);
+            .try_into()
+            .expect("Expected to get an item ttl");
+        assert!(
+            result_ttl.as_millis() > 0,
+            "Expected ttl > 0, got {:?}",
+            result_ttl
+        );
 
         // Wait for ttl to expire
         tokio::time::sleep(Duration::from_secs(2)).await;
@@ -658,7 +677,11 @@ mod set_if_present_and_not_equal {
             .await?
             .try_into()
             .expect("Expected to get an item ttl");
-        assert!(result_ttl.as_millis() > 0);
+        assert!(
+            result_ttl.as_millis() > 0,
+            "Expected ttl > 0, got {:?}",
+            result_ttl
+        );
 
         // Wait for ttl to expire
         tokio::time::sleep(Duration::from_secs(2)).await;
@@ -752,7 +775,11 @@ mod set_if_absent_or_equal {
             .await?
             .try_into()
             .expect("Expected to get an item ttl");
-        assert!(result_ttl.as_millis() > 0);
+        assert!(
+            result_ttl.as_millis() > 0,
+            "Expected ttl > 0, got {:?}",
+            result_ttl
+        );
 
         // Wait for ttl to expire
         tokio::time::sleep(Duration::from_secs(2)).await;

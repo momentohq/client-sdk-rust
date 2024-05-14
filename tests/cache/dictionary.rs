@@ -14,7 +14,9 @@ fn assert_fetched_dictionary_equals_test_data(
     dictionary_fetch_result: DictionaryFetchResponse,
     expected: &TestDictionary,
 ) -> Result<(), MomentoError> {
-    let actual: HashMap<String, String> = dictionary_fetch_result.try_into()?;
+    let actual: HashMap<String, String> = dictionary_fetch_result
+        .try_into()
+        .expect("Could not convert dictionary fetch result into HashMap<String, String>");
     assert_eq!(actual, *expected.value());
     Ok(())
 }
