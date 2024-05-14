@@ -14,5 +14,5 @@ pub mod sorted_set_length;
 pub mod sorted_set_put_element;
 /// Contains the request and response types for adding elements to a sorted set.
 pub mod sorted_set_put_elements;
-/// Contains the request and response types for removing elements from a sorted set.
+/// Contains the request and response types for removing multiple elements from a sorted set.
 pub mod sorted_set_remove_elements;
