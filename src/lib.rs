@@ -128,7 +128,7 @@ pub use errors::*;
 
 mod grpc;
 
-/// Contains the `TopicClient` for interacting with Momento Topics.
+/// Contains the [TopicClient] for interacting with Momento Topics.
 pub mod topics;
 pub use topics::TopicClient;
 
