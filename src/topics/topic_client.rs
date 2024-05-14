@@ -15,6 +15,8 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 /// Client to work with Momento Topics, the pub/sub service.
 ///
 /// # Example
+/// To instantiate a `TopicClient`, you need to provide a configuration and a [CredentialProvider](crate::CredentialProvider).
+/// Prebuilt configurations tuned for different environments are available in the [topics::configurations](crate::topics::configurations) module.
 ///
 /// ```
 /// # fn main() -> anyhow::Result<()> {
@@ -44,6 +46,33 @@ pub struct TopicClient {
 
 impl TopicClient {
     /// Constructs a TopicClient to use Momento Topics
+    ///
+    /// # Arguments
+    /// - `configuration` - Prebuilt configurations tuned for different environments are available in the [topics::configurations](crate::topics::configurations) module.
+    /// - `credential_provider` - A [CredentialProvider](crate::CredentialProvider) to use for authenticating with Momento.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # tokio_test::block_on(async {
+    /// use momento::{topics::configurations, CredentialProvider, TopicClient};
+    ///
+    /// let topic_client = match TopicClient::builder()
+    ///     .configuration(configurations::Laptop::latest())
+    ///     .credential_provider(
+    ///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
+    ///             .expect("API key should be valid"),
+    ///     )
+    ///     .build()
+    /// {
+    ///     Ok(client) => client,
+    ///     Err(err) => panic!("{err}"),
+    /// };
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
     pub fn builder() -> TopicClientBuilder<NeedsConfiguration> {
         TopicClientBuilder(NeedsConfiguration(()))
     }

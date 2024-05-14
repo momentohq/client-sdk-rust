@@ -113,22 +113,27 @@
 //! ```
 //!
 
+/// Contains the [CacheClient] for interacting with Momento Cache.
 pub mod cache;
 pub use cache::CacheClient;
 
+/// Contains configuration settings for the Momento SDK that are shared between the Cache and Topics clients.
 pub mod config;
 mod credential_provider;
 pub use credential_provider::CredentialProvider;
 
+/// Contains the [MomentoError] type for representing errors in the Momento SDK.
 pub mod errors;
 pub use errors::*;
 
 mod grpc;
 
+/// Contains the [TopicClient] for interacting with Momento Topics.
 pub mod topics;
 pub use topics::TopicClient;
 
 mod utils;
 pub use crate::utils::{IntoBytes, IntoBytesIterable};
 
+/// Represents the result of a Momento operation.
 pub type MomentoResult<T> = Result<T, MomentoError>;

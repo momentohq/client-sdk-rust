@@ -130,6 +130,7 @@ impl CredentialProvider {
         decode_auth_token(token_to_process)
     }
 
+    /// Allows the user to override the base endpoint for the control, cache, and token endpoints
     pub fn base_endpoint(mut self, endpoint: &str) -> CredentialProvider {
         self.control_endpoint = https_endpoint(get_control_endpoint(endpoint));
         self.cache_endpoint = https_endpoint(get_cache_endpoint(endpoint));

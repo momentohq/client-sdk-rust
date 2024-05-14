@@ -37,6 +37,7 @@ pub struct Configuration {
 }
 
 impl Configuration {
+    /// First level of constructing a CacheClient configuration. Must provide a [TransportStrategy] to continue.
     pub fn builder() -> ConfigurationBuilder<NeedsTransportStrategy> {
         ConfigurationBuilder(NeedsTransportStrategy(()))
     }
@@ -47,15 +48,20 @@ impl Configuration {
     }
 }
 
+/// The initial state of the ConfigurationBuilder.
 pub struct ConfigurationBuilder<State>(State);
 
+/// The state of the ConfigurationBuilder when it is waiting for a transport strategy.
 pub struct NeedsTransportStrategy(());
 
+/// The state of the ConfigurationBuilder when it is ready to build a Configuration.
 pub struct ReadyToBuild {
     transport_strategy: TransportStrategy,
 }
 
 impl ConfigurationBuilder<NeedsTransportStrategy> {
+    /// Sets the transport strategy for the Configuration and returns
+    /// the ConfigurationBuilder in the ReadyToBuild state.
     pub fn transport_strategy(
         self,
         transport_strategy: impl Into<TransportStrategy>,
@@ -67,6 +73,7 @@ impl ConfigurationBuilder<NeedsTransportStrategy> {
 }
 
 impl ConfigurationBuilder<ReadyToBuild> {
+    /// Constructs the Configuration with the given transport strategy.
     pub fn build(self) -> Configuration {
         Configuration {
             transport_strategy: self.0.transport_strategy,

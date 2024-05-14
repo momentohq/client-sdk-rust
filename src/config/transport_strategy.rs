@@ -8,20 +8,26 @@ pub struct TransportStrategy {
 }
 
 impl TransportStrategy {
+    /// Constructs a new TransportStrategyBuilder.
     pub fn builder() -> TransportStrategyBuilder<NeedsGrpcConfiguration> {
         TransportStrategyBuilder(NeedsGrpcConfiguration(()))
     }
 }
 
+/// The initial state of the TransportStrategyBuilder.
 pub struct TransportStrategyBuilder<State>(State);
 
+/// The state of the TransportStrategyBuilder when it is waiting for a GRPC configuration.
 pub struct NeedsGrpcConfiguration(());
 
+/// The state of the TransportStrategyBuilder when it is ready to build a TransportStrategy.
 pub struct ReadyToBuild {
     grpc_configuration: GrpcConfiguration,
 }
 
 impl TransportStrategyBuilder<NeedsGrpcConfiguration> {
+    /// Sets the GRPC configuration for the TransportStrategy and returns
+    /// the TransportStrategyBuilder in the ReadyToBuild state.
     pub fn grpc_configuration(
         self,
         grpc_configuration: impl Into<GrpcConfiguration>,
@@ -33,6 +39,7 @@ impl TransportStrategyBuilder<NeedsGrpcConfiguration> {
 }
 
 impl TransportStrategyBuilder<ReadyToBuild> {
+    /// Constructs the TransportStrategy with the given GRPC configuration.
     pub fn build(self) -> TransportStrategy {
         TransportStrategy {
             grpc_configuration: self.0.grpc_configuration,
