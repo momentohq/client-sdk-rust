@@ -122,7 +122,7 @@ pub mod config;
 mod credential_provider;
 pub use credential_provider::CredentialProvider;
 
-/// Contains the `MomentoError` type for representing errors in the Momento SDK.
+/// Contains the [MomentoError] type for representing errors in the Momento SDK.
 pub mod errors;
 pub use errors::*;
 
