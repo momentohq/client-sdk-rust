@@ -119,7 +119,7 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest for SetIfNotEqualR
 /// Response for a set if not equal operation
 #[derive(Debug, PartialEq, Eq)]
 pub enum SetIfNotEqualResponse {
-    /// The value was successfully stored
+    /// The value was successfully stored.
     Stored,
     /// The value was not stored because the cached value was equal to the value supplied.
     NotStored,
