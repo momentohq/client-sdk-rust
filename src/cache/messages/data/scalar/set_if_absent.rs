@@ -112,7 +112,7 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfAbsentRequest<K, V> {
 /// Response for a set if absent request.
 #[derive(Debug, PartialEq, Eq)]
 pub enum SetIfAbsentResponse {
-    /// The value was successfully stored
+    /// The value was successfully stored.
     Stored,
     /// The item was not stored because the key was already present in the cache.
     NotStored,
