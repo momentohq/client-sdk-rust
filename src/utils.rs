@@ -174,6 +174,19 @@ where
     }
 }
 
+pub(crate) fn write_bytes_for_debug(
+    f: &mut std::fmt::Formatter<'_>,
+    name: &str,
+    bytes: &[u8],
+) -> std::fmt::Result {
+    let as_str = String::from_utf8(bytes.to_vec());
+
+    match as_str {
+        Ok(s) => write!(f, "{}: {:?} (as string: {:?})", name, bytes, s),
+        Err(_) => write!(f, "{}: {:?} (as string: <invalid UTF-8>)", name, bytes),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
