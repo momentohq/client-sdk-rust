@@ -113,7 +113,7 @@
 //! ```
 //!
 
-/// Contains the `CacheClient` for interacting with Momento Cache.
+/// Contains the [CacheClient] for interacting with Momento Cache.
 pub mod cache;
 pub use cache::CacheClient;
 
