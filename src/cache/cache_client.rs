@@ -43,7 +43,32 @@ use crate::cache::cache_client_builder::{CacheClientBuilder, NeedsDefaultTtl};
 use crate::utils::IntoBytesIterable;
 use crate::{utils, IntoBytes, MomentoResult};
 
-/// Client to perform operations on a Momento cache.
+/// Client to work with Momento Cache, the serverless caching service.
+///
+/// # Example
+///
+/// ```
+/// # fn main() -> anyhow::Result<()> {
+/// # tokio_test::block_on(async {
+/// use momento::{cache::configurations, CredentialProvider, CacheClient};
+/// use std::time::Duration;
+///
+/// let cache_client = match CacheClient::builder()
+///     .default_ttl(Duration::from_secs(60))
+///     .configuration(configurations::Laptop::latest())
+///     .credential_provider(
+///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
+///             .expect("API key should be valid"),
+///     )
+///     .build()
+/// {
+///     Ok(client) => client,
+///     Err(err) => panic!("{err}"),
+/// };
+/// # Ok(())
+/// # })
+/// # }
+/// ```
 #[derive(Clone, Debug)]
 pub struct CacheClient {
     pub(crate) data_client: ScsClient<InterceptedService<Channel, HeaderInterceptor>>,
@@ -53,7 +78,7 @@ pub struct CacheClient {
 }
 
 impl CacheClient {
-    /* constructor */
+    /// Constructs a CacheClient to use Momento Cache.
     pub fn builder() -> CacheClientBuilder<NeedsDefaultTtl> {
         CacheClientBuilder(NeedsDefaultTtl(()))
     }
