@@ -46,7 +46,7 @@ use crate::{utils, IntoBytes, MomentoResult};
 /// Client to work with Momento Cache, the serverless caching service.
 ///
 /// # Example
-/// To instantiate a `CacheClient`, you need to provide a default TTL, a configuration, and a [CredentialProvider](crate::CredentialProvider).
+/// To instantiate a [CacheClient], you need to provide a default TTL, a configuration, and a [CredentialProvider](crate::CredentialProvider).
 /// Prebuilt configurations tuned for different environments are available in the [cache::configurations](crate::cache::configurations) module.
 ///
 /// ```
