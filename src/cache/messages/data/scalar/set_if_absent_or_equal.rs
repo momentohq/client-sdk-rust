@@ -123,7 +123,7 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest
 /// Response for a set if absent or equal request.
 #[derive(Debug, PartialEq, Eq)]
 pub enum SetIfAbsentOrEqualResponse {
-    /// The value was successfully stored
+    /// The value was successfully stored.
     Stored,
     /// The value was not stored because the key already exists in the cache and the value
     /// is not equal to the supplied `equal` value.
