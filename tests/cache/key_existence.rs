@@ -120,12 +120,28 @@ mod keys_exists {
         let keys_dict: HashMap<String, bool> = result.into();
 
         // these dictionary entries should be true
-        assert!(keys_dict[items[0].key()]);
-        assert!(keys_dict[items[2].key()]);
+        assert!(
+            keys_dict[items[0].key()],
+            "Key {} should exist",
+            items[0].key()
+        );
+        assert!(
+            keys_dict[items[2].key()],
+            "Key {} should exist",
+            items[2].key()
+        );
 
         // these dictionary entries should be false
-        assert!(!keys_dict[items[1].key()]);
-        assert!(!keys_dict[items[3].key()]);
+        assert!(
+            !keys_dict[items[1].key()],
+            "Key {} should not exist",
+            items[1].key()
+        );
+        assert!(
+            !keys_dict[items[3].key()],
+            "Key {} should not exist",
+            items[3].key()
+        );
 
         Ok(())
     }

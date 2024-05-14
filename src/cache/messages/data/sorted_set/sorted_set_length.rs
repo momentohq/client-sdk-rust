@@ -28,7 +28,7 @@ use crate::{
 /// # cache_client.sorted_set_put_elements(&cache_name, sorted_set_name.to_string(), vec![("value1", 1.0), ("value2", 2.0)]).await;
 ///
 /// let length_request = SortedSetLengthRequest::new(cache_name, sorted_set_name);
-/// let length: u32 = cache_client.send_request(length_request).await?.try_into().expect("Expected a list length!");
+/// let length: u32 = cache_client.send_request(length_request).await?.try_into().expect("Expected a sorted set length!");
 /// # Ok(())
 /// # })
 /// # }
