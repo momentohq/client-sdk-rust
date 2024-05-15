@@ -160,7 +160,9 @@ pub struct Value {
 
 impl std::fmt::Debug for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        utils::write_bytes_for_debug(f, "raw_item", &self.raw_item)
+        utils::fmt::write_struct_begin(f, "Value")?;
+        utils::fmt::write_bytes_for_debug(f, "raw_item", &self.raw_item)?;
+        utils::fmt::write_struct_end(f)
     }
 }
 
@@ -210,5 +212,30 @@ impl TryFrom<GetResponse> for Vec<u8> {
             GetResponse::Hit { value } => Ok(value.into()),
             GetResponse::Miss => Err(MomentoError::miss("Get")),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_response_display() -> MomentoResult<()> {
+        let hit = GetResponse::Hit {
+            value: Value::new("hello".as_bytes().to_vec()),
+        };
+        assert_eq!(
+            format!("{:?}", hit),
+            "Hit { value: Value { raw_item: [104, 101, 108, 108, 111] (as string: \"hello\") } }"
+        );
+        assert_eq!(
+            format!("{:#?}", hit),
+            "Hit {\n    value: Value { raw_item: [\n        104,\n        101,\n        108,\n        108,\n        111,\n    ] (as string: \"hello\")\n    },\n}"
+        );
+
+        let miss = GetResponse::Miss;
+        assert_eq!(format!("{}", miss), "Miss");
+
+        Ok(())
     }
 }
