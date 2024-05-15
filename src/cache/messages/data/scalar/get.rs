@@ -1,8 +1,8 @@
 use crate::cache::messages::MomentoRequest;
-use crate::utils::parse_string;
-use crate::utils::prep_request_with_timeout;
+use crate::utils;
 use crate::CacheClient;
 use crate::{IntoBytes, MomentoError, MomentoResult};
+use derive_more::Display;
 use momento_protos::cache_client::ECacheResult;
 use std::convert::{TryFrom, TryInto};
 
@@ -57,7 +57,7 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
     type Response = GetResponse;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<GetResponse> {
-        let request = prep_request_with_timeout(
+        let request = utils::prep_request_with_timeout(
             &self.cache_name,
             cache_client.configuration.deadline_millis(),
             momento_protos::cache_client::GetRequest {
@@ -132,7 +132,7 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
 /// use std::convert::TryInto;
 /// let item: MomentoResult<Vec<u8>> = get_response.try_into();
 /// ```
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq)]
 pub enum GetResponse {
     /// The item was found in the cache.
     Hit {
@@ -152,10 +152,24 @@ impl<I: IntoBytes> From<I> for GetResponse {
 }
 
 /// Represents a value retrieved from the cache.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(PartialEq, Eq, Default)]
 pub struct Value {
     /// The raw bytes of the item.
     pub(crate) raw_item: Vec<u8>,
+}
+
+impl std::fmt::Debug for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        utils::fmt::write_struct_begin(f, "Value")?;
+        utils::fmt::write_bytes_for_debug(f, "raw_item", &self.raw_item)?;
+        utils::fmt::write_struct_end(f)
+    }
+}
+
+impl std::fmt::Display for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 impl Value {
@@ -165,17 +179,11 @@ impl Value {
     }
 }
 
-impl Default for Value {
-    fn default() -> Self {
-        Value::new(Vec::new())
-    }
-}
-
 impl TryFrom<Value> for String {
     type Error = MomentoError;
 
     fn try_from(value: Value) -> Result<Self, Self::Error> {
-        parse_string(value.raw_item)
+        utils::parse_string(value.raw_item)
     }
 }
 
@@ -204,5 +212,39 @@ impl TryFrom<GetResponse> for Vec<u8> {
             GetResponse::Hit { value } => Ok(value.into()),
             GetResponse::Miss => Err(MomentoError::miss("Get")),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_response_display() -> MomentoResult<()> {
+        let hit = GetResponse::Hit {
+            value: Value::new("hello".as_bytes().to_vec()),
+        };
+        assert_eq!(
+            format!("{:?}", hit),
+            "Hit { value: Value { raw_item: [104, 101, 108, 108, 111] (as string: \"hello\") } }"
+        );
+        assert_eq!(
+            format!("{:#?}", hit),
+            r#"Hit {
+    value: Value { raw_item: [
+        104,
+        101,
+        108,
+        108,
+        111,
+    ] (as string: "hello")
+    },
+}"#
+        );
+
+        let miss = GetResponse::Miss;
+        assert_eq!(format!("{}", miss), "Miss");
+
+        Ok(())
     }
 }

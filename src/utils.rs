@@ -174,6 +174,54 @@ where
     }
 }
 
+/// Some notes on the `fmt` module:
+/// There are two modes to debug print:
+/// - Regular: `{:?}`
+/// - Alternate (pretty): `{:#?}`
+/// We implement both modes for the `fmt` module.
+pub(crate) mod fmt {
+
+    pub(crate) fn write_bytes_for_debug(
+        f: &mut std::fmt::Formatter<'_>,
+        name: &str,
+        bytes: &[u8],
+    ) -> std::fmt::Result {
+        let as_str = String::from_utf8(bytes.to_vec());
+
+        match as_str {
+            Ok(s) => {
+                if f.alternate() {
+                    write!(f, " {}: {:#?} (as string: {:#?})", name, bytes, s)
+                } else {
+                    write!(f, " {}: {:?} (as string: {:?})", name, bytes, s)
+                }
+            }
+            Err(_) => {
+                if f.alternate() {
+                    write!(f, " {}: {:#?} (as string: <invalid UTF-8>)", name, bytes)
+                } else {
+                    write!(f, " {}: {:?} (as string: <invalid UTF-8>)", name, bytes)
+                }
+            }
+        }
+    }
+
+    pub(crate) fn write_struct_begin(
+        f: &mut std::fmt::Formatter<'_>,
+        name: &str,
+    ) -> std::fmt::Result {
+        write!(f, "{} {{", name)
+    }
+
+    pub(crate) fn write_struct_end(f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if f.alternate() {
+            write!(f, "\n}}")
+        } else {
+            write!(f, " }}")
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;

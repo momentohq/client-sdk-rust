@@ -44,6 +44,7 @@ thiserror = "1.0"
 base64 = "0.21"
 futures = "0"
 zstd = "0.12.4"
+derive_more = "0.99.17"
 
 [dev-dependencies]
 base64-url = "2"
