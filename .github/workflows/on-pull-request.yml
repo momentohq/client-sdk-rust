@@ -34,9 +34,6 @@ jobs:
           template_file: ./example/README.template.md
           output_file: ./example/README.md
 
-      - name: Install protoc
-        run: ./scripts/install_protoc_linux.sh
-
       - name: Commitlint and Other Shared Build Steps
         uses: momentohq/standards-and-practices/github-actions/shared-build@gh-actions-v1
 
@@ -55,9 +52,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-
-      - name: Install protoc
-        run: ./scripts/install_protoc_osx.sh
 
       - uses: Swatinem/rust-cache@v2
 
@@ -86,9 +80,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-      - name: Install protoc
-        run: ./scripts/install_protoc_linux.sh
 
       - name: Commitlint and Other Shared Build Steps
         uses: momentohq/standards-and-practices/github-actions/shared-build@gh-actions-v1
