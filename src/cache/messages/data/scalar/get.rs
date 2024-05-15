@@ -2,6 +2,7 @@ use crate::cache::messages::MomentoRequest;
 use crate::utils;
 use crate::CacheClient;
 use crate::{IntoBytes, MomentoError, MomentoResult};
+use derive_more::Display;
 use momento_protos::cache_client::ECacheResult;
 use std::convert::{TryFrom, TryInto};
 
@@ -131,7 +132,7 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
 /// use std::convert::TryInto;
 /// let item: MomentoResult<Vec<u8>> = get_response.try_into();
 /// ```
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq)]
 pub enum GetResponse {
     /// The item was found in the cache.
     Hit {
