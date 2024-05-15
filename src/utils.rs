@@ -204,11 +204,7 @@ pub(crate) mod fmt {
         f: &mut std::fmt::Formatter<'_>,
         name: &str,
     ) -> std::fmt::Result {
-        if f.alternate() {
-            write!(f, "{:#} {{", name)
-        } else {
-            write!(f, "{} {{", name)
-        }
+        write!(f, "{} {{", name)
     }
 
     pub(crate) fn write_struct_end(f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
