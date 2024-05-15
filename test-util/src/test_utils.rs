@@ -17,10 +17,10 @@ pub type DoctestResult = anyhow::Result<()>;
 /// - Reading the auth token from the environment
 /// - Creating a cache for the doctest to use.
 /// - Ensuring that cache is deleted, even if the test case panics.
-pub fn doctest<'ctx, Fn: 'ctx, Fut: 'ctx>(func: Fn) -> DoctestResult
+pub fn doctest<'ctx, Fn, Fut>(func: Fn) -> DoctestResult
 where
-    Fn: FnOnce(String, CredentialProvider) -> Fut,
-    Fut: Future<Output = DoctestResult>,
+    Fn: 'ctx + FnOnce(String, CredentialProvider) -> Fut,
+    Fut: 'ctx + Future<Output = DoctestResult>,
 {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
