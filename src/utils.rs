@@ -174,7 +174,13 @@ where
     }
 }
 
+/// Some notes on the `fmt` module:
+/// There are two modes to debug print:
+/// - Regular: `{:?}`
+/// - Alternate (pretty): `{:#?}`
+/// We implement both modes for the `fmt` module.
 pub(crate) mod fmt {
+
     pub(crate) fn write_bytes_for_debug(
         f: &mut std::fmt::Formatter<'_>,
         name: &str,
