@@ -19,9 +19,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install protoc
-        run: ./scripts/install_protoc_linux.sh
-
       - name: Lint (rustfmt and clippy)
         run: make lint
 
