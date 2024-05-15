@@ -230,7 +230,16 @@ mod tests {
         );
         assert_eq!(
             format!("{:#?}", hit),
-            "Hit {\n    value: Value { raw_item: [\n        104,\n        101,\n        108,\n        108,\n        111,\n    ] (as string: \"hello\")\n    },\n}"
+            r#"Hit {
+    value: Value { raw_item: [
+        104,
+        101,
+        108,
+        108,
+        111,
+    ] (as string: "hello")
+    },
+}"#
         );
 
         let miss = GetResponse::Miss;
