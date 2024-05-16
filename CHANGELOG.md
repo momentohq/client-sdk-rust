@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.39.0](https://github.com/momentohq/client-sdk-rust/compare/v0.38.0...v0.39.0) (2024-05-15)
+
+
+### Features
+
+* add list_push_front and list_push_back ([#294](https://github.com/momentohq/client-sdk-rust/issues/294)) ([ace68b8](https://github.com/momentohq/client-sdk-rust/commit/ace68b8315b47bbe9f393bc9a47c64b354ce607e))
+* add response suffix to control commands ([#313](https://github.com/momentohq/client-sdk-rust/issues/313)) ([1c197d4](https://github.com/momentohq/client-sdk-rust/commit/1c197d4f5a77b3549a3ddebd52829087a3273776))
+* add response suffix to dictionary response types ([#300](https://github.com/momentohq/client-sdk-rust/issues/300)) ([1f4c80b](https://github.com/momentohq/client-sdk-rust/commit/1f4c80bdb9d26b97d2a2a3d90dc8a837c055c4b2))
+* add response suffix to list types ([#305](https://github.com/momentohq/client-sdk-rust/issues/305)) ([da538af](https://github.com/momentohq/client-sdk-rust/commit/da538afaaf22cf95b16783343100a9895c0d4f78))
+* add response suffix to scalar types ([#307](https://github.com/momentohq/client-sdk-rust/issues/307)) ([51bd289](https://github.com/momentohq/client-sdk-rust/commit/51bd289b42ba46901f076bf7f4725cdcfe2222f9))
+* add response suffix to set type ([#311](https://github.com/momentohq/client-sdk-rust/issues/311)) ([374b499](https://github.com/momentohq/client-sdk-rust/commit/374b49958313b667f94beec598eef70b589aaf83))
+* add response suffix to sorted set types ([#312](https://github.com/momentohq/client-sdk-rust/issues/312)) ([70d45ac](https://github.com/momentohq/client-sdk-rust/commit/70d45ac636bdee3795f8dba844e38154173fbb94))
+* basic subscriptions should return only SubscriptionValues ([#316](https://github.com/momentohq/client-sdk-rust/issues/316)) ([789cf02](https://github.com/momentohq/client-sdk-rust/commit/789cf02ddd0547a7c3a8b06742b282baf20f5008))
+* implement custom debug and display traits for byte-array types ([#323](https://github.com/momentohq/client-sdk-rust/issues/323)) ([4eaf53d](https://github.com/momentohq/client-sdk-rust/commit/4eaf53dcae4da48e7964d02a0d0c0b9036610337)), closes [#282](https://github.com/momentohq/client-sdk-rust/issues/282)
+
+
+### Bug Fixes
+
+* clippy error on gh with doctest signature ([#325](https://github.com/momentohq/client-sdk-rust/issues/325)) ([4b75542](https://github.com/momentohq/client-sdk-rust/commit/4b755425ebcaf3de79d40123c5afa3bacda801c3)), closes [#326](https://github.com/momentohq/client-sdk-rust/issues/326)
+* impl Display for CredentialProvider ([#295](https://github.com/momentohq/client-sdk-rust/issues/295)) ([ade83f2](https://github.com/momentohq/client-sdk-rust/commit/ade83f2c8b72afca1bd8d09903eee694aca8fa13))
+
+
+### Miscellaneous
+
+* Add / tweak doc examples for use in dev docs ([#317](https://github.com/momentohq/client-sdk-rust/issues/317)) ([6e4de64](https://github.com/momentohq/client-sdk-rust/commit/6e4de64d4ef459e83d175a6bc35a74fd1d16a749))
+* add docs to improve discoverability for client instantiation ([#320](https://github.com/momentohq/client-sdk-rust/issues/320)) ([e883d20](https://github.com/momentohq/client-sdk-rust/commit/e883d20cade2ebf674da7af542293c6c672539fa))
+* add integration tests and doctests for TopicClient ([#292](https://github.com/momentohq/client-sdk-rust/issues/292)) ([a93b319](https://github.com/momentohq/client-sdk-rust/commit/a93b319d2fe17ea5dcb673d4874b4ba3b77bd78d))
+* add links to response docstrings showing how to handle hits/misses ([#318](https://github.com/momentohq/client-sdk-rust/issues/318)) ([9af89af](https://github.com/momentohq/client-sdk-rust/commit/9af89afe9dfacf3cc776a269d14b85283d601a2f))
+* add lint rule to check usage of expect ([#293](https://github.com/momentohq/client-sdk-rust/issues/293)) ([be547e4](https://github.com/momentohq/client-sdk-rust/commit/be547e42964ed958ff943f1da084a2f78d4bf379))
+* add missing links in docs, small docs fixes ([#301](https://github.com/momentohq/client-sdk-rust/issues/301)) ([14e909e](https://github.com/momentohq/client-sdk-rust/commit/14e909e93ddce89fae45d3de1fd6009247b4df40))
+* add more docstrings for errors and utils, remove unused file ([#310](https://github.com/momentohq/client-sdk-rust/issues/310)) ([7e46916](https://github.com/momentohq/client-sdk-rust/commit/7e4691609f46d0ebba216ef44b61e1178bbb4770))
+* add top-level docs for the crate, including 'into' conventions etc. ([#304](https://github.com/momentohq/client-sdk-rust/issues/304)) ([e6d9ebe](https://github.com/momentohq/client-sdk-rust/commit/e6d9ebe25a5e2123f331a469e5235061c14a4682))
+* enable missing_docs lint rule and fill in missing docs ([#321](https://github.com/momentohq/client-sdk-rust/issues/321)) ([ce4a1ed](https://github.com/momentohq/client-sdk-rust/commit/ce4a1edf7534b90f6bc2d796ddecf5311afdf130))
+* improve error messages in tests ([#322](https://github.com/momentohq/client-sdk-rust/issues/322)) ([db927a2](https://github.com/momentohq/client-sdk-rust/commit/db927a2f8c5b34013c7f333be0fdb05bb8703e46))
+* move docs examples into subdir ([#319](https://github.com/momentohq/client-sdk-rust/issues/319)) ([1300e83](https://github.com/momentohq/client-sdk-rust/commit/1300e8379a9a59efcc7dd0bd6dd15bb3a178ac8a))
+* remove obsolete protoc scripts and ci references ([#328](https://github.com/momentohq/client-sdk-rust/issues/328)) ([dc0a3f0](https://github.com/momentohq/client-sdk-rust/commit/dc0a3f0eba5836f7b700dcb44af67d8adbcf5478))
+* Templatize example README, expand to include topics example ([#309](https://github.com/momentohq/client-sdk-rust/issues/309)) ([54a181b](https://github.com/momentohq/client-sdk-rust/commit/54a181b0c79110c75598b08924c75d674785359a))
+* upgrade codeql action upload sarif version ([#330](https://github.com/momentohq/client-sdk-rust/issues/330)) ([e09d933](https://github.com/momentohq/client-sdk-rust/commit/e09d933a1ce763d9121483fd3baf9710224cfd72))
+
 ## [0.38.0](https://github.com/momentohq/client-sdk-rust/compare/v0.37.0...v0.38.0) (2024-05-10)
 
 
