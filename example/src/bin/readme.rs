@@ -1,5 +1,4 @@
-use momento::cache::configurations::Laptop;
-use momento::cache::Get;
+use momento::cache::{configurations::Laptop, GetResponse};
 use momento::{CacheClient, CredentialProvider, MomentoError};
 use std::time::Duration;
 
@@ -23,8 +22,8 @@ pub async fn main() -> Result<(), MomentoError> {
     }
 
     let value: String = match cache_client.get(CACHE_NAME, "mykey").await? {
-        Get::Hit { value } => value.try_into().expect("I stored a string!"),
-        Get::Miss => {
+        GetResponse::Hit { value } => value.try_into().expect("I stored a string!"),
+        GetResponse::Miss => {
             println!("Cache miss!");
             return Ok(()); // probably you'll do something else here
         }

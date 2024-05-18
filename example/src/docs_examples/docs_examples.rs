@@ -20,9 +20,9 @@
 use futures::StreamExt;
 use momento::cache::configurations::Laptop;
 use momento::cache::{
-    CreateCache, DecreaseTtl, DictionaryFetch, DictionaryGetField, DictionaryGetFields, Get,
-    IncreaseTtl, ItemType, SetIfAbsent, SetIfAbsentOrEqual, SetIfEqual, SetIfNotEqual,
-    SetIfPresent, SetIfPresentAndNotEqual, SortedSetFetch, SortedSetOrder, UpdateTtl,
+    CreateCacheResponse, DecreaseTtlResponse, DictionaryFetchResponse, DictionaryGetFieldResponse, DictionaryGetFieldsResponse, GetResponse,
+    IncreaseTtlResponse, ItemType, SetIfAbsentResponse, SetIfAbsentOrEqualResponse, SetIfEqualResponse, SetIfNotEqualResponse,
+    SetIfPresentResponse, SetIfPresentAndNotEqualResponse, SortedSetFetchResponse, SortedSetOrder, UpdateTtlResponse,
 };
 use momento::topics::TopicClient;
 use momento::{CacheClient, CredentialProvider, MomentoError};
@@ -71,8 +71,8 @@ pub fn example_API_InstantiateCacheClient() -> Result<(), MomentoError> {
 #[allow(non_snake_case)]
 pub async fn example_API_CreateCache(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     match cache_client.create_cache(cache_name).await? {
-        CreateCache::Created => println!("Cache {} created", cache_name),
-        CreateCache::AlreadyExists => println!("Cache {} already exists", cache_name),
+        CreateCacheResponse::Created => println!("Cache {} created", cache_name),
+        CreateCacheResponse::AlreadyExists => println!("Cache {} already exists", cache_name),
     }
     Ok(())
 }
@@ -152,8 +152,8 @@ pub async fn example_API_UpdateTtl(cache_client: &CacheClient, cache_name: &Stri
         .update_ttl(cache_name, "key", Duration::from_secs(10))
         .await?
     {
-        UpdateTtl::Set => println!("TTL updated"),
-        UpdateTtl::Miss => println!("Cache miss, unable to find key to update TTL"),
+        UpdateTtlResponse::Set => println!("TTL updated"),
+        UpdateTtlResponse::Miss => println!("Cache miss, unable to find key to update TTL"),
     };
     Ok(())
 }
@@ -164,9 +164,9 @@ pub async fn example_API_IncreaseTtl(cache_client: &CacheClient, cache_name: &St
         .increase_ttl(cache_name, "key", Duration::from_secs(5))
         .await?
     {
-        IncreaseTtl::Set => println!("TTL updated"),
-        IncreaseTtl::NotSet => println!("unable to increase TTL"),
-        IncreaseTtl::Miss => println!("Cache miss, unable to find key to increase TTL"),
+        IncreaseTtlResponse::Set => println!("TTL updated"),
+        IncreaseTtlResponse::NotSet => println!("unable to increase TTL"),
+        IncreaseTtlResponse::Miss => println!("Cache miss, unable to find key to increase TTL"),
     };
     Ok(())
 }
@@ -177,9 +177,9 @@ pub async fn example_API_DecreaseTtl(cache_client: &CacheClient, cache_name: &St
         .decrease_ttl(cache_name, "key", Duration::from_secs(3))
         .await?
     {
-        DecreaseTtl::Set => println!("TTL updated"),
-        DecreaseTtl::NotSet => println!("unable to decrease TTL"),
-        DecreaseTtl::Miss => println!("Cache miss, unable to find key to decrease TTL"),
+        DecreaseTtlResponse::Set => println!("TTL updated"),
+        DecreaseTtlResponse::NotSet => println!("unable to decrease TTL"),
+        DecreaseTtlResponse::Miss => println!("Cache miss, unable to find key to decrease TTL"),
     };
     Ok(())
 }
@@ -190,8 +190,8 @@ pub async fn example_API_SetIfAbsent(cache_client: &CacheClient, cache_name: &St
         .set_if_absent(cache_name, "key", "value")
         .await?
     {
-        SetIfAbsent::Stored => println!("Value stored"),
-        SetIfAbsent::NotStored => println!("Value not stored"),
+        SetIfAbsentResponse::Stored => println!("Value stored"),
+        SetIfAbsentResponse::NotStored => println!("Value not stored"),
     }
     Ok(())
 }
@@ -202,8 +202,8 @@ pub async fn example_API_SetIfPresent(cache_client: &CacheClient, cache_name: &S
         .set_if_present(cache_name, "key", "value")
         .await?
     {
-        SetIfPresent::Stored => println!("Value stored"),
-        SetIfPresent::NotStored => println!("Value not stored"),
+        SetIfPresentResponse::Stored => println!("Value stored"),
+        SetIfPresentResponse::NotStored => println!("Value not stored"),
     }
     Ok(())
 }
@@ -214,8 +214,8 @@ pub async fn example_API_SetIfEqual(cache_client: &CacheClient, cache_name: &Str
         .set_if_equal(cache_name, "key", "new-value", "cached-value")
         .await?
     {
-        SetIfEqual::Stored => println!("Value stored"),
-        SetIfEqual::NotStored => println!("Value not stored"),
+        SetIfEqualResponse::Stored => println!("Value stored"),
+        SetIfEqualResponse::NotStored => println!("Value not stored"),
     }
     Ok(())
 }
@@ -226,8 +226,8 @@ pub async fn example_API_SetIfNotEqual(cache_client: &CacheClient, cache_name: &
         .set_if_not_equal(cache_name, "key", "new-value", "cached-value")
         .await?
     {
-        SetIfNotEqual::Stored => println!("Value stored"),
-        SetIfNotEqual::NotStored => println!("Value not stored"),
+        SetIfNotEqualResponse::Stored => println!("Value stored"),
+        SetIfNotEqualResponse::NotStored => println!("Value not stored"),
     }
     Ok(())
 }
@@ -238,8 +238,8 @@ pub async fn example_API_SetIfPresentAndNotEqual(cache_client: &CacheClient, cac
         .set_if_present_and_not_equal(cache_name, "key", "new-value", "cached-value")
         .await?
     {
-        SetIfPresentAndNotEqual::Stored => println!("Value stored"),
-        SetIfPresentAndNotEqual::NotStored => println!("Value not stored"),
+        SetIfPresentAndNotEqualResponse::Stored => println!("Value stored"),
+        SetIfPresentAndNotEqualResponse::NotStored => println!("Value not stored"),
     }
     Ok(())
 }
@@ -250,8 +250,8 @@ pub async fn example_API_SetIfAbsentOrEqual(cache_client: &CacheClient, cache_na
         .set_if_absent_or_equal(cache_name, "key", "new-value", "cached-value")
         .await?
     {
-        SetIfAbsentOrEqual::Stored => println!("Value stored"),
-        SetIfAbsentOrEqual::NotStored => println!("Value not stored"),
+        SetIfAbsentOrEqualResponse::Stored => println!("Value stored"),
+        SetIfAbsentOrEqualResponse::NotStored => println!("Value not stored"),
     }
     Ok(())
 }
@@ -361,12 +361,12 @@ pub async fn example_API_DictionaryFetch(cache_client: &CacheClient, cache_name:
         .await?;
 
     match response {
-        DictionaryFetch::Hit { value } => {
+        DictionaryFetchResponse::Hit { value } => {
             let dictionary: HashMap<String, String> =
                 value.try_into().expect("I stored a dictionary!");
             println!("Fetched dictionary: {:?}", dictionary);
         }
-        DictionaryFetch::Miss => println!("Cache miss"),
+        DictionaryFetchResponse::Miss => println!("Cache miss"),
     }
     Ok(())
 }
@@ -388,11 +388,11 @@ pub async fn example_API_DictionaryGetField(cache_client: &CacheClient, cache_na
         .await?;
 
     match response {
-        DictionaryGetField::Hit { value } => {
+        DictionaryGetFieldResponse::Hit { value } => {
             let value: String = value.try_into().expect("I stored a string!");
             println!("Fetched value: {}", value);
         }
-        DictionaryGetField::Miss => println!("Cache miss"),
+        DictionaryGetFieldResponse::Miss => println!("Cache miss"),
     }
     Ok(())
 }
@@ -404,13 +404,13 @@ pub async fn example_API_DictionaryGetFields(cache_client: &CacheClient, cache_n
         .await?;
 
     match response {
-        DictionaryGetFields::Hit { .. } => {
+        DictionaryGetFieldsResponse::Hit { .. } => {
             let dictionary: HashMap<String, String> = response
                 .try_into()
                 .expect("I stored a dictionary of strings!");
             println!("Fetched dictionary: {:?}", dictionary);
         }
-        DictionaryGetFields::Miss => println!("Cache miss"),
+        DictionaryGetFieldsResponse::Miss => println!("Cache miss"),
     }
     Ok(())
 }
@@ -496,7 +496,7 @@ pub async fn example_API_SortedSetFetchByRank(cache_client: &CacheClient, cache_
         .await?;
 
     match response {
-        SortedSetFetch::Hit { value } => match value.into_strings() {
+        SortedSetFetchResponse::Hit { value } => match value.into_strings() {
             Ok(vec) => {
                 println!("Fetched elements: {:?}", vec);
             }
@@ -504,7 +504,7 @@ pub async fn example_API_SortedSetFetchByRank(cache_client: &CacheClient, cache_
                 eprintln!("Error converting values into strings: {}", error);
             }
         },
-        SortedSetFetch::Miss => println!("Cache miss"),
+        SortedSetFetchResponse::Miss => println!("Cache miss"),
     }
     Ok(())
 }
@@ -516,7 +516,7 @@ pub async fn example_API_SortedSetFetchByScore(cache_client: &CacheClient, cache
         .await?;
 
     match response {
-        SortedSetFetch::Hit { value } => match value.into_strings() {
+        SortedSetFetchResponse::Hit { value } => match value.into_strings() {
             Ok(vec) => {
                 println!("Fetched elements: {:?}", vec);
             }
@@ -524,7 +524,7 @@ pub async fn example_API_SortedSetFetchByScore(cache_client: &CacheClient, cache
                 eprintln!("Error converting values into strings: {}", error);
             }
         },
-        SortedSetFetch::Miss => println!("Cache miss"),
+        SortedSetFetchResponse::Miss => println!("Cache miss"),
     }
     Ok(())
 }
@@ -632,8 +632,8 @@ pub async fn example_API_TopicSubscribe(topic_client: &TopicClient, cache_name: 
 
 pub async fn example_responsetypes_get_with_pattern_match(cache_client: &CacheClient, cache_name: &String) -> Result<(), anyhow::Error> {
     let _item: String = match cache_client.get(cache_name, "key").await? {
-        Get::Hit { value } => value.try_into()?,
-        Get::Miss => return Err(anyhow::Error::msg("cache miss"))
+        GetResponse::Hit { value } => value.try_into()?,
+        GetResponse::Miss => return Err(anyhow::Error::msg("cache miss"))
     };
     Ok(())
 }
