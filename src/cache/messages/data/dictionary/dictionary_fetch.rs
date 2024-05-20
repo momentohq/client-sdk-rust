@@ -1,12 +1,15 @@
 use crate::cache::messages::MomentoRequest;
+use crate::utils::fmt::{AsDebuggableValue, DebuggableValue};
 use crate::utils::{parse_string, prep_request_with_timeout};
 use crate::{CacheClient, IntoBytes, MomentoError, MomentoResult};
+use derive_more::Display;
 use momento_protos::cache_client::{
     dictionary_fetch_response::Dictionary as DictionaryProto,
     DictionaryFetchRequest as DictionaryFetchRequestProto,
 };
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
+use std::fmt::Debug;
 
 /// Request to fetch a dictionary from a cache.
 ///
@@ -153,7 +156,7 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
 /// use std::convert::TryInto;
 /// let item: MomentoResult<HashMap<Vec<u8>, Vec<u8>>> = fetch_response.try_into();
 /// ```
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq)]
 pub enum DictionaryFetchResponse {
     /// The dictionary was found.
     Hit {
@@ -165,10 +168,29 @@ pub enum DictionaryFetchResponse {
 }
 
 /// A dictionary fetched from a cache.
-#[derive(Debug, PartialEq, Eq, Default)]
+#[derive(PartialEq, Eq, Default)]
 pub struct Value {
     /// The raw dictionary item.
     pub(crate) raw_item: HashMap<Vec<u8>, Vec<u8>>,
+}
+
+impl Debug for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let debug_map_with_strings: HashMap<DebuggableValue, DebuggableValue> = self
+            .raw_item
+            .iter()
+            .map(|(k, v)| (k.as_debuggable_value(), v.as_debuggable_value()))
+            .collect();
+        f.debug_struct("Value")
+            .field("raw_item", &debug_map_with_strings)
+            .finish()
+    }
+}
+
+impl std::fmt::Display for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 impl Value {
@@ -217,5 +239,118 @@ impl TryFrom<DictionaryFetchResponse> for HashMap<String, String> {
             DictionaryFetchResponse::Hit { value } => value.try_into(),
             DictionaryFetchResponse::Miss => Err(MomentoError::miss("DictionaryFetch")),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_dictionary_fetch_response_display() -> MomentoResult<()> {
+        let hit = DictionaryFetchResponse::Hit {
+            value: Value::new(HashMap::from([(
+                "taco".as_bytes().to_vec(),
+                "TACO".as_bytes().to_vec(),
+            )])),
+        };
+        assert_eq!(
+            format!("{}", hit),
+            r#"Value { raw_item: {"taco": "TACO"} }"#
+        );
+        assert_eq!(
+            format!("{:?}", hit),
+            r#"Hit { value: Value { raw_item: {"taco": "TACO"} } }"#
+        );
+        assert_eq!(
+            format!("{:#?}", hit),
+            str::trim(
+                r#"
+Hit {
+    value: Value {
+        raw_item: {
+            "taco": "TACO",
+        },
+    },
+}"#
+            )
+        );
+
+        let hit_with_binary_value = DictionaryFetchResponse::Hit {
+            value: Value::new(HashMap::from([(
+                "taco".as_bytes().to_vec(),
+                vec![0, 150, 146, 159],
+            )])),
+        };
+        assert_eq!(
+            format!("{}", hit_with_binary_value),
+            r#"Value { raw_item: {"taco": [0, 150, 146, 159]} }"#
+        );
+        assert_eq!(
+            format!("{:?}", hit_with_binary_value),
+            r#"Hit { value: Value { raw_item: {"taco": [0, 150, 146, 159]} } }"#
+        );
+        assert_eq!(
+            format!("{:#?}", hit_with_binary_value),
+            str::trim(
+                r#"
+Hit {
+    value: Value {
+        raw_item: {
+            "taco": [
+                0,
+                150,
+                146,
+                159,
+            ],
+        },
+    },
+}"#
+            )
+        );
+
+        let hit_with_binary_key_and_value = DictionaryFetchResponse::Hit {
+            value: Value::new(HashMap::from([(
+                vec![0, 159, 146, 150],
+                vec![0, 150, 146, 159],
+            )])),
+        };
+        assert_eq!(
+            format!("{}", hit_with_binary_key_and_value),
+            r#"Value { raw_item: {[0, 159, 146, 150]: [0, 150, 146, 159]} }"#
+        );
+        assert_eq!(
+            format!("{:?}", hit_with_binary_key_and_value),
+            r#"Hit { value: Value { raw_item: {[0, 159, 146, 150]: [0, 150, 146, 159]} } }"#
+        );
+        assert_eq!(
+            format!("{:#?}", hit_with_binary_key_and_value),
+            str::trim(
+                r#"
+Hit {
+    value: Value {
+        raw_item: {
+            [
+                0,
+                159,
+                146,
+                150,
+            ]: [
+                0,
+                150,
+                146,
+                159,
+            ],
+        },
+    },
+}"#
+            )
+        );
+
+        let miss = DictionaryFetchResponse::Miss;
+        assert_eq!(format!("{}", miss), "Miss");
+        assert_eq!(format!("{:?}", miss), "Miss");
+
+        Ok(())
     }
 }
