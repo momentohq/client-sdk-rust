@@ -19,7 +19,7 @@ Note: you will only need to install `futures` if you use Momento Topics.
 Here is a quickstart you can use in your own project:
 
 ```rust
-{% include "./example/src/bin/readme.rs" %}
+{% include "./example/rust/src/bin/readme.rs" %}
 ```
 
 Note that the above code requires an environment variable named MOMENTO_API_KEY which must
