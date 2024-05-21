@@ -20,7 +20,7 @@ jobs:
         uses: momentohq/standards-and-practices/github-actions/oss-readme-template@gh-actions-v2
         with:
           project_status: official
-          project_stability: alpha
+          project_stability: beta
           project_type: sdk
           sdk_language: Rust
           dev_docs_slug: rust
@@ -29,7 +29,7 @@ jobs:
         uses: momentohq/standards-and-practices/github-actions/oss-readme-template@gh-actions-v2
         with:
           project_status: official
-          project_stability: alpha
+          project_stability: beta
           project_type: other
           template_file: ./example/README.template.md
           output_file: ./example/README.md
