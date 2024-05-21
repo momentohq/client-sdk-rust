@@ -174,9 +174,9 @@ where
     }
 }
 
-/// Module for use in implementing various formatting traits (Display, Debug) for Momento types.
+/// Module for use in implementing various formatting traits (`Display`, `Debug`) for Momento types.
 /// These will mostly be used in response objects, and the main purpose is to provide an easy way
-/// to toggle between displaying strings or bytes when fields are of type Vec<u8>.
+/// to toggle between displaying strings or bytes when fields are of type `Vec<u8>`.
 pub(crate) mod fmt {
     use std::fmt::{Debug, Formatter};
 
