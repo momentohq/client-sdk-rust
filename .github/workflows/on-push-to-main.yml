@@ -50,6 +50,15 @@ jobs:
           template_file: ./example/README.template.md
           output_file: ./example/README.md
 
+      - name: Verify Rust Example README generation
+        uses: momentohq/standards-and-practices/github-actions/generate-and-commit-oss-readme@gh-actions-v2
+        with:
+          project_status: official
+          project_stability: beta
+          project_type: other
+          template_file: ./example/rust/README.template.md
+          output_file: ./example/rust/README.md
+
   release-please:
     name: Release Please
     runs-on: ubuntu-latest

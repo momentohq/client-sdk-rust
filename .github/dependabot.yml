@@ -6,7 +6,7 @@
 version: 2
 updates:
   - package-ecosystem: "cargo" # See documentation for possible values
-    directory: "/example" # Location of package manifests
+    directory: "/example/rust" # Location of package manifests
     schedule:
       interval: "daily"
     allow:

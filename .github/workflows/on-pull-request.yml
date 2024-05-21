@@ -34,6 +34,15 @@ jobs:
           template_file: ./example/README.template.md
           output_file: ./example/README.md
 
+      - name: Verify Rust Example README generation
+        uses: momentohq/standards-and-practices/github-actions/oss-readme-template@gh-actions-v2
+        with:
+          project_status: official
+          project_stability: beta
+          project_type: other
+          template_file: ./example/rust/README.template.md
+          output_file: ./example/rust/README.md
+
       - name: Commitlint and Other Shared Build Steps
         uses: momentohq/standards-and-practices/github-actions/shared-build@gh-actions-v1
 
