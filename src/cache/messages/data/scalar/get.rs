@@ -1,5 +1,6 @@
 use crate::cache::messages::MomentoRequest;
 use crate::utils;
+use crate::utils::fmt::AsDebuggableValue;
 use crate::CacheClient;
 use crate::{IntoBytes, MomentoError, MomentoResult};
 use derive_more::Display;
@@ -160,9 +161,11 @@ pub struct Value {
 
 impl std::fmt::Debug for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        utils::fmt::write_struct_begin(f, "Value")?;
-        utils::fmt::write_bytes_for_debug(f, "raw_item", &self.raw_item)?;
-        utils::fmt::write_struct_end(f)
+        let raw_item = &self.raw_item;
+        let debug_value = raw_item.as_debuggable_value();
+        f.debug_struct("Value")
+            .field("raw_item", &debug_value)
+            .finish()
     }
 }
 
@@ -224,22 +227,49 @@ mod tests {
         let hit = GetResponse::Hit {
             value: Value::new("hello".as_bytes().to_vec()),
         };
+        assert_eq!(format!("{}", hit), r#"Value { raw_item: "hello" }"#);
         assert_eq!(
             format!("{:?}", hit),
-            "Hit { value: Value { raw_item: [104, 101, 108, 108, 111] (as string: \"hello\") } }"
+            r#"Hit { value: Value { raw_item: "hello" } }"#
         );
         assert_eq!(
             format!("{:#?}", hit),
-            r#"Hit {
-    value: Value { raw_item: [
-        104,
-        101,
-        108,
-        108,
-        111,
-    ] (as string: "hello")
+            str::trim(
+                r#"
+Hit {
+    value: Value {
+        raw_item: "hello",
     },
 }"#
+            )
+        );
+
+        let hit_with_binary_value = GetResponse::Hit {
+            value: Value::new(vec![0, 150, 146, 159]),
+        };
+        assert_eq!(
+            format!("{}", hit_with_binary_value),
+            r#"Value { raw_item: [0, 150, 146, 159] }"#
+        );
+        assert_eq!(
+            format!("{:?}", hit_with_binary_value),
+            r#"Hit { value: Value { raw_item: [0, 150, 146, 159] } }"#
+        );
+        assert_eq!(
+            format!("{:#?}", hit_with_binary_value),
+            str::trim(
+                r#"
+Hit {
+    value: Value {
+        raw_item: [
+            0,
+            150,
+            146,
+            159,
+        ],
+    },
+}"#
+            )
         );
 
         let miss = GetResponse::Miss;
