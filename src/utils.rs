@@ -181,8 +181,8 @@ pub(crate) mod fmt {
     use std::fmt::{Debug, Formatter};
 
     /// Enum representing a value that can be displayed in a debuggable format. When implementing
-    /// the Debug or Display traits for your Momento type, if you have a Vec<u8> field that we may
-    /// want to format as either a String or a list of bytes, use `.into()` to convert it into
+    /// the Debug or Display traits for your Momento type, if you have a `Vec<u8>` field that we may
+    /// want to format as either a String or a list of bytes, use `.as_debuggable_value()` to convert it into
     /// an instance of this enum, and then pass it to the standard Formatter apis.
     ///
     /// For best results, always call `Formatter.debug_*` and avoid calling `Formatter.write_*` when
