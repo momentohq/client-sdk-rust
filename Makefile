@@ -43,10 +43,20 @@ test-unit:
 test-doctests:
 	cd sdk && cargo test --doc
 
+.PHONY: ci-test-setup
+ci-test-setup:
+	# This script relies on dev dependencies such as Tokio, so we run it with the --example flag
+	cd sdk && cargo run --example test-setup
+
 .PHONY: test-integration
 ## Run integration tests
 test-integration:
 	cd sdk && cargo test --tests
+
+.PHONY: ci-test-teardown
+ci-test-teardown:
+	# This script relies on dev dependencies such as Tokio, so we run it with the --example flag
+	cd sdk && cargo run --example test-teardown
 
 .PHONY: test
 ## Run unit and integration tests
