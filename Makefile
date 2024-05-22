@@ -6,19 +6,20 @@ all: precommit
 ## Check the formatting of all files, run clippy on the source code, then run
 ## clippy on the tests (but allow expect to be used in tests)
 lint:
-	cargo fmt -- --check
-	cargo clippy --all-features -- -D warnings -W clippy::unwrap_used -W clippy::expect_used -W missing_docs
+	cd sdk && \
+	cargo fmt -- --check && \
+	cargo clippy --all-features -- -D warnings -W clippy::unwrap_used -W clippy::expect_used -W missing_docs && \
 	cargo clippy --tests -- -D warnings -W clippy::unwrap_used
 
 .PHONY: build
 ## Build project
 build:
-	cargo build --verbose
+	cd sdk && cargo build --verbose
 
 .PHONY: clean
 ## Remove build files
 clean:
-	cargo clean
+	cd sdk && cargo clean
 
 .PHONY: clean-build
 ## Build project
@@ -27,7 +28,7 @@ clean-build: clean build
 .PHONY: docs
 ## Build the docs, fail on warnings
 docs:
-	RUSTDOCFLAGS="-D warnings" cargo doc
+	cd sdk && RUSTDOCFLAGS="-D warnings" cargo doc
 
 .PHONY: precommit
 ## Run clean-build and test as a step before committing.
@@ -36,16 +37,26 @@ precommit: clean-build lint test build-examples
 
 .PHONY: test-unit
 test-unit:
-	cargo test --lib
+	cd sdk && cargo test --lib
 
 .PHONY: test-doctests
 test-doctests:
-	cargo test --doc
+	cd sdk && cargo test --doc
+
+.PHONY: ci-test-setup
+ci-test-setup:
+	# This script relies on dev dependencies such as Tokio, so we run it with the --example flag
+	cd sdk && cargo run --example test-setup
 
 .PHONY: test-integration
 ## Run integration tests
 test-integration:
-	cargo test --tests
+	cd sdk && cargo test --tests
+
+.PHONY: ci-test-teardown
+ci-test-teardown:
+	# This script relies on dev dependencies such as Tokio, so we run it with the --example flag
+	cd sdk && cargo run --example test-teardown
 
 .PHONY: test
 ## Run unit and integration tests

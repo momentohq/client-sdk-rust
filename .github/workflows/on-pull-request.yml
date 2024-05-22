@@ -67,8 +67,7 @@ jobs:
       - name: Build
         run: make build
       - name: Test Setup
-        # This script relies on dev dependencies such as Tokio, so we run it with the --example flag
-        run: cargo run --example test-setup
+        run: make ci-test-setup
       - name: Unit tests
         run: make test-unit
       - name: Integration Tests
@@ -78,8 +77,7 @@ jobs:
       - name: Test Teardown
         # We want the teardown to execute even if an earlier step fails, hence the `always()` condition
         if: always()
-        # This script relies on dev dependencies such as Tokio, so we run it with the --example flag
-        run: cargo run --example test-teardown
+        run: make ci-test-teardown
 
       - name: Run examples
         run: make run-examples
