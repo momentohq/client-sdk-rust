@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.39.1](https://github.com/momentohq/client-sdk-rust/compare/v0.39.0...v0.39.1) (2024-05-22)
+
+
+### Miscellaneous
+
+* **deps:** update momento requirement from 0.38.0 to 0.39.0 in /example ([#331](https://github.com/momentohq/client-sdk-rust/issues/331)) ([7bf0f16](https://github.com/momentohq/client-sdk-rust/commit/7bf0f166b5356a436045853f96843283ebb7b684))
+* implement Debug for DictionaryFetchResponse, tweak debug fmt utils ([#335](https://github.com/momentohq/client-sdk-rust/issues/335)) ([37dd7a9](https://github.com/momentohq/client-sdk-rust/commit/37dd7a93fcc3145b7be1f822cd439f578b624e91))
+* move existing examples to a subdirectory ([#337](https://github.com/momentohq/client-sdk-rust/issues/337)) ([eb16864](https://github.com/momentohq/client-sdk-rust/commit/eb16864a3a9482704c370fb69e895c67a4e46876))
+* move sdk source code to a subdir ([#338](https://github.com/momentohq/client-sdk-rust/issues/338)) ([8eddf9a](https://github.com/momentohq/client-sdk-rust/commit/8eddf9a96d63c12da630da82aca9fe89bac216ce))
+* run ci on ubuntu-24.04 ([#332](https://github.com/momentohq/client-sdk-rust/issues/332)) ([8338069](https://github.com/momentohq/client-sdk-rust/commit/8338069551493f87a4a60559b8ff95fef4f45d7b))
+* update stability to beta ([#336](https://github.com/momentohq/client-sdk-rust/issues/336)) ([ebf044f](https://github.com/momentohq/client-sdk-rust/commit/ebf044f757237f876cf362cfa8803e10d3092b6b))
+
 ## [0.39.0](https://github.com/momentohq/client-sdk-rust/compare/v0.38.0...v0.39.0) (2024-05-15)
 
 
