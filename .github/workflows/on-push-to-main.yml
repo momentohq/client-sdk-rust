@@ -93,6 +93,5 @@ jobs:
 
       - name: Publish
         run: |
-          cd sdk
-          cargo publish
+          make publish
           
