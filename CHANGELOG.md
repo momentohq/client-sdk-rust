@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.39.3](https://github.com/momentohq/client-sdk-rust/compare/v0.39.2...v0.39.3) (2024-05-23)
+
+
+### Miscellaneous
+
+* add sdk/README to gitignore to prevent attempt to publish from dirty tree ([#343](https://github.com/momentohq/client-sdk-rust/issues/343)) ([8298189](https://github.com/momentohq/client-sdk-rust/commit/82981895de7e125dd4f79cf307836c8ea890d46d))
+
 ## [0.39.2](https://github.com/momentohq/client-sdk-rust/compare/v0.39.1...v0.39.2) (2024-05-22)
 
 
