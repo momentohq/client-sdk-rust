@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.39.6](https://github.com/momentohq/client-sdk-rust/compare/v0.39.5...v0.39.6) (2024-05-23)
+
+
+### Miscellaneous
+
+* trying to fix release-please; remove path, add extra-files ([#350](https://github.com/momentohq/client-sdk-rust/issues/350)) ([e1fc5ec](https://github.com/momentohq/client-sdk-rust/commit/e1fc5ec3e9174600329fa7d5df5a221c9cca79a9))
+
 ## [0.39.3](https://github.com/momentohq/client-sdk-rust/compare/v0.39.2...v0.39.3) (2024-05-23)
 
 
