@@ -79,4 +79,7 @@ help:
 
 .PHONY: publish
 publish:
-	cd sdk && cp ../README.md . && cargo publish
+	cd sdk && \
+ 	cp ../README.md . && \
+ 	cargo publish
+
