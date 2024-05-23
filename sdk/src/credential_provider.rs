@@ -115,6 +115,7 @@ impl CredentialProvider {
     /// ```
     pub fn from_string(auth_token: impl Into<String>) -> MomentoResult<CredentialProvider> {
         let auth_token = auth_token.into();
+
         let token_to_process = {
             if auth_token.is_empty() {
                 return Err(MomentoError {
