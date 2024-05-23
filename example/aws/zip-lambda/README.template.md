@@ -22,7 +22,6 @@ Before building and deploying the Rust code, you'll need to create your lambda f
 
 ## Building the Lambda Function Rust code
 
-
 To build the zip archive containing the Rust Lambda Function, run the following commands:
 
 ```bash
