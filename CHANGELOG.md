@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.39.2](https://github.com/momentohq/client-sdk-rust/compare/v0.39.1...v0.39.2) (2024-05-22)
+
+
+### Bug Fixes
+
+* publish task broken with sdk subdir ([#340](https://github.com/momentohq/client-sdk-rust/issues/340)) ([a2e42cc](https://github.com/momentohq/client-sdk-rust/commit/a2e42cc9f795c5e108fa5df66c9535b979285268))
+
+
+### Miscellaneous
+
+* rename github workflows to be less confusing ([#339](https://github.com/momentohq/client-sdk-rust/issues/339)) ([d15df74](https://github.com/momentohq/client-sdk-rust/commit/d15df744d7e474d0cae99eb40f4f77e4cdeb0af4))
+
 ## [0.39.1](https://github.com/momentohq/client-sdk-rust/compare/v0.39.0...v0.39.1) (2024-05-22)
 
 
