@@ -73,6 +73,7 @@ jobs:
           release-type: rust
           package-name: momento
           default-branch: main
+          path: sdk
           changelog-types: '[{"type":"feat","section":"Features","hidden":false},{"type":"fix","section":"Bug Fixes","hidden":false},{"type":"chore","section":"Miscellaneous","hidden":false}]'
 
   publish:
