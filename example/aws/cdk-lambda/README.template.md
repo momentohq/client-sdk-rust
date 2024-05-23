@@ -20,7 +20,8 @@ To build and deploy the Lambda function, first make sure that your AWS credentia
 
 ```bash
 cd infrastructure
-npm ci -- deploy --parameters MomentoApiKey=<YOUR_MOMENTO_API_KEY>
+npm ci
+npm run cdk -- deploy --parameters MomentoApiKey=<YOUR_MOMENTO_API_KEY>
 ```
 
 After the lambda is deployed, you can visit the AWS console and click the "Test" button to run it! The function will
