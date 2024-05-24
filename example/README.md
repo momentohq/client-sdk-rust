@@ -6,10 +6,6 @@
 
 # Momento Rust SDK - Examples
 
-_Read this in other languages_: [日本語](README.ja.md)
-
-<br>
-
 This directory contains fully-functioning examples that demonstrate how to use the Momento Rust SDK.
 
 ## Example Requirements
@@ -20,7 +16,8 @@ This directory contains fully-functioning examples that demonstrate how to use t
 Here are the different examples available:
 
 - [Simple Rust Examples](./rust) - Basic Cache and Topics examples using the Momento Rust SDK; for server-side use, etc.
-- Coming Soon: AWS Lambda Examples
+- [CDK-based AWS Lambda Example](./aws/cdk-lambda) - Example of using the Momento Rust SDK in an AWS Lambda Function, deployed via AWS CDK.
+- [Zip-based AWS Lambda Example](./aws/zip-lambda) - Example of using the Momento Rust SDK in an AWS Lambda Function, deployed via a zip archive.
 
 ----------------------------------------------------------------------------------------
 For more info, visit our website at [https://gomomento.com](https://gomomento.com)!
