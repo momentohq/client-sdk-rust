@@ -1,7 +1,7 @@
 use std::time::Duration;
 use serde_json::Value;
 use lambda_runtime::{run, service_fn, tracing, Error, LambdaEvent};
-use momento::cache::configurations::Laptop;
+use momento::cache::configurations::Lambda;
 use momento::{CacheClient, CredentialProvider};
 
 const DEFAULT_TTL: Duration = Duration::from_secs(60);
@@ -9,7 +9,7 @@ const DEFAULT_TTL: Duration = Duration::from_secs(60);
 lazy_static::lazy_static! {
     static ref CACHE_CLIENT: CacheClient = CacheClient::builder()
     .default_ttl(DEFAULT_TTL)
-    .configuration(Laptop::latest())
+    .configuration(Lambda::latest())
     .credential_provider(CredentialProvider::from_env_var("MOMENTO_API_KEY")
         .expect("Unable to construct Momento CredentialProvider using env var MOMENTO_API_KEY"))
     .build()
