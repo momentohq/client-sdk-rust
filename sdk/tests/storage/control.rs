@@ -1,8 +1,8 @@
-use momento::storage::{CreateStoreResponse, GetResponse, SetResponse};
+use momento::storage::CreateStoreResponse;
 use momento::MomentoErrorCode;
 use momento::MomentoResult;
+use momento_test_util::unique_store_name;
 use momento_test_util::CACHE_TEST_STATE;
-use momento_test_util::{unique_store_name, TestScalar};
 
 mod create_delete_list_store {
     use super::*;

@@ -1,3 +1,3 @@
 mod cache;
-mod topics;
 mod storage;
+mod topics;

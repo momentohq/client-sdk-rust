@@ -1,14 +1,10 @@
-use momento::storage::{
-    DeleteResponse, GetResponse, SetRequest, SetResponse,
-};
+use momento::storage::{DeleteResponse, GetResponse, SetResponse};
 use momento::{MomentoErrorCode, MomentoResult};
-use momento_test_util::{
-    unique_store_name, unique_key, unique_string, TestScalar, CACHE_TEST_STATE,
-};
-use std::convert::TryInto;
+use momento_test_util::{unique_store_name, TestScalar, CACHE_TEST_STATE};
 
 mod get_set_delete {
     use super::*;
+    use momento_test_util::unique_key;
 
     #[tokio::test]
     async fn get_set_string() -> MomentoResult<()> {
@@ -42,7 +38,7 @@ mod get_set_delete {
         let result = client.get(store_name, item.key()).await?;
         assert_eq!(
             result,
-            GetResponse::from(&item),
+            GetResponse::from(&item.value),
             "Expected hit for key '{}' in store {}, got {:?}",
             item.key(),
             store_name,
@@ -53,7 +49,50 @@ mod get_set_delete {
     }
 
     #[tokio::test]
-    async fn delete_invalid_cache_name() -> MomentoResult<()> {
+    async fn get_set_integer() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.storage_client;
+        let store_name = CACHE_TEST_STATE.store_name.as_str();
+        let key = unique_key();
+        let value: i64 = 1;
+
+        // Getting a key that doesn't exist should return a miss
+        let result = client.get(store_name, &key).await?;
+        assert_eq!(
+            result,
+            GetResponse::Miss,
+            "Expected miss for key '{}' in store {}, got {:?}",
+            key,
+            store_name,
+            result
+        );
+
+        // Setting a key should return a success
+        let result = client.set(store_name, &key, &value).await?;
+        assert_eq!(
+            result,
+            SetResponse {},
+            "Expected successful Set of key '{}' in store {}, got {:?}",
+            value,
+            store_name,
+            result
+        );
+
+        // Getting the key should return a hit with the value
+        let result = client.get(store_name, &key).await?;
+        assert_eq!(
+            result,
+            GetResponse::from(&value),
+            "Expected hit for key '{}' in store {}, got {:?}",
+            key,
+            store_name,
+            result
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn delete_invalid_store_name() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.storage_client;
         let result = client.delete("   ", "key").await.unwrap_err();
         assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
@@ -61,7 +100,7 @@ mod get_set_delete {
     }
 
     #[tokio::test]
-    async fn delete_nonexistent_cache() -> MomentoResult<()> {
+    async fn delete_nonexistent_store() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.storage_client;
         let store_name = unique_store_name();
         let result = client.delete(store_name, "key").await.unwrap_err();
@@ -95,9 +134,10 @@ mod get_set_delete {
         );
 
         // Key should not exist after deletion
-        let result = client.key_exists(store_name, item.key()).await?;
-        assert!(
-            !result.exists,
+        let result = client.get(store_name, item.key()).await?;
+        assert_eq!(
+            result,
+            GetResponse::Miss,
             "Expected key 'key' to not exist in store {} after deletion, but it does",
             store_name
         );

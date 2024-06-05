@@ -13,7 +13,7 @@ use crate::storage::messages::store_value::StoreValue;
 use crate::storage::preview_storage_client_builder::{
     NeedsConfiguration, PreviewStorageClientBuilder,
 };
-use crate::storage::{Configuration, SetRequest, SetResponse};
+use crate::storage::{Configuration, DeleteRequest, DeleteResponse, SetRequest, SetResponse};
 use crate::MomentoResult;
 
 /// Client to work with Momento Store.
@@ -252,6 +252,45 @@ impl PreviewStorageClient {
         key: impl Into<String>,
     ) -> MomentoResult<GetResponse> {
         let request = GetRequest::new(store_name.into(), key.into());
+        request.send(self).await
+    }
+
+    /// Deletes an item in a Momento Store
+    ///
+    /// # Arguments
+    ///
+    /// * `store_name` - name of the store
+    /// * `key` - key of the item to delete
+    ///
+    /// # Examples
+    /// Assumes that a PreviewStorageClient named `storage_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_storage_client;
+    /// # tokio_test::block_on(async {
+    /// # let (storage_client, store_name) = create_doctest_storage_client();
+    /// use momento::storage::DeleteResponse;
+    /// use momento::MomentoErrorCode;
+    ///
+    /// match storage_client.delete(&store_name, "key").await {
+    ///     Ok(_) => println!("DeleteResponse successful"),
+    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///         println!("Store not found: {}", &store_name);
+    ///     } else {
+    ///         eprintln!("Error deleting value in store {}: {}", &store_name, e);
+    ///     }
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](PreviewStoreClient::send_request) method to delete an item using a [DeleteRequest].
+    pub async fn delete(
+        &self,
+        store_name: impl Into<String>,
+        key: impl Into<String>,
+    ) -> MomentoResult<DeleteResponse> {
+        let request = DeleteRequest::new(store_name, key);
         request.send(self).await
     }
 

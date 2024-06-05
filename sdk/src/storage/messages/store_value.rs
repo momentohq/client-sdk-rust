@@ -37,15 +37,45 @@ impl From<&str> for StoreValue {
     }
 }
 
+impl From<&String> for StoreValue {
+    fn from(string: &String) -> Self {
+        StoreValue::String(string.clone())
+    }
+}
+
 impl From<i64> for StoreValue {
     fn from(integer: i64) -> Self {
         StoreValue::Integer(integer)
     }
 }
 
+impl From<&i64> for StoreValue {
+    fn from(integer: &i64) -> Self {
+        StoreValue::Integer(*integer)
+    }
+}
+
+impl From<i32> for StoreValue {
+    fn from(integer: i32) -> Self {
+        StoreValue::Integer(integer as i64)
+    }
+}
+
+impl From<&i32> for StoreValue {
+    fn from(integer: &i32) -> Self {
+        StoreValue::Integer(*integer as i64)
+    }
+}
+
 impl From<f64> for StoreValue {
     fn from(double: f64) -> Self {
         StoreValue::Double(double)
+    }
+}
+
+impl From<&f64> for StoreValue {
+    fn from(double: &f64) -> Self {
+        StoreValue::Double(*double)
     }
 }
 
