@@ -63,14 +63,14 @@ impl<L: IntoBytes> ListFetchRequest<L> {
     }
 
     /// Set the starting inclusive element of the list to fetch.
-    pub fn start_index(mut self, start_index: i32) -> Self {
-        self.start_index = Some(start_index);
+    pub fn start_index(mut self, start_index: impl Into<Option<i32>>) -> Self {
+        self.start_index = start_index.into();
         self
     }
 
     /// Set the ending exclusive element of the list to fetch.
-    pub fn end_index(mut self, end_index: i32) -> Self {
-        self.end_index = Some(end_index);
+    pub fn end_index(mut self, end_index: impl Into<Option<i32>>) -> Self {
+        self.end_index = end_index.into();
         self
     }
 }

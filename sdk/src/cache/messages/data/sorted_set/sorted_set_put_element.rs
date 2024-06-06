@@ -65,8 +65,8 @@ impl<S: IntoBytes, V: IntoBytes> SortedSetPutElementRequest<S, V> {
     }
 
     /// Set the time-to-live for the collection.
-    pub fn ttl(mut self, collection_ttl: CollectionTtl) -> Self {
-        self.collection_ttl = Some(collection_ttl);
+    pub fn ttl(mut self, collection_ttl: impl Into<Option<CollectionTtl>>) -> Self {
+        self.collection_ttl = collection_ttl.into();
         self
     }
 }
