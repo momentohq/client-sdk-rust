@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.39.7](https://github.com/momentohq/client-sdk-rust/compare/v0.39.6...v0.39.7) (2024-06-06)
+
+
+### Bug Fixes
+
+* Move tests directory into sdk ([#355](https://github.com/momentohq/client-sdk-rust/issues/355)) ([3d7654b](https://github.com/momentohq/client-sdk-rust/commit/3d7654b9d798db2c526df2bc67fc8352f9c739c4))
+
+
+### Miscellaneous
+
+* add CDK and zip lambda examples ([#342](https://github.com/momentohq/client-sdk-rust/issues/342)) ([6ff7e97](https://github.com/momentohq/client-sdk-rust/commit/6ff7e97cd87bb20e8f47ee060909170bd433d5bd))
+* make optional things optional on request builders ([#357](https://github.com/momentohq/client-sdk-rust/issues/357)) ([62c058e](https://github.com/momentohq/client-sdk-rust/commit/62c058edbfd40f4dd8777148a294de7585948c9c)), closes [#356](https://github.com/momentohq/client-sdk-rust/issues/356)
+
 ## [0.39.6](https://github.com/momentohq/client-sdk-rust/compare/v0.39.5...v0.39.6) (2024-05-23)
 
 
