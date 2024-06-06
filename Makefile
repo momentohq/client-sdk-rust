@@ -2,6 +2,11 @@
 ## Generate sync unit tests, format, lint, and test
 all: precommit
 
+.PHONY: format
+## Format all files
+format:
+	cd sdk && cargo fmt
+
 .PHONY: lint
 ## Check the formatting of all files, run clippy on the source code, then run
 ## clippy on the tests (but allow expect to be used in tests)

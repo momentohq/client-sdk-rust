@@ -11,6 +11,7 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// The sort order determines the rank of the elements.
 /// The elements with same score are ordered lexicographically.
 #[repr(i32)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum SortedSetOrder {
     /// Scores are ordered from low to high. This is the default order.
     Ascending = 0,
@@ -87,20 +88,20 @@ impl<S: IntoBytes> SortedSetFetchByRankRequest<S> {
     }
 
     /// Set the start rank of the request.
-    pub fn start_rank(mut self, start_rank: i32) -> Self {
-        self.start_rank = Some(start_rank);
+    pub fn start_rank(mut self, start_rank: impl Into<Option<i32>>) -> Self {
+        self.start_rank = start_rank.into();
         self
     }
 
     /// Set the end rank of the request.
-    pub fn end_rank(mut self, end_rank: i32) -> Self {
-        self.end_rank = Some(end_rank);
+    pub fn end_rank(mut self, end_rank: impl Into<Option<i32>>) -> Self {
+        self.end_rank = end_rank.into();
         self
     }
 
     /// Set the order of the request.
-    pub fn order(mut self, order: SortedSetOrder) -> Self {
-        self.order = order;
+    pub fn order(mut self, order: impl Into<Option<SortedSetOrder>>) -> Self {
+        self.order = order.into().unwrap_or(SortedSetOrder::Ascending);
         self
     }
 }
@@ -144,5 +145,61 @@ impl<S: IntoBytes> MomentoRequest for SortedSetFetchByRankRequest<S> {
             .into_inner();
 
         SortedSetFetchResponse::from_fetch_response(response)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sorted_set_fetch_by_rank_request_builder() {
+        let cache_name = "my_cache";
+        let sorted_set_name = "my_sorted_set";
+
+        // Test with explicit values
+        let request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name)
+            .order(SortedSetOrder::Ascending)
+            .start_rank(1)
+            .end_rank(3);
+
+        assert_eq!(request.cache_name, cache_name);
+        assert_eq!(
+            request.sorted_set_name.into_bytes(),
+            sorted_set_name.as_bytes()
+        );
+        assert_eq!(request.start_rank, Some(1));
+        assert_eq!(request.end_rank, Some(3));
+        assert_eq!(request.order, SortedSetOrder::Ascending);
+
+        // Test with Some values
+        let request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name)
+            .order(SortedSetOrder::Descending)
+            .start_rank(Some(2))
+            .end_rank(Some(4));
+
+        assert_eq!(request.cache_name, cache_name);
+        assert_eq!(
+            request.sorted_set_name.into_bytes(),
+            sorted_set_name.as_bytes()
+        );
+        assert_eq!(request.start_rank, Some(2));
+        assert_eq!(request.end_rank, Some(4));
+        assert_eq!(request.order, SortedSetOrder::Descending);
+
+        // Test with None values
+        let request = SortedSetFetchByRankRequest::new(cache_name, sorted_set_name)
+            .order(None)
+            .start_rank(None)
+            .end_rank(None);
+
+        assert_eq!(request.cache_name, cache_name);
+        assert_eq!(
+            request.sorted_set_name.into_bytes(),
+            sorted_set_name.as_bytes()
+        );
+        assert_eq!(request.start_rank, None);
+        assert_eq!(request.end_rank, None);
+        assert_eq!(request.order, SortedSetOrder::Ascending);
     }
 }

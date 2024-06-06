@@ -61,14 +61,17 @@ impl<L: IntoBytes, V: IntoBytesIterable> ListConcatenateBackRequest<L, V> {
     }
 
     /// Set the time-to-live for the collection.
-    pub fn ttl(mut self, collection_ttl: CollectionTtl) -> Self {
-        self.collection_ttl = Some(collection_ttl);
+    pub fn ttl(mut self, collection_ttl: impl Into<Option<CollectionTtl>>) -> Self {
+        self.collection_ttl = collection_ttl.into();
         self
     }
 
     /// If the list exceeds this length, remove excess from the front of the list.
-    pub fn truncate_front_to_size(mut self, truncate_front_to_size: u32) -> Self {
-        self.truncate_front_to_size = Some(truncate_front_to_size);
+    pub fn truncate_front_to_size(
+        mut self,
+        truncate_front_to_size: impl Into<Option<u32>>,
+    ) -> Self {
+        self.truncate_front_to_size = truncate_front_to_size.into();
         self
     }
 }

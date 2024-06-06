@@ -76,8 +76,8 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> SetIfNotEqualRequest<K, V, E> {
     }
 
     /// Set the time-to-live for the item.
-    pub fn ttl(mut self, ttl: Duration) -> Self {
-        self.ttl = Some(ttl);
+    pub fn ttl(mut self, ttl: impl Into<Option<Duration>>) -> Self {
+        self.ttl = ttl.into();
         self
     }
 }
