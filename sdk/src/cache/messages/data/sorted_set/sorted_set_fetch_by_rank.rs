@@ -11,6 +11,7 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// The sort order determines the rank of the elements.
 /// The elements with same score are ordered lexicographically.
 #[repr(i32)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum SortedSetOrder {
     /// Scores are ordered from low to high. This is the default order.
     Ascending = 0,

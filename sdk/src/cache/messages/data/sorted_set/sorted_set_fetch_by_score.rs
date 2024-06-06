@@ -86,32 +86,32 @@ impl<S: IntoBytes> SortedSetFetchByScoreRequest<S> {
     }
 
     /// Set the minimum score of the request.
-    pub fn min_score(mut self, min_score: f64) -> Self {
-        self.min_score = Some(min_score);
+    pub fn min_score(mut self, min_score: impl Into<Option<f64>>) -> Self {
+        self.min_score = min_score.into();
         self
     }
 
     /// Set the maximum score of the request.
-    pub fn max_score(mut self, max_score: f64) -> Self {
-        self.max_score = Some(max_score);
+    pub fn max_score(mut self, max_score: impl Into<Option<f64>>) -> Self {
+        self.max_score = max_score.into();
         self
     }
 
     /// Set the order of the request.
-    pub fn order(mut self, order: SortedSetOrder) -> Self {
-        self.order = order;
+    pub fn order(mut self, order: impl Into<Option<SortedSetOrder>>) -> Self {
+        self.order = order.into().unwrap_or(SortedSetOrder::Ascending);
         self
     }
 
     /// Set the offset of the request.
-    pub fn offset(mut self, offset: u32) -> Self {
-        self.offset = Some(offset);
+    pub fn offset(mut self, offset: impl Into<Option<u32>>) -> Self {
+        self.offset = offset.into();
         self
     }
 
     /// Set the count of the request.
-    pub fn count(mut self, count: i32) -> Self {
-        self.count = Some(count);
+    pub fn count(mut self, count: impl Into<Option<i32>>) -> Self {
+        self.count = count.into();
         self
     }
 }
@@ -167,5 +167,70 @@ impl<S: IntoBytes> MomentoRequest for SortedSetFetchByScoreRequest<S> {
             .into_inner();
 
         SortedSetFetchResponse::from_fetch_response(response)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::SortedSetFetchByScoreRequest;
+    use crate::cache::SortedSetOrder;
+
+    // test the sorted set request with options
+    #[tokio::test]
+    async fn test_sorted_set_fetch_by_score_request_with_options() {
+        // Define the cache name and sorted set name
+        let cache_name = "test_cache";
+        let sorted_set_name = "test_sorted_set";
+
+        // Create the fetch request with options
+        let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name)
+            .order(SortedSetOrder::Ascending)
+            .min_score(2.0)
+            .max_score(3.0)
+            .offset(1)
+            .count(2);
+
+        // Verify the built request
+        assert_eq!(fetch_request.cache_name, cache_name);
+        assert_eq!(fetch_request.sorted_set_name, sorted_set_name);
+        assert_eq!(fetch_request.min_score, Some(2.0));
+        assert_eq!(fetch_request.max_score, Some(3.0));
+        assert_eq!(fetch_request.order, SortedSetOrder::Ascending);
+        assert_eq!(fetch_request.offset, Some(1));
+        assert_eq!(fetch_request.count, Some(2));
+
+        // Now pass in explicit Options to min score, max score, offset, and count
+        let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name)
+            .order(SortedSetOrder::Ascending)
+            .min_score(Some(2.0))
+            .max_score(Some(3.0))
+            .offset(Some(1))
+            .count(Some(2));
+
+        // Verify the built request
+        assert_eq!(fetch_request.cache_name, cache_name);
+        assert_eq!(fetch_request.sorted_set_name, sorted_set_name);
+        assert_eq!(fetch_request.min_score, Some(2.0));
+        assert_eq!(fetch_request.max_score, Some(3.0));
+        assert_eq!(fetch_request.order, SortedSetOrder::Ascending);
+        assert_eq!(fetch_request.offset, Some(1));
+        assert_eq!(fetch_request.count, Some(2));
+
+        // Now pass in explicit None to min score, max score, offset, and count
+        let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, sorted_set_name)
+            .order(SortedSetOrder::Ascending)
+            .min_score(None)
+            .max_score(None)
+            .offset(None)
+            .count(None);
+
+        // Verify the built request
+        assert_eq!(fetch_request.cache_name, cache_name);
+        assert_eq!(fetch_request.sorted_set_name, sorted_set_name);
+        assert_eq!(fetch_request.min_score, None);
+        assert_eq!(fetch_request.max_score, None);
+        assert_eq!(fetch_request.order, SortedSetOrder::Ascending);
+        assert_eq!(fetch_request.offset, None);
+        assert_eq!(fetch_request.count, None);
     }
 }
