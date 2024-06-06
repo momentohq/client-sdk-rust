@@ -24,4 +24,16 @@ mod create_delete_list_store {
         assert_eq!(result, CreateStoreResponse::AlreadyExists {});
         Ok(())
     }
+
+    #[tokio::test]
+    async fn list_stores_contains_test_store() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.storage_client;
+        let store_name = &CACHE_TEST_STATE.store_name;
+        let result = client.list_stores().await?;
+        assert!(
+            result.stores.iter().any(|x| x.name == *store_name),
+            "The list of stores does not contain the test store"
+        );
+        Ok(())
+    }
 }

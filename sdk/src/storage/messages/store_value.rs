@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 
 use momento_protos::store;
 use momento_protos::store::store_value::Value;
@@ -163,12 +163,64 @@ impl TryFrom<StoreValue> for i64 {
     }
 }
 
+impl TryFrom<StoreValue> for i32 {
+    type Error = MomentoError;
+
+    fn try_from(value: StoreValue) -> Result<Self, Self::Error> {
+        match value {
+            StoreValue::Integer(s) => match s.try_into() {
+                Ok(converted) => Ok(converted),
+                Err(_) => Err(MomentoError {
+                    message: "item is out of range for i32".to_string(),
+                    error_code: MomentoErrorCode::TypeError,
+                    inner_error: None,
+                    details: None,
+                }),
+            },
+            _ => Err(MomentoError {
+                message: "item is not an i64".to_string(),
+                error_code: MomentoErrorCode::TypeError,
+                inner_error: None,
+                details: None,
+            }),
+        }
+    }
+}
+
 impl TryFrom<StoreValue> for f64 {
     type Error = MomentoError;
 
     fn try_from(value: StoreValue) -> Result<Self, Self::Error> {
         match value {
             StoreValue::Double(s) => Ok(s),
+            _ => Err(MomentoError {
+                message: "item is not an f64".to_string(),
+                error_code: MomentoErrorCode::TypeError,
+                inner_error: None,
+                details: None,
+            }),
+        }
+    }
+}
+
+impl TryFrom<StoreValue> for f32 {
+    type Error = MomentoError;
+
+    fn try_from(value: StoreValue) -> Result<Self, Self::Error> {
+        match value {
+            StoreValue::Double(s) => {
+                let converted: f32 = s as f32;
+                if converted.is_infinite() && s.is_finite() {
+                    Err(MomentoError {
+                        message: "item is out of range for f32".to_string(),
+                        error_code: MomentoErrorCode::TypeError,
+                        inner_error: None,
+                        details: None,
+                    })
+                } else {
+                    Ok(converted)
+                }
+            }
             _ => Err(MomentoError {
                 message: "item is not an f64".to_string(),
                 error_code: MomentoErrorCode::TypeError,

@@ -47,7 +47,7 @@ impl PreviewStorageClientBuilder<ReadyToBuild> {
         let agent_value = &utils::user_agent("sdk");
 
         let data_channel = utils::connect_channel_lazily_configurable(
-            &self.0.credential_provider.cache_endpoint,
+            &self.0.credential_provider.storage_endpoint,
             self.0
                 .configuration
                 .transport_strategy
