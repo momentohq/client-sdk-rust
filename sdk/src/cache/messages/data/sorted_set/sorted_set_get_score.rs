@@ -29,7 +29,11 @@ use crate::{
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
 ///
-/// # cache_client.sorted_set_put_elements(&cache_name, sorted_set_name.to_string(), vec![("value1", 1.0), ("value2", 2.0)]).await;
+/// let put_element_response = cache_client.sorted_set_put_elements(
+///     cache_name.to_string(),
+///     sorted_set_name.to_string(),
+///     vec![("value1", 1.0), ("value2", 2.0), ("value3", 3.0), ("value4", 4.0)]
+/// ).await?;
 ///
 /// let get_score_request = SortedSetGetScoreRequest::new(cache_name, sorted_set_name, "value1");
 /// let score: f64 = cache_client.send_request(get_score_request).await?.try_into().expect("Expected a score!");
@@ -114,9 +118,9 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetScoreRequest<L, 
 /// # use momento::MomentoResult;
 /// use momento::cache::SortedSetGetScoreResponse;
 /// use std::convert::TryInto;
-/// # let response = SortedSetGetScoreResponse::Hit { score: 5.0 };
+/// # let response = SortedSetGetScoreResponse::Hit { score: 5.0, value: "test" };
 /// let score: f64 = match response {
-///     SortedSetGetScoreResponse::Hit { score } => score.try_into().expect("Expected a score!"),
+///     SortedSetGetScoreResponse::Hit { score, value } => score.try_into().expect("Expected a score!"),
 ///     SortedSetGetScoreResponse::Miss => return // probably you'll do something else here
 /// };
 /// ```
@@ -130,10 +134,10 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetScoreRequest<L, 
 /// # use momento::MomentoResult;
 /// use momento::cache::SortedSetGetScoreResponse;
 /// use std::convert::TryInto;
-/// # let response = SortedSetGetScoreResponse::Hit { score: 5.0 };
+/// # let response = SortedSetGetScoreResponse::Hit { score: 5.0, value: "test" };
 /// let score: MomentoResult<f64> = response.try_into();
 /// ```
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub enum SortedSetGetScoreResponse {
     /// The sorted set was found.
     Hit {

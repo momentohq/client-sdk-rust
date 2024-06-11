@@ -79,7 +79,7 @@ pub struct SortedSetElement<V: IntoBytes> {
 /// # ]);
 /// ```
 #[cfg(not(doctest))]
-fn map_and_collect_sorted_set_elements<I, V>(iter: I) -> Vec<SortedSetElement<V>>
+pub fn map_and_collect_sorted_set_elements<I, V>(iter: I) -> Vec<SortedSetElement<V>>
 where
     I: Iterator<Item = (V, f64)>,
     V: IntoBytes,

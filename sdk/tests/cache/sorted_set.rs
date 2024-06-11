@@ -389,9 +389,82 @@ mod sorted_set_get_score {
     }
 }
 
-mod sorted_set_get_scores {}
+mod sorted_set_get_scores {
+    use std::convert::TryInto;
 
-mod sorted_set_increment_score {}
+    use super::*;
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let item = TestSortedSet::new();
+
+        let result = client
+            .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
+            .await?;
+        assert_eq!(result, SortedSetPutElementsResponse {});
+
+        // Hit for existing value
+        let result: Vec<SortedSetElement<String>> = client
+            .sorted_set_get_scores(
+                cache_name,
+                item.name(),
+                vec![item.value[0].0.as_str(), item.value[1].0.as_str()],
+            )
+            .await?
+            .try_into()
+            .expect("should be able to convert to Vec<SortedSetElement<String>>");
+        assert_eq!(result.len(), 2);
+        let first = result.first().unwrap();
+        let second = result.last().unwrap();
+        assert_eq!(first.score, item.value[0].1);
+        assert_eq!(first.value, item.value[0].0);
+
+        assert_eq!(second.score, item.value[1].1);
+        assert_eq!(second.value, item.value[1].0);
+
+        // Miss for nonexistent value
+        let result = client
+            .sorted_set_get_score(cache_name, item.name(), unique_value())
+            .await?;
+        assert_eq!(result, SortedSetGetScoreResponse::Miss);
+
+        Ok(())
+    }
+}
+
+mod sorted_set_increment_score {
+    use momento::cache::SortedSetIncrementScoreResponse;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let item = TestSortedSet::new();
+
+        let result = client
+            .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
+            .await?;
+        assert_eq!(result, SortedSetPutElementsResponse {});
+
+        // Hit for existing value
+        let result = client
+            .sorted_set_increment_score(cache_name, item.name(), item.value[0].0.as_str(), 0.5)
+            .await?;
+        assert_eq!(result, SortedSetIncrementScoreResponse { score: 1.5 });
+
+        // Set a non-existent value with passed in score
+        let result = client
+            .sorted_set_increment_score(cache_name, unique_key(), unique_value(), 100.0)
+            .await?;
+        assert_eq!(result, SortedSetIncrementScoreResponse { score: 100.0 });
+
+        Ok(())
+    }
+}
 
 mod sorted_set_remove_element {}
 

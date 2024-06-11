@@ -82,6 +82,12 @@ pub use messages::data::sorted_set::sorted_set_get_rank::{
 pub use messages::data::sorted_set::sorted_set_get_score::{
     SortedSetGetScoreRequest, SortedSetGetScoreResponse,
 };
+pub use messages::data::sorted_set::sorted_set_get_scores::{
+    SortedSetGetScoresRequest, SortedSetGetScoresResponse,
+};
+pub use messages::data::sorted_set::sorted_set_increment_score::{
+    SortedSetIncrementScoreRequest, SortedSetIncrementScoreResponse,
+};
 pub use messages::data::sorted_set::sorted_set_length::{
     SortedSetLengthRequest, SortedSetLengthResponse,
 };
