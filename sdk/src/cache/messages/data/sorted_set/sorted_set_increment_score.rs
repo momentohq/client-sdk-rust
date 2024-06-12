@@ -108,5 +108,6 @@ impl<S: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetIncrementScoreReque
 /// The incremented score of the item in the sorted set
 #[derive(Debug, PartialEq, PartialOrd)]
 pub struct SortedSetIncrementScoreResponse {
+    /// The score value
     pub score: f64,
 }
