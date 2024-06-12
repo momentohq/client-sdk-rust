@@ -204,8 +204,8 @@ impl<F: IntoBytesIterable + Clone> TryFrom<SortedSetGetScoresResponse<F>>
 /// };
 /// ```
 ///
-/// You can cast your result directly into a Result<Vec<SortedSetElement<String>>, MomentoError> suitable for
-/// ?-propagation if you know you are expecting a Vec<SortedSetElement<String>> item.
+/// You can cast your result directly into a `Result<Vec<SortedSetElement<String>>, MomentoError>` suitable for
+/// ?-propagation if you know you are expecting a `Vec<SortedSetElement<String>>` item.
 ///
 /// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
 /// this is what you're after:
