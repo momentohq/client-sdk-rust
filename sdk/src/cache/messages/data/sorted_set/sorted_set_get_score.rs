@@ -118,7 +118,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetScoreRequest<L, 
 /// # use momento::MomentoResult;
 /// use momento::cache::SortedSetGetScoreResponse;
 /// use std::convert::TryInto;
-/// # let response = SortedSetGetScoreResponse::Hit { score: 5.0, value: "test" };
+/// # let response = SortedSetGetScoreResponse::Hit { score: 5.0 };
 /// let score: f64 = match response {
 ///     SortedSetGetScoreResponse::Hit { score, value } => score.try_into().expect("Expected a score!"),
 ///     SortedSetGetScoreResponse::Miss => return // probably you'll do something else here
@@ -134,7 +134,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetScoreRequest<L, 
 /// # use momento::MomentoResult;
 /// use momento::cache::SortedSetGetScoreResponse;
 /// use std::convert::TryInto;
-/// # let response = SortedSetGetScoreResponse::Hit { score: 5.0, value: "test" };
+/// # let response = SortedSetGetScoreResponse::Hit { score: 5.0 };
 /// let score: MomentoResult<f64> = response.try_into();
 /// ```
 #[derive(Debug, PartialEq, PartialOrd)]

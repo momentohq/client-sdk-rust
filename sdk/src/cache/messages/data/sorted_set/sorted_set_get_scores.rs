@@ -26,7 +26,7 @@ use crate::{
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::convert::TryInto;
-/// use momento::cache::{SortedSetGetScoresRequest};
+/// use momento::cache::{SortedSetGetScoresRequest, SortedSetElement};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
