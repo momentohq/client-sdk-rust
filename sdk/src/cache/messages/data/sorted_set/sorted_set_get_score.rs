@@ -120,7 +120,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetScoreRequest<L, 
 /// use std::convert::TryInto;
 /// # let response = SortedSetGetScoreResponse::Hit { score: 5.0 };
 /// let score: f64 = match response {
-///     SortedSetGetScoreResponse::Hit { score, value } => score.try_into().expect("Expected a score!"),
+///     SortedSetGetScoreResponse::Hit { score } => score.try_into().expect("Expected a score!"),
 ///     SortedSetGetScoreResponse::Miss => return // probably you'll do something else here
 /// };
 /// ```

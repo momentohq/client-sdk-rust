@@ -190,6 +190,32 @@ impl<F: IntoBytesIterable + Clone> TryFrom<SortedSetGetScoresResponse<F>>
     }
 }
 
+/// Response for a sorted set get scores operation.
+///
+/// If you'd like to handle misses you can simply match and handle your response:
+/// ```
+/// # use momento::MomentoResult;
+/// use momento::cache::SortedSetGetScoresResponse;
+/// use std::convert::TryInto;
+/// # let response = SortedSetGetScoresResponse::Hit { score: 5.0 };
+/// match response {
+///     SortedSetGetScoresResponse::Hit { responses, values } => responses,
+///     SortedSetGetScoresResponse::Miss => return // probably you'll do something else here
+/// };
+/// ```
+///
+/// You can cast your result directly into a Result<Vec<SortedSetElement<String>>>, MomentoError> suitable for
+/// ?-propagation if you know you are expecting a Vec<SortedSetElement<String>> item.
+///
+/// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
+/// this is what you're after:
+/// ```
+/// # use momento::cache::{SortedSetGetScoresResponse, SortedSetElement};
+/// # use momento::MomentoResult;
+/// # let fetch_response: DictionaryGetFieldsResponse<Vec<String>> = SortedSetGetScoresResponse::default();
+/// use std::convert::TryInto;
+/// let item: MomentoResult<Vec<SortedSetElement<String>>> = fetch_response.try_into();
+/// ```
 #[derive(Debug, PartialEq, PartialOrd)]
 pub enum SortedSetGetScoresResponse<T: IntoBytesIterable + Clone> {
     /// The sorted set was found.
