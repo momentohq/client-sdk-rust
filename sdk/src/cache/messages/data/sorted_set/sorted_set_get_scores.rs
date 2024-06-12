@@ -38,7 +38,7 @@ use crate::{
 /// ).await?;
 ///
 /// let get_score_request = SortedSetGetScoresRequest::new(cache_name, sorted_set_name, vec!["value1", "value2"]);
-/// let elements: Vec<SortedSetElement> = cache_client.send_request(get_score_request).await?.try_into().expect("Expected a score!");
+/// let elements: Vec<SortedSetElement<String>> = cache_client.send_request(get_score_request).await?.try_into().expect("Expected a score!");
 /// # assert_eq!(elements.len(), 2);
 /// # Ok(())
 /// # })
@@ -197,7 +197,7 @@ impl<F: IntoBytesIterable + Clone> TryFrom<SortedSetGetScoresResponse<F>>
 /// # use momento::MomentoResult;
 /// use momento::cache::SortedSetGetScoresResponse;
 /// use std::convert::TryInto;
-/// # let response = SortedSetGetScoresResponse::Hit { score: 5.0 };
+/// # let response = SortedSetGetScoresResponse::Hit { responses: vec![], values: vec![] };
 /// match response {
 ///     SortedSetGetScoresResponse::Hit { responses, values } => responses,
 ///     SortedSetGetScoresResponse::Miss => return // probably you'll do something else here
@@ -212,7 +212,7 @@ impl<F: IntoBytesIterable + Clone> TryFrom<SortedSetGetScoresResponse<F>>
 /// ```
 /// # use momento::cache::{SortedSetGetScoresResponse, SortedSetElement};
 /// # use momento::MomentoResult;
-/// # let fetch_response: DictionaryGetFieldsResponse<Vec<String>> = SortedSetGetScoresResponse::default();
+/// # let response: SortedSetGetScoresResponse<Vec<String>> = SortedSetGetScoresResponse::default();
 /// use std::convert::TryInto;
 /// let item: MomentoResult<Vec<SortedSetElement<String>>> = fetch_response.try_into();
 /// ```

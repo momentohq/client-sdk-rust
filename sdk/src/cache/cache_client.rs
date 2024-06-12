@@ -1364,10 +1364,10 @@ impl CacheClient {
     ///
     /// # cache_client.sorted_set_put_elements(&cache_name, sorted_set_name.to_string(), vec![("value1", 1.0), ("value2", 2.0)]).await;
     ///
-    /// let result: Vec<SortedSetElement<String>> = client
+    /// let result: Vec<SortedSetElement<String>> = cache_client
     ///   .sorted_set_get_scores(
     ///      cache_name,
-    ///      item.name(),
+    ///      sorted_set_name.to_string(),
     ///       vec!["value1", "value2"],
     ///   )
     ///   .await?
