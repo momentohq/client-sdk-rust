@@ -1343,6 +1343,42 @@ impl CacheClient {
         request.send(self).await
     }
 
+    /// Gets the scores of specific elements in a sorted set.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `sorted_set_name` - name of the sorted set
+    /// * `values` - the sorted set values to get the scores of
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use std::convert::TryInto;
+    /// use momento::cache::{SortedSetGetScoresResponse, SortedSetGetScoresRequest, SortedSetElement};
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let sorted_set_name = "sorted_set";
+    ///
+    /// # cache_client.sorted_set_put_elements(&cache_name, sorted_set_name.to_string(), vec![("value1", 1.0), ("value2", 2.0)]).await;
+    ///
+    /// let result: Vec<SortedSetElement<String>> = client
+    ///   .sorted_set_get_scores(
+    ///      cache_name,
+    ///      item.name(),
+    ///       vec!["value1", "value2"],
+    ///   )
+    ///   .await?
+    ///   .try_into()
+    ///   .expect("should be able to convert to Vec<SortedSetElement<String>>");
+    /// assert_eq!(result.len(), 2);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get the score of an element using a [SortedSetGetScoreRequest].
     pub async fn sorted_set_get_scores<F: IntoBytesIterable + Clone>(
         &self,
         cache_name: impl Into<String>,

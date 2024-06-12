@@ -222,6 +222,7 @@ pub enum SortedSetGetScoresResponse<T: IntoBytesIterable + Clone> {
     Hit {
         /// The responses for each element.
         responses: Vec<SortedSetGetScoreResponse>,
+        /// The values in the set that were requested
         values: T,
     },
     /// The sorted set was not found.
