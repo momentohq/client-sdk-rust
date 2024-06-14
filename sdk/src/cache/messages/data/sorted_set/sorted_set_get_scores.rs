@@ -212,7 +212,7 @@ impl<F: IntoBytesIterable + Clone> TryFrom<SortedSetGetScoresResponse<F>>
 /// ```
 /// # use momento::cache::{SortedSetGetScoresResponse, SortedSetElement};
 /// # use momento::MomentoResult;
-/// # let response: SortedSetGetScoresResponse<Vec<String>> = SortedSetGetScoresResponse::default();
+/// # let response: SortedSetGetScoresResponse<Vec<String>> = SortedSetGetScoresResponse::Hit { responses: vec![], values: vec![] };
 /// use std::convert::TryInto;
 /// let item: MomentoResult<Vec<SortedSetElement<String>>> = response.try_into();
 /// ```
