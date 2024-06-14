@@ -1389,8 +1389,9 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Increments an elements value in a sorted set. If the element doesnt exist, it is set with the passed in score.
-    /// Creates the sorted set + value if it does not exist.
+    /// Increment the score of an element in the sorted set. Incrementing a score that was not set
+    /// using this method or is not the string representation of an integer results in a failure with
+    /// a FailedPreconditionException error.
     ///
     /// # Arguments
     ///
