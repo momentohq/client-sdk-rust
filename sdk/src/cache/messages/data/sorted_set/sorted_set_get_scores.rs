@@ -12,7 +12,7 @@ use crate::{
     CacheClient, IntoBytes, IntoBytesIterable, MomentoError, MomentoResult,
 };
 
-/// Get the scores of a specific elements in a sorted set.
+/// Get the scores of specific elements in a sorted set.
 ///
 /// # Arguments
 /// * `cache_name` - name of cache
