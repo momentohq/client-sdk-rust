@@ -31,15 +31,18 @@ use crate::cache::{
     SetIfPresentRequest, SetIfPresentResponse, SetRemoveElementsRequest, SetRemoveElementsResponse,
     SetRequest, SetResponse, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest,
     SortedSetFetchResponse, SortedSetGetRankRequest, SortedSetGetRankResponse,
-    SortedSetGetScoreRequest, SortedSetGetScoreResponse, SortedSetLengthRequest,
-    SortedSetLengthResponse, SortedSetOrder, SortedSetPutElementRequest,
-    SortedSetPutElementResponse, SortedSetPutElementsRequest, SortedSetPutElementsResponse,
-    SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse, UpdateTtlRequest,
-    UpdateTtlResponse,
+    SortedSetGetScoreRequest, SortedSetGetScoreResponse, SortedSetGetScoresRequest,
+    SortedSetGetScoresResponse, SortedSetLengthRequest, SortedSetLengthResponse, SortedSetOrder,
+    SortedSetPutElementRequest, SortedSetPutElementResponse, SortedSetPutElementsRequest,
+    SortedSetPutElementsResponse, SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse,
+    UpdateTtlRequest, UpdateTtlResponse,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
 use crate::cache::cache_client_builder::{CacheClientBuilder, NeedsDefaultTtl};
+use crate::cache::messages::data::sorted_set::sorted_set_increment_score::{
+    SortedSetIncrementScoreRequest, SortedSetIncrementScoreResponse,
+};
 use crate::utils::IntoBytesIterable;
 use crate::{utils, IntoBytes, MomentoResult};
 
@@ -1337,6 +1340,101 @@ impl CacheClient {
         value: impl IntoBytes,
     ) -> MomentoResult<SortedSetGetScoreResponse> {
         let request = SortedSetGetScoreRequest::new(cache_name, sorted_set_name, value);
+        request.send(self).await
+    }
+
+    /// Gets the scores of specific elements in a sorted set.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `sorted_set_name` - name of the sorted set
+    /// * `values` - the sorted set values to get the scores of
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use std::convert::TryInto;
+    /// use momento::cache::{SortedSetGetScoresResponse, SortedSetGetScoresRequest, SortedSetElement};
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let sorted_set_name = "sorted_set";
+    ///
+    /// # cache_client.sorted_set_put_elements(&cache_name, sorted_set_name.to_string(), vec![("value1", 1.0), ("value2", 2.0)]).await;
+    ///
+    /// let result: Vec<SortedSetElement<String>> = cache_client
+    ///   .sorted_set_get_scores(
+    ///      cache_name,
+    ///      sorted_set_name.to_string(),
+    ///       vec!["value1", "value2"],
+    ///   )
+    ///   .await?
+    ///   .try_into()
+    ///   .expect("should be able to convert to Vec<SortedSetElement<String>>");
+    /// assert_eq!(result.len(), 2);
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get the score of an element using a [SortedSetGetScoreRequest].
+    pub async fn sorted_set_get_scores<F: IntoBytesIterable + Clone>(
+        &self,
+        cache_name: impl Into<String>,
+        sorted_set_name: impl IntoBytes,
+        values: F,
+    ) -> MomentoResult<SortedSetGetScoresResponse<F>> {
+        let request = SortedSetGetScoresRequest::new(cache_name, sorted_set_name, values);
+        request.send(self).await
+    }
+
+    /// Increment the score of an element in the sorted set. Incrementing a score that was not set
+    /// using this method or is not the string representation of an integer results in a failure with
+    /// a FailedPreconditionException error.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - The name of the cache containing the sorted set.
+    /// * `sorted_set_name` - The name of the sorted set to add an element to.
+    /// * `value` - The value of the element to add. Must be able to be converted to a `Vec<u8>`.
+    /// * `amount` - The amount to add to the score.
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to add an element using a
+    /// [SortedSetIncrementScoreRequest], you can also provide the following optional arguments:
+    ///
+    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::SortedSetPutElementResponse;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let sorted_set_name = "sorted_set";
+    ///
+    /// let response = cache_client.sorted_set_increment_score(cache_name, sorted_set_name, "value1", 1.0).await?;
+    ///
+    /// println!("Score updated in sorted set: {}", response.score);
+    ///
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetIncrementScoreRequest]
+    /// which will allow you to set [optional arguments](SortedSetIncrementScoreRequest#optional-arguments) as well.
+    pub async fn sorted_set_increment_score(
+        &self,
+        cache_name: impl Into<String>,
+        sorted_set_name: impl IntoBytes,
+        value: impl IntoBytes,
+        score: f64,
+    ) -> MomentoResult<SortedSetIncrementScoreResponse> {
+        let request =
+            SortedSetIncrementScoreRequest::new(cache_name, sorted_set_name, value, score);
         request.send(self).await
     }
 
