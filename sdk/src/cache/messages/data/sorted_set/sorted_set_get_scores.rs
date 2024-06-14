@@ -228,12 +228,3 @@ pub enum SortedSetGetScoresResponse<T: IntoBytesIterable + Clone> {
     /// The sorted set was not found.
     Miss,
 }
-
-impl<T: IntoBytes + Clone> Default for SortedSetGetScoresResponse<Vec<T>> {
-    fn default() -> Self {
-        SortedSetGetScoresResponse::Hit {
-            responses: vec![],
-            values: vec![],
-        }
-    }
-}

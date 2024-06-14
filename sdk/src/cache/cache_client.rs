@@ -1389,7 +1389,7 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Adds an element to the given sorted set. If the element already exists, its score is updated.
+    /// Increments an elements value in a sorted set. If the element doesnt exist, it is set with the passed in score.
     /// Creates the sorted set + value if it does not exist.
     ///
     /// # Arguments
