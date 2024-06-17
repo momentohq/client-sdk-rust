@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.40.0](https://github.com/momentohq/client-sdk-rust/compare/v0.39.7...v0.40.0) (2024-06-14)
+
+
+### Features
+
+* add sorted_set_get_scores and sorted_set_increment methods ([#360](https://github.com/momentohq/client-sdk-rust/issues/360)) ([ba95599](https://github.com/momentohq/client-sdk-rust/commit/ba9559941baa547c378f39ad3fa63f7b494907e8))
+
 ## [0.39.7](https://github.com/momentohq/client-sdk-rust/compare/v0.39.6...v0.39.7) (2024-06-06)
 
 
