@@ -791,5 +791,3 @@ mod set_if_absent_or_equal {
         Ok(())
     }
 }
-
-mod when_readconcern_is_specified {}
