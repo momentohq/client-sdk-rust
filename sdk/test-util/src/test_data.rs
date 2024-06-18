@@ -194,7 +194,7 @@ impl Default for TestList {
 
 impl From<&TestList> for ListFetchResponse {
     fn from(test_list: &TestList) -> Self {
-        test_list.into()
+        test_list.values().clone().into()
     }
 }
 
