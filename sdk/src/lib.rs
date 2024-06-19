@@ -134,7 +134,7 @@ pub use topics::TopicClient;
 
 mod utils;
 
-/// Contains the [StorageClient] for interacting with Momento Persistent Storage.
+/// Contains the [PreviewStorageClient] for interacting with Momento Persistent Storage.
 pub mod storage;
 pub use storage::PreviewStorageClient;
 

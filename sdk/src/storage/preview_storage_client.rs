@@ -283,7 +283,7 @@ impl PreviewStorageClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](PreviewStoreClient::send_request) method to delete an item using a [DeleteRequest].
+    /// You can also use the [send_request](PreviewStorageClient::send_request) method to delete an item using a [DeleteRequest].
     pub async fn delete(
         &self,
         store_name: impl Into<String>,
