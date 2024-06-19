@@ -5,7 +5,7 @@ pub use messages::control::delete_store::{DeleteStoreRequest, DeleteStoreRespons
 pub use messages::control::list_stores::{ListStoresRequest, ListStoresResponse, StoreInfo};
 pub use messages::data::delete::{DeleteRequest, DeleteResponse};
 pub use messages::data::get::{GetRequest, GetResponse};
-pub use messages::data::set::{SetRequest, SetResponse};
+pub use messages::data::put::{PutRequest, PutResponse};
 pub use preview_storage_client::PreviewStorageClient;
 
 mod config;

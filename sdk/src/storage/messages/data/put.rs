@@ -4,12 +4,12 @@ use crate::storage::PreviewStorageClient;
 use crate::utils::prep_storage_request_with_timeout;
 use crate::MomentoResult;
 
-/// Request to set a value in a store.
+/// Request to put a value in a store.
 ///
 /// # Arguments
 ///
 /// * `store_name` - The name of the store to add a value to.
-/// * `key` - key of the item whose value we are setting
+/// * `key` - key of the item whose value we are putting
 /// * `value` - data to store
 ///
 ///
@@ -20,36 +20,36 @@ use crate::MomentoResult;
 /// # use momento_test_util::create_doctest_storage_client;
 /// # tokio_test::block_on(async {
 /// use std::time::Duration;
-/// use momento::storage::{SetResponse, SetRequest};
+/// use momento::storage::{PutResponse, PutRequest};
 /// use momento::MomentoErrorCode;
 /// # let (storage_client, store_name) = create_doctest_storage_client();
 ///
-/// let set_request = SetRequest::new(
+/// let put_request = PutRequest::new(
 ///     &store_name,
 ///     "key",
 ///     "value1"
 /// );
 ///
-/// match storage_client.send_request(set_request).await {
-///     Ok(_) => println!("SetResponse successful"),
+/// match storage_client.send_request(put_request).await {
+///     Ok(_) => println!("PutResponse successful"),
 ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
 ///         println!("Store not found: {}", &store_name);
 ///     } else {
-///         eprintln!("Error setting value in store {}: {}", &store_name, e);
+///         eprintln!("Error putting value in store {}: {}", &store_name, e);
 ///     }
 /// }
 /// # Ok(())
 /// # })
 /// # }
 /// ```
-pub struct SetRequest {
+pub struct PutRequest {
     store_name: String,
     key: String,
     value: StoreValue,
 }
 
-impl SetRequest {
-    /// Construct a new SetRequest.
+impl PutRequest {
+    /// Construct a new PutRequest.
     pub fn new(
         store_name: impl Into<String>,
         key: impl Into<String>,
@@ -63,24 +63,24 @@ impl SetRequest {
     }
 }
 
-impl MomentoStorageRequest for SetRequest {
-    type Response = SetResponse;
+impl MomentoStorageRequest for PutRequest {
+    type Response = PutResponse;
 
-    async fn send(self, storage_client: &PreviewStorageClient) -> MomentoResult<SetResponse> {
+    async fn send(self, storage_client: &PreviewStorageClient) -> MomentoResult<PutResponse> {
         let request = prep_storage_request_with_timeout(
             &self.store_name,
             storage_client.configuration.deadline_millis(),
-            momento_protos::store::StoreSetRequest {
+            momento_protos::store::StorePutRequest {
                 key: self.key,
                 value: Some(self.value.into()),
             },
         )?;
 
-        storage_client.storage_client.clone().set(request).await?;
-        Ok(SetResponse {})
+        storage_client.storage_client.clone().put(request).await?;
+        Ok(PutResponse {})
     }
 }
 
-/// The response type for a successful set request.
+/// The response type for a successful put request.
 #[derive(Debug, PartialEq, Eq)]
-pub struct SetResponse {}
+pub struct PutResponse {}

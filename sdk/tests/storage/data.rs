@@ -1,4 +1,4 @@
-use momento::storage::{DeleteResponse, GetResponse, SetResponse};
+use momento::storage::{DeleteResponse, GetResponse, PutResponse};
 use momento::{MomentoErrorCode, MomentoResult};
 use momento_test_util::{unique_store_name, TestScalar, CACHE_TEST_STATE};
 
@@ -12,29 +12,22 @@ mod get_set_delete {
         let store_name = CACHE_TEST_STATE.store_name.as_str();
         let item = TestScalar::new();
 
-        // Getting a key that doesn't exist should return a miss
-        let result = client.get(store_name, item.key()).await?;
-        assert_eq!(
-            result,
-            GetResponse::Miss,
-            "Expected miss for key '{}' in store {}, got {:?}",
-            item.key(),
-            store_name,
-            result
-        );
+        // Getting a key that doesn't exist should return a not found
+        let result = client.get(store_name, item.key()).await.unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
 
-        // Setting a key should return a hit
-        let result = client.set(store_name, item.key(), item.value()).await?;
+        // Setting a key should return a success
+        let result = client.put(store_name, item.key(), item.value()).await?;
         assert_eq!(
             result,
-            SetResponse {},
+            PutResponse {},
             "Expected successful Set of key '{}' in store {}, got {:?}",
             item.key(),
             store_name,
             result
         );
 
-        // Getting the key should return a hit with the value
+        // Getting the key should return a success with the value
         let result = client.get(store_name, item.key()).await?;
         assert_eq!(
             result,
@@ -55,29 +48,22 @@ mod get_set_delete {
         let key = unique_key();
         let value: i64 = 1;
 
-        // Getting a key that doesn't exist should return a miss
-        let result = client.get(store_name, &key).await?;
-        assert_eq!(
-            result,
-            GetResponse::Miss,
-            "Expected miss for key '{}' in store {}, got {:?}",
-            key,
-            store_name,
-            result
-        );
+        // Getting a key that doesn't exist should return a not found
+        let result = client.get(store_name, &key).await.unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
 
         // Setting a key should return a success
-        let result = client.set(store_name, &key, &value).await?;
+        let result = client.put(store_name, &key, &value).await?;
         assert_eq!(
             result,
-            SetResponse {},
+            PutResponse {},
             "Expected successful Set of key '{}' in store {}, got {:?}",
             value,
             store_name,
             result
         );
 
-        // Getting the key should return a hit with the value
+        // Getting the key should return a success with the value
         let result = client.get(store_name, &key).await?;
         assert_eq!(
             result,
@@ -124,7 +110,7 @@ mod get_set_delete {
         );
 
         // Deleting a key that exists should delete it
-        client.set(store_name, item.key(), item.value()).await?;
+        client.put(store_name, item.key(), item.value()).await?;
         let result = client.delete(store_name, item.key()).await?;
         assert_eq!(
             result,
@@ -134,13 +120,8 @@ mod get_set_delete {
         );
 
         // Key should not exist after deletion
-        let result = client.get(store_name, item.key()).await?;
-        assert_eq!(
-            result,
-            GetResponse::Miss,
-            "Expected key 'key' to not exist in store {} after deletion, but it does",
-            store_name
-        );
+        let result = client.get(store_name, item.key()).await.unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
 
         Ok(())
     }

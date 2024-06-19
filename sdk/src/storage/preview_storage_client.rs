@@ -13,10 +13,12 @@ use crate::storage::messages::store_value::StoreValue;
 use crate::storage::preview_storage_client_builder::{
     NeedsConfiguration, PreviewStorageClientBuilder,
 };
-use crate::storage::{Configuration, DeleteRequest, DeleteResponse, SetRequest, SetResponse};
+use crate::storage::{Configuration, DeleteRequest, DeleteResponse, PutRequest, PutResponse};
 use crate::MomentoResult;
 
-/// Client to work with Momento Store.
+/// Preview client to work with Momento Store.
+///
+/// These preview APIs are not final and are subject to change.
 ///
 /// # Example
 /// To instantiate a [PreviewStorageClient], you need to provide a configuration and a [CredentialProvider](crate::CredentialProvider).
@@ -176,12 +178,12 @@ impl PreviewStorageClient {
         request.send(self).await
     }
 
-    /// Sets an item in a Momento Store
+    /// Puts an item in a Momento Store
     ///
     /// # Arguments
     ///
     /// * `store_name` - name of the store
-    /// * `key` - key of the item whose value we are setting
+    /// * `key` - key of the item whose value we are putting
     /// * `value` - data to stored
     ///
     /// # Examples
@@ -193,26 +195,26 @@ impl PreviewStorageClient {
     /// # let (storage_client, store_name) = create_doctest_storage_client();
     /// use momento::MomentoErrorCode;
     ///
-    /// match storage_client.set(&store_name, "k1", "v1").await {
-    ///     Ok(_) => println!("SetResponse successful"),
+    /// match storage_client.put(&store_name, "k1", "v1").await {
+    ///     Ok(_) => println!("PutResponse successful"),
     ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
     ///         println!("Store not found: {}", &store_name);
     ///     } else {
-    ///         eprintln!("Error setting value in store {}: {}", &store_name, e);
+    ///         eprintln!("Error putting value in store {}: {}", &store_name, e);
     ///     }
     /// }
     /// # Ok(())
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](PreviewStorageClient::send_request) method to get an item using a [SetRequest].
-    pub async fn set(
+    /// You can also use the [send_request](PreviewStorageClient::send_request) method to get an item using a [PutRequest].
+    pub async fn put(
         &self,
         store_name: impl Into<String>,
         key: impl Into<String>,
         value: impl Into<StoreValue>,
-    ) -> MomentoResult<SetResponse> {
-        let request = SetRequest::new(store_name, key, value);
+    ) -> MomentoResult<PutResponse> {
+        let request = PutRequest::new(store_name, key, value);
         request.send(self).await
     }
 
@@ -232,12 +234,9 @@ impl PreviewStorageClient {
     /// # tokio_test::block_on(async {
     /// # let (storage_client, store_name) = create_doctest_storage_client();
     /// use std::convert::TryInto;
-    /// # storage_client.set(&store_name, "key", "value").await?;
+    /// # storage_client.put(&store_name, "key", "value").await?;
     ///
-    /// let item: String = match(storage_client.get(&store_name, "key").await?) {
-    ///     GetResponse::Hit { value } => value.try_into().expect("I stored a string!"),
-    ///     GetResponse::Miss => return Err(anyhow::Error::msg("miss"))
-    /// };
+    /// let item: String = storage_client.get(&store_name, "key").await?.try_into().expect("I stored a string!");
     /// # assert_eq!(item, "value");
     /// # Ok(())
     /// # })
@@ -294,11 +293,7 @@ impl PreviewStorageClient {
         request.send(self).await
     }
 
-    /// Lower-level API to send any type of MomentoRequest to the server. This is used for cases when
-    /// you want to set optional fields on a request that are not supported by the short-hand API for
-    /// that request type.
-    ///
-    /// See [SortedSetFetchByScoreRequest] for an example of creating a request with optional fields.
+    /// Lower-level API to send any type of MomentoRequest to the server.
     pub async fn send_request<R: MomentoStorageRequest>(
         &self,
         request: R,

@@ -19,22 +19,20 @@ use crate::{MomentoError, MomentoResult};
 /// Assumes that a PreviewStorageClient named `storage_client` has been created and is available.
 /// ```
 /// # fn main() -> anyhow::Result<()> {
-/// # use momento_test_util::create_doctest_storage_client;
+/// # use std::convert::TryInto;
+/// use momento_test_util::create_doctest_storage_client;
 /// # tokio_test::block_on(async {
 /// use std::convert::TryInto;
 /// use momento::storage::{GetResponse, GetRequest};
 /// # let (storage_client, store_name) = create_doctest_storage_client();
-/// # storage_client.set(&store_name, "key", "value").await?;
+/// # storage_client.put(&store_name, "key", "value").await?;
 ///
 /// let get_request = GetRequest::new(
 ///     store_name,
 ///     "key"
 /// );
 ///
-/// let item: String = match storage_client.send_request(get_request).await? {
-///   GetResponse::Hit { value } => value.try_into().expect("I stored a string!"),
-///   GetResponse::Miss => return Err(anyhow::Error::msg("store miss"))
-/// };
+/// let item: String = storage_client.send_request(get_request).await?.try_into().expect("I stored a string!");
 /// # assert_eq!(item, "value");
 /// # Ok(())
 /// # })
@@ -72,10 +70,10 @@ impl MomentoStorageRequest for GetRequest {
             .await?
             .into_inner();
         match response.value {
-            None => Ok(GetResponse::Miss),
+            None => Err(MomentoError::unknown_error("StoreGet", None)),
             Some(store_value) => match store_value.value {
-                None => Ok(GetResponse::Miss),
-                Some(value) => Ok(GetResponse::Hit {
+                None => Err(MomentoError::unknown_error("StoreGet", None)),
+                Some(value) => Ok(GetResponse::Success {
                     value: value.into(),
                 }),
             },
@@ -85,27 +83,13 @@ impl MomentoStorageRequest for GetRequest {
 
 /// Response for a store get operation.
 ///
-/// If you'd like to handle misses you can simply match and handle your response:
-/// ```
-/// # use momento::storage::GetResponse;
-/// # use momento::MomentoResult;
-/// # let get_response = GetResponse::Hit { value: "value".into() };
-/// use std::convert::TryInto;
-/// let item: String = match get_response {
-///     GetResponse::Hit { value } => value.try_into().expect("I stored a string!"),
-///     GetResponse::Miss => return // probably you'll do something else here
-/// };
-/// ```
-///
 /// You can cast your result directly into a Result<String, MomentoError> suitable for
 /// ?-propagation if you know you are expecting a String item.
 ///
-/// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
-/// this is what you're after:
 /// ```
 /// # use momento::storage::GetResponse;
 /// # use momento::MomentoResult;
-/// # let get_response = GetResponse::Hit { value: "value".into() };
+/// # let get_response = GetResponse::Success { value: "value".into() };
 /// use std::convert::TryInto;
 /// let item: MomentoResult<String> = get_response.try_into();
 /// ```
@@ -114,7 +98,7 @@ impl MomentoStorageRequest for GetRequest {
 /// ```
 /// # use momento::storage::GetResponse;
 /// # use momento::MomentoResult;
-/// # let get_response = GetResponse::Hit { value: vec![1, 2, 3, 4, 5].into() };
+/// # let get_response = GetResponse::Success { value: vec![1, 2, 3, 4, 5].into() };
 /// use std::convert::TryInto;
 /// let item: MomentoResult<Vec<u8>> = get_response.try_into();
 /// ```
@@ -122,7 +106,7 @@ impl MomentoStorageRequest for GetRequest {
 /// ```
 /// # use momento::storage::GetResponse;
 /// # use momento::MomentoResult;
-/// # let get_response = GetResponse::Hit { value: 1.into() };
+/// # let get_response = GetResponse::Success { value: 1.into() };
 /// use std::convert::TryInto;
 /// let item: MomentoResult<i64> = get_response.try_into();
 /// ```
@@ -130,24 +114,22 @@ impl MomentoStorageRequest for GetRequest {
 /// ```
 /// # use momento::storage::GetResponse;
 /// # use momento::MomentoResult;
-/// # let get_response = GetResponse::Hit { value: 1.0.into() };
+/// # let get_response = GetResponse::Success { value: 1.0.into() };
 /// use std::convert::TryInto;
 /// let item: MomentoResult<f64> = get_response.try_into();
 /// ```
 #[derive(Debug, Display, PartialEq)]
 pub enum GetResponse {
     /// The item was found in the store.
-    Hit {
+    Success {
         /// The value of the item.
         value: StoreValue,
     },
-    /// The item was not found in the store.
-    Miss,
 }
 
 impl<I: Into<StoreValue>> From<I> for GetResponse {
     fn from(value: I) -> Self {
-        GetResponse::Hit {
+        GetResponse::Success {
             value: value.into(),
         }
     }
@@ -158,8 +140,7 @@ impl TryFrom<GetResponse> for Vec<u8> {
 
     fn try_from(value: GetResponse) -> Result<Self, Self::Error> {
         match value {
-            GetResponse::Hit { value } => value.try_into(),
-            GetResponse::Miss => Err(MomentoError::miss("StoreGet")),
+            GetResponse::Success { value } => value.try_into(),
         }
     }
 }
@@ -169,8 +150,7 @@ impl TryFrom<GetResponse> for String {
 
     fn try_from(value: GetResponse) -> Result<Self, Self::Error> {
         match value {
-            GetResponse::Hit { value } => value.try_into(),
-            GetResponse::Miss => Err(MomentoError::miss("StoreGet")),
+            GetResponse::Success { value } => value.try_into(),
         }
     }
 }
@@ -180,8 +160,7 @@ impl TryFrom<GetResponse> for i64 {
 
     fn try_from(value: GetResponse) -> Result<Self, Self::Error> {
         match value {
-            GetResponse::Hit { value } => value.try_into(),
-            GetResponse::Miss => Err(MomentoError::miss("StoreGet")),
+            GetResponse::Success { value } => value.try_into(),
         }
     }
 }
@@ -191,8 +170,7 @@ impl TryFrom<GetResponse> for f64 {
 
     fn try_from(value: GetResponse) -> Result<Self, Self::Error> {
         match value {
-            GetResponse::Hit { value } => value.try_into(),
-            GetResponse::Miss => Err(MomentoError::miss("StoreGet")),
+            GetResponse::Success { value } => value.try_into(),
         }
     }
 }
