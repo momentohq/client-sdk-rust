@@ -17,7 +17,9 @@ path = "src/docs_examples/docs_examples.rs"
 
 [dependencies]
 futures = "0.3.30"
-momento = { version = "0.39.0" }
+momento = { version = "0.39.0", path = "../../sdk" }
 tokio = { version = "1.37.0", features = ["full"] }
 uuid = { version = "1.8.0", features = ["v4"] }
 anyhow = "1"
+aws-sdk-dynamodb = "1.35.0"
+aws-config = "1.5.3"

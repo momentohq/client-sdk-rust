@@ -1,11 +1,8 @@
 use std::convert::{TryFrom, TryInto};
-
-use derive_more::Display;
-
 use crate::storage::messages::momento_store_request::MomentoStorageRequest;
 use crate::storage::messages::store_value::StoreValue;
 use crate::storage::PreviewStorageClient;
-use crate::utils;
+use crate::{MomentoErrorCode, utils};
 use crate::{MomentoError, MomentoResult};
 
 /// Request to get an item from a store
@@ -67,16 +64,25 @@ impl MomentoStorageRequest for GetRequest {
             .storage_client
             .clone()
             .get(request)
-            .await?
-            .into_inner();
-        match response.value {
-            None => Err(MomentoError::unknown_error("StoreGet", None)),
-            Some(store_value) => match store_value.value {
+            .await;
+
+        match response {
+            Ok(success) => match success.into_inner().value {
                 None => Err(MomentoError::unknown_error("StoreGet", None)),
-                Some(value) => Ok(GetResponse::Success {
-                    value: value.into(),
-                }),
+                Some(store_value) => match store_value.value {
+                    None => Err(MomentoError::unknown_error("StoreGet", None)),
+                    Some(value) => Ok(GetResponse {
+                        value: Some(value.into()),
+                    }),
+                },
             },
+            Err(status) => {
+                let e: MomentoError = status.into();
+                match e.error_code {
+                    MomentoErrorCode::ItemNotFoundError => Ok(GetResponse { value: None }),
+                    _ => Err(e),
+                }
+            }
         }
     }
 }
@@ -118,19 +124,36 @@ impl MomentoStorageRequest for GetRequest {
 /// use std::convert::TryInto;
 /// let item: MomentoResult<f64> = get_response.try_into();
 /// ```
-#[derive(Debug, Display, PartialEq)]
-pub enum GetResponse {
-    /// The item was found in the store.
-    Success {
-        /// The value of the item.
-        value: StoreValue,
-    },
+#[derive(Debug, PartialEq, Clone)]
+pub struct GetResponse {
+    /// The value of the item.
+    pub value: Option<StoreValue>,
+}
+
+fn not_found_error() -> MomentoError {
+    MomentoError {
+        message: "Storage value not found".into(),
+        error_code: MomentoErrorCode::ItemNotFoundError,
+        inner_error: None,
+        details: None,
+    }
 }
 
 impl<I: Into<StoreValue>> From<I> for GetResponse {
     fn from(value: I) -> Self {
-        GetResponse::Success {
-            value: value.into(),
+        GetResponse {
+            value: Some(value.into()),
+        }
+    }
+}
+
+impl TryFrom<GetResponse> for Option<Vec<u8>> {
+    type Error = MomentoError;
+
+    fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
+        match response.value {
+            None => Ok(None),
+            Some(v) => v.try_into().map(Some),
         }
     }
 }
@@ -138,9 +161,21 @@ impl<I: Into<StoreValue>> From<I> for GetResponse {
 impl TryFrom<GetResponse> for Vec<u8> {
     type Error = MomentoError;
 
-    fn try_from(value: GetResponse) -> Result<Self, Self::Error> {
-        match value {
-            GetResponse::Success { value } => value.try_into(),
+    fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
+        match response.value {
+            None => Err(not_found_error()),
+            Some(v) => v.try_into(),
+        }
+    }
+}
+
+impl TryFrom<GetResponse> for Option<String> {
+    type Error = MomentoError;
+
+    fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
+        match response.value {
+                None => Ok(None),
+                Some(v) => v.try_into().map(Some),
         }
     }
 }
@@ -148,9 +183,21 @@ impl TryFrom<GetResponse> for Vec<u8> {
 impl TryFrom<GetResponse> for String {
     type Error = MomentoError;
 
-    fn try_from(value: GetResponse) -> Result<Self, Self::Error> {
-        match value {
-            GetResponse::Success { value } => value.try_into(),
+    fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
+        match response.value {
+            None => Err(not_found_error()),
+            Some(v) => v.try_into(),
+        }
+    }
+}
+
+impl TryFrom<GetResponse> for Option<i64> {
+    type Error = MomentoError;
+
+    fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
+        match response.value {
+                None => Ok(None),
+                Some(v) => v.try_into().map(Some),
         }
     }
 }
@@ -158,9 +205,21 @@ impl TryFrom<GetResponse> for String {
 impl TryFrom<GetResponse> for i64 {
     type Error = MomentoError;
 
-    fn try_from(value: GetResponse) -> Result<Self, Self::Error> {
-        match value {
-            GetResponse::Success { value } => value.try_into(),
+    fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
+        match response.value {
+            None => Err(not_found_error()),
+            Some(v) => v.try_into(),
+        }
+    }
+}
+
+impl TryFrom<GetResponse> for Option<f64> {
+    type Error = MomentoError;
+
+    fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
+        match response.value {
+                None => Ok(None),
+                Some(v) => v.try_into().map(Some),
         }
     }
 }
@@ -168,9 +227,10 @@ impl TryFrom<GetResponse> for i64 {
 impl TryFrom<GetResponse> for f64 {
     type Error = MomentoError;
 
-    fn try_from(value: GetResponse) -> Result<Self, Self::Error> {
-        match value {
-            GetResponse::Success { value } => value.try_into(),
+    fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
+        match response.value {
+            None => Err(not_found_error()),
+            Some(v) => v.try_into(),
         }
     }
 }
