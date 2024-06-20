@@ -16,7 +16,7 @@ use crate::storage::preview_storage_client_builder::{
 use crate::storage::{Configuration, DeleteRequest, DeleteResponse, PutRequest, PutResponse};
 use crate::MomentoResult;
 
-/// Preview client to work with Momento Store.
+/// Preview client to work with Momento Storage.
 ///
 /// These preview APIs are not final and are subject to change.
 ///
