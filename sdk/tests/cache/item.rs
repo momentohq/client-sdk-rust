@@ -22,7 +22,7 @@ mod item_get_type {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = unique_cache_name();
         let result = client.item_get_type(cache_name, "key").await.unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 

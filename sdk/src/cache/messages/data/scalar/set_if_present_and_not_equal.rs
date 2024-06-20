@@ -44,7 +44,7 @@ use std::time::Duration;
 ///         SetIfPresentAndNotEqualResponse::Stored => println!("Value stored"),
 ///         SetIfPresentAndNotEqualResponse::NotStored => println!("Value not stored"),
 ///     }
-///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+///     Err(e) => if let MomentoErrorCode::CacheNotFoundError = e.error_code {
 ///         println!("Cache not found: {}", &cache_name);
 ///     } else {
 ///         eprintln!("Error setting value in cache {}: {}", &cache_name, e);

@@ -134,7 +134,7 @@ impl PreviewStorageClient {
     ///
     /// match storage_client.delete_store(&store_name).await {
     ///     Ok(_) => println!("Store deleted: {}", &store_name),
-    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///     Err(e) => if let MomentoErrorCode::StoreNotFoundError = e.error_code {
     ///         println!("Store not found: {}", &store_name);
     ///     } else {
     ///         eprintln!("Error deleting store {}: {}", &store_name, e);
@@ -197,7 +197,7 @@ impl PreviewStorageClient {
     ///
     /// match storage_client.put(&store_name, "k1", "v1").await {
     ///     Ok(_) => println!("PutResponse successful"),
-    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///     Err(e) => if let MomentoErrorCode::StoreNotFoundError = e.error_code {
     ///         println!("Store not found: {}", &store_name);
     ///     } else {
     ///         eprintln!("Error putting value in store {}: {}", &store_name, e);
@@ -273,7 +273,7 @@ impl PreviewStorageClient {
     ///
     /// match storage_client.delete(&store_name, "key").await {
     ///     Ok(_) => println!("DeleteResponse successful"),
-    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///     Err(e) => if let MomentoErrorCode::StoreNotFoundError = e.error_code {
     ///         println!("Store not found: {}", &store_name);
     ///     } else {
     ///         eprintln!("Error deleting value in store {}: {}", &store_name, e);

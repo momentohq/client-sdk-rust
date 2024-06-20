@@ -32,7 +32,7 @@ use crate::MomentoResult;
 ///
 /// match storage_client.send_request(put_request).await {
 ///     Ok(_) => println!("PutResponse successful"),
-///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+///     Err(e) => if let MomentoErrorCode::StoreNotFoundError = e.error_code {
 ///         println!("Store not found: {}", &store_name);
 ///     } else {
 ///         eprintln!("Error putting value in store {}: {}", &store_name, e);

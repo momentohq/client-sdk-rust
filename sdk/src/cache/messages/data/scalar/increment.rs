@@ -36,7 +36,7 @@ use crate::{
 ///
 /// match cache_client.send_request(increment_request).await {
 ///     Ok(r) => println!("Incremented value: {}", r.value),
-///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+///     Err(e) => if let MomentoErrorCode::CacheNotFoundError = e.error_code {
 ///         println!("Cache not found: {}", &cache_name);
 ///     } else {
 ///         eprintln!("Error incrementing value in cache {}: {}", &cache_name, e);

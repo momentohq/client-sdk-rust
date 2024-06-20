@@ -147,7 +147,7 @@ mod sorted_set_fetch_by_rank {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
 
         Ok(())
     }
@@ -268,7 +268,7 @@ mod sorted_set_fetch_by_score {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 }
@@ -313,7 +313,7 @@ mod sorted_set_get_rank {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 
@@ -371,7 +371,7 @@ mod sorted_set_get_score {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 
@@ -453,7 +453,7 @@ mod sorted_set_remove_elements {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 
@@ -513,7 +513,7 @@ mod sorted_set_put_element {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 }
@@ -596,7 +596,7 @@ mod sorted_set_put_elements {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 }
@@ -637,7 +637,7 @@ mod sorted_set_length {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 }

@@ -63,7 +63,7 @@ mod set_add_elements {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
 
         Ok(())
     }
@@ -125,7 +125,7 @@ mod set_fetch {
 
         let result = client.set_fetch(cache_name, "set").await.unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
 
         Ok(())
     }
@@ -171,7 +171,7 @@ mod set_remove_elements {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
 
         Ok(())
     }

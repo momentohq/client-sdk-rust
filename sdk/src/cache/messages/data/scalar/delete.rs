@@ -26,7 +26,7 @@ use crate::{
 ///
 /// match cache_client.send_request(delete_request).await {
 ///     Ok(_) => println!("DeleteResponse successful"),
-///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+///     Err(e) => if let MomentoErrorCode::CacheNotFoundError = e.error_code {
 ///         println!("Cache not found: {}", &cache_name);
 ///     } else {
 ///         eprintln!("Error deleting value in cache {}: {}", &cache_name, e);

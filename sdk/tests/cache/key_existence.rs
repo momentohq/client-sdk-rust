@@ -21,7 +21,7 @@ mod key_exists {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = unique_cache_name();
         let result = client.key_exists(cache_name, "key").await.unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 
@@ -73,7 +73,7 @@ mod keys_exists {
             .keys_exist(cache_name, vec!["key"])
             .await
             .unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 

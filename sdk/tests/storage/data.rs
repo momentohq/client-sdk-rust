@@ -13,8 +13,15 @@ mod get_set_delete {
         let item = TestScalar::new();
 
         // Getting a key that doesn't exist should return a not found
-        let result = client.get(store_name, item.key()).await.unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        let result = client.get(store_name, item.key()).await?;
+        assert_eq!(
+            result,
+            GetResponse { value: None },
+            "Expected empty GetResponse for key '{}' in store {}, got {:?}",
+            item.key(),
+            store_name,
+            result
+        );
 
         // Setting a key should return a success
         let result = client.put(store_name, item.key(), item.value()).await?;
@@ -49,8 +56,15 @@ mod get_set_delete {
         let value: i64 = 1;
 
         // Getting a key that doesn't exist should return a not found
-        let result = client.get(store_name, &key).await.unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        let result = client.get(store_name, &key).await?;
+        assert_eq!(
+            result,
+            GetResponse { value: None },
+            "Expected empty GetResponse for key '{}' in store {}, got {:?}",
+            key,
+            store_name,
+            result
+        );
 
         // Setting a key should return a success
         let result = client.put(store_name, &key, &value).await?;
@@ -90,7 +104,7 @@ mod get_set_delete {
         let client = &CACHE_TEST_STATE.storage_client;
         let store_name = unique_store_name();
         let result = client.delete(store_name, "key").await.unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::StoreNotFoundError);
         Ok(())
     }
 
@@ -120,8 +134,15 @@ mod get_set_delete {
         );
 
         // Key should not exist after deletion
-        let result = client.get(store_name, item.key()).await.unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        let result = client.get(store_name, item.key()).await?;
+        assert_eq!(
+            result,
+            GetResponse { value: None },
+            "Expected empty GetResponse for key '{}' in store {}, got {:?}",
+            item.key(),
+            store_name,
+            result
+        );
 
         Ok(())
     }

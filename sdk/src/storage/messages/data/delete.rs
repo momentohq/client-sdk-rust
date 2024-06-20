@@ -27,7 +27,7 @@ use crate::MomentoResult;
 ///
 /// match storage_client.send_request(delete_request).await {
 ///     Ok(_) => println!("DeleteResponse successful"),
-///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+///     Err(e) => if let MomentoErrorCode::StoreNotFoundError = e.error_code {
 ///         println!("Store not found: {}", &store_name);
 ///     } else {
 ///         eprintln!("Error deleting value in store {}: {}", &store_name, e);

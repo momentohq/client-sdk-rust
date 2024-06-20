@@ -1,9 +1,9 @@
-use std::convert::{TryFrom, TryInto};
 use crate::storage::messages::momento_store_request::MomentoStorageRequest;
 use crate::storage::messages::store_value::StoreValue;
 use crate::storage::PreviewStorageClient;
-use crate::{MomentoErrorCode, utils};
+use crate::{utils, MomentoErrorCode};
 use crate::{MomentoError, MomentoResult};
+use std::convert::{TryFrom, TryInto};
 
 /// Request to get an item from a store
 ///
@@ -60,11 +60,7 @@ impl MomentoStorageRequest for GetRequest {
             momento_protos::store::StoreGetRequest { key: self.key },
         )?;
 
-        let response = storage_client
-            .storage_client
-            .clone()
-            .get(request)
-            .await;
+        let response = storage_client.storage_client.clone().get(request).await;
 
         match response {
             Ok(success) => match success.into_inner().value {
@@ -95,7 +91,7 @@ impl MomentoStorageRequest for GetRequest {
 /// ```
 /// # use momento::storage::GetResponse;
 /// # use momento::MomentoResult;
-/// # let get_response = GetResponse::Success { value: "value".into() };
+/// # let get_response = GetResponse::from("value");
 /// use std::convert::TryInto;
 /// let item: MomentoResult<String> = get_response.try_into();
 /// ```
@@ -104,7 +100,7 @@ impl MomentoStorageRequest for GetRequest {
 /// ```
 /// # use momento::storage::GetResponse;
 /// # use momento::MomentoResult;
-/// # let get_response = GetResponse::Success { value: vec![1, 2, 3, 4, 5].into() };
+/// # let get_response = GetResponse::from(vec![1, 2, 3, 4, 5]);
 /// use std::convert::TryInto;
 /// let item: MomentoResult<Vec<u8>> = get_response.try_into();
 /// ```
@@ -112,7 +108,7 @@ impl MomentoStorageRequest for GetRequest {
 /// ```
 /// # use momento::storage::GetResponse;
 /// # use momento::MomentoResult;
-/// # let get_response = GetResponse::Success { value: 1.into() };
+/// # let get_response = GetResponse::from(1);
 /// use std::convert::TryInto;
 /// let item: MomentoResult<i64> = get_response.try_into();
 /// ```
@@ -120,7 +116,7 @@ impl MomentoStorageRequest for GetRequest {
 /// ```
 /// # use momento::storage::GetResponse;
 /// # use momento::MomentoResult;
-/// # let get_response = GetResponse::Success { value: 1.0.into() };
+/// # let get_response = GetResponse::from(1.0);
 /// use std::convert::TryInto;
 /// let item: MomentoResult<f64> = get_response.try_into();
 /// ```
@@ -174,8 +170,8 @@ impl TryFrom<GetResponse> for Option<String> {
 
     fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
         match response.value {
-                None => Ok(None),
-                Some(v) => v.try_into().map(Some),
+            None => Ok(None),
+            Some(v) => v.try_into().map(Some),
         }
     }
 }
@@ -196,8 +192,8 @@ impl TryFrom<GetResponse> for Option<i64> {
 
     fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
         match response.value {
-                None => Ok(None),
-                Some(v) => v.try_into().map(Some),
+            None => Ok(None),
+            Some(v) => v.try_into().map(Some),
         }
     }
 }
@@ -218,8 +214,8 @@ impl TryFrom<GetResponse> for Option<f64> {
 
     fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
         match response.value {
-                None => Ok(None),
-                Some(v) => v.try_into().map(Some),
+            None => Ok(None),
+            Some(v) => v.try_into().map(Some),
         }
     }
 }

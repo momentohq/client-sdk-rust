@@ -12,7 +12,7 @@ mod create_delete_list_cache {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = unique_cache_name();
         let result = client.delete_cache(cache_name).await.unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 
@@ -55,7 +55,7 @@ mod flush_cache {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = unique_cache_name();
         let result = client.flush_cache(cache_name).await.unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 

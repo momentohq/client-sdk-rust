@@ -14,9 +14,9 @@ pub enum MomentoErrorCode {
     AlreadyExistsError,
     /// Cache with specified name doesn't exist
     CacheNotFoundError,
-    // Store with specified name doesn't exist
+    /// Store with specified name doesn't exist
     StoreNotFoundError,
-    // Item with specified key doesn't exist
+    /// Item with specified key doesn't exist
     ItemNotFoundError,
     /// An unexpected error occurred while trying to fulfill the request
     InternalServerError,
@@ -133,7 +133,8 @@ pub enum ErrorSource {
     /// Caused by a malformed URI
     #[error("uri is invalid")]
     InvalidUri(#[from] http::uri::InvalidUri),
-    
+
+    /// Caused by unparseable response metadata
     #[error("unable to parse response metadata value")]
     MetadataValueError(#[from] ToStrError),
 }

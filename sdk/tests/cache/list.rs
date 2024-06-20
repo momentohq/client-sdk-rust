@@ -37,7 +37,7 @@ mod list_concatenate_back {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
 
         Ok(())
     }
@@ -106,7 +106,7 @@ mod list_concatenate_front {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
 
         Ok(())
     }
@@ -173,7 +173,7 @@ mod list_length {
 
         let result = client.list_length(cache_name, "list").await.unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
 
         Ok(())
     }
@@ -223,7 +223,7 @@ mod list_fetch {
 
         let result = client.list_fetch(cache_name, "list").await.unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
 
         Ok(())
     }
@@ -288,7 +288,7 @@ mod list_pop_back {
 
         let result = client.list_pop_back(cache_name, "list").await.unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
 
         Ok(())
     }
@@ -351,7 +351,7 @@ mod list_pop_front {
 
         let result = client.list_pop_front(cache_name, "list").await.unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
 
         Ok(())
     }
@@ -420,7 +420,7 @@ mod list_push_back {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
 
         Ok(())
     }
@@ -499,7 +499,7 @@ mod list_push_front {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
 
         Ok(())
     }
@@ -578,7 +578,7 @@ mod list_remove {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
 
         Ok(())
     }
