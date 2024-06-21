@@ -52,7 +52,7 @@ pub struct PreviewStorageClient {
 }
 
 impl PreviewStorageClient {
-    /// Constructs a PreviewStorageClient to use Momento Store.
+    /// Constructs a PreviewStorageClient to use Momento Storage.
     ///
     /// # Arguments
     /// - `configuration` - Prebuilt configurations tuned for different environments are available in the [storage::configurations](crate::storage::configurations) module.
