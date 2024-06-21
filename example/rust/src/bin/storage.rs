@@ -24,7 +24,12 @@ async fn main() -> Result<(), MomentoError> {
 
     // List all stores and validate my_momento_store was created
     let list_stores_response = storage_client.list_stores().await?;
-    if list_stores_response.stores.iter().any(|x| { x.name == store_name}) == false {
+    if list_stores_response
+        .stores
+        .iter()
+        .any(|x| x.name == store_name)
+        == false
+    {
         eprintln!("{store_name} was not created");
         process::exit(1);
     }
@@ -46,14 +51,12 @@ async fn main() -> Result<(), MomentoError> {
 
     // Get the key from store and validate it got persisted
     match storage_client.get(store_name, key).await {
-        Ok(res) => {
-            match res.value {
-                Some(val) => {
-                    println!("Key {key} found in {store_name} with value {val}");
-                },
-                None => {},
+        Ok(res) => match res.value {
+            Some(val) => {
+                println!("Key {key} found in {store_name} with value {val}");
             }
-        }
+            None => {}
+        },
         Err(err) => {
             eprint!("error while getting key: {err}");
             process::exit(1);
@@ -64,34 +67,37 @@ async fn main() -> Result<(), MomentoError> {
     match storage_client.delete(store_name, key).await {
         Ok(_) => {
             println!("Key {key} was successfully deleted from {store_name}");
-        },
+        }
         Err(err) => {
             eprint!("error while deleting key: {err}");
             process::exit(1);
         }
     }
 
-     // Get the key from storage and validate it doesn't exist
-     match storage_client.get(store_name, key).await {
-        Ok(res) => {
-            match res.value {
-                Some(val) => {
-                    eprint!("Key {key} should have been deleted; instead got value as {val}");
-                    process::exit(1);
-                },
-                None => {},
+    // Get the key from storage and validate it doesn't exist
+    match storage_client.get(store_name, key).await {
+        Ok(res) => match res.value {
+            Some(val) => {
+                eprint!("Key {key} should have been deleted; instead got value as {val}");
+                process::exit(1);
             }
-        }
+            None => {}
+        },
         Err(err) => {
             eprint!("error while getting key: {err}");
             process::exit(1);
         }
     }
-    
+
     storage_client.delete_store(store_name).await?;
 
     let list_stores_response = storage_client.list_stores().await?;
-    if list_stores_response.stores.iter().any(|x| { x.name == store_name}) == true {
+    if list_stores_response
+        .stores
+        .iter()
+        .any(|x| x.name == store_name)
+        == true
+    {
         eprintln!("{store_name} was not deleted");
         process::exit(1);
     }
