@@ -24,11 +24,10 @@ async fn main() -> Result<(), MomentoError> {
 
     // List all stores and validate my_momento_store was created
     let list_stores_response = storage_client.list_stores().await?;
-    if list_stores_response
+    if !list_stores_response
         .stores
         .iter()
         .any(|x| x.name == store_name)
-        == false
     {
         eprintln!("{store_name} was not created");
         process::exit(1);
@@ -51,11 +50,8 @@ async fn main() -> Result<(), MomentoError> {
 
     // Get the key from store and validate it got persisted
     match storage_client.get(store_name, key).await {
-        Ok(res) => match res.value {
-            Some(val) => {
-                println!("Key {key} found in {store_name} with value {val}");
-            }
-            None => {}
+        Ok(res) => if let Some(val) = res.value {
+            println!("Key {key} found in {store_name} with value {val}");
         },
         Err(err) => {
             eprint!("error while getting key: {err}");
@@ -76,12 +72,9 @@ async fn main() -> Result<(), MomentoError> {
 
     // Get the key from storage and validate it doesn't exist
     match storage_client.get(store_name, key).await {
-        Ok(res) => match res.value {
-            Some(val) => {
-                eprint!("Key {key} should have been deleted; instead got value as {val}");
-                process::exit(1);
-            }
-            None => {}
+        Ok(res) => if let Some(val) = res.value {
+            eprint!("Key {key} should have been deleted; instead got value as {val}");    
+            process::exit(1);    
         },
         Err(err) => {
             eprint!("error while getting key: {err}");
@@ -96,7 +89,6 @@ async fn main() -> Result<(), MomentoError> {
         .stores
         .iter()
         .any(|x| x.name == store_name)
-        == true
     {
         eprintln!("{store_name} was not deleted");
         process::exit(1);
