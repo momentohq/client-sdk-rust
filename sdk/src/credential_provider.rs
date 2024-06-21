@@ -1,20 +1,9 @@
 use crate::MomentoResult;
 use crate::{MomentoError, MomentoErrorCode};
 use base64::Engine;
-use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fmt::{Debug, Display, Formatter};
-
-#[derive(Debug, Serialize, Deserialize)]
-struct JwtClaims {
-    #[serde(rename = "sub")]
-    subject: String,
-    #[serde(rename = "c")]
-    cache_endpoint: Option<String>,
-    #[serde(rename = "cp")]
-    control_endpoint: Option<String>,
-}
 
 #[derive(Serialize, Deserialize)]
 struct V1Token {
@@ -103,7 +92,7 @@ impl CredentialProvider {
     /// use momento::CredentialProvider;
     ///
     /// let api_key = "YOUR API KEY GOES HERE";
-    /// let credential_provider = match(CredentialProvider::from_string(api_key)) {
+    /// let credential_provider = match CredentialProvider::from_string(api_key) {
     ///    Ok(credential_provider) => credential_provider,
     ///    Err(e) => {
     ///         println!("Error while creating credential provider: {}", e);
@@ -144,10 +133,10 @@ impl CredentialProvider {
 }
 
 fn decode_auth_token(auth_token: String) -> MomentoResult<CredentialProvider> {
-    match base64::engine::general_purpose::URL_SAFE.decode(&auth_token) {
-        Ok(auth_token_bytes) => process_v1_token(auth_token_bytes),
-        Err(_) => process_jwt_token(auth_token),
-    }
+    let auth_token_bytes = base64::engine::general_purpose::URL_SAFE
+        .decode(auth_token)
+        .map_err(|e| token_parsing_error(Box::new(e)))?;
+    process_v1_token(auth_token_bytes)
 }
 
 fn process_v1_token(auth_token_bytes: Vec<u8>) -> MomentoResult<CredentialProvider> {
@@ -160,45 +149,6 @@ fn process_v1_token(auth_token_bytes: Vec<u8>) -> MomentoResult<CredentialProvid
         control_endpoint: https_endpoint(get_control_endpoint(&json.endpoint)),
         token_endpoint: https_endpoint(get_token_endpoint(&json.endpoint)),
         storage_endpoint: https_endpoint(get_storage_endpoint(&json.endpoint)),
-    })
-}
-
-fn process_jwt_token(auth_token: String) -> MomentoResult<CredentialProvider> {
-    let key = DecodingKey::from_secret(b"");
-    let mut validation = Validation::new(Algorithm::HS256);
-    validation.required_spec_claims.clear();
-    validation.required_spec_claims.insert("sub".to_string());
-
-    validation.validate_exp = false;
-    validation.insecure_disable_signature_validation();
-
-    let token =
-        decode(&auth_token, &key, &validation).map_err(|e| token_parsing_error(Box::new(e)))?;
-    let token_claims: JwtClaims = token.claims;
-
-    let cache_endpoint = token_claims.cache_endpoint
-    .ok_or_else(|| MomentoError {
-        message: "auth token is missing cache endpoint and endpoint override is missing. One or the other must be provided".into(),
-        error_code: MomentoErrorCode::InvalidArgumentError,
-        inner_error: None,
-        details: None
-    })?;
-    let control_endpoint = token_claims.control_endpoint
-    .ok_or_else(|| MomentoError {
-        message: "auth token is missing control endpoint and endpoint override is missing. One or the other must be provided.".into(),
-        error_code: MomentoErrorCode::InvalidArgumentError,
-        inner_error: None,
-        details: None
-    })?;
-    let token_endpoint = cache_endpoint.clone();
-    let storage_endpoint = cache_endpoint.clone();
-
-    Ok(CredentialProvider {
-        auth_token,
-        cache_endpoint: https_endpoint(cache_endpoint),
-        control_endpoint: https_endpoint(control_endpoint),
-        token_endpoint: https_endpoint(token_endpoint),
-        storage_endpoint: https_endpoint(storage_endpoint),
     })
 }
 
@@ -285,44 +235,6 @@ mod tests {
     }
 
     #[test]
-    fn valid_legacy_jwt() {
-        // Token header
-        // ------------
-        // {
-        //   "alg": "HS512"
-        // }
-        //
-        // Token claims
-        // ------------
-        // {
-        //   "c": "data plane endpoint",
-        //   "cp": "control plane endpoint",
-        //   "sub": "squirrel"
-        // }
-        let legacy_jwt = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzcXVpcnJlbCIsImNwIjoiY29udHJvbCBwbGFuZSBlbmRwb2ludCIsImMiOiJkYXRhIHBsYW5lIGVuZHBvaW50In0.zsTsEXFawetTCZI".to_owned();
-        let credential_provider = CredentialProvider::from_string(legacy_jwt.clone())
-            .expect("should be able to build credential provider");
-        assert_eq!(
-            credential_provider.cache_endpoint,
-            "https://data plane endpoint"
-        );
-        assert_eq!(
-            credential_provider.control_endpoint,
-            "https://control plane endpoint"
-        );
-        assert_eq!(
-            "https://data plane endpoint",
-            credential_provider.token_endpoint
-        );
-
-        assert_eq!(
-            "https://data plane endpoint",
-            credential_provider.storage_endpoint
-        );
-        assert_eq!(credential_provider.auth_token, legacy_jwt);
-    }
-
-    #[test]
     fn empty_token() {
         let e = CredentialProvider::from_string("").unwrap_err();
         let _err_msg = "Auth token string cannot be empty".to_owned();
@@ -334,29 +246,6 @@ mod tests {
         let e = CredentialProvider::from_string("wfheofhriugheifweif").unwrap_err();
         let _err_msg =
             "Could not parse token. Please ensure a valid token was entered correctly.".to_owned();
-        assert_eq!(e.to_string(), _err_msg);
-    }
-
-    #[test]
-    fn invalid_no_cache_claim_jwt_with_no_endpoint_override() {
-        // Token header
-        // ------------
-        // {
-        //   "typ": "JWT",
-        //   "alg": "HS256"
-        // }
-        //
-        // Token claims
-        // ------------
-        // {
-        //   "iat": 1516239022,
-        //   "name": "John Doe",
-        //   "sub": "abcd"
-        // }
-        let auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYmNkIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.PTgxba";
-        let e = CredentialProvider::from_string(auth_token).unwrap_err();
-        let _err_msg =
-            "auth token is missing cache endpoint and endpoint override is missing. One or the other must be provided".to_string();
         assert_eq!(e.to_string(), _err_msg);
     }
 
