@@ -1,6 +1,9 @@
 use std::process;
 
-use momento::{storage::configurations, CredentialProvider, MomentoError, PreviewStorageClient};
+use momento::{
+    storage::{configurations, ListStoresResponse},
+    CredentialProvider, MomentoError, PreviewStorageClient,
+};
 
 #[tokio::main]
 async fn main() -> Result<(), MomentoError> {
@@ -24,11 +27,7 @@ async fn main() -> Result<(), MomentoError> {
 
     // List all stores and validate my_momento_store was created
     let list_stores_response = storage_client.list_stores().await?;
-    if !list_stores_response
-        .stores
-        .iter()
-        .any(|x| x.name == store_name)
-    {
+    if !store_exists(&list_stores_response, store_name) {
         eprintln!("{store_name} was not created");
         process::exit(1);
     }
@@ -50,14 +49,15 @@ async fn main() -> Result<(), MomentoError> {
 
     // Get the key from store and validate it got persisted
     match storage_client.get(store_name, key).await {
-        Ok(res) => {
-            if let Some(val) = res.value {
+        Ok(res) => match res.value {
+            Some(val) => {
                 println!("Key {key} found in {store_name} with value {val}");
-            } else {
-                eprintln!("Key {key} was not found!");
+            }
+            None => {
+                eprintln!("Value should have been persisted for key {key} but didn't");
                 process::exit(1);
             }
-        }
+        },
         Err(err) => {
             eprint!("error while getting key: {err}");
             process::exit(1);
@@ -94,11 +94,7 @@ async fn main() -> Result<(), MomentoError> {
 
     // Validate store was deleted
     let list_stores_response = storage_client.list_stores().await?;
-    if list_stores_response
-        .stores
-        .iter()
-        .any(|x| x.name == store_name)
-    {
+    if store_exists(&list_stores_response, store_name) {
         eprintln!("{store_name} was not deleted");
         process::exit(1);
     }
@@ -106,4 +102,11 @@ async fn main() -> Result<(), MomentoError> {
     println!("Store was deleted");
 
     Ok(())
+}
+
+fn store_exists(list_stores_response: &ListStoresResponse, store_name: &str) -> bool {
+    list_stores_response
+        .stores
+        .iter()
+        .any(|x| x.name == store_name)
 }
