@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.41.0](https://github.com/momentohq/client-sdk-rust/compare/v0.40.0...v0.41.0) (2024-06-21)
+
+
+### Features
+
+* Add a preview Storage Client ([#354](https://github.com/momentohq/client-sdk-rust/issues/354)) ([8aa9b7c](https://github.com/momentohq/client-sdk-rust/commit/8aa9b7c62e1eb078db157b1bb7485d757d1d5a47))
+
+
+### Miscellaneous
+
+* remove legacy jwt token support ([#366](https://github.com/momentohq/client-sdk-rust/issues/366)) ([ba90ff0](https://github.com/momentohq/client-sdk-rust/commit/ba90ff072664376051807c44d5aba4824d523800))
+* remove unused read concern mod ([#363](https://github.com/momentohq/client-sdk-rust/issues/363)) ([86f876b](https://github.com/momentohq/client-sdk-rust/commit/86f876bda6c737ca87ace2a61e71f3a3ddb50fcb))
+
 ## [0.40.0](https://github.com/momentohq/client-sdk-rust/compare/v0.39.7...v0.40.0) (2024-06-14)
 
 
