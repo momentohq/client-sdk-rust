@@ -50,9 +50,11 @@ async fn main() -> Result<(), MomentoError> {
 
     // Get the key from store and validate it got persisted
     match storage_client.get(store_name, key).await {
-        Ok(res) => if let Some(val) = res.value {
-            println!("Key {key} found in {store_name} with value {val}");
-        },
+        Ok(res) => {
+            if let Some(val) = res.value {
+                println!("Key {key} found in {store_name} with value {val}");
+            }
+        }
         Err(err) => {
             eprint!("error while getting key: {err}");
             process::exit(1);
@@ -72,10 +74,12 @@ async fn main() -> Result<(), MomentoError> {
 
     // Get the key from storage and validate it doesn't exist
     match storage_client.get(store_name, key).await {
-        Ok(res) => if let Some(val) = res.value {
-            eprint!("Key {key} should have been deleted; instead got value as {val}");    
-            process::exit(1);    
-        },
+        Ok(res) => {
+            if let Some(val) = res.value {
+                eprint!("Key {key} should have been deleted; instead got value as {val}");
+                process::exit(1);
+            }
+        }
         Err(err) => {
             eprint!("error while getting key: {err}");
             process::exit(1);
