@@ -53,6 +53,9 @@ async fn main() -> Result<(), MomentoError> {
         Ok(res) => {
             if let Some(val) = res.value {
                 println!("Key {key} found in {store_name} with value {val}");
+            } else {
+                eprintln!("Key {key} was not found!");
+                process::exit(1);
             }
         }
         Err(err) => {
@@ -86,8 +89,10 @@ async fn main() -> Result<(), MomentoError> {
         }
     }
 
+    // Delete store
     storage_client.delete_store(store_name).await?;
 
+    // Validate store was deleted
     let list_stores_response = storage_client.list_stores().await?;
     if list_stores_response
         .stores
