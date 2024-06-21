@@ -25,7 +25,7 @@ use crate::{utils, CacheClient, MomentoResult};
 /// match cache_client.send_request(flush_cache_request).await {
 ///     Ok(_) => println!("Flushed cache: {}", cache_name),
 ///     Err(e) => {
-///         if let MomentoErrorCode::NotFoundError = e.error_code {
+///         if let MomentoErrorCode::CacheNotFoundError = e.error_code {
 ///             println!("Cache not found: {}", cache_name);
 ///         } else {
 ///            eprintln!("Error flushing cache: {}", e);

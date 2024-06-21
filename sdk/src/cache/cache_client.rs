@@ -170,7 +170,7 @@ impl CacheClient {
     ///
     /// match cache_client.delete_cache(&cache_name).await {
     ///     Ok(_) => println!("Cache deleted: {}", &cache_name),
-    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///     Err(e) => if let MomentoErrorCode::CacheNotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
     ///     } else {
     ///         eprintln!("Error deleting cache {}: {}", &cache_name, e);
@@ -233,7 +233,7 @@ impl CacheClient {
     /// match cache_client.flush_cache(cache_name.to_string()).await {
     ///     Ok(_) => println!("Flushed cache: {}", cache_name),
     ///     Err(e) => {
-    ///         if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///         if let MomentoErrorCode::CacheNotFoundError = e.error_code {
     ///             println!("Cache not found: {}", cache_name);
     ///         } else {
     ///            eprintln!("Error flushing cache: {}", e);
@@ -279,7 +279,7 @@ impl CacheClient {
     ///
     /// match cache_client.set(&cache_name, "k1", "v1").await {
     ///     Ok(_) => println!("SetResponse successful"),
-    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///     Err(e) => if let MomentoErrorCode::CacheNotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
     ///     } else {
     ///         eprintln!("Error setting value in cache {}: {}", &cache_name, e);
@@ -359,7 +359,7 @@ impl CacheClient {
     ///
     /// match cache_client.delete(&cache_name, "key").await {
     ///     Ok(_) => println!("DeleteResponse successful"),
-    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///     Err(e) => if let MomentoErrorCode::CacheNotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
     ///     } else {
     ///         eprintln!("Error deleting value in cache {}: {}", &cache_name, e);
@@ -1538,7 +1538,7 @@ impl CacheClient {
     ///
     /// match cache_client.increment(&cache_name, "key", 1).await {
     ///     Ok(r) => println!("Incremented value: {}", r.value),
-    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///     Err(e) => if let MomentoErrorCode::CacheNotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
     ///     } else {
     ///         eprintln!("Error incrementing value in cache {}: {}", &cache_name, e);
@@ -1777,7 +1777,7 @@ impl CacheClient {
     ///         SetIfAbsentResponse::Stored => println!("Value stored"),
     ///         SetIfAbsentResponse::NotStored => println!("Value not stored"),
     ///     }
-    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///     Err(e) => if let MomentoErrorCode::CacheNotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
     ///     } else {
     ///         eprintln!("Error setting value in cache {}: {}", &cache_name, e);
@@ -1828,7 +1828,7 @@ impl CacheClient {
     ///         SetIfPresentResponse::Stored => println!("Value stored"),
     ///         SetIfPresentResponse::NotStored => println!("Value not stored"),
     ///     }
-    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///     Err(e) => if let MomentoErrorCode::CacheNotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
     ///     } else {
     ///         eprintln!("Error setting value in cache {}: {}", &cache_name, e);
@@ -1881,7 +1881,7 @@ impl CacheClient {
     ///         SetIfEqualResponse::Stored => println!("Value stored"),
     ///         SetIfEqualResponse::NotStored => println!("Value not stored"),
     ///     }
-    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///     Err(e) => if let MomentoErrorCode::CacheNotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
     ///     } else {
     ///         eprintln!("Error setting value in cache {}: {}", &cache_name, e);
@@ -1935,7 +1935,7 @@ impl CacheClient {
     ///         SetIfNotEqualResponse::Stored => println!("Value stored"),
     ///         SetIfNotEqualResponse::NotStored => println!("Value not stored"),
     ///     }
-    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///     Err(e) => if let MomentoErrorCode::CacheNotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
     ///     } else {
     ///         eprintln!("Error setting value in cache {}: {}", &cache_name, e);
@@ -1989,7 +1989,7 @@ impl CacheClient {
     ///         SetIfPresentAndNotEqualResponse::Stored => println!("Value stored"),
     ///         SetIfPresentAndNotEqualResponse::NotStored => println!("Value not stored"),
     ///     }
-    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///     Err(e) => if let MomentoErrorCode::CacheNotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
     ///     } else {
     ///         eprintln!("Error setting value in cache {}: {}", &cache_name, e);
@@ -2043,7 +2043,7 @@ impl CacheClient {
     ///         SetIfAbsentOrEqualResponse::Stored => println!("Value stored"),
     ///         SetIfAbsentOrEqualResponse::NotStored => println!("Value not stored"),
     ///     }
-    ///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+    ///     Err(e) => if let MomentoErrorCode::CacheNotFoundError = e.error_code {
     ///         println!("Cache not found: {}", &cache_name);
     ///     } else {
     ///         eprintln!("Error setting value in cache {}: {}", &cache_name, e);

@@ -28,7 +28,7 @@ mod item_get_ttl {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = unique_cache_name();
         let result = client.item_get_ttl(cache_name, "key").await.unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 
@@ -133,7 +133,7 @@ mod increase_ttl {
             .increase_ttl(cache_name, "key", Duration::from_secs(5))
             .await
             .unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 
@@ -233,7 +233,7 @@ mod decrease_ttl {
             .decrease_ttl(cache_name, "key", Duration::from_secs(5))
             .await
             .unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 
@@ -332,7 +332,7 @@ mod update_ttl {
             .update_ttl(cache_name, "key", Duration::from_secs(5))
             .await
             .unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 

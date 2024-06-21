@@ -31,6 +31,22 @@ pub(crate) fn request_meta_data<T>(
         })
 }
 
+pub(crate) fn store_request_meta_data<T>(
+    request: &mut Request<T>,
+    store_name: &str,
+) -> MomentoResult<()> {
+    tonic::metadata::AsciiMetadataValue::try_from(store_name)
+        .map(|value| {
+            request.metadata_mut().append("store", value);
+        })
+        .map_err(|e| MomentoError {
+            message: format!("Could not treat store name as a header value: {e}"),
+            error_code: MomentoErrorCode::InvalidArgumentError,
+            inner_error: Some(ErrorSource::Unknown(Box::new(e))),
+            details: None,
+        })
+}
+
 pub(crate) fn prep_request_with_timeout<R>(
     cache_name: &str,
     timeout: Duration,
@@ -40,6 +56,19 @@ pub(crate) fn prep_request_with_timeout<R>(
 
     let mut request = Request::new(request);
     request_meta_data(&mut request, cache_name)?;
+    request.set_timeout(timeout);
+    Ok(request)
+}
+
+pub(crate) fn prep_storage_request_with_timeout<R>(
+    store_name: &str,
+    timeout: Duration,
+    request: R,
+) -> MomentoResult<Request<R>> {
+    is_store_name_valid(store_name)?;
+
+    let mut request = Request::new(request);
+    store_request_meta_data(&mut request, store_name)?;
     request.set_timeout(timeout);
     Ok(request)
 }
@@ -65,6 +94,18 @@ pub(crate) fn is_cache_name_valid(cache_name: &str) -> Result<(), MomentoError> 
     if cache_name.trim().is_empty() {
         return Err(MomentoError {
             message: "Cache name cannot be empty".into(),
+            error_code: MomentoErrorCode::InvalidArgumentError,
+            inner_error: None,
+            details: None,
+        });
+    }
+    Ok(())
+}
+
+pub(crate) fn is_store_name_valid(store_name: &str) -> Result<(), MomentoError> {
+    if store_name.trim().is_empty() {
+        return Err(MomentoError {
+            message: "Store name cannot be empty".into(),
             error_code: MomentoErrorCode::InvalidArgumentError,
             inner_error: None,
             details: None,

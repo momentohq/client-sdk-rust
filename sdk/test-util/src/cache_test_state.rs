@@ -5,9 +5,10 @@ use momento::cache::CreateCacheResponse;
 use once_cell::sync::Lazy;
 use tokio::sync::watch::channel;
 
-use crate::{get_test_cache_name, get_test_credential_provider};
+use crate::{get_test_cache_name, get_test_credential_provider, get_test_store_name};
 use momento::cache::configurations;
-use momento::{CacheClient, TopicClient};
+use momento::storage::CreateStoreResponse;
+use momento::{CacheClient, PreviewStorageClient, TopicClient};
 
 pub static CACHE_TEST_STATE: Lazy<Arc<CacheTestState>> =
     Lazy::new(|| Arc::new(CacheTestState::new()));
@@ -15,7 +16,9 @@ pub static CACHE_TEST_STATE: Lazy<Arc<CacheTestState>> =
 pub struct CacheTestState {
     pub client: Arc<CacheClient>,
     pub cache_name: String,
+    pub store_name: String,
     pub topic_client: Arc<TopicClient>,
+    pub storage_client: Arc<PreviewStorageClient>,
     #[allow(dead_code)]
     runtime: tokio::runtime::Runtime,
 }
@@ -26,6 +29,10 @@ impl CacheTestState {
         let cache_name = get_test_cache_name();
         println!("Using cache name: {}", cache_name);
         let thread_cache_name = cache_name.clone();
+
+        let store_name = get_test_store_name();
+        println!("Using store name: {}", store_name);
+        let thread_store_name = store_name.clone();
 
         let credential_provider = get_test_credential_provider();
 
@@ -60,15 +67,29 @@ impl CacheTestState {
                 .build()
                 .expect("Failed to create topic client");
 
+            let storage_client = PreviewStorageClient::builder()
+                .configuration(momento::storage::configurations::Laptop::latest())
+                .credential_provider(credential_provider.clone())
+                .build()
+                .expect("Failed to create storage client");
+
+            match storage_client.clone().create_store(thread_store_name).await {
+                Ok(ok) => match ok {
+                    CreateStoreResponse::Created => println!("Store created."),
+                    CreateStoreResponse::AlreadyExists => println!("Store already exists."),
+                },
+                Err(e) => panic!("Failed to create store: {:?}", e),
+            }
+
             sender
-                .send(Some((cache_client, topic_client)))
+                .send(Some((cache_client, topic_client, storage_client)))
                 .expect("client should be sent to test state thread");
             thread_barrier.wait();
         });
         barrier.wait();
 
         // Retrieve the client from the runtime that created it.
-        let (client, topic_client) = client_receiver
+        let (client, topic_client, storage_client) = client_receiver
             .borrow()
             .as_ref()
             .expect("Clients should already exist")
@@ -77,7 +98,9 @@ impl CacheTestState {
         CacheTestState {
             client: Arc::new(client.clone()),
             topic_client: Arc::new(topic_client.clone()),
+            storage_client: Arc::new(storage_client.clone()),
             cache_name,
+            store_name,
             runtime,
         }
     }

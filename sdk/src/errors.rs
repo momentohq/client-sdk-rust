@@ -1,6 +1,7 @@
 use std::{error::Error, fmt::Debug, str::from_utf8};
 
 use tonic::codegen::http;
+use tonic::metadata::errors::ToStrError;
 
 /// Error codes to indicate the type of error that occurred
 #[derive(Debug, Clone, PartialEq)]
@@ -12,7 +13,11 @@ pub enum MomentoErrorCode {
     /// Resource with specified name already exists
     AlreadyExistsError,
     /// Cache with specified name doesn't exist
-    NotFoundError,
+    CacheNotFoundError,
+    /// Store with specified name doesn't exist
+    StoreNotFoundError,
+    /// Item with specified key doesn't exist
+    ItemNotFoundError,
     /// An unexpected error occurred while trying to fulfill the request
     InternalServerError,
     /// Insufficient permissions to perform operation
@@ -128,6 +133,10 @@ pub enum ErrorSource {
     /// Caused by a malformed URI
     #[error("uri is invalid")]
     InvalidUri(#[from] http::uri::InvalidUri),
+
+    /// Caused by unparseable response metadata
+    #[error("unable to parse response metadata value")]
+    MetadataValueError(#[from] ToStrError),
 }
 
 impl From<tonic::Status> for MomentoError {
@@ -193,11 +202,45 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
             inner_error: Some(status.clone().into()),
             details: Some(status.into())
         },
-        tonic::Code::NotFound => MomentoError {
-            message: "A cache with the specified name does not exist.  To resolve this error, make sure you have created the cache before attempting to use it".into(),
-            error_code: MomentoErrorCode::NotFoundError,
-            inner_error: Some(status.clone().into()),
-            details: Some(status.into())
+        tonic::Code::NotFound => {
+            match status.metadata().get("err") {
+                None => MomentoError {
+                    message: "A cache with the specified name does not exist.  To resolve this error, make sure you have created the cache before attempting to use it".into(),
+                    error_code: MomentoErrorCode::CacheNotFoundError,
+                    inner_error: Some(status.clone().into()),
+                    details: Some(status.into())
+                },
+                Some(err) => match err.to_str() {
+                    Ok(err_str) => {
+                        match err_str {
+                            "store_not_found" => MomentoError {
+                                message: "A store with the specified name does not exist.  To resolve this error, make sure you have created the store before attempting to use it".into(),
+                                error_code: MomentoErrorCode::StoreNotFoundError,
+                                inner_error: Some(status.clone().into()),
+                                details: Some(status.into())
+                            },
+                            "element_not_found" => MomentoError {
+                                message: "An item with the specified key does not exist.  To resolve this error, make sure you have created the item before attempting to use it".into(),
+                                error_code: MomentoErrorCode::ItemNotFoundError,
+                                inner_error: Some(status.clone().into()),
+                                details: Some(status.into())
+                            },
+                            unknown_err => MomentoError {
+                                message: format!("Unknown error has occurred, unsupported error type for NotFound: {:?}", unknown_err),
+                                error_code: MomentoErrorCode::UnknownError,
+                                inner_error: Some(status.clone().into()),
+                                details: Some(status.into())
+                            }
+                        }
+                    }
+                    Err(e) => MomentoError {
+                        message: "Unknown error has occurred, unable to convert the error metadata into a string".into(),
+                        error_code: MomentoErrorCode::UnknownError,
+                        inner_error: Some(e.into()),
+                        details: Some(status.into())
+                    }
+                }
+            }
         },
         tonic::Code::AlreadyExists => MomentoError {
             message: "A cache with the specified name already exists.  To resolve this error, either delete the existing cache and make a new one, or use a different name".into(),

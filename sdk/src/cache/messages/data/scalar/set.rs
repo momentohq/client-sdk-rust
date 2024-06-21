@@ -35,7 +35,7 @@ use std::time::Duration;
 ///
 /// match cache_client.send_request(set_request).await {
 ///     Ok(_) => println!("SetResponse successful"),
-///     Err(e) => if let MomentoErrorCode::NotFoundError = e.error_code {
+///     Err(e) => if let MomentoErrorCode::CacheNotFoundError = e.error_code {
 ///         println!("Cache not found: {}", &cache_name);
 ///     } else {
 ///         eprintln!("Error setting value in cache {}: {}", &cache_name, e);

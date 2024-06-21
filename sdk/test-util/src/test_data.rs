@@ -22,6 +22,10 @@ pub fn unique_topic_name() -> String {
     unique_string("topic")
 }
 
+pub fn unique_store_name() -> String {
+    unique_string("rust-sdk")
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct TestScalar {
     pub key: String,

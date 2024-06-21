@@ -62,7 +62,7 @@ mod dictionary_fetch {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 }
@@ -120,7 +120,7 @@ mod dictionary_get_field {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 }
@@ -184,7 +184,7 @@ mod dictionary_get_fields {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 }
@@ -244,7 +244,7 @@ mod dictionary_increment {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 }
@@ -304,7 +304,7 @@ mod dictionary_remove_field {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 }
@@ -363,7 +363,7 @@ mod dictionary_remove_fields {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 }
@@ -412,7 +412,7 @@ mod dictionary_set_field {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 }
@@ -464,7 +464,7 @@ mod dictionary_set_fields {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 }
@@ -539,7 +539,7 @@ mod dictionary_length {
             .await
             .unwrap_err();
 
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 }

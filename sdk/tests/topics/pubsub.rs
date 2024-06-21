@@ -18,7 +18,7 @@ mod publish_and_subscribe {
             .publish(&cache_name, "topic", "value")
             .await
             .unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
 
         // We know that subscribing to a nonexistent cache is going to produce a NotFoundError,
         // but because Subscription can't implement the Debug macro, we can't use the safe version,
@@ -29,7 +29,7 @@ mod publish_and_subscribe {
                 .await
                 .unwrap_err_unchecked()
         };
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
 
         Ok(())
     }

@@ -112,7 +112,7 @@ mod get_set_delete {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = unique_cache_name();
         let result = client.delete(cache_name, "key").await.unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 
@@ -169,7 +169,7 @@ mod increment {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = unique_cache_name();
         let result = client.increment(cache_name, "key", 1).await.unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 
@@ -237,7 +237,7 @@ mod set_if_absent {
             .set_if_absent(cache_name, "key", "value")
             .await
             .unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 
@@ -324,7 +324,7 @@ mod set_if_present {
             .set_if_present(cache_name, "key", "value")
             .await
             .unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 
@@ -415,7 +415,7 @@ mod set_if_equal {
             .set_if_equal(cache_name, "key", "value", "equal")
             .await
             .unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 
@@ -515,7 +515,7 @@ mod set_if_not_equal {
             .set_if_not_equal(cache_name, "key", "value", "not-equal")
             .await
             .unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 
@@ -615,7 +615,7 @@ mod set_if_present_and_not_equal {
             .set_if_present_and_not_equal(cache_name, "key", "value", "not-equal")
             .await
             .unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 
@@ -716,7 +716,7 @@ mod set_if_absent_or_equal {
             .set_if_absent_or_equal(cache_name, "key", "value", "equal")
             .await
             .unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::NotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }
 
