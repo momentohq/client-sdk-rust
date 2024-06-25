@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.41.1](https://github.com/momentohq/client-sdk-rust/compare/v0.41.0...v0.41.1) (2024-06-25)
+
+
+### Bug Fixes
+
+* export StorageValue and align the exports with the cache client. ([#370](https://github.com/momentohq/client-sdk-rust/issues/370)) ([e75608f](https://github.com/momentohq/client-sdk-rust/commit/e75608f919892fb24a7cbadd822748f91300e5cb))
+
 ## [0.41.0](https://github.com/momentohq/client-sdk-rust/compare/v0.40.0...v0.41.0) (2024-06-21)
 
 
