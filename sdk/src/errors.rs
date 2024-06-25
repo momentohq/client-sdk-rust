@@ -219,7 +219,7 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
                                 inner_error: Some(status.clone().into()),
                                 details: Some(status.into())
                             },
-                            "element_not_found" => MomentoError {
+                            "item_not_found" => MomentoError {
                                 message: "An item with the specified key does not exist.  To resolve this error, make sure you have created the item before attempting to use it".into(),
                                 error_code: MomentoErrorCode::ItemNotFoundError,
                                 inner_error: Some(status.clone().into()),

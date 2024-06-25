@@ -1,126 +1,131 @@
 use std::convert::{TryFrom, TryInto};
 
-use momento_protos::store;
 use momento_protos::store::store_value::Value;
+use momento_protos::store::StoreValue;
 
 use crate::{MomentoError, MomentoErrorCode};
 
+/// An enum representing an item in a Momento store.
 #[derive(Debug, Clone, PartialEq)]
-pub enum StoreValue {
+pub enum StorageValue {
+    /// A storage value containing a byte array.
     Bytes(Vec<u8>),
+    /// A storage value containing a string.
     String(String),
+    /// A storage value containing a 64-bit integer.
     Integer(i64),
+    /// A storage value containing a double.
     Double(f64),
 }
 
-impl From<Vec<u8>> for StoreValue {
+impl From<Vec<u8>> for StorageValue {
     fn from(bytes: Vec<u8>) -> Self {
-        StoreValue::Bytes(bytes)
+        StorageValue::Bytes(bytes)
     }
 }
 
-impl From<&[u8]> for StoreValue {
+impl From<&[u8]> for StorageValue {
     fn from(bytes: &[u8]) -> Self {
-        StoreValue::Bytes(bytes.to_vec())
+        StorageValue::Bytes(bytes.to_vec())
     }
 }
 
-impl From<String> for StoreValue {
+impl From<String> for StorageValue {
     fn from(string: String) -> Self {
-        StoreValue::String(string)
+        StorageValue::String(string)
     }
 }
 
-impl From<&str> for StoreValue {
+impl From<&str> for StorageValue {
     fn from(string: &str) -> Self {
-        StoreValue::String(string.to_string())
+        StorageValue::String(string.to_string())
     }
 }
 
-impl From<&String> for StoreValue {
+impl From<&String> for StorageValue {
     fn from(string: &String) -> Self {
-        StoreValue::String(string.clone())
+        StorageValue::String(string.clone())
     }
 }
 
-impl From<i64> for StoreValue {
+impl From<i64> for StorageValue {
     fn from(integer: i64) -> Self {
-        StoreValue::Integer(integer)
+        StorageValue::Integer(integer)
     }
 }
 
-impl From<&i64> for StoreValue {
+impl From<&i64> for StorageValue {
     fn from(integer: &i64) -> Self {
-        StoreValue::Integer(*integer)
+        StorageValue::Integer(*integer)
     }
 }
 
-impl From<i32> for StoreValue {
+impl From<i32> for StorageValue {
     fn from(integer: i32) -> Self {
-        StoreValue::Integer(integer as i64)
+        StorageValue::Integer(integer as i64)
     }
 }
 
-impl From<&i32> for StoreValue {
+impl From<&i32> for StorageValue {
     fn from(integer: &i32) -> Self {
-        StoreValue::Integer(*integer as i64)
+        StorageValue::Integer(*integer as i64)
     }
 }
 
-impl From<f64> for StoreValue {
+impl From<f64> for StorageValue {
     fn from(double: f64) -> Self {
-        StoreValue::Double(double)
+        StorageValue::Double(double)
     }
 }
 
-impl From<&f64> for StoreValue {
+impl From<&f64> for StorageValue {
     fn from(double: &f64) -> Self {
-        StoreValue::Double(*double)
+        StorageValue::Double(*double)
     }
 }
 
-impl From<Value> for StoreValue {
+impl From<Value> for StorageValue {
     fn from(value: Value) -> Self {
         match value {
-            Value::BytesValue(bytes) => StoreValue::Bytes(bytes),
-            Value::StringValue(string) => StoreValue::String(string),
-            Value::IntegerValue(integer) => StoreValue::Integer(integer),
-            Value::DoubleValue(double) => StoreValue::Double(double),
+            Value::BytesValue(bytes) => StorageValue::Bytes(bytes),
+            Value::StringValue(string) => StorageValue::String(string),
+            Value::IntegerValue(integer) => StorageValue::Integer(integer),
+            Value::DoubleValue(double) => StorageValue::Double(double),
         }
     }
 }
 
-impl From<StoreValue> for store::StoreValue {
-    fn from(value: StoreValue) -> store::StoreValue {
+impl From<StorageValue> for StoreValue {
+    fn from(value: StorageValue) -> StoreValue {
         match value {
-            StoreValue::Bytes(bytes) => store::StoreValue {
+            StorageValue::Bytes(bytes) => StoreValue {
                 value: Some(Value::BytesValue(bytes)),
             },
-            StoreValue::String(string) => store::StoreValue {
+            StorageValue::String(string) => StoreValue {
                 value: Some(Value::StringValue(string)),
             },
-            StoreValue::Integer(integer) => store::StoreValue {
+            StorageValue::Integer(integer) => StoreValue {
                 value: Some(Value::IntegerValue(integer)),
             },
-            StoreValue::Double(double) => store::StoreValue {
+            StorageValue::Double(double) => StoreValue {
                 value: Some(Value::DoubleValue(double)),
             },
         }
     }
 }
 
-impl std::fmt::Display for StoreValue {
+impl std::fmt::Display for StorageValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
     }
 }
 
-impl TryFrom<StoreValue> for Vec<u8> {
+impl TryFrom<StorageValue> for Vec<u8> {
     type Error = MomentoError;
 
-    fn try_from(value: StoreValue) -> Result<Self, Self::Error> {
+    fn try_from(value: StorageValue) -> Result<Self, Self::Error> {
         match value {
-            StoreValue::Bytes(s) => Ok(s),
+            StorageValue::Bytes(s) => Ok(s),
             _ => Err(MomentoError {
                 message: "item is not a byte array".to_string(),
                 error_code: MomentoErrorCode::TypeError,
@@ -131,12 +136,12 @@ impl TryFrom<StoreValue> for Vec<u8> {
     }
 }
 
-impl TryFrom<StoreValue> for String {
+impl TryFrom<StorageValue> for String {
     type Error = MomentoError;
 
-    fn try_from(value: StoreValue) -> Result<Self, Self::Error> {
+    fn try_from(value: StorageValue) -> Result<Self, Self::Error> {
         match value {
-            StoreValue::String(s) => Ok(s),
+            StorageValue::String(s) => Ok(s),
             _ => Err(MomentoError {
                 message: "item is not a utf-8 string".to_string(),
                 error_code: MomentoErrorCode::TypeError,
@@ -147,12 +152,12 @@ impl TryFrom<StoreValue> for String {
     }
 }
 
-impl TryFrom<StoreValue> for i64 {
+impl TryFrom<StorageValue> for i64 {
     type Error = MomentoError;
 
-    fn try_from(value: StoreValue) -> Result<Self, Self::Error> {
+    fn try_from(value: StorageValue) -> Result<Self, Self::Error> {
         match value {
-            StoreValue::Integer(s) => Ok(s),
+            StorageValue::Integer(s) => Ok(s),
             _ => Err(MomentoError {
                 message: "item is not an i64".to_string(),
                 error_code: MomentoErrorCode::TypeError,
@@ -163,12 +168,12 @@ impl TryFrom<StoreValue> for i64 {
     }
 }
 
-impl TryFrom<StoreValue> for i32 {
+impl TryFrom<StorageValue> for i32 {
     type Error = MomentoError;
 
-    fn try_from(value: StoreValue) -> Result<Self, Self::Error> {
+    fn try_from(value: StorageValue) -> Result<Self, Self::Error> {
         match value {
-            StoreValue::Integer(s) => match s.try_into() {
+            StorageValue::Integer(s) => match s.try_into() {
                 Ok(converted) => Ok(converted),
                 Err(_) => Err(MomentoError {
                     message: "item is out of range for i32".to_string(),
@@ -187,12 +192,12 @@ impl TryFrom<StoreValue> for i32 {
     }
 }
 
-impl TryFrom<StoreValue> for f64 {
+impl TryFrom<StorageValue> for f64 {
     type Error = MomentoError;
 
-    fn try_from(value: StoreValue) -> Result<Self, Self::Error> {
+    fn try_from(value: StorageValue) -> Result<Self, Self::Error> {
         match value {
-            StoreValue::Double(s) => Ok(s),
+            StorageValue::Double(s) => Ok(s),
             _ => Err(MomentoError {
                 message: "item is not an f64".to_string(),
                 error_code: MomentoErrorCode::TypeError,
@@ -203,12 +208,12 @@ impl TryFrom<StoreValue> for f64 {
     }
 }
 
-impl TryFrom<StoreValue> for f32 {
+impl TryFrom<StorageValue> for f32 {
     type Error = MomentoError;
 
-    fn try_from(value: StoreValue) -> Result<Self, Self::Error> {
+    fn try_from(value: StorageValue) -> Result<Self, Self::Error> {
         match value {
-            StoreValue::Double(s) => {
+            StorageValue::Double(s) => {
                 let converted: f32 = s as f32;
                 if converted.is_infinite() && s.is_finite() {
                     Err(MomentoError {

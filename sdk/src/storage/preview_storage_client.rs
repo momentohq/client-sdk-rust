@@ -4,16 +4,14 @@ use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
 
 use crate::grpc::header_interceptor::HeaderInterceptor;
-use crate::storage::messages::control::create_store::{CreateStoreRequest, CreateStoreResponse};
-use crate::storage::messages::control::delete_store::{DeleteStoreRequest, DeleteStoreResponse};
-use crate::storage::messages::control::list_stores::{ListStoresRequest, ListStoresResponse};
-use crate::storage::messages::data::get::{GetRequest, GetResponse};
-use crate::storage::messages::momento_store_request::MomentoStorageRequest;
-use crate::storage::messages::store_value::StoreValue;
 use crate::storage::preview_storage_client_builder::{
     NeedsConfiguration, PreviewStorageClientBuilder,
 };
-use crate::storage::{Configuration, DeleteRequest, DeleteResponse, PutRequest, PutResponse};
+use crate::storage::{
+    Configuration, CreateStoreRequest, CreateStoreResponse, DeleteRequest, DeleteResponse,
+    DeleteStoreRequest, DeleteStoreResponse, GetRequest, GetResponse, ListStoresRequest,
+    ListStoresResponse, MomentoStorageRequest, PutRequest, PutResponse, StorageValue,
+};
 use crate::MomentoResult;
 
 /// Preview client to work with Momento Storage.
@@ -212,7 +210,7 @@ impl PreviewStorageClient {
         &self,
         store_name: impl Into<String>,
         key: impl Into<String>,
-        value: impl Into<StoreValue>,
+        value: impl Into<StorageValue>,
     ) -> MomentoResult<PutResponse> {
         let request = PutRequest::new(store_name, key, value);
         request.send(self).await

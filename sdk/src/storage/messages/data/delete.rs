@@ -1,4 +1,4 @@
-use crate::storage::messages::momento_store_request::MomentoStorageRequest;
+use crate::storage::messages::momento_storage_request::MomentoStorageRequest;
 use crate::storage::PreviewStorageClient;
 use crate::utils::prep_storage_request_with_timeout;
 use crate::MomentoResult;
