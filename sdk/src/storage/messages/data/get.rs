@@ -1,5 +1,5 @@
-use crate::storage::messages::momento_store_request::MomentoStorageRequest;
-use crate::storage::messages::store_value::StoreValue;
+use crate::storage::messages::momento_storage_request::MomentoStorageRequest;
+use crate::storage::messages::storage_value::StorageValue;
 use crate::storage::PreviewStorageClient;
 use crate::{utils, MomentoErrorCode};
 use crate::{MomentoError, MomentoResult};
@@ -123,7 +123,7 @@ impl MomentoStorageRequest for GetRequest {
 #[derive(Debug, PartialEq, Clone)]
 pub struct GetResponse {
     /// The value of the item.
-    pub value: Option<StoreValue>,
+    pub value: Option<StorageValue>,
 }
 
 fn not_found_error() -> MomentoError {
@@ -135,7 +135,7 @@ fn not_found_error() -> MomentoError {
     }
 }
 
-impl<I: Into<StoreValue>> From<I> for GetResponse {
+impl<I: Into<StorageValue>> From<I> for GetResponse {
     fn from(value: I) -> Self {
         GetResponse {
             value: Some(value.into()),

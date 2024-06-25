@@ -2,7 +2,7 @@ use momento_protos::control_client;
 use tonic::Request;
 
 use crate::status_to_error;
-use crate::storage::messages::momento_store_request::MomentoStorageRequest;
+use crate::storage::messages::momento_storage_request::MomentoStorageRequest;
 use crate::storage::PreviewStorageClient;
 use crate::{utils, MomentoResult};
 

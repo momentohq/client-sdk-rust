@@ -1,5 +1,5 @@
-use crate::storage::messages::momento_store_request::MomentoStorageRequest;
-use crate::storage::messages::store_value::StoreValue;
+use crate::storage::messages::momento_storage_request::MomentoStorageRequest;
+use crate::storage::messages::storage_value::StorageValue;
 use crate::storage::PreviewStorageClient;
 use crate::utils::prep_storage_request_with_timeout;
 use crate::MomentoResult;
@@ -45,7 +45,7 @@ use crate::MomentoResult;
 pub struct PutRequest {
     store_name: String,
     key: String,
-    value: StoreValue,
+    value: StorageValue,
 }
 
 impl PutRequest {
@@ -53,7 +53,7 @@ impl PutRequest {
     pub fn new(
         store_name: impl Into<String>,
         key: impl Into<String>,
-        value: impl Into<StoreValue>,
+        value: impl Into<StorageValue>,
     ) -> Self {
         Self {
             store_name: store_name.into(),
