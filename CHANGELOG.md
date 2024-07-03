@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.41.1](https://github.com/momentohq/client-sdk-rust/compare/v0.41.0...v0.41.1) (2024-07-03)
+
+
+### Bug Fixes
+
+* export StorageValue and align the exports with the cache client. ([#370](https://github.com/momentohq/client-sdk-rust/issues/370)) ([e75608f](https://github.com/momentohq/client-sdk-rust/commit/e75608f919892fb24a7cbadd822748f91300e5cb))
+
+
+### Miscellaneous
+
+* **deps:** bump momento from 0.39.7 to 0.41.0 in /example/rust ([#369](https://github.com/momentohq/client-sdk-rust/issues/369)) ([08f7828](https://github.com/momentohq/client-sdk-rust/commit/08f78285ce947f6a6fc2bd5bf8072a2d5573b778))
+* fix failing test for StoreNotFound ([#374](https://github.com/momentohq/client-sdk-rust/issues/374)) ([e5990de](https://github.com/momentohq/client-sdk-rust/commit/e5990deea83c05ce39e09c820a6b258f433489b7))
+
 ## [0.41.0](https://github.com/momentohq/client-sdk-rust/compare/v0.40.0...v0.41.0) (2024-06-21)
 
 
