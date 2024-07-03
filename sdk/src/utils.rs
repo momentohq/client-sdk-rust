@@ -170,7 +170,7 @@ pub(crate) fn connect_channel_lazily_configurable(
 }
 
 pub(crate) fn user_agent(user_agent_name: &str) -> String {
-    format!("rust-{user_agent_name}:{VERSION}")
+    format!("rust:{user_agent_name}:{VERSION}")
 }
 
 pub(crate) fn parse_string(raw: Vec<u8>) -> MomentoResult<String> {
@@ -352,8 +352,8 @@ mod tests {
 
     #[test]
     fn test_user_agent() {
-        let user_agent_name = "my_app";
-        let expected_user_agent = format!("rust-{user_agent_name}:{VERSION}");
+        let user_agent_name = "cache";
+        let expected_user_agent = format!("rust:{user_agent_name}:{VERSION}");
         let result = user_agent(user_agent_name);
         assert_eq!(result, expected_user_agent);
     }

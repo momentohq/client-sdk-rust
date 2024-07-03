@@ -59,7 +59,7 @@ impl CacheClientBuilder<NeedsCredentialProvider> {
 
 impl CacheClientBuilder<ReadyToBuild> {
     pub fn build(self) -> MomentoResult<CacheClient> {
-        let agent_value = &utils::user_agent("sdk");
+        let agent_value = &utils::user_agent("cache");
 
         let data_channel = utils::connect_channel_lazily_configurable(
             &self.0.credential_provider.cache_endpoint,

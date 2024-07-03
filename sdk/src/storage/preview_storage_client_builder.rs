@@ -44,7 +44,7 @@ impl PreviewStorageClientBuilder<NeedsCredentialProvider> {
 
 impl PreviewStorageClientBuilder<ReadyToBuild> {
     pub fn build(self) -> MomentoResult<PreviewStorageClient> {
-        let agent_value = &utils::user_agent("sdk");
+        let agent_value = &utils::user_agent("store");
 
         let data_channel = utils::connect_channel_lazily_configurable(
             &self.0.credential_provider.storage_endpoint,
