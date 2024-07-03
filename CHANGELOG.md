@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.41.2](https://github.com/momentohq/client-sdk-rust/compare/v0.41.1...v0.41.2) (2024-07-03)
+
+
+### Miscellaneous
+
+* adjust agent header value per spec ([#375](https://github.com/momentohq/client-sdk-rust/issues/375)) ([610ddf9](https://github.com/momentohq/client-sdk-rust/commit/610ddf9287dd825b4d716a2bcc2a1508a5d2f176))
+
 ## [0.41.1](https://github.com/momentohq/client-sdk-rust/compare/v0.41.0...v0.41.1) (2024-07-03)
 
 
