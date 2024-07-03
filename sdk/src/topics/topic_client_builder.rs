@@ -46,7 +46,7 @@ impl TopicClientBuilder<NeedsCredentialProvider> {
 
 impl TopicClientBuilder<ReadyToBuild> {
     pub fn build(self) -> MomentoResult<TopicClient> {
-        let agent_value = &utils::user_agent("sdk");
+        let agent_value = &utils::user_agent("topic");
         let channel = connect_channel_lazily(&self.0.credential_provider.cache_endpoint)?;
         let authorized_channel = InterceptedService::new(
             channel,
