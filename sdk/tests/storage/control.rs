@@ -12,7 +12,7 @@ mod create_delete_list_store {
         let client = &CACHE_TEST_STATE.storage_client;
         let store_name = unique_store_name();
         let result = client.delete_store(store_name).await.unwrap_err();
-        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
+        assert_eq!(result.error_code, MomentoErrorCode::StoreNotFoundError);
         Ok(())
     }
 
