@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.41.3](https://github.com/momentohq/client-sdk-rust/compare/v0.41.2...v0.41.3) (2024-07-05)
+
+
+### Bug Fixes
+
+* storage get response should use Found and NotFound cases ([#376](https://github.com/momentohq/client-sdk-rust/issues/376)) ([8f3344f](https://github.com/momentohq/client-sdk-rust/commit/8f3344f78fc907c6c93cd5a15f616eca513f151e))
+
 ## [0.41.2](https://github.com/momentohq/client-sdk-rust/compare/v0.41.1...v0.41.2) (2024-07-03)
 
 
