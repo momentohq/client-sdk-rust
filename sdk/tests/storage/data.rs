@@ -16,8 +16,8 @@ mod get_set_delete {
         let result = client.get(store_name, item.key()).await?;
         assert_eq!(
             result,
-            GetResponse { value: None },
-            "Expected empty GetResponse for key '{}' in store {}, got {:?}",
+            GetResponse::NotFound {},
+            "Expected NotFound for key '{}' in store {}, got {:?}",
             item.key(),
             store_name,
             result
@@ -59,8 +59,8 @@ mod get_set_delete {
         let result = client.get(store_name, &key).await?;
         assert_eq!(
             result,
-            GetResponse { value: None },
-            "Expected empty GetResponse for key '{}' in store {}, got {:?}",
+            GetResponse::NotFound {},
+            "Expected NotFound for key '{}' in store {}, got {:?}",
             key,
             store_name,
             result
@@ -137,8 +137,8 @@ mod get_set_delete {
         let result = client.get(store_name, item.key()).await?;
         assert_eq!(
             result,
-            GetResponse { value: None },
-            "Expected empty GetResponse for key '{}' in store {}, got {:?}",
+            GetResponse::NotFound {},
+            "Expected NotFound for key '{}' in store {}, got {:?}",
             item.key(),
             store_name,
             result

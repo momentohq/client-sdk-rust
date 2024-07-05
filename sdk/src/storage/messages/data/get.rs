@@ -67,15 +67,15 @@ impl MomentoStorageRequest for GetRequest {
                 None => Err(MomentoError::unknown_error("StoreGet", None)),
                 Some(store_value) => match store_value.value {
                     None => Err(MomentoError::unknown_error("StoreGet", None)),
-                    Some(value) => Ok(GetResponse {
-                        value: Some(value.into()),
+                    Some(value) => Ok(GetResponse::Found {
+                        value: value.into(),
                     }),
                 },
             },
             Err(status) => {
                 let e: MomentoError = status.into();
                 match e.error_code {
-                    MomentoErrorCode::ItemNotFoundError => Ok(GetResponse { value: None }),
+                    MomentoErrorCode::ItemNotFoundError => Ok(GetResponse::NotFound {}),
                     _ => Err(e),
                 }
             }
@@ -120,10 +120,16 @@ impl MomentoStorageRequest for GetRequest {
 /// use std::convert::TryInto;
 /// let item: MomentoResult<f64> = get_response.try_into();
 /// ```
-#[derive(Debug, PartialEq, Clone)]
-pub struct GetResponse {
-    /// The value of the item.
-    pub value: Option<StorageValue>,
+/// The response type for a successful create store request
+#[derive(Debug, PartialEq)]
+pub enum GetResponse {
+    /// The item was in the store.
+    Found {
+        /// The value of the item.
+        value: StorageValue,
+    },
+    /// The item was not in the store.
+    NotFound,
 }
 
 fn not_found_error() -> MomentoError {
@@ -137,8 +143,8 @@ fn not_found_error() -> MomentoError {
 
 impl<I: Into<StorageValue>> From<I> for GetResponse {
     fn from(value: I) -> Self {
-        GetResponse {
-            value: Some(value.into()),
+        GetResponse::Found {
+            value: value.into(),
         }
     }
 }
@@ -147,9 +153,9 @@ impl TryFrom<GetResponse> for Option<Vec<u8>> {
     type Error = MomentoError;
 
     fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
-        match response.value {
-            None => Ok(None),
-            Some(v) => v.try_into().map(Some),
+        match response {
+            GetResponse::Found { value } => Ok(Some(value.try_into()?)),
+            GetResponse::NotFound => Ok(None),
         }
     }
 }
@@ -158,9 +164,9 @@ impl TryFrom<GetResponse> for Vec<u8> {
     type Error = MomentoError;
 
     fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
-        match response.value {
-            None => Err(not_found_error()),
-            Some(v) => v.try_into(),
+        match response {
+            GetResponse::Found { value } => value.try_into(),
+            GetResponse::NotFound => Err(not_found_error()),
         }
     }
 }
@@ -169,9 +175,9 @@ impl TryFrom<GetResponse> for Option<String> {
     type Error = MomentoError;
 
     fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
-        match response.value {
-            None => Ok(None),
-            Some(v) => v.try_into().map(Some),
+        match response {
+            GetResponse::Found { value } => Ok(Some(value.try_into()?)),
+            GetResponse::NotFound => Ok(None),
         }
     }
 }
@@ -180,9 +186,9 @@ impl TryFrom<GetResponse> for String {
     type Error = MomentoError;
 
     fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
-        match response.value {
-            None => Err(not_found_error()),
-            Some(v) => v.try_into(),
+        match response {
+            GetResponse::Found { value } => value.try_into(),
+            GetResponse::NotFound => Err(not_found_error()),
         }
     }
 }
@@ -191,9 +197,9 @@ impl TryFrom<GetResponse> for Option<i64> {
     type Error = MomentoError;
 
     fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
-        match response.value {
-            None => Ok(None),
-            Some(v) => v.try_into().map(Some),
+        match response {
+            GetResponse::Found { value } => Ok(Some(value.try_into()?)),
+            GetResponse::NotFound => Ok(None),
         }
     }
 }
@@ -202,9 +208,9 @@ impl TryFrom<GetResponse> for i64 {
     type Error = MomentoError;
 
     fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
-        match response.value {
-            None => Err(not_found_error()),
-            Some(v) => v.try_into(),
+        match response {
+            GetResponse::Found { value } => value.try_into(),
+            GetResponse::NotFound => Err(not_found_error()),
         }
     }
 }
@@ -213,9 +219,9 @@ impl TryFrom<GetResponse> for Option<f64> {
     type Error = MomentoError;
 
     fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
-        match response.value {
-            None => Ok(None),
-            Some(v) => v.try_into().map(Some),
+        match response {
+            GetResponse::Found { value } => Ok(Some(value.try_into()?)),
+            GetResponse::NotFound => Ok(None),
         }
     }
 }
@@ -224,9 +230,9 @@ impl TryFrom<GetResponse> for f64 {
     type Error = MomentoError;
 
     fn try_from(response: GetResponse) -> Result<Self, Self::Error> {
-        match response.value {
-            None => Err(not_found_error()),
-            Some(v) => v.try_into(),
+        match response {
+            GetResponse::Found { value } => value.try_into(),
+            GetResponse::NotFound => Err(not_found_error()),
         }
     }
 }
