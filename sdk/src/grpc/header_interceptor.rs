@@ -49,6 +49,12 @@ impl tonic::service::Interceptor for HeaderInterceptor {
                 tonic::metadata::AsciiMetadataKey::from_static("agent"),
                 sdk_agent,
             );
+            // Because the `runtime-version` header makes more sense for interpreted languages,
+            // we send this sentinel value to ensure we report *some* value for this sdk.
+            request.metadata_mut().insert(
+                tonic::metadata::AsciiMetadataKey::from_static("runtime-version"),
+                "rust".parse().unwrap(),
+            );
             ARE_ONLY_ONCE_HEADER_SENT.store(true, Ordering::Relaxed);
         }
 
