@@ -15,6 +15,18 @@ impl HeaderInterceptor {
             sdk_agent: sdk_agent.to_string(),
         }
     }
+
+    /// Insert a header into the request.
+    fn insert_header(
+        &self,
+        request: &mut tonic::Request<()>,
+        name: &str,
+        value: &str,
+    ) -> Result<(), tonic::Status> {
+        let (header_name, header_value) = create_header_from_string(name, value)?;
+        request.metadata_mut().insert(header_name, header_value);
+        Ok(())
+    }
 }
 
 impl tonic::service::Interceptor for HeaderInterceptor {
@@ -24,26 +36,14 @@ impl tonic::service::Interceptor for HeaderInterceptor {
     ) -> Result<tonic::Request<()>, tonic::Status> {
         static ARE_ONLY_ONCE_HEADER_SENT: AtomicBool = AtomicBool::new(false);
 
-        let (auth_header_name, auth_header_value) =
-            create_header_from_string("authorization", &self.auth_token)?;
-        request
-            .metadata_mut()
-            .insert(auth_header_name, auth_header_value);
+        self.insert_header(&mut request, "authorization", &self.auth_token)?;
 
         if !ARE_ONLY_ONCE_HEADER_SENT.load(Ordering::Relaxed) {
-            let (agent_header_name, agent_header_value) =
-                create_header_from_string("agent", &self.sdk_agent)?;
-            request
-                .metadata_mut()
-                .insert(agent_header_name, agent_header_value);
+            self.insert_header(&mut request, "agent", &self.sdk_agent)?;
 
             // Because the `runtime-version` header makes more sense for interpreted languages,
             // we send this sentinel value to ensure we report *some* value for this sdk.
-            let (runtime_version_header_name, runtime_version_header_value) =
-                create_header_from_string("runtime-version", "rust")?;
-            request
-                .metadata_mut()
-                .insert(runtime_version_header_name, runtime_version_header_value);
+            self.insert_header(&mut request, "runtime-version", "rust")?;
             ARE_ONLY_ONCE_HEADER_SENT.store(true, Ordering::Relaxed);
         }
 
