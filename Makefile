@@ -75,7 +75,14 @@ build-examples:
 .PHONY: run-examples
 ## Run example code
 run-examples:
-	cd example/rust && make lint && cargo run --bin=readme && cargo run --bin=cache && cargo run --bin=topics && cargo run --bin=docs_examples && cargo run --bin=cheat_sheet_client_instantiation
+	cd example/rust \
+	&& make lint \
+	&& cargo run --bin=readme \
+	&& cargo run --bin=cache \
+	&& cargo run --bin=topics \
+	&& cargo run --bin=storage \
+	&& cargo run --bin=docs_examples \
+	&& cargo run --bin=cheat_sheet_client_instantiation
 
 # See <https://gist.github.com/klmr/575726c7e05d8780505a> for explanation.
 .PHONY: help
