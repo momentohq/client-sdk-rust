@@ -1,11 +1,13 @@
 use std::convert::TryFrom;
 use std::str::FromStr;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct HeaderInterceptor {
     auth_token: String,
     sdk_agent: String,
+    are_only_once_header_sent: Arc<AtomicBool>,
 }
 
 impl HeaderInterceptor {
@@ -13,6 +15,7 @@ impl HeaderInterceptor {
         HeaderInterceptor {
             auth_token: authorization.to_string(),
             sdk_agent: sdk_agent.to_string(),
+            are_only_once_header_sent: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -34,17 +37,16 @@ impl tonic::service::Interceptor for HeaderInterceptor {
         &mut self,
         mut request: tonic::Request<()>,
     ) -> Result<tonic::Request<()>, tonic::Status> {
-        static ARE_ONLY_ONCE_HEADER_SENT: AtomicBool = AtomicBool::new(false);
-
         self.insert_header(&mut request, "authorization", &self.auth_token)?;
 
-        if !ARE_ONLY_ONCE_HEADER_SENT.load(Ordering::Relaxed) {
+        if !self.are_only_once_header_sent.load(Ordering::Relaxed) {
             self.insert_header(&mut request, "agent", &self.sdk_agent)?;
 
             // Because the `runtime-version` header makes more sense for interpreted languages,
             // we send this sentinel value to ensure we report *some* value for this sdk.
             self.insert_header(&mut request, "runtime-version", "rust")?;
-            ARE_ONLY_ONCE_HEADER_SENT.store(true, Ordering::Relaxed);
+            self.are_only_once_header_sent
+                .store(true, Ordering::Relaxed);
         }
 
         Ok(request)
