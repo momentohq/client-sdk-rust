@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.42.0](https://github.com/momentohq/client-sdk-rust/compare/v0.41.3...v0.42.0) (2024-07-12)
+
+
+### Features
+
+* add example for preview storage client ([#368](https://github.com/momentohq/client-sdk-rust/issues/368)) ([61ad15e](https://github.com/momentohq/client-sdk-rust/commit/61ad15e89d139ed25af53b42a16234f2b6a4435d))
+
+
+### Bug Fixes
+
+* interceptor should send only once per client ([#384](https://github.com/momentohq/client-sdk-rust/issues/384)) ([8ed2e86](https://github.com/momentohq/client-sdk-rust/commit/8ed2e86d060fdf0da7d771a67dfcd3fad5499b2a))
+* publisher_id was missing from received subscription items ([#385](https://github.com/momentohq/client-sdk-rust/issues/385)) ([1fc1804](https://github.com/momentohq/client-sdk-rust/commit/1fc1804538aa1cce669c8ef7b0901a393d9834a2))
+
+
+### Miscellaneous
+
+* add vscode workspace ([#383](https://github.com/momentohq/client-sdk-rust/issues/383)) ([b3d219b](https://github.com/momentohq/client-sdk-rust/commit/b3d219b8e2be74045d6cf93c1440de9cd36ae618))
+* send sentinel value for `runtime-version` header ([#381](https://github.com/momentohq/client-sdk-rust/issues/381)) ([56401d8](https://github.com/momentohq/client-sdk-rust/commit/56401d8676abf9721cb7d579a6eb8b3fdf8baa36))
+* update examples momento dep and update storage example get responses ([#386](https://github.com/momentohq/client-sdk-rust/issues/386)) ([6d3ee17](https://github.com/momentohq/client-sdk-rust/commit/6d3ee1743d86dba55658bddbbb9216548c41f033))
+
 ## [0.41.3](https://github.com/momentohq/client-sdk-rust/compare/v0.41.2...v0.41.3) (2024-07-05)
 
 
