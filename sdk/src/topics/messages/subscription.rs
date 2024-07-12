@@ -146,6 +146,7 @@ impl Subscription {
                                             ValueKind::Binary(binary)
                                         }
                                     },
+                                    publisher_id: item.publisher_id,
                                 }))
                             }
                             // This is kind of a broken protocol situation - but we do have a sequence number
@@ -303,6 +304,8 @@ pub struct SubscriptionValue {
     /// Best-effort sequence number for the topic. This is not transactional, it's just
     /// to help you know when things are probably working well or probably not working well.
     pub topic_sequence_number: u64,
+    /// Authenticated id from Publisher's disposable token
+    pub publisher_id: String,
 }
 
 impl TryFrom<SubscriptionValue> for String {
