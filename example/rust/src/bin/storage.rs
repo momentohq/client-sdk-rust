@@ -1,7 +1,7 @@
 use std::process;
 
 use momento::{
-    storage::{configurations, ListStoresResponse},
+    storage::{configurations, GetResponse, ListStoresResponse},
     CredentialProvider, MomentoError, PreviewStorageClient,
 };
 
@@ -49,14 +49,12 @@ async fn main() -> Result<(), MomentoError> {
 
     // Get the key from store and validate it got persisted
     match storage_client.get(store_name, key).await {
-        Ok(res) => match res.value {
-            Some(val) => {
-                println!("Key {key} found in {store_name} with value {val}");
+        Ok(res) => match res {
+            GetResponse::Found { value } => {
+                let found_value: String = value.try_into()?;
+                println!("Key {key} was found with value {found_value}")
             }
-            None => {
-                eprintln!("Value should have been persisted for key {key} but didn't");
-                process::exit(1);
-            }
+            GetResponse::NotFound => println!("Key {key} not found in {store_name}"),
         },
         Err(err) => {
             eprint!("error while getting key: {err}");
@@ -77,12 +75,14 @@ async fn main() -> Result<(), MomentoError> {
 
     // Get the key from storage and validate it doesn't exist
     match storage_client.get(store_name, key).await {
-        Ok(res) => {
-            if let Some(val) = res.value {
-                eprint!("Key {key} should have been deleted; instead got value as {val}");
+        Ok(res) => match res {
+            GetResponse::NotFound => println!("Key {key} not found in {store_name}"),
+            GetResponse::Found { value } => {
+                let found_value: String = value.try_into()?;
+                eprint!("Key {key} should have been deleted; instead got value as {found_value}");
                 process::exit(1);
             }
-        }
+        },
         Err(err) => {
             eprint!("error while getting key: {err}");
             process::exit(1);
