@@ -704,6 +704,17 @@ pub async fn example_API_Storage_Get(storage_client: &PreviewStorageClient, stor
     match response {
         momento::storage::GetResponse::NotFound => println!("Key not found in {}", store_name),
         momento::storage::GetResponse::Found { value } => {
+            // A Found response indicates the value was found in the store.
+
+            // Use `match` to get the value if you don't know the type beforehand:
+            match value.clone() {
+                momento::storage::StorageValue::String(value) => println!("Got string value {}", value),
+                momento::storage::StorageValue::Bytes(value) => println!("Got bytes value {:?}", value),
+                momento::storage::StorageValue::Integer(value) => println!("Got integer value {}", value),
+                momento::storage::StorageValue::Double(value) => println!("Got double value {}", value),
+            }
+
+            // If you know the type you're expecting, you can `try_into()` it directly:
             let found_value: String = value.try_into()?;
             println!("Got value {}", found_value);
         }
