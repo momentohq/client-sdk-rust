@@ -25,7 +25,7 @@ use momento::cache::{
     SetIfPresentResponse, SetIfPresentAndNotEqualResponse, SortedSetFetchResponse, SortedSetOrder, UpdateTtlResponse,
 };
 use momento::topics::TopicClient;
-use momento::{CacheClient, CredentialProvider, MomentoError};
+use momento::{CacheClient, CredentialProvider, MomentoError, PreviewStorageClient};
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::time::Duration;
@@ -34,6 +34,11 @@ use uuid::Uuid;
 #[allow(non_snake_case)]
 pub fn example_API_CredentialProviderFromString() {
     let _credential_provider = CredentialProvider::from_string("my-api-key".to_string());
+}
+
+#[allow(non_snake_case)]
+pub fn example_API_CredentialProviderFromEnvVar() {
+    let _credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string());
 }
 
 #[allow(non_snake_case)]
@@ -651,9 +656,72 @@ pub async fn example_responsetypes_dictionary_with_try_into(cache_client: &Cache
     Ok(())
 }
 
+#[allow(non_snake_case)]
+pub fn example_API_Storage_InstantiateClient() -> Result<(), MomentoError> {
+    let _storage_client = PreviewStorageClient::builder()
+        .configuration(momento::storage::configurations::Laptop::latest())
+        .credential_provider(CredentialProvider::from_env_var(
+            "MOMENTO_API_KEY".to_string(),
+        )?)
+        .build()?;
+    Ok(())
+}
+
+#[allow(non_snake_case)]
+pub async fn example_API_Storage_CreateStore(storage_client: &PreviewStorageClient, store_name: &String) -> Result<(), MomentoError> {
+    let response = storage_client.create_store(store_name).await?;
+    match response {
+        momento::storage::CreateStoreResponse::Created => println!("Store {} created", store_name),
+        momento::storage::CreateStoreResponse::AlreadyExists => println!("Store {} already exists", store_name),
+    }
+    Ok(())
+}
+
+#[allow(non_snake_case)]
+pub async fn example_API_Storage_ListStores(storage_client: &PreviewStorageClient) -> Result<(), MomentoError> {
+    let response = storage_client.list_stores().await?;
+    println!("Stores: {:#?}", response.stores);
+    Ok(())
+}
+
+#[allow(non_snake_case)]
+pub async fn example_API_Storage_DeleteStore(storage_client: &PreviewStorageClient, store_name: &String) -> Result<(), MomentoError> {
+    storage_client.delete_store(store_name).await?;
+    println!("Store {} deleted", store_name);
+    Ok(())
+}
+
+#[allow(non_snake_case)]
+pub async fn example_API_Storage_Put(storage_client: &PreviewStorageClient, store_name: &String) -> Result<(), MomentoError> {
+    storage_client.put(store_name, "key", "value").await?;
+    println!("Put key and value in store {}", store_name);
+    Ok(())
+}
+
+#[allow(non_snake_case)]
+pub async fn example_API_Storage_Get(storage_client: &PreviewStorageClient, store_name: &String) -> Result<(), MomentoError> {
+    let response = storage_client.get(store_name, "key").await?;
+    match response {
+        momento::storage::GetResponse::NotFound => println!("Key not found in {}", store_name),
+        momento::storage::GetResponse::Found { value } => {
+            let found_value: String = value.try_into()?;
+            println!("Got value {}", found_value);
+        }
+    }
+    Ok(())
+}
+
+#[allow(non_snake_case)]
+pub async fn example_API_Storage_Delete(storage_client: &PreviewStorageClient, store_name: &String) -> Result<(), MomentoError> {
+    storage_client.delete(store_name, "key").await?;
+    println!("Deleted key from store {}", store_name);
+    Ok(())
+}
+
 #[tokio::main]
 pub async fn main() -> Result<(), MomentoError> {
     example_API_CredentialProviderFromString();
+    example_API_CredentialProviderFromEnvVar();
     example_API_ConfigurationLaptop();
     example_API_ConfigurationInRegionDefaultLatest();
     example_API_ConfigurationInRegionLowLatency();
@@ -742,5 +810,25 @@ pub async fn main() -> Result<(), MomentoError> {
     .await;
 
     example_API_DeleteCache(&cache_client, &cache_name).await?;
+
+    example_API_Storage_InstantiateClient()?;
+
+    let storage_client = PreviewStorageClient::builder()
+        .configuration(momento::storage::configurations::Laptop::latest())
+        .credential_provider(CredentialProvider::from_env_var(
+            "MOMENTO_API_KEY".to_string(),
+        )?)
+        .build()?;
+    let store_name = format!("{}-{}", "docs-examples", Uuid::new_v4());
+
+    example_API_Storage_CreateStore(&storage_client, &store_name).await?;
+    example_API_Storage_ListStores(&storage_client).await?;
+
+    example_API_Storage_Put(&storage_client, &store_name).await?;
+    example_API_Storage_Get(&storage_client, &store_name).await?;
+    example_API_Storage_Delete(&storage_client, &store_name).await?;
+
+    example_API_Storage_DeleteStore(&storage_client, &store_name).await?;
+
     Ok(())
 }
