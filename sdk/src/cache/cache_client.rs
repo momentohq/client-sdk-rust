@@ -47,6 +47,9 @@ use crate::cache::messages::data::sorted_set::sorted_set_increment_score::{
 use crate::utils::IntoBytesIterable;
 use crate::{utils, CredentialProvider, IntoBytes, MomentoResult};
 
+type ControlClient =
+    Arc<Mutex<Option<ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>>>>;
+
 /// Client to work with Momento Cache, the serverless caching service.
 ///
 /// # Example
@@ -78,8 +81,7 @@ use crate::{utils, CredentialProvider, IntoBytes, MomentoResult};
 #[derive(Clone, Debug)]
 pub struct CacheClient {
     pub(crate) data_client: ScsClient<InterceptedService<Channel, HeaderInterceptor>>,
-    pub(crate) control_client:
-        Arc<Mutex<Option<ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>>>>,
+    pub(crate) control_client: ControlClient,
     pub(crate) credential_provider: CredentialProvider,
     pub(crate) configuration: Configuration,
     pub(crate) item_default_ttl: Duration,
