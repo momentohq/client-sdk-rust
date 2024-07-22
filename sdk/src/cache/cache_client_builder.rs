@@ -1,11 +1,11 @@
 use crate::cache::Configuration;
 use crate::grpc::header_interceptor::HeaderInterceptor;
 use crate::{utils, CacheClient, CredentialProvider, MomentoResult};
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tonic::codegen::InterceptedService;
 
 use momento_protos::cache_client::scs_client::ScsClient;
-use momento_protos::control_client::scs_control_client::ScsControlClient;
 
 pub struct CacheClientBuilder<State>(pub State);
 
@@ -69,30 +69,18 @@ impl CacheClientBuilder<ReadyToBuild> {
                 .grpc_configuration
                 .clone(),
         )?;
-        let control_channel = utils::connect_channel_lazily_configurable(
-            &self.0.credential_provider.control_endpoint,
-            self.0
-                .configuration
-                .transport_strategy
-                .grpc_configuration
-                .clone(),
-        )?;
 
         let data_interceptor = InterceptedService::new(
             data_channel,
             HeaderInterceptor::new(&self.0.credential_provider.auth_token, agent_value),
         );
-        let control_interceptor = InterceptedService::new(
-            control_channel,
-            HeaderInterceptor::new(&self.0.credential_provider.auth_token, agent_value),
-        );
 
         let data_client = ScsClient::new(data_interceptor);
-        let control_client = ScsControlClient::new(control_interceptor);
 
         Ok(CacheClient {
             data_client,
-            control_client,
+            control_client: Arc::new(Mutex::new(None)),
+            credential_provider: self.0.credential_provider,
             configuration: self.0.configuration,
             item_default_ttl: self.0.default_ttl,
         })
