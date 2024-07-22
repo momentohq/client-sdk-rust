@@ -1,4 +1,5 @@
 use std::convert::TryInto;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use momento_protos::cache_client::scs_client::ScsClient;
@@ -44,7 +45,7 @@ use crate::cache::messages::data::sorted_set::sorted_set_increment_score::{
     SortedSetIncrementScoreRequest, SortedSetIncrementScoreResponse,
 };
 use crate::utils::IntoBytesIterable;
-use crate::{utils, IntoBytes, MomentoResult};
+use crate::{utils, CredentialProvider, IntoBytes, MomentoResult};
 
 /// Client to work with Momento Cache, the serverless caching service.
 ///
@@ -77,7 +78,9 @@ use crate::{utils, IntoBytes, MomentoResult};
 #[derive(Clone, Debug)]
 pub struct CacheClient {
     pub(crate) data_client: ScsClient<InterceptedService<Channel, HeaderInterceptor>>,
-    pub(crate) control_client: ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>,
+    pub(crate) control_client:
+        Arc<Mutex<Option<ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>>>>,
+    pub(crate) credential_provider: CredentialProvider,
     pub(crate) configuration: Configuration,
     pub(crate) item_default_ttl: Duration,
 }
@@ -116,6 +119,47 @@ impl CacheClient {
     /// ```
     pub fn builder() -> CacheClientBuilder<NeedsDefaultTtl> {
         CacheClientBuilder(NeedsDefaultTtl(()))
+    }
+
+    fn create_control_client(
+        &self,
+    ) -> MomentoResult<ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>> {
+        let control_channel = utils::connect_channel_lazily_configurable(
+            &self.credential_provider.control_endpoint,
+            self.configuration
+                .transport_strategy
+                .grpc_configuration
+                .clone(),
+        )?;
+
+        let control_interceptor = InterceptedService::new(
+            control_channel,
+            HeaderInterceptor::new(
+                &self.credential_provider.auth_token,
+                &utils::user_agent("cache"),
+            ),
+        );
+
+        Ok(ScsControlClient::new(control_interceptor))
+    }
+
+    pub(crate) fn get_control_client(
+        &self,
+    ) -> MomentoResult<ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>> {
+        let mut control_client = match self.control_client.lock() {
+            Ok(client) => client,
+            Err(poisoned) => poisoned.into_inner(),
+        };
+
+        let client = match *control_client {
+            Some(ref client) => client.clone(),
+            None => {
+                let client = self.create_control_client()?;
+                *control_client = Some(client.clone());
+                client
+            }
+        };
+        Ok(client)
     }
 
     /* public API */

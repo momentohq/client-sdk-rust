@@ -62,8 +62,7 @@ impl MomentoRequest for FlushCacheRequest {
         });
 
         let _ = cache_client
-            .control_client
-            .clone()
+            .get_control_client()?
             .flush_cache(request)
             .await?;
         Ok(FlushCacheResponse {})

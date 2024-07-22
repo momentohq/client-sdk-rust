@@ -60,8 +60,7 @@ impl MomentoRequest for DeleteCacheRequest {
         });
 
         let _ = cache_client
-            .control_client
-            .clone()
+            .get_control_client()?
             .delete_cache(request)
             .await?;
         Ok(DeleteCacheResponse {})

@@ -54,8 +54,7 @@ impl MomentoRequest for CreateCacheRequest {
         });
 
         let result = cache_client
-            .control_client
-            .clone()
+            .get_control_client()?
             .create_cache(request)
             .await;
         match result {

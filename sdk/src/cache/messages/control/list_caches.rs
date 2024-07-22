@@ -36,8 +36,7 @@ impl MomentoRequest for ListCachesRequest {
         });
 
         let response = cache_client
-            .control_client
-            .clone()
+            .get_control_client()?
             .list_caches(request)
             .await?
             .into_inner();
