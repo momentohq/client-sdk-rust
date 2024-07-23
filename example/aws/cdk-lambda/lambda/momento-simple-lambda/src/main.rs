@@ -1,49 +1,47 @@
-use std::time::Duration;
-use serde_json::Value;
-use lambda_runtime::{run, service_fn, tracing, Error, LambdaEvent};
-use momento::cache::configurations::Lambda;
+use base64::prelude::*;
+use lambda_http::{
+    http::{Response, StatusCode},
+    run, service_fn, Error, IntoResponse, Request,
+};
 use momento::{CacheClient, CredentialProvider};
+use std::time::Duration;
 
-const DEFAULT_TTL: Duration = Duration::from_secs(60);
+async fn function_handler(event: Request) -> Result<impl IntoResponse, Error> {
+    println!("event data payload: {:?}", event);
 
-lazy_static::lazy_static! {
-    static ref CACHE_CLIENT: CacheClient = CacheClient::builder()
-    .default_ttl(DEFAULT_TTL)
-    .configuration(Lambda::latest())
-    .credential_provider(CredentialProvider::from_env_var("MOMENTO_API_KEY")
-        .expect("Unable to construct Momento CredentialProvider using env var MOMENTO_API_KEY"))
-    .build()
-    .expect("Unable to construct Momento CacheClient");
-}
+    let api_key = event.headers().get("authorization").unwrap().to_str()?;
+    println!("got api key: {:?}", api_key);
 
-/// This is the main body for the function.
-/// Write your code inside it.
-/// There are some code example in the following URLs:
-/// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
-/// - https://github.com/aws-samples/serverless-rust-demo/
-async fn function_handler(_event: LambdaEvent<Value>) -> Result<(), Error> {
-    // Extract some useful information from the request
+    let creds = CredentialProvider::from_string(api_key);
+    match creds {
+        Ok(creds) => {
+            println!("creds: {:?}", creds);
+            let momento = CacheClient::builder()
+                .default_ttl(Duration::from_secs(60))
+                .configuration(momento::cache::configurations::Lambda::latest())
+                .credential_provider(creds)
+                .build()?;
 
-    let set_result = CACHE_CLIENT.set("cache", "my-cache-key", "my-cache-value").await;
-    match set_result {
-        Ok(_) => println!("Successfully set cache value for key my-cache-key!"),
-        Err(e) => println!("Uh-oh. Failed to set cache key: {}", e),
+            let list_caches_resp = momento.list_caches().await?;
+            print!("list_caches_resp: {:?}", list_caches_resp);
+        }
+        Err(e) => {
+            println!("Error: {:?}", e);
+        }
     }
 
-    let get_result: String = CACHE_CLIENT.get("cache", "my-cache-key")
-        .await
-        .expect("Failed to get cache value for key my-cache-key")
-        .try_into()
-        .expect("Failed to convert cache value to String");
-    
-    println!("Successfully retrieved cache value for key my-cache-key: {}", get_result);
-    
-    Ok(())
+    let response = Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "application/grpc")
+        .header("grpc-status", 0)
+        .header("grpc-message", "Ok")
+        .body(BASE64_STANDARD.encode("Hello AWS Lambda HTTP request"))
+        .map_err(Box::new)?;
+
+    Ok(response)
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    tracing::init_default_subscriber();
-
     run(service_fn(function_handler)).await
 }
