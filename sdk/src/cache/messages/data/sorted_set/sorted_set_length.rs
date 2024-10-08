@@ -61,8 +61,7 @@ impl<L: IntoBytes> MomentoRequest for SortedSetLengthRequest<L> {
         )?;
 
         let response = cache_client
-            .data_client
-            .clone()
+.next_data_client()
             .sorted_set_length(request)
             .await?
             .into_inner();

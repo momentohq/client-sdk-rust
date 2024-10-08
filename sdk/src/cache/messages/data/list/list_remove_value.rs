@@ -63,8 +63,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListRemoveValueRequest<L, V>
         )?;
 
         cache_client
-            .data_client
-            .clone()
+.next_data_client()
             .list_remove(request)
             .await?
             .into_inner();

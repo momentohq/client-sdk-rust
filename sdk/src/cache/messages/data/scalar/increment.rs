@@ -87,8 +87,7 @@ impl<K: IntoBytes> MomentoRequest for IncrementRequest<K> {
         )?;
 
         let response = cache_client
-            .data_client
-            .clone()
+.next_data_client()
             .increment(request)
             .await?
             .into_inner();

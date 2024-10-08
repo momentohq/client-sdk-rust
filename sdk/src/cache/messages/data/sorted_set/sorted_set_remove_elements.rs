@@ -73,8 +73,7 @@ impl<S: IntoBytes, V: IntoBytesIterable> MomentoRequest for SortedSetRemoveEleme
         )?;
 
         let _ = cache_client
-            .data_client
-            .clone()
+.next_data_client()
             .sorted_set_remove(request)
             .await?;
         Ok(SortedSetRemoveElementsResponse {})

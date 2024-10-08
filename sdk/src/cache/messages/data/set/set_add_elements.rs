@@ -87,7 +87,7 @@ impl<S: IntoBytes, E: IntoBytesIterable> MomentoRequest for SetAddElementsReques
             },
         )?;
 
-        let _ = cache_client.data_client.clone().set_union(request).await?;
+        let _ = cache_client.next_data_client().set_union(request).await?;
         Ok(SetAddElementsResponse {})
     }
 }

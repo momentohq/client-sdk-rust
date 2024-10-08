@@ -93,8 +93,7 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfPresentRequest<K, V> {
         )?;
 
         let response = cache_client
-            .data_client
-            .clone()
+.next_data_client()
             .set_if(request)
             .await?
             .into_inner();

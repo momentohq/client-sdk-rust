@@ -94,8 +94,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListPushBackRequest<L, V> {
         )?;
 
         let _ = cache_client
-            .data_client
-            .clone()
+.next_data_client()
             .list_push_back(request)
             .await?;
         Ok(ListPushBackResponse {})

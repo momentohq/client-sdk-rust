@@ -69,8 +69,7 @@ impl<K: IntoBytes> MomentoRequest for UpdateTtlRequest<K> {
         )?;
 
         let response = cache_client
-            .data_client
-            .clone()
+.next_data_client()
             .update_ttl(request)
             .await?
             .into_inner();

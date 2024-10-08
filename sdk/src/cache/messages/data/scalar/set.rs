@@ -85,7 +85,7 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetRequest<K, V> {
             },
         )?;
 
-        let _ = cache_client.data_client.clone().set(request).await?;
+        let _ = cache_client.next_data_client().set(request).await?;
         Ok(SetResponse {})
     }
 }

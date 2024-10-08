@@ -76,8 +76,7 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
         )?;
 
         let response = cache_client
-            .data_client
-            .clone()
+.next_data_client()
             .dictionary_fetch(request)
             .await?
             .into_inner();

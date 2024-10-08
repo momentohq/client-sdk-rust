@@ -63,7 +63,7 @@ impl<K: IntoBytes> MomentoRequest for DeleteRequest<K> {
             },
         )?;
 
-        let _ = cache_client.data_client.clone().delete(request).await?;
+        let _ = cache_client.next_data_client().delete(request).await?;
         Ok(DeleteResponse {})
     }
 }

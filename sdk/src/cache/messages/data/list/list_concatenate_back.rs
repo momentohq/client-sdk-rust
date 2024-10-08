@@ -97,8 +97,7 @@ impl<L: IntoBytes, V: IntoBytesIterable> MomentoRequest for ListConcatenateBackR
         )?;
 
         let _ = cache_client
-            .data_client
-            .clone()
+.next_data_client()
             .list_concatenate_back(request)
             .await?;
         Ok(ListConcatenateBackResponse {})

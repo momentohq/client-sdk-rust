@@ -1,4 +1,5 @@
 use std::convert::TryInto;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
 use momento_protos::cache_client::scs_client::ScsClient;
@@ -76,11 +77,13 @@ use crate::{utils, IntoBytes, MomentoResult};
 /// ```
 #[derive(Clone, Debug)]
 pub struct CacheClient {
-    pub(crate) data_client: ScsClient<InterceptedService<Channel, HeaderInterceptor>>,
+    pub(crate) data_clients: Vec<ScsClient<InterceptedService<Channel, HeaderInterceptor>>>,
     pub(crate) control_client: ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>,
     pub(crate) configuration: Configuration,
     pub(crate) item_default_ttl: Duration,
 }
+
+const NEXT_DATA_CLIENT_INDEX: AtomicUsize = AtomicUsize::new(0);
 
 impl CacheClient {
     /// Constructs a CacheClient to use Momento Cache.
@@ -2458,5 +2461,10 @@ impl CacheClient {
         utils::is_ttl_valid(ttl)?;
 
         Ok(ttl.as_millis().try_into().unwrap_or(i64::MAX as u64))
+    }
+    
+    pub(crate) fn next_data_client(&self) -> ScsClient<InterceptedService<Channel, HeaderInterceptor>> {
+        let next_index = NEXT_DATA_CLIENT_INDEX.fetch_add(1, Ordering::Relaxed) % self.data_clients.len();
+        self.data_clients[next_index].clone()
     }
 }

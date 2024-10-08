@@ -107,9 +107,7 @@ where
             },
         )?;
 
-        cache_client
-            .data_client
-            .clone()
+        cache_client.next_data_client()
             .dictionary_set(request)
             .await?;
 

@@ -67,8 +67,7 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
         )?;
 
         let response = cache_client
-            .data_client
-            .clone()
+.next_data_client()
             .get(request)
             .await?
             .into_inner();
