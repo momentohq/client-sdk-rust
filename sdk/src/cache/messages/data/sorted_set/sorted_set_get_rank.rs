@@ -67,7 +67,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetRankRequest<L, V
         )?;
 
         let response = cache_client
-.next_data_client()
+            .next_data_client()
             .sorted_set_get_rank(request)
             .await?
             .into_inner();

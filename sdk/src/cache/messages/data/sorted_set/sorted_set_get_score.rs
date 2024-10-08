@@ -73,7 +73,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetScoreRequest<L, 
         )?;
 
         let response = cache_client
-.next_data_client()
+            .next_data_client()
             .sorted_set_get_score(request)
             .await?
             .into_inner();

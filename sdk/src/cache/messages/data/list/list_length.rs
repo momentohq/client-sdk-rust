@@ -60,7 +60,7 @@ impl<L: IntoBytes> MomentoRequest for ListLengthRequest<L> {
         )?;
 
         let response = cache_client
-.next_data_client()
+            .next_data_client()
             .list_length(request)
             .await?
             .into_inner();

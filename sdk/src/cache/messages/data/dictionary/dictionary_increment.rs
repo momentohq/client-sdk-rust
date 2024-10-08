@@ -92,7 +92,7 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryIncrementRequest<D
         )?;
 
         let response = cache_client
-.next_data_client()
+            .next_data_client()
             .dictionary_increment(request)
             .await?
             .into_inner();

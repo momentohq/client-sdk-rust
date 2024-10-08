@@ -80,7 +80,7 @@ impl<L: IntoBytes, V: IntoBytesIterable + Clone> MomentoRequest
         )?;
 
         let get_scores_response = cache_client
-.next_data_client()
+            .next_data_client()
             .sorted_set_get_score(request)
             .await?
             .into_inner();

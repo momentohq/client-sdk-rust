@@ -94,7 +94,7 @@ impl<L: IntoBytes, V: IntoBytesIterable> MomentoRequest for ListConcatenateFront
         )?;
 
         let _ = cache_client
-.next_data_client()
+            .next_data_client()
             .list_concatenate_front(request)
             .await?;
         Ok(ListConcatenateFrontResponse {})

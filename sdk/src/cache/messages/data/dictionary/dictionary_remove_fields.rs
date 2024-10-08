@@ -73,7 +73,7 @@ impl<D: IntoBytes, F: IntoBytesIterable> MomentoRequest for DictionaryRemoveFiel
         )?;
 
         cache_client
-.next_data_client()
+            .next_data_client()
             .dictionary_delete(request)
             .await?
             .into_inner();

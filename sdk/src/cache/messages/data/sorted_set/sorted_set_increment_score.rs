@@ -95,7 +95,7 @@ impl<S: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetIncrementScoreReque
         )?;
 
         let response = cache_client
-.next_data_client()
+            .next_data_client()
             .sorted_set_increment(request)
             .await?;
 

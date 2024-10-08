@@ -162,7 +162,7 @@ where
         )?;
 
         cache_client
-.next_data_client()
+            .next_data_client()
             .dictionary_set(request)
             .await?;
 

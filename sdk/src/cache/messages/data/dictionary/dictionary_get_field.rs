@@ -82,7 +82,7 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryGetFieldRequest<D,
         )?;
 
         let response = cache_client
-.next_data_client()
+            .next_data_client()
             .dictionary_get(request)
             .await?
             .into_inner();

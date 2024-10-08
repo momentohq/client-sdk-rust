@@ -200,7 +200,7 @@ impl<S: IntoBytes, V: IntoBytes, E: IntoSortedSetElements<V>> MomentoRequest
         )?;
 
         let _ = cache_client
-.next_data_client()
+            .next_data_client()
             .sorted_set_put(request)
             .await?;
         Ok(SortedSetPutElementsResponse {})

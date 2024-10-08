@@ -62,7 +62,7 @@ impl<K: IntoBytes> MomentoRequest for ItemGetTtlRequest<K> {
         )?;
 
         let response = cache_client
-.next_data_client()
+            .next_data_client()
             .item_get_ttl(request)
             .await?
             .into_inner();

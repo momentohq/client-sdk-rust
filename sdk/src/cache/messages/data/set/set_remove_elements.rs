@@ -75,7 +75,7 @@ impl<S: IntoBytes, E: IntoBytes> MomentoRequest for SetRemoveElementsRequest<S, 
         )?;
 
         let _ = cache_client
-.next_data_client()
+            .next_data_client()
             .set_difference(request)
             .await?;
         Ok(SetRemoveElementsResponse {})

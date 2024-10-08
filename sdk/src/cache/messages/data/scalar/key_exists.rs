@@ -60,7 +60,7 @@ impl<K: IntoBytes> MomentoRequest for KeyExistsRequest<K> {
         )?;
 
         let response = cache_client
-.next_data_client()
+            .next_data_client()
             .keys_exist(request)
             .await?
             .into_inner();

@@ -83,7 +83,7 @@ pub struct CacheClient {
     pub(crate) item_default_ttl: Duration,
 }
 
-const NEXT_DATA_CLIENT_INDEX: AtomicUsize = AtomicUsize::new(0);
+static NEXT_DATA_CLIENT_INDEX: AtomicUsize = AtomicUsize::new(0);
 
 impl CacheClient {
     /// Constructs a CacheClient to use Momento Cache.
@@ -2462,9 +2462,12 @@ impl CacheClient {
 
         Ok(ttl.as_millis().try_into().unwrap_or(i64::MAX as u64))
     }
-    
-    pub(crate) fn next_data_client(&self) -> ScsClient<InterceptedService<Channel, HeaderInterceptor>> {
-        let next_index = NEXT_DATA_CLIENT_INDEX.fetch_add(1, Ordering::Relaxed) % self.data_clients.len();
+
+    pub(crate) fn next_data_client(
+        &self,
+    ) -> ScsClient<InterceptedService<Channel, HeaderInterceptor>> {
+        let next_index =
+            NEXT_DATA_CLIENT_INDEX.fetch_add(1, Ordering::Relaxed) % self.data_clients.len();
         self.data_clients[next_index].clone()
     }
 }

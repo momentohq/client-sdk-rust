@@ -64,7 +64,7 @@ impl<S: IntoBytes> MomentoRequest for SetFetchRequest<S> {
         )?;
 
         let response = cache_client
-.next_data_client()
+            .next_data_client()
             .set_fetch(request)
             .await?
             .into_inner();

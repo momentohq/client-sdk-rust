@@ -72,7 +72,7 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryRemoveFieldRequest
         )?;
 
         cache_client
-.next_data_client()
+            .next_data_client()
             .dictionary_delete(request)
             .await?
             .into_inner();

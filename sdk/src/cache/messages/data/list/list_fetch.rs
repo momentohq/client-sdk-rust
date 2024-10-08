@@ -98,7 +98,7 @@ impl<L: IntoBytes> MomentoRequest for ListFetchRequest<L> {
         )?;
 
         let response = cache_client
-.next_data_client()
+            .next_data_client()
             .list_fetch(request)
             .await?
             .into_inner();

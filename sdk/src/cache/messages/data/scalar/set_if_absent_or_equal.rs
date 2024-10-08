@@ -102,7 +102,7 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest
         )?;
 
         let response = cache_client
-.next_data_client()
+            .next_data_client()
             .set_if(request)
             .await?
             .into_inner();

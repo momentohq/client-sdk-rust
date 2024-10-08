@@ -138,7 +138,7 @@ impl<S: IntoBytes> MomentoRequest for SortedSetFetchByRankRequest<S> {
         )?;
 
         let response = cache_client
-.next_data_client()
+            .next_data_client()
             .sorted_set_fetch(request)
             .await?
             .into_inner();

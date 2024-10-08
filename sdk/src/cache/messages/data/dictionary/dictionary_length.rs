@@ -62,7 +62,7 @@ impl<D: IntoBytes> MomentoRequest for DictionaryLengthRequest<D> {
         )?;
 
         let response = cache_client
-.next_data_client()
+            .next_data_client()
             .dictionary_length(request)
             .await?
             .into_inner();

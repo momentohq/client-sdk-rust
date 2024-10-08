@@ -61,7 +61,7 @@ impl<L: IntoBytes> MomentoRequest for ListPopBackRequest<L> {
         )?;
 
         let response = cache_client
-.next_data_client()
+            .next_data_client()
             .list_pop_back(request)
             .await?
             .into_inner();

@@ -61,7 +61,7 @@ impl<L: IntoBytes> MomentoRequest for ListPopFrontRequest<L> {
         )?;
 
         let response = cache_client
-.next_data_client()
+            .next_data_client()
             .list_pop_front(request)
             .await?
             .into_inner();

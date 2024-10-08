@@ -93,7 +93,7 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfAbsentRequest<K, V> {
         )?;
 
         let response = cache_client
-.next_data_client()
+            .next_data_client()
             .set_if(request)
             .await?
             .into_inner();

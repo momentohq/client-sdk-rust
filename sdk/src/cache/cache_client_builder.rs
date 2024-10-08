@@ -4,10 +4,10 @@ use crate::{utils, CacheClient, CredentialProvider, MomentoResult};
 use std::time::Duration;
 use tonic::codegen::InterceptedService;
 
+use crate::utils::ChannelConnectError;
 use momento_protos::cache_client::scs_client::ScsClient;
 use momento_protos::control_client::scs_control_client::ScsControlClient;
 use tonic::transport::Channel;
-use crate::utils::ChannelConnectError;
 
 pub struct CacheClientBuilder<State>(pub State);
 
@@ -68,23 +68,26 @@ impl CacheClientBuilder<ReadyToBuild> {
             ..self.0
         })
     }
-    
+
     pub fn build(self) -> MomentoResult<CacheClient> {
         let agent_value = &utils::user_agent("cache");
 
-        let data_channels_result: Result<Vec<Channel>, ChannelConnectError> = (0..self.0.num_channels).map(|_| {
-            utils::connect_channel_lazily_configurable(
-                &self.0.credential_provider.cache_endpoint,
-                self.0
-                    .configuration
-                    .transport_strategy
-                    .grpc_configuration
-                    .clone(),
-            )
-        }).collect();
-        
+        let data_channels_result: Result<Vec<Channel>, ChannelConnectError> =
+            (0..self.0.num_channels)
+                .map(|_| {
+                    utils::connect_channel_lazily_configurable(
+                        &self.0.credential_provider.cache_endpoint,
+                        self.0
+                            .configuration
+                            .transport_strategy
+                            .grpc_configuration
+                            .clone(),
+                    )
+                })
+                .collect();
+
         let data_channels = data_channels_result?;
-    
+
         let control_channel = utils::connect_channel_lazily_configurable(
             &self.0.credential_provider.control_endpoint,
             self.0
@@ -99,13 +102,17 @@ impl CacheClientBuilder<ReadyToBuild> {
             HeaderInterceptor::new(&self.0.credential_provider.auth_token, agent_value),
         );
 
-        let data_clients: Vec<ScsClient<InterceptedService<Channel, HeaderInterceptor>>> = data_channels.into_iter().map(|c| {
-            let data_interceptor = InterceptedService::new(
-                c,
-                HeaderInterceptor::new(&self.0.credential_provider.auth_token, agent_value),
-            );
-            ScsClient::new(data_interceptor) 
-        }).collect();
+        let data_clients: Vec<ScsClient<InterceptedService<Channel, HeaderInterceptor>>> =
+            data_channels
+                .into_iter()
+                .map(|c| {
+                    let data_interceptor = InterceptedService::new(
+                        c,
+                        HeaderInterceptor::new(&self.0.credential_provider.auth_token, agent_value),
+                    );
+                    ScsClient::new(data_interceptor)
+                })
+                .collect();
         let control_client = ScsControlClient::new(control_interceptor);
 
         Ok(CacheClient {

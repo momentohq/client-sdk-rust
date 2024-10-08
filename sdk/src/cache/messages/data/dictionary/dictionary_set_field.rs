@@ -107,7 +107,8 @@ where
             },
         )?;
 
-        cache_client.next_data_client()
+        cache_client
+            .next_data_client()
             .dictionary_set(request)
             .await?;
 

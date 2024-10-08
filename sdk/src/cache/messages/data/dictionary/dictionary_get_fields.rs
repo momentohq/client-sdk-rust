@@ -87,7 +87,7 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
         )?;
 
         let response = cache_client
-.next_data_client()
+            .next_data_client()
             .dictionary_get(request)
             .await?
             .into_inner();

@@ -91,7 +91,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListPushFrontRequest<L, V> {
         )?;
 
         let _ = cache_client
-.next_data_client()
+            .next_data_client()
             .list_push_front(request)
             .await?;
         Ok(ListPushFrontResponse {})
