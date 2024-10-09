@@ -20,14 +20,14 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// # Optional Arguments
 ///
 /// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
-/// Defaults to Ascending.
+///   Defaults to Ascending.
 /// * `min_score` - The minimum score (inclusive) of the elements to fetch. Defaults to negative
-/// infinity.
+///   infinity.
 /// * `max_score` - The maximum score (inclusive) of the elements to fetch. Defaults to positive
-/// infinity.
+///   infinity.
 /// * `offset` - The number of elements to skip before returning the first element. Defaults to
 /// 0. Note: this is not the rank of the first element to return, but the number of elements of
-/// the result set to skip before returning the first element.
+///    the result set to skip before returning the first element.
 /// * `count` - The maximum number of elements to return. Defaults to all elements.
 ///
 /// # Examples

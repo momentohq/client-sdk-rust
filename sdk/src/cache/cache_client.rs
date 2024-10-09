@@ -1054,10 +1054,10 @@ impl CacheClient {
     /// * `sorted_set_name` - The name of the sorted set to add an element to.
     /// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
     /// * `start_rank` - The rank of the first element to fetch. Defaults to 0. This rank is
-    /// inclusive, i.e. the element at this rank will be fetched.
+    ///   inclusive, i.e. the element at this rank will be fetched.
     /// * `end_rank` - The rank of the last element to fetch. This rank is exclusive, i.e. the
-    /// element at this rank will not be fetched. Defaults to -1, which fetches up until and
-    /// including the last element.
+    ///   element at this rank will not be fetched. Defaults to -1, which fetches up until and
+    ///   including the last element.
     ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -1131,12 +1131,12 @@ impl CacheClient {
     /// [SortedSetFetchByScoreRequest], you can also provide the following optional arguments:
     ///
     /// * `min_score` - The minimum score (inclusive) of the elements to fetch. Defaults to negative
-    /// infinity.
+    ///   infinity.
     /// * `max_score` - The maximum score (inclusive) of the elements to fetch. Defaults to positive
-    /// infinity.
+    ///   infinity.
     /// * `offset` - The number of elements to skip before returning the first element. Defaults to
     /// 0. Note: this is not the rank of the first element to return, but the number of elements of
-    /// the result set to skip before returning the first element.
+    ///    the result set to skip before returning the first element.
     /// * `count` - The maximum number of elements to return. Defaults to all elements.
     ///
     /// # Examples
