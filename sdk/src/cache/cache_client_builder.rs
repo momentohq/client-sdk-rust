@@ -127,11 +127,11 @@ impl CacheClientBuilder<ReadyToBuild> {
                 .collect();
         let control_client = ScsControlClient::new(control_interceptor);
 
-        Ok(CacheClient {
+        Ok(CacheClient::new(
             data_clients,
             control_client,
-            configuration: self.0.configuration,
-            item_default_ttl: self.0.default_ttl,
-        })
+            self.0.configuration,
+            self.0.default_ttl,
+        ))
     }
 }

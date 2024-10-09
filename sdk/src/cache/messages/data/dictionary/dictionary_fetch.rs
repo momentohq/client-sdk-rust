@@ -69,7 +69,7 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<Self::Response> {
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             DictionaryFetchRequestProto {
                 dictionary_name: self.dictionary_name.into_bytes(),
             },

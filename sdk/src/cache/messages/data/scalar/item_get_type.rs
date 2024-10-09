@@ -56,7 +56,7 @@ impl<K: IntoBytes> MomentoRequest for ItemGetTypeRequest<K> {
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<ItemGetTypeResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             momento_protos::cache_client::ItemGetTypeRequest {
                 cache_key: self.key.into_bytes(),
             },

@@ -81,7 +81,7 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryIncrementRequest<D
         let collection_ttl = self.collection_ttl.unwrap_or_default();
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             momento_protos::cache_client::DictionaryIncrementRequest {
                 dictionary_name: self.dictionary_name.into_bytes(),
                 field: self.field.into_bytes(),

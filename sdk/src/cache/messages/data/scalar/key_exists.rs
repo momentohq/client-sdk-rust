@@ -53,7 +53,7 @@ impl<K: IntoBytes> MomentoRequest for KeyExistsRequest<K> {
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<KeyExistsResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             momento_protos::cache_client::KeysExistRequest {
                 cache_keys: vec![self.key.into_bytes()],
             },

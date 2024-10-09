@@ -150,7 +150,7 @@ impl<S: IntoBytes> MomentoRequest for SortedSetFetchByScoreRequest<S> {
 
         let request = prep_request_with_timeout(
             cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             SortedSetFetchRequest {
                 set_name,
                 order: self.order as i32,

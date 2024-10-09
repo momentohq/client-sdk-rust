@@ -86,7 +86,7 @@ impl<L: IntoBytes, V: IntoBytesIterable> MomentoRequest for ListConcatenateBackR
         let cache_name = &self.cache_name;
         let request = prep_request_with_timeout(
             cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             momento_protos::cache_client::ListConcatenateBackRequest {
                 list_name,
                 values: values.into_bytes(),

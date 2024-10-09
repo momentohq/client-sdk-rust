@@ -95,7 +95,7 @@ where
         let collection_ttl = self.collection_ttl.unwrap_or_default();
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             DictionarySetFieldRequestProto {
                 dictionary_name: self.dictionary_name.into_bytes(),
                 items: vec![DictionaryFieldValuePairProto {

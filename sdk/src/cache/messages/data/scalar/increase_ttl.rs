@@ -60,7 +60,7 @@ impl<K: IntoBytes> MomentoRequest for IncreaseTtlRequest<K> {
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<IncreaseTtlResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             momento_protos::cache_client::UpdateTtlRequest {
                 cache_key: self.key.into_bytes(),
                 update_ttl: Some(IncreaseToMilliseconds(

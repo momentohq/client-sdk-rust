@@ -54,7 +54,7 @@ impl<L: IntoBytes> MomentoRequest for ListPopFrontRequest<L> {
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListPopFrontResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             momento_protos::cache_client::ListPopFrontRequest {
                 list_name: self.list_name.into_bytes(),
             },

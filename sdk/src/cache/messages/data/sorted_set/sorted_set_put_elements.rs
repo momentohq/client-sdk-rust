@@ -184,7 +184,7 @@ impl<S: IntoBytes, V: IntoBytes, E: IntoSortedSetElements<V>> MomentoRequest
         let cache_name = &self.cache_name;
         let request = prep_request_with_timeout(
             cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             SortedSetPutRequest {
                 set_name,
                 elements: elements

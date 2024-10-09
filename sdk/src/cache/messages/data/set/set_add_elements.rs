@@ -78,7 +78,7 @@ impl<S: IntoBytes, E: IntoBytesIterable> MomentoRequest for SetAddElementsReques
         let cache_name = &self.cache_name;
         let request = prep_request_with_timeout(
             cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             SetUnionRequest {
                 set_name,
                 elements,

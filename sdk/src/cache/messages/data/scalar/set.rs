@@ -77,7 +77,7 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetRequest<K, V> {
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             momento_protos::cache_client::SetRequest {
                 cache_key: self.key.into_bytes(),
                 cache_body: self.value.into_bytes(),

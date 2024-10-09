@@ -65,7 +65,7 @@ impl<S: IntoBytes, V: IntoBytesIterable> MomentoRequest for SortedSetRemoveEleme
         let cache_name = &self.cache_name;
         let request = prep_request_with_timeout(
             cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             SortedSetRemoveRequest {
                 set_name,
                 remove_elements: Some(RemoveElements::Some(Some { values })),

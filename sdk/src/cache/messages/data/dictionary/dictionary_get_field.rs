@@ -74,7 +74,7 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryGetFieldRequest<D,
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<Self::Response> {
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             DictionaryGetRequestProto {
                 dictionary_name: self.dictionary_name.into_bytes(),
                 fields: vec![self.field.into_bytes()],

@@ -89,7 +89,7 @@ impl<L: IntoBytes> MomentoRequest for ListFetchRequest<L> {
         };
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             momento_protos::cache_client::ListFetchRequest {
                 list_name: self.list_name.into_bytes(),
                 start_index,

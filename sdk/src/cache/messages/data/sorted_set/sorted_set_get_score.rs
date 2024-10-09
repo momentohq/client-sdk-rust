@@ -65,7 +65,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetScoreRequest<L, 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<SortedSetGetScoreResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             momento_protos::cache_client::SortedSetGetScoreRequest {
                 set_name: self.sorted_set_name.into_bytes(),
                 values: vec![self.value.into_bytes()],

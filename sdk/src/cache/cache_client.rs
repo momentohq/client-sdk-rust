@@ -77,10 +77,10 @@ use crate::{utils, IntoBytes, MomentoResult};
 /// ```
 #[derive(Clone, Debug)]
 pub struct CacheClient {
-    pub(crate) data_clients: Vec<ScsClient<InterceptedService<Channel, HeaderInterceptor>>>,
-    pub(crate) control_client: ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>,
-    pub(crate) configuration: Configuration,
-    pub(crate) item_default_ttl: Duration,
+    data_clients: Vec<ScsClient<InterceptedService<Channel, HeaderInterceptor>>>,
+    control_client: ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>,
+    configuration: Configuration,
+    item_default_ttl: Duration,
 }
 
 static NEXT_DATA_CLIENT_INDEX: AtomicUsize = AtomicUsize::new(0);
@@ -2456,11 +2456,35 @@ impl CacheClient {
     }
 
     /* helper fns */
+    pub(crate) fn new(
+        data_clients: Vec<ScsClient<InterceptedService<Channel, HeaderInterceptor>>>,
+        control_client: ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>,
+        configuration: Configuration,
+        item_default_ttl: Duration,
+    ) -> Self {
+        Self {
+            data_clients,
+            control_client,
+            configuration,
+            item_default_ttl,
+        }
+    }
+
     pub(crate) fn expand_ttl_ms(&self, ttl: Option<Duration>) -> MomentoResult<u64> {
         let ttl = ttl.unwrap_or(self.item_default_ttl);
         utils::is_ttl_valid(ttl)?;
 
         Ok(ttl.as_millis().try_into().unwrap_or(i64::MAX as u64))
+    }
+
+    pub(crate) fn deadline_millis(&self) -> Duration {
+        self.configuration.deadline_millis()
+    }
+
+    pub(crate) fn control_client(
+        &self,
+    ) -> ScsControlClient<InterceptedService<Channel, HeaderInterceptor>> {
+        self.control_client.clone()
     }
 
     pub(crate) fn next_data_client(

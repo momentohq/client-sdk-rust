@@ -87,7 +87,7 @@ impl<K: IntoBytesIterable> MomentoRequest for KeysExistRequest<K> {
 
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             momento_protos::cache_client::KeysExistRequest {
                 cache_keys: byte_keys,
             },

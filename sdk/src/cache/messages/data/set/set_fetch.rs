@@ -57,7 +57,7 @@ impl<S: IntoBytes> MomentoRequest for SetFetchRequest<S> {
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetFetchResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             momento_protos::cache_client::SetFetchRequest {
                 set_name: self.set_name.into_bytes(),
             },

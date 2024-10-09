@@ -53,11 +53,7 @@ impl MomentoRequest for CreateCacheRequest {
             cache_name: self.cache_name,
         });
 
-        let result = cache_client
-            .control_client
-            .clone()
-            .create_cache(request)
-            .await;
+        let result = cache_client.control_client().create_cache(request).await;
         match result {
             Ok(_) => Ok(CreateCacheResponse::Created {}),
             Err(e) => {
