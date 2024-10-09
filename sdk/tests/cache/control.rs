@@ -12,7 +12,6 @@ mod create_delete_list_cache {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = unique_cache_name();
         let result = client.delete_cache(cache_name).await.unwrap_err();
-        println!("FUCK: {:?}", result);
         assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
         Ok(())
     }

@@ -212,7 +212,6 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
                 },
                 Some(err) => match err.to_str() {
                     Ok(err_str) => {
-                        println!("THE ERR STR IS: {:?}", err_str);
                         match err_str {
                             "store_not_found" => MomentoError {
                                 message: "A store with the specified name does not exist.  To resolve this error, make sure you have created the store before attempting to use it".into(),
