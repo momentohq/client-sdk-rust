@@ -7,7 +7,7 @@ pub struct GrpcConfiguration {
     /// with a DeadlineExceeded error.
     pub(crate) deadline: Duration,
     /// The number of grpc channels (TCP connections) to create
-    pub(crate) num_channels: u32,
+    pub(crate) num_channels: usize,
     /// Indicates whether the client should send keep-alive pings.
     ///
     /// NOTE: keep-alives are very important for long-lived server environments where there may be
@@ -40,7 +40,7 @@ pub struct NeedsDeadline(());
 /// The state of the GrpcConfigurationBuilder when it is ready to build a GrpcConfiguration.
 pub struct ReadyToBuild {
     deadline: Duration,
-    num_channels: u32,
+    num_channels: usize,
     keep_alive_while_idle: Option<bool>,
     keep_alive_interval: Option<Duration>,
     keep_alive_timeout: Option<Duration>,
@@ -61,7 +61,7 @@ impl GrpcConfigurationBuilder<NeedsDeadline> {
 }
 
 impl GrpcConfigurationBuilder<ReadyToBuild> {
-    pub(crate) fn num_channels(mut self, num_channels: u32) -> Self {
+    pub(crate) fn num_channels(mut self, num_channels: usize) -> Self {
         self.0.num_channels = num_channels;
         self
     }

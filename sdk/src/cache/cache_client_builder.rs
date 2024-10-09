@@ -62,7 +62,7 @@ impl CacheClientBuilder<NeedsCredentialProvider> {
 }
 
 impl CacheClientBuilder<ReadyToBuild> {
-    pub fn with_num_connections(self, num_connections: u32) -> CacheClientBuilder<ReadyToBuild> {
+    pub fn with_num_connections(self, num_connections: usize) -> CacheClientBuilder<ReadyToBuild> {
         let grpc_configuration = self.0.configuration.transport_strategy.grpc_configuration;
         let transport_strategy = TransportStrategy {
             grpc_configuration: GrpcConfiguration {
