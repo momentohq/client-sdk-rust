@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.43.0](https://github.com/momentohq/client-sdk-rust/compare/v0.42.0...v0.43.0) (2024-10-09)
+
+
+### Features
+
+* adding support for multiple connections ([#393](https://github.com/momentohq/client-sdk-rust/issues/393)) ([2e79c87](https://github.com/momentohq/client-sdk-rust/commit/2e79c878830ee4c7789f7caa45ecbedbc836b0c6))
+
+
+### Miscellaneous
+
+* add dev docs snippets and cheat sheet for storage client ([#389](https://github.com/momentohq/client-sdk-rust/issues/389)) ([223be86](https://github.com/momentohq/client-sdk-rust/commit/223be86afab4f5968660b925c674be133b693c28))
+* **deps:** bump momento from 0.41.3 to 0.42.0 in /example/rust ([#387](https://github.com/momentohq/client-sdk-rust/issues/387)) ([e64afce](https://github.com/momentohq/client-sdk-rust/commit/e64afceb4198c3fb4eb6ddd0afbf40b329c552d4))
+
 ## [0.42.0](https://github.com/momentohq/client-sdk-rust/compare/v0.41.3...v0.42.0) (2024-07-12)
 
 
