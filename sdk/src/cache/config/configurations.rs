@@ -129,7 +129,9 @@ impl Lambda {
     pub fn v1() -> impl Into<Configuration> {
         Configuration::builder().transport_strategy(
             TransportStrategy::builder().grpc_configuration(
-                GrpcConfiguration::builder().deadline(Duration::from_millis(1100)),
+                GrpcConfiguration::builder()
+                    .deadline(Duration::from_millis(1100))
+                    .num_channels(1),
             ),
         )
     }

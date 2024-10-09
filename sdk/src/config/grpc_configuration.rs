@@ -6,6 +6,8 @@ pub struct GrpcConfiguration {
     /// The duration the client is willing to wait for an RPC to complete before it is terminated
     /// with a DeadlineExceeded error.
     pub(crate) deadline: Duration,
+    /// The number of grpc channels (TCP connections) to create
+    pub(crate) num_channels: u32,
     /// Indicates whether the client should send keep-alive pings.
     ///
     /// NOTE: keep-alives are very important for long-lived server environments where there may be
@@ -38,6 +40,7 @@ pub struct NeedsDeadline(());
 /// The state of the GrpcConfigurationBuilder when it is ready to build a GrpcConfiguration.
 pub struct ReadyToBuild {
     deadline: Duration,
+    num_channels: u32,
     keep_alive_while_idle: Option<bool>,
     keep_alive_interval: Option<Duration>,
     keep_alive_timeout: Option<Duration>,
@@ -49,6 +52,7 @@ impl GrpcConfigurationBuilder<NeedsDeadline> {
     pub fn deadline(self, deadline: Duration) -> GrpcConfigurationBuilder<ReadyToBuild> {
         GrpcConfigurationBuilder(ReadyToBuild {
             deadline,
+            num_channels: 1,
             keep_alive_while_idle: None,
             keep_alive_interval: None,
             keep_alive_timeout: None,
@@ -57,6 +61,11 @@ impl GrpcConfigurationBuilder<NeedsDeadline> {
 }
 
 impl GrpcConfigurationBuilder<ReadyToBuild> {
+    pub(crate) fn num_channels(mut self, num_channels: u32) -> Self {
+        self.0.num_channels = num_channels;
+        self
+    }
+    
     pub(crate) fn enable_keep_alives_with_defaults(
         mut self,
     ) -> GrpcConfigurationBuilder<ReadyToBuild> {
@@ -107,6 +116,7 @@ impl GrpcConfigurationBuilder<ReadyToBuild> {
     pub fn build(self) -> GrpcConfiguration {
         GrpcConfiguration {
             deadline: self.0.deadline,
+            num_channels: self.0.num_channels,
             keep_alive_while_idle: self.0.keep_alive_while_idle,
             keep_alive_interval: self.0.keep_alive_interval,
             keep_alive_timeout: self.0.keep_alive_timeout,

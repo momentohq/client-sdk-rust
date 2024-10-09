@@ -8,6 +8,8 @@ use crate::utils::ChannelConnectError;
 use momento_protos::cache_client::scs_client::ScsClient;
 use momento_protos::control_client::scs_control_client::ScsControlClient;
 use tonic::transport::Channel;
+use crate::config::grpc_configuration::GrpcConfiguration;
+use crate::config::transport_strategy::TransportStrategy;
 
 pub struct CacheClientBuilder<State>(pub State);
 
@@ -26,7 +28,6 @@ pub struct ReadyToBuild {
     default_ttl: Duration,
     configuration: Configuration,
     credential_provider: CredentialProvider,
-    num_channels: u16,
 }
 
 impl CacheClientBuilder<NeedsDefaultTtl> {
@@ -56,15 +57,24 @@ impl CacheClientBuilder<NeedsCredentialProvider> {
             default_ttl: self.0.default_ttl,
             configuration: self.0.configuration,
             credential_provider,
-            num_channels: 1,
         })
     }
 }
 
 impl CacheClientBuilder<ReadyToBuild> {
-    pub fn with_num_connections(self, num_connections: u16) -> CacheClientBuilder<ReadyToBuild> {
+    pub fn with_num_connections(self, num_connections: u32) -> CacheClientBuilder<ReadyToBuild> {
+        let grpc_configuration = self.0.configuration.transport_strategy.grpc_configuration;
+        let transport_strategy = TransportStrategy{
+            grpc_configuration: GrpcConfiguration{
+              num_channels: num_connections,
+                ..grpc_configuration
+            },
+        };
+        
         CacheClientBuilder(ReadyToBuild {
-            num_channels: num_connections,
+            configuration: Configuration{
+                transport_strategy,
+            },
             ..self.0
         })
     }
@@ -73,7 +83,7 @@ impl CacheClientBuilder<ReadyToBuild> {
         let agent_value = &utils::user_agent("cache");
 
         let data_channels_result: Result<Vec<Channel>, ChannelConnectError> =
-            (0..self.0.num_channels)
+            (0..self.0.configuration.transport_strategy.grpc_configuration.num_channels)
                 .map(|_| {
                     utils::connect_channel_lazily_configurable(
                         &self.0.credential_provider.cache_endpoint,
