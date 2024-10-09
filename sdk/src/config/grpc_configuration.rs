@@ -65,7 +65,7 @@ impl GrpcConfigurationBuilder<ReadyToBuild> {
         self.0.num_channels = num_channels;
         self
     }
-    
+
     pub(crate) fn enable_keep_alives_with_defaults(
         mut self,
     ) -> GrpcConfigurationBuilder<ReadyToBuild> {

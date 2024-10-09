@@ -4,12 +4,12 @@ use crate::{utils, CacheClient, CredentialProvider, MomentoResult};
 use std::time::Duration;
 use tonic::codegen::InterceptedService;
 
+use crate::config::grpc_configuration::GrpcConfiguration;
+use crate::config::transport_strategy::TransportStrategy;
 use crate::utils::ChannelConnectError;
 use momento_protos::cache_client::scs_client::ScsClient;
 use momento_protos::control_client::scs_control_client::ScsControlClient;
 use tonic::transport::Channel;
-use crate::config::grpc_configuration::GrpcConfiguration;
-use crate::config::transport_strategy::TransportStrategy;
 
 pub struct CacheClientBuilder<State>(pub State);
 
@@ -64,17 +64,15 @@ impl CacheClientBuilder<NeedsCredentialProvider> {
 impl CacheClientBuilder<ReadyToBuild> {
     pub fn with_num_connections(self, num_connections: u32) -> CacheClientBuilder<ReadyToBuild> {
         let grpc_configuration = self.0.configuration.transport_strategy.grpc_configuration;
-        let transport_strategy = TransportStrategy{
-            grpc_configuration: GrpcConfiguration{
-              num_channels: num_connections,
+        let transport_strategy = TransportStrategy {
+            grpc_configuration: GrpcConfiguration {
+                num_channels: num_connections,
                 ..grpc_configuration
             },
         };
-        
+
         CacheClientBuilder(ReadyToBuild {
-            configuration: Configuration{
-                transport_strategy,
-            },
+            configuration: Configuration { transport_strategy },
             ..self.0
         })
     }
@@ -82,19 +80,23 @@ impl CacheClientBuilder<ReadyToBuild> {
     pub fn build(self) -> MomentoResult<CacheClient> {
         let agent_value = &utils::user_agent("cache");
 
-        let data_channels_result: Result<Vec<Channel>, ChannelConnectError> =
-            (0..self.0.configuration.transport_strategy.grpc_configuration.num_channels)
-                .map(|_| {
-                    utils::connect_channel_lazily_configurable(
-                        &self.0.credential_provider.cache_endpoint,
-                        self.0
-                            .configuration
-                            .transport_strategy
-                            .grpc_configuration
-                            .clone(),
-                    )
-                })
-                .collect();
+        let data_channels_result: Result<Vec<Channel>, ChannelConnectError> = (0..self
+            .0
+            .configuration
+            .transport_strategy
+            .grpc_configuration
+            .num_channels)
+            .map(|_| {
+                utils::connect_channel_lazily_configurable(
+                    &self.0.credential_provider.cache_endpoint,
+                    self.0
+                        .configuration
+                        .transport_strategy
+                        .grpc_configuration
+                        .clone(),
+                )
+            })
+            .collect();
 
         let data_channels = data_channels_result?;
 
