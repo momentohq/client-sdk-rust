@@ -1,5 +1,7 @@
 use std::time::Duration;
 
+const MAX_NUM_CHANNELS: usize = 200;
+
 /// Low-level gRPC settings for communicating with Momento.
 #[derive(Clone, Debug)]
 pub struct GrpcConfiguration {
@@ -114,6 +116,13 @@ impl GrpcConfigurationBuilder<ReadyToBuild> {
 
     /// Constructs the GrpcConfiguration with the given settings.
     pub fn build(self) -> GrpcConfiguration {
+        let num_channels = self.0.num_channels;
+        if num_channels == 0 || num_channels > MAX_NUM_CHANNELS {
+            panic!(
+                "The maximum number of grpc channels (connections must be between 1 and {}",
+                MAX_NUM_CHANNELS
+            );
+        }
         GrpcConfiguration {
             deadline: self.0.deadline,
             num_channels: self.0.num_channels,
