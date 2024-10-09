@@ -212,6 +212,7 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
                 },
                 Some(err) => match err.to_str() {
                     Ok(err_str) => {
+                        println!("THE ERR STR IS: {:?}", err_str);
                         match err_str {
                             "store_not_found" => MomentoError {
                                 message: "A store with the specified name does not exist.  To resolve this error, make sure you have created the store before attempting to use it".into(),
@@ -225,9 +226,9 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
                                 inner_error: Some(status.clone().into()),
                                 details: Some(status.into())
                             },
-                            unknown_err => MomentoError {
-                                message: format!("Unknown error has occurred, unsupported error type for NotFound: {:?}", unknown_err),
-                                error_code: MomentoErrorCode::UnknownError,
+                            _ => MomentoError {
+                                message: "A cache with the specified name does not exist.  To resolve this error, make sure you have created the cache before attempting to use it".into(),
+                                error_code: MomentoErrorCode::CacheNotFoundError,
                                 inner_error: Some(status.clone().into()),
                                 details: Some(status.into())
                             }
