@@ -84,7 +84,7 @@ impl<S: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetIncrementScoreReque
         let value = self.value.into_bytes();
         let request = prep_request_with_timeout(
             cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             SortedSetIncrementRequest {
                 set_name,
                 value,
@@ -95,8 +95,7 @@ impl<S: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetIncrementScoreReque
         )?;
 
         let response = cache_client
-            .data_client
-            .clone()
+            .next_data_client()
             .sorted_set_increment(request)
             .await?;
 

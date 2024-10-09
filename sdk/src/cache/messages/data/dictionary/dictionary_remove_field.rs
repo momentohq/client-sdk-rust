@@ -64,7 +64,7 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryRemoveFieldRequest
         };
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             DictionaryRemoveFieldsRequestProto {
                 dictionary_name: self.dictionary_name.into_bytes(),
                 delete: Some(DictionaryFieldSelector::Delete::Some(fields_to_delete)),
@@ -72,8 +72,7 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryRemoveFieldRequest
         )?;
 
         cache_client
-            .data_client
-            .clone()
+            .next_data_client()
             .dictionary_delete(request)
             .await?
             .into_inner();

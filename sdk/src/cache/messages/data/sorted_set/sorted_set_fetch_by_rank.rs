@@ -29,12 +29,12 @@ pub enum SortedSetOrder {
 /// # Optional Arguments
 ///
 /// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
-/// Defaults to Ascending.
+///   Defaults to Ascending.
 /// * `start_rank` - The rank of the first element to fetch. Defaults to 0. This rank is
-/// inclusive, i.e. the element at this rank will be fetched.
+///   inclusive, i.e. the element at this rank will be fetched.
 /// * `end_rank` - The rank of the last element to fetch. This rank is exclusive, i.e. the
-/// element at this rank will not be fetched. Defaults to -1, which fetches up until and
-/// including the last element.
+///   element at this rank will not be fetched. Defaults to -1, which fetches up until and
+///   including the last element.
 ///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -128,7 +128,7 @@ impl<S: IntoBytes> MomentoRequest for SortedSetFetchByRankRequest<S> {
 
         let request = prep_request_with_timeout(
             cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             SortedSetFetchRequest {
                 set_name,
                 order: self.order as i32,
@@ -138,8 +138,7 @@ impl<S: IntoBytes> MomentoRequest for SortedSetFetchByRankRequest<S> {
         )?;
 
         let response = cache_client
-            .data_client
-            .clone()
+            .next_data_client()
             .sorted_set_fetch(request)
             .await?
             .into_inner();

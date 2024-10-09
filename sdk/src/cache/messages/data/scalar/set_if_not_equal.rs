@@ -88,7 +88,7 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest for SetIfNotEqualR
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetIfNotEqualResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             momento_protos::cache_client::SetIfRequest {
                 cache_key: self.key.into_bytes(),
                 cache_body: self.value.into_bytes(),
@@ -100,8 +100,7 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest for SetIfNotEqualR
         )?;
 
         let response = cache_client
-            .data_client
-            .clone()
+            .next_data_client()
             .set_if(request)
             .await?
             .into_inner();

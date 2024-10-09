@@ -59,7 +59,7 @@ impl<K: IntoBytes> MomentoRequest for UpdateTtlRequest<K> {
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<UpdateTtlResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             momento_protos::cache_client::UpdateTtlRequest {
                 cache_key: self.key.into_bytes(),
                 update_ttl: Some(OverwriteToMilliseconds(
@@ -69,8 +69,7 @@ impl<K: IntoBytes> MomentoRequest for UpdateTtlRequest<K> {
         )?;
 
         let response = cache_client
-            .data_client
-            .clone()
+            .next_data_client()
             .update_ttl(request)
             .await?
             .into_inner();

@@ -55,7 +55,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListRemoveValueRequest<L, V>
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<ListRemoveValueResponse> {
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             momento_protos::cache_client::ListRemoveRequest {
                 list_name: self.list_name.into_bytes(),
                 remove: Some(Remove::AllElementsWithValue(self.value.into_bytes())),
@@ -63,8 +63,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListRemoveValueRequest<L, V>
         )?;
 
         cache_client
-            .data_client
-            .clone()
+            .next_data_client()
             .list_remove(request)
             .await?
             .into_inner();

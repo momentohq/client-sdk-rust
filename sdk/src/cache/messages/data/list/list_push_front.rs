@@ -80,7 +80,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListPushFrontRequest<L, V> {
         let cache_name = &self.cache_name;
         let request = prep_request_with_timeout(
             cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             momento_protos::cache_client::ListPushFrontRequest {
                 list_name,
                 value,
@@ -91,8 +91,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for ListPushFrontRequest<L, V> {
         )?;
 
         let _ = cache_client
-            .data_client
-            .clone()
+            .next_data_client()
             .list_push_front(request)
             .await?;
         Ok(ListPushFrontResponse {})

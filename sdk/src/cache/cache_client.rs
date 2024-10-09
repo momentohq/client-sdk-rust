@@ -1,4 +1,5 @@
 use std::convert::TryInto;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
 use momento_protos::cache_client::scs_client::ScsClient;
@@ -76,11 +77,13 @@ use crate::{utils, IntoBytes, MomentoResult};
 /// ```
 #[derive(Clone, Debug)]
 pub struct CacheClient {
-    pub(crate) data_client: ScsClient<InterceptedService<Channel, HeaderInterceptor>>,
-    pub(crate) control_client: ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>,
-    pub(crate) configuration: Configuration,
-    pub(crate) item_default_ttl: Duration,
+    data_clients: Vec<ScsClient<InterceptedService<Channel, HeaderInterceptor>>>,
+    control_client: ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>,
+    configuration: Configuration,
+    item_default_ttl: Duration,
 }
+
+static NEXT_DATA_CLIENT_INDEX: AtomicUsize = AtomicUsize::new(0);
 
 impl CacheClient {
     /// Constructs a CacheClient to use Momento Cache.
@@ -1051,10 +1054,10 @@ impl CacheClient {
     /// * `sorted_set_name` - The name of the sorted set to add an element to.
     /// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
     /// * `start_rank` - The rank of the first element to fetch. Defaults to 0. This rank is
-    /// inclusive, i.e. the element at this rank will be fetched.
+    ///   inclusive, i.e. the element at this rank will be fetched.
     /// * `end_rank` - The rank of the last element to fetch. This rank is exclusive, i.e. the
-    /// element at this rank will not be fetched. Defaults to -1, which fetches up until and
-    /// including the last element.
+    ///   element at this rank will not be fetched. Defaults to -1, which fetches up until and
+    ///   including the last element.
     ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -1128,12 +1131,12 @@ impl CacheClient {
     /// [SortedSetFetchByScoreRequest], you can also provide the following optional arguments:
     ///
     /// * `min_score` - The minimum score (inclusive) of the elements to fetch. Defaults to negative
-    /// infinity.
+    ///   infinity.
     /// * `max_score` - The maximum score (inclusive) of the elements to fetch. Defaults to positive
-    /// infinity.
+    ///   infinity.
     /// * `offset` - The number of elements to skip before returning the first element. Defaults to
     /// 0. Note: this is not the rank of the first element to return, but the number of elements of
-    /// the result set to skip before returning the first element.
+    ///    the result set to skip before returning the first element.
     /// * `count` - The maximum number of elements to return. Defaults to all elements.
     ///
     /// # Examples
@@ -2453,10 +2456,42 @@ impl CacheClient {
     }
 
     /* helper fns */
+    pub(crate) fn new(
+        data_clients: Vec<ScsClient<InterceptedService<Channel, HeaderInterceptor>>>,
+        control_client: ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>,
+        configuration: Configuration,
+        item_default_ttl: Duration,
+    ) -> Self {
+        Self {
+            data_clients,
+            control_client,
+            configuration,
+            item_default_ttl,
+        }
+    }
+
     pub(crate) fn expand_ttl_ms(&self, ttl: Option<Duration>) -> MomentoResult<u64> {
         let ttl = ttl.unwrap_or(self.item_default_ttl);
         utils::is_ttl_valid(ttl)?;
 
         Ok(ttl.as_millis().try_into().unwrap_or(i64::MAX as u64))
+    }
+
+    pub(crate) fn deadline_millis(&self) -> Duration {
+        self.configuration.deadline_millis()
+    }
+
+    pub(crate) fn control_client(
+        &self,
+    ) -> ScsControlClient<InterceptedService<Channel, HeaderInterceptor>> {
+        self.control_client.clone()
+    }
+
+    pub(crate) fn next_data_client(
+        &self,
+    ) -> ScsClient<InterceptedService<Channel, HeaderInterceptor>> {
+        let next_index =
+            NEXT_DATA_CLIENT_INDEX.fetch_add(1, Ordering::Relaxed) % self.data_clients.len();
+        self.data_clients[next_index].clone()
     }
 }

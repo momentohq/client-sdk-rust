@@ -72,7 +72,7 @@ impl<L: IntoBytes, V: IntoBytesIterable + Clone> MomentoRequest
     ) -> MomentoResult<SortedSetGetScoresResponse<V>> {
         let request = prep_request_with_timeout(
             &self.cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             momento_protos::cache_client::SortedSetGetScoreRequest {
                 set_name: self.sorted_set_name.into_bytes(),
                 values: self.values.clone().into_bytes(),
@@ -80,8 +80,7 @@ impl<L: IntoBytes, V: IntoBytesIterable + Clone> MomentoRequest
         )?;
 
         let get_scores_response = cache_client
-            .data_client
-            .clone()
+            .next_data_client()
             .sorted_set_get_score(request)
             .await?
             .into_inner();

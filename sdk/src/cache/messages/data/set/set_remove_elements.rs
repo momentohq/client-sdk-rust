@@ -65,7 +65,7 @@ impl<S: IntoBytes, E: IntoBytes> MomentoRequest for SetRemoveElementsRequest<S, 
         let cache_name = &self.cache_name;
         let request = prep_request_with_timeout(
             cache_name,
-            cache_client.configuration.deadline_millis(),
+            cache_client.deadline_millis(),
             SetDifferenceRequest {
                 set_name,
                 difference: Some(Difference::Subtrahend(Subtrahend {
@@ -75,8 +75,7 @@ impl<S: IntoBytes, E: IntoBytes> MomentoRequest for SetRemoveElementsRequest<S, 
         )?;
 
         let _ = cache_client
-            .data_client
-            .clone()
+            .next_data_client()
             .set_difference(request)
             .await?;
         Ok(SetRemoveElementsResponse {})

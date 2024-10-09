@@ -59,11 +59,7 @@ impl MomentoRequest for DeleteCacheRequest {
             cache_name: cache_name.to_string(),
         });
 
-        let _ = cache_client
-            .control_client
-            .clone()
-            .delete_cache(request)
-            .await?;
+        let _ = cache_client.control_client().delete_cache(request).await?;
         Ok(DeleteCacheResponse {})
     }
 }
