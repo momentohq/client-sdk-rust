@@ -323,27 +323,38 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
     }
 }
 
-
 enum LimitExceededMessageWrapper {
-    TopicSubscriptionsLimitExceeded,
-    OperationsRateLimitExceeded,
-    ThroughputRateLimitExceeded,
-    RequestSizeLimitExceeded,
-    ItemSizeLimitExceeded,
-    ElementSizeLimitExceeded,
-    UnknownLimitExceeded,
+    TopicSubscriptions,
+    OperationsRate,
+    ThroughputRate,
+    RequestSize,
+    ItemSize,
+    ElementSize,
+    Unknown,
 }
 
 impl LimitExceededMessageWrapper {
     pub fn value(&self) -> String {
         match self {
-            LimitExceededMessageWrapper::TopicSubscriptionsLimitExceeded => "Topic subscriptions limit exceeded for this account".to_string(),
-            LimitExceededMessageWrapper::OperationsRateLimitExceeded => "Request rate limit exceeded for this account".to_string(),
-            LimitExceededMessageWrapper::ThroughputRateLimitExceeded => "Bandwidth limit exceeded for this account".to_string(),
-            LimitExceededMessageWrapper::RequestSizeLimitExceeded => "Request size limit exceeded for this account".to_string(),
-            LimitExceededMessageWrapper::ItemSizeLimitExceeded => "Item size limit exceeded for this account".to_string(),
-            LimitExceededMessageWrapper::ElementSizeLimitExceeded => "Element size limit exceeded for this account".to_string(),
-            LimitExceededMessageWrapper::UnknownLimitExceeded => "Limit exceeded for this account".to_string(),
+            LimitExceededMessageWrapper::TopicSubscriptions => {
+                "Topic subscriptions limit exceeded for this account".to_string()
+            }
+            LimitExceededMessageWrapper::OperationsRate => {
+                "Request rate limit exceeded for this account".to_string()
+            }
+            LimitExceededMessageWrapper::ThroughputRate => {
+                "Bandwidth limit exceeded for this account".to_string()
+            }
+            LimitExceededMessageWrapper::RequestSize => {
+                "Request size limit exceeded for this account".to_string()
+            }
+            LimitExceededMessageWrapper::ItemSize => {
+                "Item size limit exceeded for this account".to_string()
+            }
+            LimitExceededMessageWrapper::ElementSize => {
+                "Element size limit exceeded for this account".to_string()
+            }
+            LimitExceededMessageWrapper::Unknown => "Limit exceeded for this account".to_string(),
         }
     }
 }
@@ -354,14 +365,20 @@ fn determine_limit_exceeded_message_wrapper(metadata: &MetadataMap, message: &st
     if let Some(err_cause) = metadata.get("err") {
         if let Ok(err_str) = err_cause.to_str() {
             return match err_str {
-                "topic_subscriptions_limit_exceeded" => LimitExceededMessageWrapper::TopicSubscriptionsLimitExceeded.value(),
-                "operations_rate_limit_exceeded" => LimitExceededMessageWrapper::OperationsRateLimitExceeded.value(),
-                "throughput_rate_limit_exceeded" => LimitExceededMessageWrapper::ThroughputRateLimitExceeded.value(),
-                "request_size_limit_exceeded" => LimitExceededMessageWrapper::RequestSizeLimitExceeded.value(),
-                "item_size_limit_exceeded" => LimitExceededMessageWrapper::ItemSizeLimitExceeded.value(),
-                "element_size_limit_exceeded" => LimitExceededMessageWrapper::ElementSizeLimitExceeded.value(),
-                _ => LimitExceededMessageWrapper::UnknownLimitExceeded.value(),
-            }
+                "topic_subscriptions_limit_exceeded" => {
+                    LimitExceededMessageWrapper::TopicSubscriptions.value()
+                }
+                "operations_rate_limit_exceeded" => {
+                    LimitExceededMessageWrapper::OperationsRate.value()
+                }
+                "throughput_rate_limit_exceeded" => {
+                    LimitExceededMessageWrapper::ThroughputRate.value()
+                }
+                "request_size_limit_exceeded" => LimitExceededMessageWrapper::RequestSize.value(),
+                "item_size_limit_exceeded" => LimitExceededMessageWrapper::ItemSize.value(),
+                "element_size_limit_exceeded" => LimitExceededMessageWrapper::ElementSize.value(),
+                _ => LimitExceededMessageWrapper::Unknown.value(),
+            };
         }
     }
 
@@ -369,18 +386,18 @@ fn determine_limit_exceeded_message_wrapper(metadata: &MetadataMap, message: &st
     // to return an appropriate error message.
     let lower_cased_message = message.to_lowercase();
     if lower_cased_message.contains("subscribers") {
-        return LimitExceededMessageWrapper::TopicSubscriptionsLimitExceeded.value();
+        LimitExceededMessageWrapper::TopicSubscriptions.value()
     } else if lower_cased_message.contains("operations") {
-        return LimitExceededMessageWrapper::OperationsRateLimitExceeded.value();
+        LimitExceededMessageWrapper::OperationsRate.value()
     } else if lower_cased_message.contains("throughput") {
-        return LimitExceededMessageWrapper::ThroughputRateLimitExceeded.value();
+        LimitExceededMessageWrapper::ThroughputRate.value()
     } else if lower_cased_message.contains("request limit") {
-        return LimitExceededMessageWrapper::RequestSizeLimitExceeded.value();
+        LimitExceededMessageWrapper::RequestSize.value()
     } else if lower_cased_message.contains("item size") {
-        return LimitExceededMessageWrapper::ItemSizeLimitExceeded.value();
+        LimitExceededMessageWrapper::ItemSize.value()
     } else if lower_cased_message.contains("element size") {
-        return LimitExceededMessageWrapper::ElementSizeLimitExceeded.value();
+        LimitExceededMessageWrapper::ElementSize.value()
     } else {
-        return LimitExceededMessageWrapper::UnknownLimitExceeded.value();
+        LimitExceededMessageWrapper::Unknown.value()
     }
 }
