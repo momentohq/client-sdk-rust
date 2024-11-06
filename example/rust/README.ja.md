@@ -10,13 +10,11 @@ _他言語バージョンもあります_：[English](README.md)
 - Momento オーストークンが必要です。トークン発行は[Momento CLI](https://github.com/momentohq/momento-cli)から行えます。
 
 ```bash
-cargo build
-
 # SDKコード例を実行する
-MOMENTO_AUTH_TOKEN=<YOUR AUTH TOKEN> ./target/debug/rust
+MOMENTO_API_KEY=<YOUR API KEY> cargo run --bin=cache
 ```
 
-SDK コード例: [main.rs](src/main.rs)
+SDK コード例: [cache.rs](src/bin/cache.rs)
 
 ## SDK を自身のプロジェクトで使用する
 
