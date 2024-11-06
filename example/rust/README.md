@@ -26,7 +26,7 @@ This example demonstrates a basic set and get from a cache.
 MOMENTO_API_KEY=<YOUR API KEY> cargo run --bin=cache
 ```
 
-Example Code: [cache.rs](src/cache.rs)
+Example Code: [cache.rs](src/bin/cache.rs)
 
 ## Running the Topics Example
 
@@ -37,7 +37,7 @@ This example demonstrates subscribing to and publishing to a Topic.
 MOMENTO_API_KEY=<YOUR API KEY> cargo run --bin=topics
 ```
 
-Example Code: [topics.rs](src/topics.rs)
+Example Code: [topics.rs](src/bin/topics.rs)
 
 ----------------------------------------------------------------------------------------
 For more info, visit our website at [https://gomomento.com](https://gomomento.com)!
