@@ -334,70 +334,68 @@ enum LimitExceededMessageWrapper {
 }
 
 impl LimitExceededMessageWrapper {
-    pub fn value(&self) -> String {
+    pub fn value(&self) -> &str {
         match self {
             LimitExceededMessageWrapper::TopicSubscriptions => {
-                "Topic subscriptions limit exceeded for this account".to_string()
+                "Topic subscriptions limit exceeded for this account"
             }
             LimitExceededMessageWrapper::OperationsRate => {
-                "Request rate limit exceeded for this account".to_string()
+                "Request rate limit exceeded for this account"
             }
             LimitExceededMessageWrapper::ThroughputRate => {
-                "Bandwidth limit exceeded for this account".to_string()
+                "Bandwidth limit exceeded for this account"
             }
             LimitExceededMessageWrapper::RequestSize => {
-                "Request size limit exceeded for this account".to_string()
+                "Request size limit exceeded for this account"
             }
-            LimitExceededMessageWrapper::ItemSize => {
-                "Item size limit exceeded for this account".to_string()
-            }
+            LimitExceededMessageWrapper::ItemSize => "Item size limit exceeded for this account",
             LimitExceededMessageWrapper::ElementSize => {
-                "Element size limit exceeded for this account".to_string()
+                "Element size limit exceeded for this account"
             }
-            LimitExceededMessageWrapper::Unknown => "Limit exceeded for this account".to_string(),
+            LimitExceededMessageWrapper::Unknown => "Limit exceeded for this account",
         }
     }
 }
 
 fn determine_limit_exceeded_message_wrapper(metadata: &MetadataMap, message: &str) -> String {
+    let wrapper;
+
     // If provided, we use the `err` metadata value to determine the most
     // appropriate error message to return.
     if let Some(err_cause) = metadata.get("err") {
         if let Ok(err_str) = err_cause.to_str() {
-            return match err_str {
+            wrapper = match err_str {
                 "topic_subscriptions_limit_exceeded" => {
-                    LimitExceededMessageWrapper::TopicSubscriptions.value()
+                    LimitExceededMessageWrapper::TopicSubscriptions
                 }
-                "operations_rate_limit_exceeded" => {
-                    LimitExceededMessageWrapper::OperationsRate.value()
-                }
-                "throughput_rate_limit_exceeded" => {
-                    LimitExceededMessageWrapper::ThroughputRate.value()
-                }
-                "request_size_limit_exceeded" => LimitExceededMessageWrapper::RequestSize.value(),
-                "item_size_limit_exceeded" => LimitExceededMessageWrapper::ItemSize.value(),
-                "element_size_limit_exceeded" => LimitExceededMessageWrapper::ElementSize.value(),
-                _ => LimitExceededMessageWrapper::Unknown.value(),
+                "operations_rate_limit_exceeded" => LimitExceededMessageWrapper::OperationsRate,
+                "throughput_rate_limit_exceeded" => LimitExceededMessageWrapper::ThroughputRate,
+                "request_size_limit_exceeded" => LimitExceededMessageWrapper::RequestSize,
+                "item_size_limit_exceeded" => LimitExceededMessageWrapper::ItemSize,
+                "element_size_limit_exceeded" => LimitExceededMessageWrapper::ElementSize,
+                _ => LimitExceededMessageWrapper::Unknown,
             };
+            return wrapper.value().to_string();
         }
     }
 
     // If `err` metadata is unavailable, try to use the error details field
     // to return an appropriate error message.
     let lower_cased_message = message.to_lowercase();
-    if lower_cased_message.contains("subscribers") {
-        LimitExceededMessageWrapper::TopicSubscriptions.value()
+    wrapper = if lower_cased_message.contains("subscribers") {
+        LimitExceededMessageWrapper::TopicSubscriptions
     } else if lower_cased_message.contains("operations") {
-        LimitExceededMessageWrapper::OperationsRate.value()
+        LimitExceededMessageWrapper::OperationsRate
     } else if lower_cased_message.contains("throughput") {
-        LimitExceededMessageWrapper::ThroughputRate.value()
+        LimitExceededMessageWrapper::ThroughputRate
     } else if lower_cased_message.contains("request limit") {
-        LimitExceededMessageWrapper::RequestSize.value()
+        LimitExceededMessageWrapper::RequestSize
     } else if lower_cased_message.contains("item size") {
-        LimitExceededMessageWrapper::ItemSize.value()
+        LimitExceededMessageWrapper::ItemSize
     } else if lower_cased_message.contains("element size") {
-        LimitExceededMessageWrapper::ElementSize.value()
+        LimitExceededMessageWrapper::ElementSize
     } else {
-        LimitExceededMessageWrapper::Unknown.value()
-    }
+        LimitExceededMessageWrapper::Unknown
+    };
+    wrapper.value().to_string()
 }
