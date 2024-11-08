@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.43.1](https://github.com/momentohq/client-sdk-rust/compare/v0.43.0...v0.43.1) (2024-11-08)
+
+
+### Miscellaneous
+
+* **deps-dev:** bump aws-cdk in /example/aws/cdk-lambda/infrastructure ([#395](https://github.com/momentohq/client-sdk-rust/issues/395)) ([6090dc8](https://github.com/momentohq/client-sdk-rust/commit/6090dc8ae457e765fdaaa3306af45da6dc5061fe))
+* **deps:** bump momento from 0.42.0 to 0.43.0 in /example/rust ([#394](https://github.com/momentohq/client-sdk-rust/issues/394)) ([1ae2a4d](https://github.com/momentohq/client-sdk-rust/commit/1ae2a4d88cc6b0dac3d2c6b07a82718636e076e9))
+* fix broken links in readmes ([#397](https://github.com/momentohq/client-sdk-rust/issues/397)) ([b07c4ad](https://github.com/momentohq/client-sdk-rust/commit/b07c4adc93d4db3d36da37b13867f989df148587))
+* improve resource exhausted message ([#398](https://github.com/momentohq/client-sdk-rust/issues/398)) ([84a0cbf](https://github.com/momentohq/client-sdk-rust/commit/84a0cbf9398e91f429a850b8469f511296171c87))
+
 ## [0.43.0](https://github.com/momentohq/client-sdk-rust/compare/v0.42.0...v0.43.0) (2024-10-09)
 
 
