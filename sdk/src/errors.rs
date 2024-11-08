@@ -2,6 +2,7 @@ use std::{error::Error, fmt::Debug, str::from_utf8};
 
 use tonic::codegen::http;
 use tonic::metadata::errors::ToStrError;
+use tonic::metadata::MetadataMap;
 
 /// Error codes to indicate the type of error that occurred
 #[derive(Debug, Clone, PartialEq)]
@@ -197,7 +198,7 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
             details: Some(status.into())
         },
         tonic::Code::ResourceExhausted => MomentoError {
-            message: "Request rate, bandwidth, or object size exceeded the limits for this account.  To resolve this error, reduce your usage as appropriate or contact us at support@momentohq.com to request a limit increase".into(),
+            message: determine_limit_exceeded_message_wrapper(status.metadata(), status.message()),
             error_code: MomentoErrorCode::LimitExceededError,
             inner_error: Some(status.clone().into()),
             details: Some(status.into())
@@ -320,4 +321,81 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
             details: Some(status.into())
         },
     }
+}
+
+enum LimitExceededMessageWrapper {
+    TopicSubscriptions,
+    OperationsRate,
+    ThroughputRate,
+    RequestSize,
+    ItemSize,
+    ElementSize,
+    Unknown,
+}
+
+impl LimitExceededMessageWrapper {
+    pub fn value(&self) -> &str {
+        match self {
+            LimitExceededMessageWrapper::TopicSubscriptions => {
+                "Topic subscriptions limit exceeded for this account"
+            }
+            LimitExceededMessageWrapper::OperationsRate => {
+                "Request rate limit exceeded for this account"
+            }
+            LimitExceededMessageWrapper::ThroughputRate => {
+                "Bandwidth limit exceeded for this account"
+            }
+            LimitExceededMessageWrapper::RequestSize => {
+                "Request size limit exceeded for this account"
+            }
+            LimitExceededMessageWrapper::ItemSize => "Item size limit exceeded for this account",
+            LimitExceededMessageWrapper::ElementSize => {
+                "Element size limit exceeded for this account"
+            }
+            LimitExceededMessageWrapper::Unknown => "Limit exceeded for this account",
+        }
+    }
+}
+
+fn determine_limit_exceeded_message_wrapper(metadata: &MetadataMap, message: &str) -> String {
+    let wrapper;
+
+    // If provided, we use the `err` metadata value to determine the most
+    // appropriate error message to return.
+    if let Some(err_cause) = metadata.get("err") {
+        if let Ok(err_str) = err_cause.to_str() {
+            wrapper = match err_str {
+                "topic_subscriptions_limit_exceeded" => {
+                    LimitExceededMessageWrapper::TopicSubscriptions
+                }
+                "operations_rate_limit_exceeded" => LimitExceededMessageWrapper::OperationsRate,
+                "throughput_rate_limit_exceeded" => LimitExceededMessageWrapper::ThroughputRate,
+                "request_size_limit_exceeded" => LimitExceededMessageWrapper::RequestSize,
+                "item_size_limit_exceeded" => LimitExceededMessageWrapper::ItemSize,
+                "element_size_limit_exceeded" => LimitExceededMessageWrapper::ElementSize,
+                _ => LimitExceededMessageWrapper::Unknown,
+            };
+            return wrapper.value().to_string();
+        }
+    }
+
+    // If `err` metadata is unavailable, try to use the error details field
+    // to return an appropriate error message.
+    let lower_cased_message = message.to_lowercase();
+    wrapper = if lower_cased_message.contains("subscribers") {
+        LimitExceededMessageWrapper::TopicSubscriptions
+    } else if lower_cased_message.contains("operations") {
+        LimitExceededMessageWrapper::OperationsRate
+    } else if lower_cased_message.contains("throughput") {
+        LimitExceededMessageWrapper::ThroughputRate
+    } else if lower_cased_message.contains("request limit") {
+        LimitExceededMessageWrapper::RequestSize
+    } else if lower_cased_message.contains("item size") {
+        LimitExceededMessageWrapper::ItemSize
+    } else if lower_cased_message.contains("element size") {
+        LimitExceededMessageWrapper::ElementSize
+    } else {
+        LimitExceededMessageWrapper::Unknown
+    };
+    wrapper.value().to_string()
 }
