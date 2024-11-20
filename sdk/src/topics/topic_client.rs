@@ -153,7 +153,7 @@ impl TopicClient {
         cache_name: impl Into<String> + Clone,
         topic: impl Into<String> + Clone,
     ) -> Result<Subscription, MomentoError> {
-        let request = SubscribeRequest::new(cache_name, topic, None);
+        let request = SubscribeRequest::new(cache_name, topic, None, None);
         request.send(self).await
     }
 
