@@ -227,7 +227,8 @@ impl futures::Stream for Subscription {
                                             }
                                             SubscriptionItem::Discontinuity(d) => {
                                                 log::debug!("discontinuity! Updating sequence number and continuing...");
-                                                self.current_sequence_number = d.new_sequence_number;
+                                                self.current_sequence_number =
+                                                    d.new_sequence_number;
                                                 self.current_sequence_page = d.new_sequence_page;
                                             }
                                         }

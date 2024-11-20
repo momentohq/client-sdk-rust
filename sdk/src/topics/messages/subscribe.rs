@@ -83,7 +83,7 @@ impl MomentoRequest for SubscribeRequest {
                 resume_at_topic_sequence_number: self
                     .resume_at_topic_sequence_number
                     .unwrap_or_default(),
-                sequence_page: self.resume_at_topic_sequence_number.unwrap_or_default()
+                sequence_page: self.resume_at_topic_sequence_number.unwrap_or_default(),
             },
         )?;
 
