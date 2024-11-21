@@ -154,7 +154,7 @@ impl Subscription {
                                     publisher_id: item.publisher_id,
                                 }))
                             }
-                            // This is kind of a broken protocol situation - but we do have a sequence number
+                            // This is kind of a broken protocol situation - but we do have a sequence number and page,
                             // so communicating the discontinuity at least allows downstream consumers to
                             // take action on a partially-unsupported stream.
                             None => {
@@ -304,7 +304,6 @@ pub(crate) enum SubscriptionItem {
     /// You might not care about these, and that's okay! It's probably a good idea to
     /// log them though, so you can reach out for help if you notice something naughty
     /// that hurts your users.
-    /// We currently do not expose discontinuities to the end user.
     Discontinuity(Discontinuity),
 }
 
@@ -313,11 +312,9 @@ pub(crate) enum SubscriptionItem {
 pub struct SubscriptionValue {
     /// The published value.
     pub kind: ValueKind,
-    /// Best-effort sequence number for the topic. This is not transactional, it's just
-    /// to help you know when things are probably working well or probably not working well.
+    /// The sequence number of the topic.
     pub topic_sequence_number: u64,
-    /// Best-effort page number for the topic. This is not transactional, it's just
-    /// to help you know when things are probably working well or probably not working well.
+    /// The page number of the topic.
     pub topic_sequence_page: u64,
     /// Authenticated id from Publisher's disposable token
     pub publisher_id: String,
