@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.44.0](https://github.com/momentohq/client-sdk-rust/compare/v0.43.1...v0.44.0) (2024-11-21)
+
+
+### Features
+
+* add sequence page to topics ([#400](https://github.com/momentohq/client-sdk-rust/issues/400)) ([29ee341](https://github.com/momentohq/client-sdk-rust/commit/29ee3411716461c981ca78241d64abf1a9efe693))
+
 ## [0.43.1](https://github.com/momentohq/client-sdk-rust/compare/v0.43.0...v0.43.1) (2024-11-08)
 
 
