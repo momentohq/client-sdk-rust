@@ -27,8 +27,8 @@ use crate::{
 /// use momento::topics::SubscribeRequest;
 /// # let (topic_client, cache_name) = momento_test_util::create_doctest_topic_client();
 ///
-/// // Subscribe to a topic and resume from sequence number 10
-/// let request = SubscribeRequest::new(cache_name, "topic", Some(10));
+/// // Subscribe to a topic and resume from sequence number 10 and page 2
+/// let request = SubscribeRequest::new(cache_name, "topic", Some(10), Some(2));
 ///
 /// // Note: your subscription must be declared as `mut`!
 /// let mut subscription = topic_client.send_request(request).await?;
@@ -50,6 +50,7 @@ pub struct SubscribeRequest {
     cache_name: String,
     topic: String,
     resume_at_topic_sequence_number: Option<u64>,
+    resume_at_sequence_page: Option<u64>,
 }
 
 impl SubscribeRequest {
@@ -58,11 +59,13 @@ impl SubscribeRequest {
         cache_name: impl Into<String>,
         topic: impl Into<String>,
         resume_at_topic_sequence_number: Option<u64>,
+        resume_at_sequence_page: Option<u64>,
     ) -> Self {
         Self {
             cache_name: cache_name.into(),
             topic: topic.into(),
             resume_at_topic_sequence_number,
+            resume_at_sequence_page,
         }
     }
 }
@@ -80,6 +83,7 @@ impl MomentoRequest for SubscribeRequest {
                 resume_at_topic_sequence_number: self
                     .resume_at_topic_sequence_number
                     .unwrap_or_default(),
+                sequence_page: self.resume_at_topic_sequence_number.unwrap_or_default(),
             },
         )?;
 
@@ -94,6 +98,7 @@ impl MomentoRequest for SubscribeRequest {
             self.cache_name,
             self.topic,
             self.resume_at_topic_sequence_number.unwrap_or_default(),
+            self.resume_at_sequence_page.unwrap_or_default(),
             SubscriptionState::Subscribed(stream),
         ))
     }

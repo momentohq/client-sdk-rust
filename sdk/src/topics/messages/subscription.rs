@@ -80,6 +80,7 @@ pub struct Subscription {
     cache_name: String,
     topic: String,
     current_sequence_number: u64,
+    current_sequence_page: u64,
     current_subscription: SubscriptionState,
 }
 
@@ -113,6 +114,7 @@ impl Subscription {
         cache_name: String,
         topic: String,
         current_sequence_number: u64,
+        current_sequence_page: u64,
         current_subscription: SubscriptionState,
     ) -> Subscription {
         Subscription {
@@ -120,6 +122,7 @@ impl Subscription {
             cache_name,
             topic,
             current_sequence_number,
+            current_sequence_page,
             current_subscription,
         }
     }
@@ -134,10 +137,12 @@ impl Subscription {
                 pubsub::subscription_item::Kind::Item(item) => match item.value {
                     Some(value) => {
                         let sequence_number = item.topic_sequence_number;
+                        let sequence_page = item.sequence_page;
                         match value.kind {
                             Some(topic_value_kind) => {
                                 MapKind::RealItem(SubscriptionItem::Value(SubscriptionValue {
                                     topic_sequence_number: sequence_number,
+                                    topic_sequence_page: sequence_page,
                                     kind: match topic_value_kind {
                                         pubsub::topic_value::Kind::Text(text) => {
                                             ValueKind::Text(text)
@@ -149,13 +154,14 @@ impl Subscription {
                                     publisher_id: item.publisher_id,
                                 }))
                             }
-                            // This is kind of a broken protocol situation - but we do have a sequence number
+                            // This is kind of a broken protocol situation - but we do have a sequence number and page,
                             // so communicating the discontinuity at least allows downstream consumers to
                             // take action on a partially-unsupported stream.
                             None => {
                                 MapKind::RealItem(SubscriptionItem::Discontinuity(Discontinuity {
                                     last_sequence_number: None,
                                     new_sequence_number: sequence_number,
+                                    new_sequence_page: sequence_page,
                                 }))
                             }
                         }
@@ -166,6 +172,7 @@ impl Subscription {
                     MapKind::RealItem(SubscriptionItem::Discontinuity(Discontinuity {
                         last_sequence_number: Some(discontinuity.last_topic_sequence),
                         new_sequence_number: discontinuity.new_topic_sequence,
+                        new_sequence_page: discontinuity.new_sequence_page,
                     }))
                 }
                 pubsub::subscription_item::Kind::Heartbeat(_) => MapKind::Heartbeat,
@@ -179,12 +186,14 @@ impl Subscription {
         let cache_name = self.cache_name.clone();
         let topic = self.topic.clone();
         let resume_at_topic_sequence_number = self.current_sequence_number;
+        let resume_at_topic_sequence_page = self.current_sequence_page;
         async move {
             client
                 .subscribe(SubscriptionRequest {
                     cache_name,
                     topic,
                     resume_at_topic_sequence_number,
+                    sequence_page: resume_at_topic_sequence_page,
                 })
                 .await
         }
@@ -212,12 +221,15 @@ impl futures::Stream for Subscription {
                                             SubscriptionItem::Value(v) => {
                                                 self.current_sequence_number =
                                                     v.topic_sequence_number;
+                                                self.current_sequence_page = v.topic_sequence_page;
                                                 // We return only SubscriptionValues here
                                                 break std::task::Poll::Ready(Some(v.clone()));
                                             }
                                             SubscriptionItem::Discontinuity(d) => {
                                                 log::debug!("discontinuity! Updating sequence number and continuing...");
-                                                self.current_sequence_number = d.new_sequence_number
+                                                self.current_sequence_number =
+                                                    d.new_sequence_number;
+                                                self.current_sequence_page = d.new_sequence_page;
                                             }
                                         }
                                     }
@@ -292,7 +304,6 @@ pub(crate) enum SubscriptionItem {
     /// You might not care about these, and that's okay! It's probably a good idea to
     /// log them though, so you can reach out for help if you notice something naughty
     /// that hurts your users.
-    /// We currently do not expose discontinuities to the end user.
     Discontinuity(Discontinuity),
 }
 
@@ -301,9 +312,10 @@ pub(crate) enum SubscriptionItem {
 pub struct SubscriptionValue {
     /// The published value.
     pub kind: ValueKind,
-    /// Best-effort sequence number for the topic. This is not transactional, it's just
-    /// to help you know when things are probably working well or probably not working well.
+    /// The sequence number of the topic.
     pub topic_sequence_number: u64,
+    /// The page number of the topic.
+    pub topic_sequence_page: u64,
     /// Authenticated id from Publisher's disposable token
     pub publisher_id: String,
 }
@@ -343,6 +355,9 @@ pub struct Discontinuity {
     /// This discontinuity's sequence number. The next item on the stream should
     /// be a value with the next sequence after this.
     pub new_sequence_number: u64,
+
+    /// This discontinuity's page number.
+    pub new_sequence_page: u64,
 }
 
 /// How a value should be presented on a subscription stream
