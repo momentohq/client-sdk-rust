@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.44.1](https://github.com/momentohq/client-sdk-rust/compare/v0.44.0...v0.44.1) (2024-11-25)
+
+
+### Miscellaneous
+
+* **deps:** bump momento from 0.43.0 to 0.44.0 in /example/rust ([#402](https://github.com/momentohq/client-sdk-rust/issues/402)) ([747bd9a](https://github.com/momentohq/client-sdk-rust/commit/747bd9ac839487e910afffa29d3c72810cb15618))
+
 ## [0.44.0](https://github.com/momentohq/client-sdk-rust/compare/v0.43.1...v0.44.0) (2024-11-21)
 
 
