@@ -1,7 +1,7 @@
 {
     "recommendations": [
         "rust-lang.rust-analyzer",
-        "serayuzgur.crates",
+        "fill-labs.dependi",
         "vadimcn.vscode-lldb",
         "tamasfe.even-better-toml"
     ]
