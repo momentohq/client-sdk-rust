@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.44.1](https://github.com/momentohq/client-sdk-rust/compare/v0.44.0...v0.44.1) (2024-12-09)
+
+
+### Miscellaneous
+
+* **deps:** bump momento from 0.43.0 to 0.44.0 in /example/rust ([#402](https://github.com/momentohq/client-sdk-rust/issues/402)) ([747bd9a](https://github.com/momentohq/client-sdk-rust/commit/747bd9ac839487e910afffa29d3c72810cb15618))
+* remove deprecated crates extension ([#404](https://github.com/momentohq/client-sdk-rust/issues/404)) ([d81a66a](https://github.com/momentohq/client-sdk-rust/commit/d81a66aef7e726aaf24e6c2e496feccb7c421afa))
+* sdk/Cargo.lock should use correct version of momento packages ([#405](https://github.com/momentohq/client-sdk-rust/issues/405)) ([bcd74ed](https://github.com/momentohq/client-sdk-rust/commit/bcd74ed5418468e29d1aa4e88fe9513f0007b304))
+
 ## [0.44.0](https://github.com/momentohq/client-sdk-rust/compare/v0.43.1...v0.44.0) (2024-11-21)
 
 
