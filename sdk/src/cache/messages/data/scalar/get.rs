@@ -132,7 +132,7 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
 /// use std::convert::TryInto;
 /// let item: MomentoResult<Vec<u8>> = get_response.try_into();
 /// ```
-#[derive(Debug, Display, PartialEq, Eq)]
+#[derive(Debug, Display, PartialEq, Eq, Clone)]
 pub enum GetResponse {
     /// The item was found in the cache.
     Hit {
@@ -152,7 +152,7 @@ impl<I: IntoBytes> From<I> for GetResponse {
 }
 
 /// Represents a value retrieved from the cache.
-#[derive(PartialEq, Eq, Default)]
+#[derive(PartialEq, Eq, Default, Clone)]
 pub struct Value {
     /// The raw bytes of the item.
     pub(crate) raw_item: Vec<u8>,
