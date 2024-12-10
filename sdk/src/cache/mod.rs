@@ -52,6 +52,7 @@ pub use messages::data::scalar::item_get_type::{
 pub use messages::data::scalar::key_exists::{KeyExistsRequest, KeyExistsResponse};
 pub use messages::data::scalar::keys_exist::{KeysExistRequest, KeysExistResponse};
 pub use messages::data::scalar::set::{SetRequest, SetResponse};
+pub use messages::data::scalar::set_batch::{SetBatchRequest, SetBatchResponse};
 pub use messages::data::scalar::set_if_absent::{SetIfAbsentRequest, SetIfAbsentResponse};
 pub use messages::data::scalar::set_if_absent_or_equal::{
     SetIfAbsentOrEqualRequest, SetIfAbsentOrEqualResponse,

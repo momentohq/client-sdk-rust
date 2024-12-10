@@ -1,5 +1,5 @@
 use momento::cache::messages::data::scalar::get::Value;
-use momento::cache::GetResponse;
+use momento::cache::{GetResponse, SetResponse};
 use momento::{MomentoErrorCode, MomentoResult};
 use momento_test_util::{unique_cache_name, unique_key, TestScalar, CACHE_TEST_STATE};
 use std::collections::HashMap;
@@ -7,6 +7,8 @@ use std::convert::TryInto;
 use std::iter::zip;
 
 mod batch_get_set {
+    use momento::cache::SetBatchRequest;
+
     use super::*;
 
     #[tokio::test]
@@ -71,13 +73,22 @@ mod batch_get_set {
     }
 
     #[tokio::test]
-    async fn get_batch_happy_path_some_hits_and_misses() -> MomentoResult<()> {
+    async fn get_set_batch_happy_path_with_some_hits_and_misses() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = CACHE_TEST_STATE.cache_name.as_str();
 
         let items = [TestScalar::new(), TestScalar::new(), TestScalar::new()];
+        let items_map = HashMap::from([
+            (items[0].key(), items[0].value()),
+            (items[1].key(), items[1].value()),
+            (items[2].key(), items[2].value()),
+        ]);
+        let set_response = client.set_batch(cache_name, items_map.clone()).await?;
+        let set_responses_map: HashMap<String, SetResponse> = set_response.into();
+        assert_eq!(set_responses_map.len(), items.len());
         for item in items.iter() {
-            client.set(cache_name, item.key(), item.value()).await?;
+            let set_value = set_responses_map.get(item.key()).unwrap();
+            assert_eq!(*set_value, SetResponse {});
         }
 
         let nonexistent_keys = vec![unique_key(), unique_key(), unique_key()];
@@ -144,6 +155,49 @@ mod batch_get_set {
             assert_eq!(*retrieved_value, item.value().as_bytes());
         }
 
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn set_batch_invalid_cache_name() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let items: HashMap<&str, &str> = HashMap::from([("k1", "v1"), ("k1", "v1")]);
+        let result = client.set_batch("   ", items).await.unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn set_batch_nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_cache_name();
+        let items: HashMap<&str, &str> = HashMap::from([("k1", "v1"), ("k1", "v1")]);
+        let result = client.set_batch(cache_name, items).await.unwrap_err();
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn set_batch_with_ttl() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = CACHE_TEST_STATE.cache_name.as_str();
+
+        let items = [TestScalar::new(), TestScalar::new(), TestScalar::new()];
+        let items_map = HashMap::from([
+            (items[0].key(), items[0].value()),
+            (items[1].key(), items[1].value()),
+            (items[2].key(), items[2].value()),
+        ]);
+
+        let set_batch_request = SetBatchRequest::new(cache_name, items_map.clone())
+            .ttl(std::time::Duration::from_secs(60));
+        let set_batch_response = client.send_request(set_batch_request).await?;
+        let set_responses_map: HashMap<String, SetResponse> = set_batch_response.into();
+        assert_eq!(set_responses_map.len(), items.len());
+        for item in items.iter() {
+            let set_value = set_responses_map.get(item.key()).unwrap();
+            assert_eq!(*set_value, SetResponse {});
+        }
         Ok(())
     }
 }

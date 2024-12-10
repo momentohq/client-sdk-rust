@@ -21,7 +21,7 @@ pub mod keys_exist;
 /// Contains the request and response types for setting an item in a cache.
 pub mod set;
 /// Contains the request and response types for setting a batch of items in a cache.
-// pub mod set_batch;
+pub mod set_batch;
 /// Contains the request and response types for setting an item in a cache if it is absent from the cache.
 pub mod set_if_absent;
 /// Contains the request and response types for setting an item in a cache if it is absent or equal to a given value.
