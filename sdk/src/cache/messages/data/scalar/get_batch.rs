@@ -99,7 +99,9 @@ impl<K: IntoBytesIterable> MomentoRequest for GetBatchRequest<K> {
             .into_inner();
 
         // receive stream of get responses
-        let mut results_list: Vec<GetResponse> = vec![];
+        // let mut results_list: Vec<GetResponse> = vec![];
+        let mut responses: HashMap<String, GetResponse> = HashMap::new();
+        let mut string_keys_iter = string_keys.iter();
         while let Some(get_response) = response_stream.message().await? {
             let sdk_get_response = match get_response.result() {
                 ECacheResult::Hit => GetResponse::Hit {
@@ -115,18 +117,20 @@ impl<K: IntoBytesIterable> MomentoRequest for GetBatchRequest<K> {
                     ))
                 }
             };
-            results_list.push(sdk_get_response);
+            let key = match string_keys_iter.next() {
+                Some(key) => key,
+                None => {
+                    return Err(MomentoError::unknown_error(
+                        "GetBatch",
+                        Some("Received more responses than expected".to_string()),
+                    ))
+                }
+            };
+            responses.insert(key.to_string(), sdk_get_response);
         }
 
-        let results_map: HashMap<String, GetResponse> = string_keys
-            .clone()
-            .into_iter()
-            .zip(results_list.clone())
-            .collect();
-
         Ok(GetBatchResponse {
-            results: results_list,
-            results_dictionary: results_map,
+            results_dictionary: responses,
         })
     }
 }
@@ -162,13 +166,12 @@ impl<K: IntoBytesIterable> MomentoRequest for GetBatchRequest<K> {
 /// ```
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct GetBatchResponse {
-    results: Vec<GetResponse>,
     results_dictionary: HashMap<String, GetResponse>,
 }
 
 impl From<GetBatchResponse> for Vec<GetResponse> {
     fn from(response: GetBatchResponse) -> Self {
-        response.results
+        response.results_dictionary.into_values().collect()
     }
 }
 

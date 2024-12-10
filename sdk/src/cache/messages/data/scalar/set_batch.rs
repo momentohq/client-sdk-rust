@@ -110,7 +110,6 @@ impl<K: IntoBytes + Copy, V: IntoBytes + Copy> MomentoRequest for SetBatchReques
         let mut responses: HashMap<String, SetResponse> = HashMap::new();
         let mut set_request_keys_iter = set_request_keys.iter();
         while let Some(set_response) = response_stream.message().await? {
-            println!("set_response message? {:?}", set_response.message);
             let sdk_set_response = match set_response.result() {
                 ECacheResult::Ok => SetResponse {},
                 _ => {
@@ -124,7 +123,7 @@ impl<K: IntoBytes + Copy, V: IntoBytes + Copy> MomentoRequest for SetBatchReques
                 Some(key) => key,
                 None => {
                     return Err(MomentoError::unknown_error(
-                        "Set",
+                        "SetBatch",
                         Some("Received more responses than expected".to_string()),
                     ))
                 }
