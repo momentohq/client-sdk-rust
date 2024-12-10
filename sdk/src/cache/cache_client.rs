@@ -16,27 +16,28 @@ use crate::cache::{
     DictionaryLengthResponse, DictionaryRemoveFieldRequest, DictionaryRemoveFieldResponse,
     DictionaryRemoveFieldsRequest, DictionaryRemoveFieldsResponse, DictionarySetFieldRequest,
     DictionarySetFieldResponse, DictionarySetFieldsRequest, DictionarySetFieldsResponse,
-    FlushCacheRequest, FlushCacheResponse, GetRequest, GetResponse, IncreaseTtlRequest,
-    IncreaseTtlResponse, IncrementRequest, IncrementResponse, IntoDictionaryFieldValuePairs,
-    IntoSortedSetElements, ItemGetTtlRequest, ItemGetTtlResponse, ItemGetTypeRequest,
-    ItemGetTypeResponse, KeyExistsRequest, KeyExistsResponse, KeysExistRequest, KeysExistResponse,
-    ListCachesRequest, ListCachesResponse, ListConcatenateBackRequest, ListConcatenateBackResponse,
-    ListConcatenateFrontRequest, ListConcatenateFrontResponse, ListFetchRequest, ListFetchResponse,
-    ListLengthRequest, ListLengthResponse, ListPopBackRequest, ListPopBackResponse,
-    ListPopFrontRequest, ListPopFrontResponse, ListPushBackRequest, ListPushBackResponse,
-    ListPushFrontRequest, ListPushFrontResponse, ListRemoveValueRequest, ListRemoveValueResponse,
-    MomentoRequest, SetAddElementsRequest, SetAddElementsResponse, SetFetchRequest,
-    SetFetchResponse, SetIfAbsentOrEqualRequest, SetIfAbsentOrEqualResponse, SetIfAbsentRequest,
-    SetIfAbsentResponse, SetIfEqualRequest, SetIfEqualResponse, SetIfNotEqualRequest,
-    SetIfNotEqualResponse, SetIfPresentAndNotEqualRequest, SetIfPresentAndNotEqualResponse,
-    SetIfPresentRequest, SetIfPresentResponse, SetRemoveElementsRequest, SetRemoveElementsResponse,
-    SetRequest, SetResponse, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest,
-    SortedSetFetchResponse, SortedSetGetRankRequest, SortedSetGetRankResponse,
-    SortedSetGetScoreRequest, SortedSetGetScoreResponse, SortedSetGetScoresRequest,
-    SortedSetGetScoresResponse, SortedSetLengthRequest, SortedSetLengthResponse, SortedSetOrder,
-    SortedSetPutElementRequest, SortedSetPutElementResponse, SortedSetPutElementsRequest,
-    SortedSetPutElementsResponse, SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse,
-    UpdateTtlRequest, UpdateTtlResponse,
+    FlushCacheRequest, FlushCacheResponse, GetBatchRequest, GetBatchResponse, GetRequest,
+    GetResponse, IncreaseTtlRequest, IncreaseTtlResponse, IncrementRequest, IncrementResponse,
+    IntoDictionaryFieldValuePairs, IntoSortedSetElements, ItemGetTtlRequest, ItemGetTtlResponse,
+    ItemGetTypeRequest, ItemGetTypeResponse, KeyExistsRequest, KeyExistsResponse, KeysExistRequest,
+    KeysExistResponse, ListCachesRequest, ListCachesResponse, ListConcatenateBackRequest,
+    ListConcatenateBackResponse, ListConcatenateFrontRequest, ListConcatenateFrontResponse,
+    ListFetchRequest, ListFetchResponse, ListLengthRequest, ListLengthResponse, ListPopBackRequest,
+    ListPopBackResponse, ListPopFrontRequest, ListPopFrontResponse, ListPushBackRequest,
+    ListPushBackResponse, ListPushFrontRequest, ListPushFrontResponse, ListRemoveValueRequest,
+    ListRemoveValueResponse, MomentoRequest, SetAddElementsRequest, SetAddElementsResponse,
+    SetFetchRequest, SetFetchResponse, SetIfAbsentOrEqualRequest, SetIfAbsentOrEqualResponse,
+    SetIfAbsentRequest, SetIfAbsentResponse, SetIfEqualRequest, SetIfEqualResponse,
+    SetIfNotEqualRequest, SetIfNotEqualResponse, SetIfPresentAndNotEqualRequest,
+    SetIfPresentAndNotEqualResponse, SetIfPresentRequest, SetIfPresentResponse,
+    SetRemoveElementsRequest, SetRemoveElementsResponse, SetRequest, SetResponse,
+    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetFetchResponse,
+    SortedSetGetRankRequest, SortedSetGetRankResponse, SortedSetGetScoreRequest,
+    SortedSetGetScoreResponse, SortedSetGetScoresRequest, SortedSetGetScoresResponse,
+    SortedSetLengthRequest, SortedSetLengthResponse, SortedSetOrder, SortedSetPutElementRequest,
+    SortedSetPutElementResponse, SortedSetPutElementsRequest, SortedSetPutElementsResponse,
+    SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse, UpdateTtlRequest,
+    UpdateTtlResponse,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -304,6 +305,8 @@ impl CacheClient {
         request.send(self).await
     }
 
+    // TODO: set batch
+
     /// Gets an item from a Momento Cache
     ///
     /// # Arguments
@@ -340,6 +343,54 @@ impl CacheClient {
         key: impl IntoBytes,
     ) -> MomentoResult<GetResponse> {
         let request = GetRequest::new(cache_name, key);
+        request.send(self).await
+    }
+
+    /// Gets a batch of items from a Momento Cache
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache
+    /// * `keys` - list of keys to fetch
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// use std::convert::TryInto;
+    /// use std::collections::HashMap;
+    /// use momento::cache::GetResponse;
+    /// # cache_client.set(&cache_name, "key1", "value1").await?;
+    /// # cache_client.set(&cache_name, "key2", "value2").await?;
+    ///
+    /// let results_map: HashMap<String, GetResponse> = cache_client.get_batch(&cache_name, vec!["key1", "key2"]).await?.into();
+    /// # assert_eq!(results_map.clone().len(), 2);
+    ///
+    /// for (key, response) in results_map {
+    ///     match response {
+    ///         GetResponse::Hit { value } => {
+    ///             let value: String = value.try_into().expect("I stored a string!");
+    ///             println!("Fetched value for key {}: {}", key, value);
+    ///         }
+    ///         GetResponse::Miss => println!("Cache miss for key {}", key),
+    ///     }
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [GetBatchRequest].
+    ///
+    /// For more examples of handling the response, see [GetBatchResponse].
+    pub async fn get_batch(
+        &self,
+        cache_name: impl Into<String>,
+        keys: impl IntoBytesIterable,
+    ) -> MomentoResult<GetBatchResponse> {
+        let request = GetBatchRequest::new(cache_name, keys);
         request.send(self).await
     }
 

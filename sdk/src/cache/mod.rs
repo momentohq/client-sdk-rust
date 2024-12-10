@@ -42,6 +42,7 @@ pub use messages::data::dictionary::dictionary_set_fields::{
 pub use messages::data::scalar::decrease_ttl::{DecreaseTtlRequest, DecreaseTtlResponse};
 pub use messages::data::scalar::delete::{DeleteRequest, DeleteResponse};
 pub use messages::data::scalar::get::{GetRequest, GetResponse};
+pub use messages::data::scalar::get_batch::{GetBatchRequest, GetBatchResponse};
 pub use messages::data::scalar::increase_ttl::{IncreaseTtlRequest, IncreaseTtlResponse};
 pub use messages::data::scalar::increment::{IncrementRequest, IncrementResponse};
 pub use messages::data::scalar::item_get_ttl::{ItemGetTtlRequest, ItemGetTtlResponse};

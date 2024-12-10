@@ -4,6 +4,8 @@ pub mod decrease_ttl;
 pub mod delete;
 /// Contains the request and response types for getting an item from a cache.
 pub mod get;
+/// Contains the request and response types for getting a batch of items from a cache.
+pub mod get_batch;
 /// Contains the request and response types for increasing the time-to-live of an item in a cache.
 pub mod increase_ttl;
 /// Contains the request and response types for incrementing the value of an item in a cache.
@@ -18,6 +20,8 @@ pub mod key_exists;
 pub mod keys_exist;
 /// Contains the request and response types for setting an item in a cache.
 pub mod set;
+/// Contains the request and response types for setting a batch of items in a cache.
+// pub mod set_batch;
 /// Contains the request and response types for setting an item in a cache if it is absent from the cache.
 pub mod set_if_absent;
 /// Contains the request and response types for setting an item in a cache if it is absent or equal to a given value.
