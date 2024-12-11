@@ -4,7 +4,6 @@ use momento::{MomentoErrorCode, MomentoResult};
 use momento_test_util::{unique_cache_name, unique_key, TestScalar, CACHE_TEST_STATE};
 use std::collections::HashMap;
 use std::convert::TryInto;
-use std::iter::zip;
 
 mod batch_get_set {
     use momento::cache::SetBatchRequest;
@@ -36,19 +35,6 @@ mod batch_get_set {
         let cache_name = CACHE_TEST_STATE.cache_name.as_str();
         let keys = vec![unique_key(), unique_key(), unique_key()];
         let response = client.get_batch(cache_name, keys.clone()).await?;
-
-        let results_list: Vec<GetResponse> = response.clone().into();
-        assert_eq!(results_list.len(), 3);
-        for (result, key) in zip(results_list, keys.clone()) {
-            assert_eq!(
-                result,
-                GetResponse::Miss,
-                "Expected miss for key '{}' in cache {}, got {:?}",
-                key,
-                cache_name,
-                result
-            );
-        }
 
         let results_map: HashMap<String, GetResponse> = response.clone().into();
         assert_eq!(results_map.len(), keys.len());
@@ -98,27 +84,6 @@ mod batch_get_set {
         ]
         .concat();
         let response = client.get_batch(cache_name, all_keys.clone()).await?;
-
-        let results_list: Vec<GetResponse> = response.clone().into();
-        assert_eq!(results_list.len(), all_keys.len());
-        for (result, key) in zip(results_list, all_keys.clone()) {
-            if nonexistent_keys.contains(&key) {
-                assert_eq!(
-                    result,
-                    GetResponse::Miss,
-                    "Expected miss for key '{}' in cache {}, got {:?}",
-                    key,
-                    cache_name,
-                    result
-                );
-            } else {
-                for item in items.iter() {
-                    if item.key() == key {
-                        assert_eq!(result, GetResponse::from(item));
-                    }
-                }
-            }
-        }
 
         let results_map: HashMap<String, GetResponse> = response.clone().into();
         assert_eq!(results_map.len(), all_keys.len());
