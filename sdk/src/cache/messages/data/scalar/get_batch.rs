@@ -134,7 +134,7 @@ impl<K: IntoBytesIterable> MomentoRequest for GetBatchRequest<K> {
 
 /// Response for a cache get batch operation.
 ///
-/// You can use `into()` to convert a `GetBatchResponse` into a `Vec<GetResponse>`, a `HashMap<String, GetResponse>`, a `HashMap<String, Value>`, or a `HashMap<String, Vec<u8>>`.
+/// You can use `into()` to convert a `GetBatchResponse` into a `HashMap<String, GetResponse>`, a `HashMap<String, Value>`, or a `HashMap<String, Vec<u8>>`.
 /// You can use `try_into()` to convert a `GetBatchResponse` into a `HashMap<String, String>`.
 /// ```
 /// # fn main() -> anyhow::Result<()> {
@@ -147,8 +147,6 @@ impl<K: IntoBytesIterable> MomentoRequest for GetBatchRequest<K> {
 /// use momento::cache::messages::data::scalar::get::Value;
 ///
 /// let keys = vec!["key1", "key2", "key3"];
-///
-/// let result_list: Vec<GetResponse> = cache_client.get_batch(&cache_name, keys.clone()).await?.into();
 ///
 /// let result_map: HashMap<String, GetResponse> = cache_client.get_batch(&cache_name, keys.clone()).await?.into();
 ///
