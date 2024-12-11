@@ -410,7 +410,7 @@ impl CacheClient {
     /// # cache_client.set(&cache_name, "key1", "value1").await?;
     /// # cache_client.set(&cache_name, "key2", "value2").await?;
     ///
-    /// let results_map: HashMap<String, GetResponse> = cache_client.get_batch(&cache_name, vec!["key1", "key2"]).await?.into();
+    /// let results_map: HashMap<String, GetResponse> = cache_client.get_batch(&cache_name, vec!["key1", "key2"]).await?.try_into().expect("stored string keys");
     /// # assert_eq!(results_map.clone().len(), 2);
     ///
     /// for (key, response) in results_map {

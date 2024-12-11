@@ -33,7 +33,8 @@ use crate::cache::messages::data::scalar::get::{GetResponse, Value};
 /// # cache_client.set(&cache_name, "key2", "value2").await?;
 ///
 /// let get_batch_request = GetBatchRequest::new(cache_name, vec!["key1", "key2"]);
-/// let results_map: HashMap<String, GetResponse> = cache_client.send_request(get_batch_request).await?.into();
+/// let response = cache_client.send_request(get_batch_request).await?;
+/// let results_map: HashMap<String, GetResponse> = response.try_into().expect("stored string keys");
 /// # assert_eq!(results_map.clone().len(), 2);
 ///
 /// for (key, response) in results_map {
@@ -68,18 +69,15 @@ impl<K: IntoBytesIterable> MomentoRequest for GetBatchRequest<K> {
     type Response = GetBatchResponse;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<GetBatchResponse> {
-        // consume self.keys once to convert all keys to bytes
+        // Convert all keys to bytes so they can be sent over the wire
+        // and create a HashMap of (key, GetResponse) pairs for the response
         let byte_keys: Vec<Vec<u8>> = self.keys.into_bytes();
 
-        // convert keys to strings for the HashMap keys
-        let string_keys: Vec<String> = byte_keys
-            .iter()
-            .map(|key| parse_string(key.clone()))
-            .collect::<MomentoResult<Vec<String>>>()?;
-
         let get_requests = byte_keys
-            .into_iter()
-            .map(|key| momento_protos::cache_client::GetRequest { cache_key: key })
+            .iter()
+            .map(|key| momento_protos::cache_client::GetRequest {
+                cache_key: key.clone(),
+            })
             .collect();
 
         let get_batch_request = utils::prep_request_with_timeout(
@@ -97,8 +95,8 @@ impl<K: IntoBytesIterable> MomentoRequest for GetBatchRequest<K> {
             .into_inner();
 
         // receive stream of get responses
-        let mut responses: HashMap<String, GetResponse> = HashMap::new();
-        let mut string_keys_iter = string_keys.into_iter();
+        let mut responses: HashMap<Vec<u8>, GetResponse> = HashMap::new();
+        let mut byte_keys_iter = byte_keys.into_iter();
         while let Some(get_response) = response_stream.message().await? {
             let sdk_get_response = match get_response.result() {
                 ECacheResult::Hit => GetResponse::Hit {
@@ -114,7 +112,7 @@ impl<K: IntoBytesIterable> MomentoRequest for GetBatchRequest<K> {
                     ))
                 }
             };
-            let key = match string_keys_iter.next() {
+            let key = match byte_keys_iter.next() {
                 Some(key) => key,
                 None => {
                     return Err(MomentoError::unknown_error(
@@ -134,8 +132,12 @@ impl<K: IntoBytesIterable> MomentoRequest for GetBatchRequest<K> {
 
 /// Response for a cache get batch operation.
 ///
-/// You can use `into()` to convert a `GetBatchResponse` into a `HashMap<String, GetResponse>`, a `HashMap<String, Value>`, or a `HashMap<String, Vec<u8>>`.
-/// You can use `try_into()` to convert a `GetBatchResponse` into a `HashMap<String, String>`.
+/// You can use `into()` to convert a `GetBatchResponse` into a `HashMap<Vec<u8>, GetResponse>`, `HashMap<Vec<u8>, Value>`, or a `HashMap<Vec<u8>, Vec<u8>>`.
+/// You can use `try_into()` to convert a `GetBatchResponse` into a `HashMap<String, GetResponse>`, `HashMap<String, Value>`, a `HashMap<String, String>`, `HashMap<String, Vec<u8>>`, or a `HashMap<Vec<u8>, String>`.
+///
+/// The `HashMap<_, GetResponse>` maps will return all the keys and get responses, whether they are a hit or miss.
+/// The `HashMap<_, Value>`, `HashMap<_, Vec<u8>>`, and `HashMap<_, String>` maps will filter out `GetResponse::Miss` responses
+/// as only `GetResponse::Hit` objects contain a `Value` fetched from the cache and can be converted to `String` or `Vec<u8>`.
 /// ```
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;
@@ -147,30 +149,37 @@ impl<K: IntoBytesIterable> MomentoRequest for GetBatchRequest<K> {
 /// use momento::cache::messages::data::scalar::get::Value;
 ///
 /// let keys = vec!["key1", "key2", "key3"];
+/// let get_batch_response = cache_client.get_batch(&cache_name, keys.clone()).await?;
 ///
-/// let result_map: HashMap<String, GetResponse> = cache_client.get_batch(&cache_name, keys.clone()).await?.into();
+/// let byte_keys_get_responses: HashMap<Vec<u8>, GetResponse> = get_batch_response.clone().into();
+/// let str_keys_get_responses: HashMap<String, GetResponse> = get_batch_response.clone().try_into().expect("stored string keys");
 ///
-/// let result_map_values: HashMap<String, Value> = cache_client.get_batch(&cache_name, keys.clone()).await?.into();
+/// let byte_keys_hit_values: HashMap<Vec<u8>, Value> = get_batch_response.clone().into();
+/// let str_keys_hit_values: HashMap<String, Value> = get_batch_response.clone().try_into().expect("stored string keys");
 ///
-/// let result_map_string_values: HashMap<String, Vec<u8>> = cache_client.get_batch(&cache_name, keys.clone()).await?.into();
+/// let byte_keys_hit_bytes: HashMap<Vec<u8>, Vec<u8>> = get_batch_response.clone().into();
+/// let str_keys_hit_bytes: HashMap<String, Vec<u8>> = get_batch_response.clone().try_into().expect("stored string keys");
 ///
-/// let result_map_byte_values: HashMap<String, String> = cache_client.get_batch(&cache_name, keys.clone()).await?.try_into().expect("expecting strings");
+/// let byte_keys_hit_strings: HashMap<Vec<u8>, String> = get_batch_response.clone().try_into().expect("stored string values");
+/// let str_keys_hit_strings: HashMap<String, String> = get_batch_response.clone().try_into().expect("stored string keys and values");
 /// # Ok(())
 /// # })
 /// # }
 /// ```
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct GetBatchResponse {
-    results_dictionary: HashMap<String, GetResponse>,
+    results_dictionary: HashMap<Vec<u8>, GetResponse>,
 }
 
-impl From<GetBatchResponse> for HashMap<String, GetResponse> {
+// (Bytes key, GetResponse) pairs -- does NOT filter out Miss responses
+impl From<GetBatchResponse> for HashMap<Vec<u8>, GetResponse> {
     fn from(response: GetBatchResponse) -> Self {
         response.results_dictionary
     }
 }
 
-impl From<GetBatchResponse> for HashMap<String, Value> {
+// (Bytes key, Value) pairs -- filters out Miss responses
+impl From<GetBatchResponse> for HashMap<Vec<u8>, Value> {
     fn from(response: GetBatchResponse) -> Self {
         response
             .results_dictionary
@@ -183,11 +192,82 @@ impl From<GetBatchResponse> for HashMap<String, Value> {
     }
 }
 
+// (Bytes key, Bytes value) pairs -- filters out Miss responses
+impl From<GetBatchResponse> for HashMap<Vec<u8>, Vec<u8>> {
+    fn from(response: GetBatchResponse) -> Self {
+        response
+            .results_dictionary
+            .into_iter()
+            .filter_map(|(key, get_response)| match get_response {
+                GetResponse::Hit { value } => Some((key, value.into())),
+                GetResponse::Miss => None,
+            })
+            .collect()
+    }
+}
+
+// (Bytes key, String value) pairs -- filters out Miss responses
+impl TryFrom<GetBatchResponse> for HashMap<Vec<u8>, String> {
+    type Error = MomentoError;
+
+    fn try_from(response: GetBatchResponse) -> Result<Self, Self::Error> {
+        response
+            .results_dictionary
+            .into_iter()
+            .filter(|(_, get_response)| match get_response {
+                GetResponse::Hit { value: _ } => true,
+                GetResponse::Miss => false,
+            })
+            .map(|(key, hit_response)| match hit_response.try_into() {
+                Ok(value) => Ok((key, value)),
+                Err(e) => Err(e),
+            })
+            .collect()
+    }
+}
+
+// (String key, GetResponse) pairs -- does NOT filter out Miss responses
+impl TryFrom<GetBatchResponse> for HashMap<String, GetResponse> {
+    type Error = MomentoError;
+
+    fn try_from(response: GetBatchResponse) -> Result<Self, Self::Error> {
+        response
+            .results_dictionary
+            .into_iter()
+            .map(|(key, response)| match parse_string(key) {
+                Ok(str_key) => Ok((str_key, response)),
+                Err(e) => Err(e),
+            })
+            .collect()
+    }
+}
+
+// (String key, Value) pairs -- filters out Miss responses
+impl TryFrom<GetBatchResponse> for HashMap<String, Value> {
+    type Error = MomentoError;
+
+    fn try_from(response: GetBatchResponse) -> Result<Self, Self::Error> {
+        response
+            .results_dictionary
+            .into_iter()
+            .filter_map(|(key, get_response)| match get_response {
+                GetResponse::Hit { value } => Some((key, value)),
+                GetResponse::Miss => None,
+            })
+            .map(|(key, value)| match parse_string(key) {
+                Ok(str_key) => Ok((str_key, value)),
+                Err(e) => Err(e),
+            })
+            .collect()
+    }
+}
+
+// (String key, String value) pairs -- filters out Miss responses
 impl TryFrom<GetBatchResponse> for HashMap<String, String> {
     type Error = MomentoError;
 
     fn try_from(response: GetBatchResponse) -> Result<Self, Self::Error> {
-        let values_map: HashMap<String, Value> = response.into();
+        let values_map: HashMap<String, Value> = response.try_into()?;
         values_map
             .into_iter()
             .try_fold(HashMap::new(), |mut acc, (key, value)| {
@@ -202,12 +282,17 @@ impl TryFrom<GetBatchResponse> for HashMap<String, String> {
     }
 }
 
-impl From<GetBatchResponse> for HashMap<String, Vec<u8>> {
-    fn from(response: GetBatchResponse) -> Self {
-        let values_map: HashMap<String, Value> = response.into();
-        values_map
+// (String key, Bytes value) pairs -- filters out Miss responses
+impl TryFrom<GetBatchResponse> for HashMap<String, Vec<u8>> {
+    type Error = MomentoError;
+
+    fn try_from(response: GetBatchResponse) -> Result<Self, Self::Error> {
+        let values_map: HashMap<String, Value> = response.try_into()?;
+        Ok(values_map
             .into_iter()
-            .map(|(key, value)| (key, value.raw_item))
-            .collect()
+            .fold(HashMap::new(), |mut acc, (key, value)| {
+                acc.insert(key, value.into());
+                acc
+            }))
     }
 }

@@ -36,24 +36,47 @@ mod batch_get_set {
         let keys = vec![unique_key(), unique_key(), unique_key()];
         let response = client.get_batch(cache_name, keys.clone()).await?;
 
-        let results_map: HashMap<String, GetResponse> = response.clone().into();
-        assert_eq!(results_map.len(), keys.len());
-        for key in keys {
-            let retrieved_value = results_map.get(&key).unwrap();
+        // Then we verify that each possible GetBatchResponse conversion works as expected
+
+        let byte_keys_get_responses: HashMap<Vec<u8>, GetResponse> = response.clone().into();
+        assert_eq!(byte_keys_get_responses.len(), keys.len());
+        for key in keys.iter() {
+            let byte_key = key.as_bytes();
+            let retrieved_value = byte_keys_get_responses.get(byte_key).unwrap();
             assert_eq!(*retrieved_value, GetResponse::Miss {});
         }
 
-        let results_values_map: HashMap<String, Value> = response.clone().into();
-        assert_eq!(results_values_map.len(), 0);
+        let str_keys_get_responses: HashMap<String, GetResponse> =
+            response.clone().try_into().expect("string keys");
+        assert_eq!(str_keys_get_responses.len(), keys.len());
+        for key in keys {
+            let retrieved_value = str_keys_get_responses.get(&key).unwrap();
+            assert_eq!(*retrieved_value, GetResponse::Miss {});
+        }
 
-        let results_values_map_string: HashMap<String, String> = response
+        let byte_keys_hit_values: HashMap<Vec<u8>, Value> = response.clone().into();
+        assert_eq!(byte_keys_hit_values.len(), 0);
+
+        let str_keys_hit_values: HashMap<String, Value> =
+            response.clone().try_into().expect("string keys");
+        assert_eq!(str_keys_hit_values.len(), 0);
+
+        let byte_keys_hit_bytes: HashMap<Vec<u8>, Vec<u8>> = response.clone().into();
+        assert_eq!(byte_keys_hit_bytes.len(), 0);
+
+        let str_keys_hit_bytes: HashMap<String, Vec<u8>> =
+            response.clone().try_into().expect("stored string keys");
+        assert_eq!(str_keys_hit_bytes.len(), 0);
+
+        let byte_keys_hit_strings: HashMap<Vec<u8>, String> =
+            response.clone().try_into().expect("stored string values");
+        assert_eq!(byte_keys_hit_strings.len(), 0);
+
+        let str_keys_hit_strings: HashMap<String, String> = response
             .clone()
             .try_into()
-            .expect("Expected a HashMap<String, String>");
-        assert_eq!(results_values_map_string.len(), 0);
-
-        let results_values_map_bytes: HashMap<String, Vec<u8>> = response.clone().into();
-        assert_eq!(results_values_map_bytes.len(), 0);
+            .expect("stored string keys and values");
+        assert_eq!(str_keys_hit_strings.len(), 0);
 
         Ok(())
     }
@@ -85,11 +108,14 @@ mod batch_get_set {
         .concat();
         let response = client.get_batch(cache_name, all_keys.clone()).await?;
 
-        let results_map: HashMap<String, GetResponse> = response.clone().into();
-        assert_eq!(results_map.len(), all_keys.len());
-        for key in all_keys {
-            let retrieved_value = results_map.get(&key).unwrap();
-            if nonexistent_keys.contains(&key) {
+        // Then we verify that each possible GetBatchResponse conversion works as expected
+
+        let byte_keys_get_responses: HashMap<Vec<u8>, GetResponse> = response.clone().into();
+        assert_eq!(byte_keys_get_responses.len(), all_keys.len());
+        for key in all_keys.iter() {
+            let byte_key = key.as_bytes();
+            let retrieved_value = byte_keys_get_responses.get(byte_key).unwrap();
+            if nonexistent_keys.contains(key) {
                 assert_eq!(*retrieved_value, GetResponse::Miss {});
             } else {
                 for item in items.iter() {
@@ -100,24 +126,72 @@ mod batch_get_set {
             }
         }
 
-        let results_values_map: HashMap<String, Value> = response.clone().into();
-        assert_eq!(results_values_map.len(), items.len());
-
-        let results_values_map_string: HashMap<String, String> = response
-            .clone()
-            .try_into()
-            .expect("Expected a HashMap<String, String>");
-        assert_eq!(results_values_map_string.len(), items.len());
-        for item in items.iter() {
-            let retrieved_value = results_values_map_string.get(item.key()).unwrap();
-            assert_eq!(*retrieved_value, item.value().to_string());
+        let str_keys_get_responses: HashMap<String, GetResponse> =
+            response.clone().try_into().expect("string keys");
+        assert_eq!(str_keys_get_responses.len(), all_keys.len());
+        for key in all_keys.iter() {
+            let retrieved_value = str_keys_get_responses.get(key).unwrap();
+            if nonexistent_keys.contains(key) {
+                assert_eq!(*retrieved_value, GetResponse::Miss {});
+            } else {
+                for item in items.iter() {
+                    if item.key() == key {
+                        assert_eq!(*retrieved_value, GetResponse::from(item));
+                    }
+                }
+            }
         }
 
-        let results_values_map_bytes: HashMap<String, Vec<u8>> = response.clone().into();
-        assert_eq!(results_values_map_bytes.len(), items.len());
+        let byte_keys_hit_values: HashMap<Vec<u8>, Value> = response.clone().into();
+        assert_eq!(byte_keys_hit_values.len(), items.len());
         for item in items.iter() {
-            let retrieved_value = results_values_map_bytes.get(item.key()).unwrap();
-            assert_eq!(*retrieved_value, item.value().as_bytes());
+            let byte_key = item.key().as_bytes();
+            let retrieved_value = byte_keys_hit_values.get(byte_key).unwrap();
+            let item_value = Value::new(item.value().as_bytes().to_vec());
+            assert_eq!(*retrieved_value, item_value);
+        }
+
+        let str_keys_hit_values: HashMap<String, Value> =
+            response.clone().try_into().expect("string keys");
+        assert_eq!(str_keys_hit_values.len(), items.len());
+        for item in items.iter() {
+            let retrieved_value = str_keys_hit_values.get(item.key()).unwrap();
+            let item_value = Value::new(item.value().as_bytes().to_vec());
+            assert_eq!(*retrieved_value, item_value);
+        }
+
+        let byte_keys_hit_bytes: HashMap<Vec<u8>, Vec<u8>> = response.clone().into();
+        assert_eq!(byte_keys_hit_bytes.len(), items.len());
+        for item in items.iter() {
+            let byte_key = item.key().as_bytes();
+            let retrieved_value = byte_keys_hit_bytes.get(byte_key).unwrap();
+            assert_eq!(retrieved_value, item.value().as_bytes());
+        }
+
+        let str_keys_hit_bytes: HashMap<String, Vec<u8>> =
+            response.clone().try_into().expect("stored string keys");
+        assert_eq!(str_keys_hit_bytes.len(), items.len());
+        for item in items.iter() {
+            let retrieved_value = str_keys_hit_bytes.get(item.key()).unwrap();
+            assert_eq!(retrieved_value, item.value().as_bytes());
+        }
+
+        let byte_keys_hit_strings: HashMap<Vec<u8>, String> =
+            response.clone().try_into().expect("stored string values");
+        for item in items.iter() {
+            let byte_key = item.key().as_bytes();
+            let retrieved_value = byte_keys_hit_strings.get(byte_key).unwrap();
+            assert_eq!(retrieved_value, item.value());
+        }
+
+        let str_keys_hit_strings: HashMap<String, String> = response
+            .clone()
+            .try_into()
+            .expect("stored string keys and values");
+        assert_eq!(str_keys_hit_strings.len(), items.len());
+        for item in items.iter() {
+            let retrieved_value = str_keys_hit_strings.get(item.key()).unwrap();
+            assert_eq!(retrieved_value, item.value());
         }
 
         Ok(())
