@@ -1,3 +1,4 @@
+mod batch;
 mod control;
 mod dictionary;
 mod item;

@@ -42,6 +42,7 @@ pub use messages::data::dictionary::dictionary_set_fields::{
 pub use messages::data::scalar::decrease_ttl::{DecreaseTtlRequest, DecreaseTtlResponse};
 pub use messages::data::scalar::delete::{DeleteRequest, DeleteResponse};
 pub use messages::data::scalar::get::{GetRequest, GetResponse};
+pub use messages::data::scalar::get_batch::{GetBatchRequest, GetBatchResponse};
 pub use messages::data::scalar::increase_ttl::{IncreaseTtlRequest, IncreaseTtlResponse};
 pub use messages::data::scalar::increment::{IncrementRequest, IncrementResponse};
 pub use messages::data::scalar::item_get_ttl::{ItemGetTtlRequest, ItemGetTtlResponse};
@@ -51,6 +52,7 @@ pub use messages::data::scalar::item_get_type::{
 pub use messages::data::scalar::key_exists::{KeyExistsRequest, KeyExistsResponse};
 pub use messages::data::scalar::keys_exist::{KeysExistRequest, KeysExistResponse};
 pub use messages::data::scalar::set::{SetRequest, SetResponse};
+pub use messages::data::scalar::set_batch::{SetBatchRequest, SetBatchResponse};
 pub use messages::data::scalar::set_if_absent::{SetIfAbsentRequest, SetIfAbsentResponse};
 pub use messages::data::scalar::set_if_absent_or_equal::{
     SetIfAbsentOrEqualRequest, SetIfAbsentOrEqualResponse,

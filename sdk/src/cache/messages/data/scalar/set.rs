@@ -1,6 +1,8 @@
+use momento_protos::cache_client::ECacheResult;
+
 use crate::cache::messages::MomentoRequest;
 use crate::utils::prep_request_with_timeout;
-use crate::CacheClient;
+use crate::{CacheClient, MomentoError};
 use crate::{IntoBytes, MomentoResult};
 use std::time::Duration;
 
@@ -8,7 +10,7 @@ use std::time::Duration;
 ///
 /// # Arguments
 ///
-/// * `cache_name` - The name of the cache to create.
+/// * `cache_name` - name of the cache
 /// * `key` - key of the item whose value we are setting
 /// * `value` - data to stored in the cache item
 ///
@@ -85,11 +87,21 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetRequest<K, V> {
             },
         )?;
 
-        let _ = cache_client.next_data_client().set(request).await?;
-        Ok(SetResponse {})
+        let response = cache_client
+            .next_data_client()
+            .set(request)
+            .await?
+            .into_inner();
+        match response.result() {
+            ECacheResult::Ok => Ok(SetResponse {}),
+            _ => Err(MomentoError::unknown_error(
+                "Set",
+                Some(format!("{:#?}", response)),
+            )),
+        }
     }
 }
 
 /// The response type for a successful set request.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct SetResponse {}
