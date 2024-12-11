@@ -166,12 +166,6 @@ pub struct GetBatchResponse {
     results_dictionary: HashMap<String, GetResponse>,
 }
 
-impl From<GetBatchResponse> for Vec<GetResponse> {
-    fn from(response: GetBatchResponse) -> Self {
-        response.results_dictionary.into_values().collect()
-    }
-}
-
 impl From<GetBatchResponse> for HashMap<String, GetResponse> {
     fn from(response: GetBatchResponse) -> Self {
         response.results_dictionary

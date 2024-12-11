@@ -150,9 +150,3 @@ impl From<SetBatchResponse> for HashMap<String, SetResponse> {
         response.results_dictionary
     }
 }
-
-impl From<SetBatchResponse> for Vec<SetResponse> {
-    fn from(response: SetBatchResponse) -> Self {
-        response.results_dictionary.into_values().collect()
-    }
-}
