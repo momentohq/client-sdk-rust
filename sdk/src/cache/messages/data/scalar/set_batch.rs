@@ -50,18 +50,18 @@ use crate::cache::messages::data::scalar::set::SetResponse;
 /// # })
 /// # }
 /// ```
-pub struct SetBatchRequest<K: IntoBytes + Copy, V: IntoBytes + Copy> {
+pub struct SetBatchRequest<K: IntoBytes, V: IntoBytes> {
     cache_name: String,
-    items: HashMap<K, V>,
+    items: Vec<(K, V)>,
     ttl: Option<Duration>,
 }
 
-impl<K: IntoBytes + Copy, V: IntoBytes + Copy> SetBatchRequest<K, V> {
+impl<K: IntoBytes, V: IntoBytes> SetBatchRequest<K, V> {
     /// Construct a new SetBatchRequest.
-    pub fn new(cache_name: impl Into<String>, items: HashMap<K, V>) -> Self {
+    pub fn new(cache_name: impl Into<String>, items: impl IntoIterator<Item = (K, V)>) -> Self {
         Self {
             cache_name: cache_name.into(),
-            items,
+            items: items.into_iter().collect(),
             ttl: None,
         }
     }
@@ -73,7 +73,7 @@ impl<K: IntoBytes + Copy, V: IntoBytes + Copy> SetBatchRequest<K, V> {
     }
 }
 
-impl<K: IntoBytes + Copy, V: IntoBytes + Copy> MomentoRequest for SetBatchRequest<K, V> {
+impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetBatchRequest<K, V> {
     type Response = SetBatchResponse;
 
     async fn send(self, cache_client: &CacheClient) -> MomentoResult<SetBatchResponse> {
@@ -81,7 +81,7 @@ impl<K: IntoBytes + Copy, V: IntoBytes + Copy> MomentoRequest for SetBatchReques
         // so we can map keys to the correct SetResponse objects later
         let mut set_requests: Vec<momento_protos::cache_client::SetRequest> = vec![];
         let mut set_request_keys: Vec<String> = vec![];
-        for (key, value) in self.items.iter() {
+        for (key, value) in self.items.into_iter() {
             let byte_key = key.into_bytes();
             let set_request = momento_protos::cache_client::SetRequest {
                 cache_key: byte_key.clone(),
@@ -89,7 +89,7 @@ impl<K: IntoBytes + Copy, V: IntoBytes + Copy> MomentoRequest for SetBatchReques
                 ttl_milliseconds: cache_client.expand_ttl_ms(self.ttl)?,
             };
             set_requests.push(set_request);
-            set_request_keys.push(parse_string(byte_key.clone())?);
+            set_request_keys.push(parse_string(byte_key)?);
         }
 
         let set_batch_request = prep_request_with_timeout(
@@ -108,7 +108,7 @@ impl<K: IntoBytes + Copy, V: IntoBytes + Copy> MomentoRequest for SetBatchReques
 
         // receive stream of get responses
         let mut responses: HashMap<String, SetResponse> = HashMap::new();
-        let mut set_request_keys_iter = set_request_keys.iter();
+        let mut set_request_keys_iter = set_request_keys.into_iter();
         while let Some(set_response) = response_stream.message().await? {
             let sdk_set_response = match set_response.result() {
                 ECacheResult::Ok => SetResponse {},
@@ -128,7 +128,7 @@ impl<K: IntoBytes + Copy, V: IntoBytes + Copy> MomentoRequest for SetBatchReques
                     ))
                 }
             };
-            responses.insert(key.to_string(), sdk_set_response);
+            responses.insert(key, sdk_set_response);
         }
 
         Ok(SetBatchResponse {

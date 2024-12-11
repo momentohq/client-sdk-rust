@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::convert::TryInto;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
@@ -343,10 +342,10 @@ impl CacheClient {
     /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SetBatchRequest].
     ///
     /// For more examples of handling the response, see [SetBatchResponse].
-    pub async fn set_batch(
+    pub async fn set_batch<K: IntoBytes, V: IntoBytes>(
         &self,
         cache_name: impl Into<String>,
-        items: HashMap<impl IntoBytes + Copy, impl IntoBytes + Copy>,
+        items: impl IntoIterator<Item = (K, V)>,
     ) -> MomentoResult<SetBatchResponse> {
         let request = SetBatchRequest::new(cache_name, items);
         request.send(self).await

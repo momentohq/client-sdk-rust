@@ -78,10 +78,8 @@ impl<K: IntoBytesIterable> MomentoRequest for GetBatchRequest<K> {
             .collect::<MomentoResult<Vec<String>>>()?;
 
         let get_requests = byte_keys
-            .iter()
-            .map(|key| momento_protos::cache_client::GetRequest {
-                cache_key: key.clone(),
-            })
+            .into_iter()
+            .map(|key| momento_protos::cache_client::GetRequest { cache_key: key })
             .collect();
 
         let get_batch_request = utils::prep_request_with_timeout(
@@ -99,9 +97,8 @@ impl<K: IntoBytesIterable> MomentoRequest for GetBatchRequest<K> {
             .into_inner();
 
         // receive stream of get responses
-        // let mut results_list: Vec<GetResponse> = vec![];
         let mut responses: HashMap<String, GetResponse> = HashMap::new();
-        let mut string_keys_iter = string_keys.iter();
+        let mut string_keys_iter = string_keys.into_iter();
         while let Some(get_response) = response_stream.message().await? {
             let sdk_get_response = match get_response.result() {
                 ECacheResult::Hit => GetResponse::Hit {
@@ -126,7 +123,7 @@ impl<K: IntoBytesIterable> MomentoRequest for GetBatchRequest<K> {
                     ))
                 }
             };
-            responses.insert(key.to_string(), sdk_get_response);
+            responses.insert(key, sdk_get_response);
         }
 
         Ok(GetBatchResponse {
