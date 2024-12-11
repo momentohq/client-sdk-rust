@@ -132,12 +132,21 @@ impl<K: IntoBytesIterable> MomentoRequest for GetBatchRequest<K> {
 
 /// Response for a cache get batch operation.
 ///
-/// You can use `into()` to convert a `GetBatchResponse` into a `HashMap<Vec<u8>, GetResponse>`, `HashMap<Vec<u8>, Value>`, or a `HashMap<Vec<u8>, Vec<u8>>`.
-/// You can use `try_into()` to convert a `GetBatchResponse` into a `HashMap<String, GetResponse>`, `HashMap<String, Value>`, a `HashMap<String, String>`, `HashMap<String, Vec<u8>>`, or a `HashMap<Vec<u8>, String>`.
+/// You can use `into()` to convert a `GetBatchResponse` into one of the following:
+/// - `HashMap<Vec<u8>, GetResponse>`
+/// - `HashMap<Vec<u8>, Value>`
+/// - `HashMap<Vec<u8>, Vec<u8>>`
+///
+/// You can use `try_into()` to convert a `GetBatchResponse` into one of the following:
+/// - `HashMap<Vec<u8>, String>`
+/// - `HashMap<String, GetResponse>`
+/// - `HashMap<String, Value>`
+/// - `HashMap<String, String>`
+/// - `HashMap<String, Vec<u8>>`
 ///
 /// The `HashMap<_, GetResponse>` maps will return all the keys and get responses, whether they are a hit or miss.
-/// The `HashMap<_, Value>`, `HashMap<_, Vec<u8>>`, and `HashMap<_, String>` maps will filter out `GetResponse::Miss` responses
-/// as only `GetResponse::Hit` objects contain a `Value` fetched from the cache and can be converted to `String` or `Vec<u8>`.
+///
+/// The other conversions will filter out `GetResponse::Miss` responses because only `GetResponse::Hit` objects contain a `Value` fetched from the cache and can be converted to `String` or `Vec<u8>`.
 /// ```
 /// # fn main() -> anyhow::Result<()> {
 /// # use momento_test_util::create_doctest_cache_client;

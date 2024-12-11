@@ -92,13 +92,27 @@ mod batch_get_set {
             (items[1].key(), items[1].value()),
             (items[2].key(), items[2].value()),
         ]);
-        let set_response = client.set_batch(cache_name, items_map.clone()).await?;
-        let set_responses_map: HashMap<String, SetResponse> = set_response.into();
-        assert_eq!(set_responses_map.len(), items.len());
+        let set_batch_response = client.set_batch(cache_name, items_map.clone()).await?;
+
+        // Then we verify that each possible SetBatchResponse conversion works as expected
+
+        let byte_keys_set_responses: HashMap<Vec<u8>, SetResponse> =
+            set_batch_response.clone().into();
+        assert_eq!(byte_keys_set_responses.len(), items.len());
         for item in items.iter() {
-            let set_value = set_responses_map.get(item.key()).unwrap();
+            let set_value = byte_keys_set_responses.get(item.key().as_bytes()).unwrap();
             assert_eq!(*set_value, SetResponse {});
         }
+
+        let str_keys_set_responses: HashMap<String, SetResponse> =
+            set_batch_response.try_into().expect("string keys");
+        assert_eq!(str_keys_set_responses.len(), items.len());
+        for item in items.iter() {
+            let set_value = str_keys_set_responses.get(item.key()).unwrap();
+            assert_eq!(*set_value, SetResponse {});
+        }
+
+        // Now create some keys that won't exist in the cache
 
         let nonexistent_keys = vec![unique_key(), unique_key(), unique_key()];
         let all_keys = [
@@ -231,12 +245,25 @@ mod batch_get_set {
         let set_batch_request = SetBatchRequest::new(cache_name, items_map.clone())
             .ttl(std::time::Duration::from_secs(60));
         let set_batch_response = client.send_request(set_batch_request).await?;
-        let set_responses_map: HashMap<String, SetResponse> = set_batch_response.into();
-        assert_eq!(set_responses_map.len(), items.len());
+
+        // Then we verify that each possible SetBatchResponse conversion works as expected
+
+        let byte_keys_set_responses: HashMap<Vec<u8>, SetResponse> =
+            set_batch_response.clone().into();
+        assert_eq!(byte_keys_set_responses.len(), items.len());
         for item in items.iter() {
-            let set_value = set_responses_map.get(item.key()).unwrap();
+            let set_value = byte_keys_set_responses.get(item.key().as_bytes()).unwrap();
             assert_eq!(*set_value, SetResponse {});
         }
+
+        let str_keys_set_responses: HashMap<String, SetResponse> =
+            set_batch_response.try_into().expect("string keys");
+        assert_eq!(str_keys_set_responses.len(), items.len());
+        for item in items.iter() {
+            let set_value = str_keys_set_responses.get(item.key()).unwrap();
+            assert_eq!(*set_value, SetResponse {});
+        }
+
         Ok(())
     }
 }

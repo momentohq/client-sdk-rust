@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::time::Duration;
 
 use momento_protos::cache_client::ECacheResult;
@@ -80,7 +81,7 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetBatchRequest<K, V> {
         // Turn map of items into a vector of keys and vector of SetRequest objects
         // so we can map keys to the correct SetResponse objects later
         let mut set_requests: Vec<momento_protos::cache_client::SetRequest> = vec![];
-        let mut set_request_keys: Vec<String> = vec![];
+        let mut set_request_keys: Vec<Vec<u8>> = vec![];
         for (key, value) in self.items.into_iter() {
             let byte_key = key.into_bytes();
             let set_request = momento_protos::cache_client::SetRequest {
@@ -89,7 +90,7 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetBatchRequest<K, V> {
                 ttl_milliseconds: cache_client.expand_ttl_ms(self.ttl)?,
             };
             set_requests.push(set_request);
-            set_request_keys.push(parse_string(byte_key)?);
+            set_request_keys.push(byte_key);
         }
 
         let set_batch_request = prep_request_with_timeout(
@@ -106,8 +107,8 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetBatchRequest<K, V> {
             .await?
             .into_inner();
 
-        // receive stream of get responses
-        let mut responses: HashMap<String, SetResponse> = HashMap::new();
+        // receive stream of set responses
+        let mut responses: HashMap<Vec<u8>, SetResponse> = HashMap::new();
         let mut set_request_keys_iter = set_request_keys.into_iter();
         while let Some(set_response) = response_stream.message().await? {
             let sdk_set_response = match set_response.result() {
@@ -139,14 +140,50 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetBatchRequest<K, V> {
 
 /// The response type for a successful set request.
 ///
-/// You can use `into()` to convert a `SetBatchResponse` into a `HashMap<String, SetResponse>` or a `Vec<SetResponse>`.
-#[derive(Debug, PartialEq, Eq)]
+/// You can use `into()` to convert a `SetBatchResponse` into a `HashMap<Vec<u8>, SetResponse>`.
+///
+/// You can use `try_into()` to convert a `SetBatchResponse` into a `HashMap<String, SetResponse>`.
+/// ```
+/// # fn main() -> anyhow::Result<()> {
+/// # use momento_test_util::create_doctest_cache_client;
+/// # tokio_test::block_on(async {
+/// # let (cache_client, cache_name) = create_doctest_cache_client();
+/// use std::convert::TryInto;
+/// use std::collections::HashMap;
+/// use momento::cache::SetResponse;
+///
+/// let items = HashMap::from([("k1", "v1"), ("k2", "v2"), ("k3", "v3")]);
+/// let set_batch_response = cache_client.set_batch(&cache_name, items).await?;
+///
+/// let byte_keys_set_responses: HashMap<Vec<u8>, SetResponse> = set_batch_response.clone().into();
+///
+/// let str_keys_set_responses: HashMap<String, SetResponse> = set_batch_response.clone().try_into().expect("stored string keys");
+/// # Ok(())
+/// # })
+/// # }
+/// ```
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct SetBatchResponse {
-    results_dictionary: HashMap<String, SetResponse>,
+    results_dictionary: HashMap<Vec<u8>, SetResponse>,
 }
 
-impl From<SetBatchResponse> for HashMap<String, SetResponse> {
+impl From<SetBatchResponse> for HashMap<Vec<u8>, SetResponse> {
     fn from(response: SetBatchResponse) -> Self {
         response.results_dictionary
+    }
+}
+
+impl TryFrom<SetBatchResponse> for HashMap<String, SetResponse> {
+    type Error = MomentoError;
+
+    fn try_from(response: SetBatchResponse) -> Result<Self, Self::Error> {
+        response
+            .results_dictionary
+            .into_iter()
+            .map(|(key, response)| match parse_string(key) {
+                Ok(str_key) => Ok((str_key, response)),
+                Err(e) => Err(e),
+            })
+            .collect()
     }
 }

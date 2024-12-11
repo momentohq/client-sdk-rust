@@ -326,10 +326,12 @@ impl CacheClient {
     /// # tokio_test::block_on(async {
     /// # let (cache_client, cache_name) = create_doctest_cache_client();
     /// use std::collections::HashMap;
+    /// use std::convert::TryInto;
     /// use momento::cache::SetResponse;
     ///
     /// let items = HashMap::from([("k1", "v1"), ("k2", "v2"), ("k3", "v3")]);
-    /// let results_map: HashMap<String, SetResponse> = cache_client.set_batch(&cache_name, items).await?.into();
+    /// let set_batch_response = cache_client.set_batch(&cache_name, items).await?;
+    /// let results_map: HashMap<String, SetResponse> = set_batch_response.try_into().expect("stored string keys");
     /// # assert_eq!(results_map.clone().len(), 3);
     ///
     /// for (key, response) in results_map {
@@ -410,7 +412,8 @@ impl CacheClient {
     /// # cache_client.set(&cache_name, "key1", "value1").await?;
     /// # cache_client.set(&cache_name, "key2", "value2").await?;
     ///
-    /// let results_map: HashMap<String, GetResponse> = cache_client.get_batch(&cache_name, vec!["key1", "key2"]).await?.try_into().expect("stored string keys");
+    /// let get_batch_response = cache_client.get_batch(&cache_name, vec!["key1", "key2"]).await?;
+    /// let results_map: HashMap<String, GetResponse> = get_batch_response.try_into().expect("stored string keys");
     /// # assert_eq!(results_map.clone().len(), 2);
     ///
     /// for (key, response) in results_map {
