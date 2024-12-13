@@ -93,5 +93,6 @@ help:
 publish:
 	cd sdk && \
  	cp ../README.md . && \
- 	cargo publish
+ 	cargo publish --allow-dirty
+
 
