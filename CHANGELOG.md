@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.46.0](https://github.com/momentohq/client-sdk-rust/compare/v0.45.0...v0.46.0) (2024-12-13)
+
+
+### Features
+
+* fix ci for release ([#408](https://github.com/momentohq/client-sdk-rust/issues/408)) ([8b3cfea](https://github.com/momentohq/client-sdk-rust/commit/8b3cfea9c9049748e3364e86d1549f67af880e43))
+
 ## [0.45.0](https://github.com/momentohq/client-sdk-rust/compare/v0.44.0...v0.45.0) (2024-12-12)
 
 
