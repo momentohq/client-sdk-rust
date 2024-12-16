@@ -1,6 +1,0 @@
-# During publish operations, we temporarily copy the README.md file from the parent dir
-# into this dir so that it can be published to crates.io. However, the `cargo publish`
-# command will fail if the working tree is dirty, which it will be if the README.md
-# file is recognized as a potential source file. Including it in the .gitignore here
-# prevents the working tree from being flagged as dirty.
-README.md
