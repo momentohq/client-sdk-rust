@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.46.1](https://github.com/momentohq/client-sdk-rust/compare/v0.46.0...v0.46.1) (2024-12-16)
+
+
+### Miscellaneous
+
+* remove dead code to set cargo version ([#413](https://github.com/momentohq/client-sdk-rust/issues/413)) ([771d4b8](https://github.com/momentohq/client-sdk-rust/commit/771d4b80d595de51bb72c590eb125fae6318debc))
+* update cargo lock ([#411](https://github.com/momentohq/client-sdk-rust/issues/411)) ([f8b7a38](https://github.com/momentohq/client-sdk-rust/commit/f8b7a38f941d9510536a016c79db611aa71500ba))
+
 ## [0.46.0](https://github.com/momentohq/client-sdk-rust/compare/v0.45.0...v0.46.0) (2024-12-13)
 
 
