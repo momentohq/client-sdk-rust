@@ -3,6 +3,7 @@
   "packages": {
     ".": {
       "release-type": "rust",
+      "include-component-in-tag": false,
       "changelog-sections": [
         {
           "type": "feat",
