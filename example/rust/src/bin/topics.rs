@@ -16,9 +16,15 @@ async fn main() -> MomentoResult<()> {
     // call `abort()` on the task handle after messages are published.
     let mut subscription1 = topic_client.subscribe("cache", "my-topic").await?;
     let subscriber_handle1 = tokio::spawn(async move {
-        println!("Subscriber should keep receiving until task is aborted");
+        println!("\n Subscriber [1] should keep receiving until task is aborted");
         while let Some(message) = subscription1.next().await {
-            println!("[1] Received message: {:?}", message);
+            println!(
+                "[1] Received message: \n\tKind: {:?} \n\tSequence number: {:?} \n\tSequence page: {:?} \n\tPublisher ID: {:?}", 
+                message.kind,
+                message.topic_sequence_number,
+                message.topic_sequence_page,
+                message.publisher_id
+            );
         }
     });
 
@@ -38,10 +44,24 @@ async fn main() -> MomentoResult<()> {
     // let the task end after receiving 10 messages.
     let mut subscription2 = topic_client.subscribe("cache", "my-topic").await?;
     tokio::spawn(async move {
-        println!("Subscriber should receive 10 messages then exit");
+        println!("\nSubscriber [2] should receive 10 messages then exit");
         for _ in 0..10 {
             let message = subscription2.next().await;
-            println!("[2] Received message: {:?}", message);
+            // println!("[2] Received message: {:?}", message);
+            match message {
+                Some(message) => {
+                    println!(
+                        "[2] Received message: \n\tKind: {:?} \n\tSequence number: {:?} \n\tSequence page: {:?} \n\tPublisher ID: {:?}", 
+                        message.kind,
+                        message.topic_sequence_number,
+                        message.topic_sequence_page,
+                        message.publisher_id
+                    );
+                }
+                None => {
+                    println!("[2] Received None item from subscription");
+                }
+            }
         }
     });
 
