@@ -12,13 +12,44 @@ use base64::{engine::general_purpose, Engine as _};
 use momento_protos::token::generate_disposable_token_request::Expires;
 
 /// Optional arguments for generating a disposable token.
-/// Currently, the only optional argument is the `token_id`,
-/// which can be used to identify which token was used for
-/// messages published on Momento Topics.
 pub struct DisposableTokenProps {
+    /// Currently, the only optional argument is the `token_id`,
+    /// which can be used to identify which token was used for
+    /// messages published on Momento Topics.
     pub token_id: Option<String>,
 }
 
+/// Request to generate a new disposable, fine-grained access token.
+///
+/// # Arguments
+///
+/// * `scope` - The permission scope that the token will have.
+/// * `expires_in` - The duration for which the token will be valid.
+///
+/// # Optional Arguments
+///
+/// * `props` - A collection of optional arguments for the request. Currently contains only `token_id`, which can be used to identify which token was used for messages published on Momento Topics.
+///
+/// # Examples
+/// Assumes that an AuthClient named `auth_client` has been created and is available.
+/// ```
+/// # fn main() -> anyhow::Result<()> {
+/// # use momento_test_util::create_doctest_auth_client;
+/// # tokio_test::block_on(async {
+/// # let auth_client = create_doctest_auth_client();
+/// use momento::auth::{GenerateDisposableTokenRequest, ExpiresIn, DisposableTokenScopes};
+///
+/// let expiry = ExpiresIn::minutes(5);
+/// let permission_scope = DisposableTokenScopes::cache_key_read_write("cache", "key");
+/// let request = GenerateDisposableTokenRequest::new(permission_scope, expiry).token_id("my-token-id".to_string());
+/// let response = auth_client.send_request(request).await?;
+/// # assert!(!response.clone().auth_token().is_empty());
+/// println!("Generated disposable token with read-write access to key 'key' in cache 'cache': {}", response);
+/// # Ok(())
+/// # })
+/// # }
+/// ```
+/// ```
 pub struct GenerateDisposableTokenRequest<K: IntoBytes> {
     scope: DisposableTokenScope<K>,
     expires_in: ExpiresIn,
@@ -26,6 +57,7 @@ pub struct GenerateDisposableTokenRequest<K: IntoBytes> {
 }
 
 impl<K: IntoBytes> GenerateDisposableTokenRequest<K> {
+    /// Construct a new GenerateDisposableTokenRequest.
     pub fn new(scope: DisposableTokenScope<K>, expires_in: ExpiresIn) -> Self {
         Self {
             scope,
@@ -92,8 +124,6 @@ impl<K: IntoBytes> MomentoRequest for GenerateDisposableTokenRequest<K> {
 }
 
 /// Response for a generate disposable token operation.
-///
-/// TODO: examples
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct GenerateDisposableTokenResponse {
     auth_token: String,

@@ -8,9 +8,11 @@ use super::{
     permission_scope::{CacheRole, CacheSelector},
 };
 
+/// A collection of convenience methods for creating disposable token permission scopes.
 pub struct DisposableTokenScopes {}
 
 impl DisposableTokenScopes {
+    /// Create a ReadWrite permission scope for a specific key in a specific cache.
     pub fn cache_key_read_write(
         cache_selector: impl Into<CacheSelector>,
         key: impl IntoBytes,
@@ -24,6 +26,7 @@ impl DisposableTokenScopes {
         })
     }
 
+    /// Create a ReadWrite permission scope for all keys matching the key prefix in a specific cache.
     pub fn cache_key_prefix_read_write(
         cache_selector: impl Into<CacheSelector>,
         key_prefix: impl IntoBytes,
@@ -39,6 +42,7 @@ impl DisposableTokenScopes {
         })
     }
 
+    /// Create a ReadOnly permission scope for a specific key in a specific cache.
     pub fn cache_key_read_only(
         cache_selector: impl Into<CacheSelector>,
         key: impl IntoBytes,
@@ -52,6 +56,7 @@ impl DisposableTokenScopes {
         })
     }
 
+    /// Create a ReadOnly permission scope for all keys matching the key prefix in a specific cache.
     pub fn cache_key_prefix_read_only(
         cache_selector: impl Into<CacheSelector>,
         key_prefix: impl IntoBytes,
@@ -67,6 +72,7 @@ impl DisposableTokenScopes {
         })
     }
 
+    /// Create a WriteOnly permission scope for a specific key in a specific cache.
     pub fn cache_key_write_only(
         cache_selector: impl Into<CacheSelector>,
         key: impl IntoBytes,
@@ -80,6 +86,7 @@ impl DisposableTokenScopes {
         })
     }
 
+    /// Create a WriteOnly permission scope for all keys matching the key prefix in a specific cache.
     pub fn cache_key_prefix_write_only(
         cache_selector: impl Into<CacheSelector>,
         key_prefix: impl IntoBytes,

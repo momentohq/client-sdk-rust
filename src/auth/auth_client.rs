@@ -85,7 +85,7 @@ impl AuthClient {
     /// # Arguments
     ///
     /// * `scope` - The permission scope that the token will have.
-    /// * `expires_in` - The duration for which the token will be valid.
+    /// * `expires_in` - The duration for which the token will be valid. Note: disposable tokens must expire within 1 hour.
     ///
     /// # Optional Arguments
     /// If you use [send_request](AuthClient::send_request) to generate a token using a
@@ -100,7 +100,7 @@ impl AuthClient {
     /// # use momento_test_util::create_doctest_auth_client;
     /// # tokio_test::block_on(async {
     /// # let auth_client = create_doctest_auth_client();
-    /// use momento::auth::{GenerateDisposableTokenResponse, ExpiresIn, DisposableTokenScopes};
+    /// use momento::auth::{ExpiresIn, DisposableTokenScopes};
     ///
     /// let expiry = ExpiresIn::minutes(5);
     /// let permission_scope = DisposableTokenScopes::cache_key_read_write("cache", "key");

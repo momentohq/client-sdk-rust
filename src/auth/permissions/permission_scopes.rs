@@ -3,9 +3,12 @@ use super::permission_scope::{
     TopicPermission, TopicRole, TopicSelector,
 };
 
+/// A collection of convenience methods for creating permission scopes.
+/// These can be used to create both longer-lived API keys and disposable tokens.
 pub struct PermissionScopes {}
 
 impl PermissionScopes {
+    /// Create a ReadWrite permission scope for a specific cache.
     pub fn cache_read_write(cache_selector: impl Into<CacheSelector>) -> PermissionScope {
         PermissionScope::Permissions(Permissions {
             permissions: vec![Permission::CachePermission(CachePermission {
@@ -15,6 +18,7 @@ impl PermissionScopes {
         })
     }
 
+    /// Create a ReadOnly permission scope for a specific cache.
     pub fn cache_read_only(cache_selector: impl Into<CacheSelector>) -> PermissionScope {
         PermissionScope::Permissions(Permissions {
             permissions: vec![Permission::CachePermission(CachePermission {
@@ -24,6 +28,7 @@ impl PermissionScopes {
         })
     }
 
+    /// Create a WriteOnly permission scope for a specific cache.
     pub fn cache_write_only(cache_selector: impl Into<CacheSelector>) -> PermissionScope {
         PermissionScope::Permissions(Permissions {
             permissions: vec![Permission::CachePermission(CachePermission {
@@ -33,6 +38,7 @@ impl PermissionScopes {
         })
     }
 
+    /// Create a PublishSubscribe permission scope for a specific topic in a specific cache.
     pub fn topic_publish_subscribe(
         cache_selector: impl Into<CacheSelector>,
         topic_selector: impl Into<TopicSelector>,
@@ -46,6 +52,7 @@ impl PermissionScopes {
         })
     }
 
+    /// Create a SubscribeOnly permission scope for a specific topic in a specific cache.
     pub fn topic_subscribe_only(
         cache_selector: impl Into<CacheSelector>,
         topic_selector: impl Into<TopicSelector>,
@@ -59,6 +66,7 @@ impl PermissionScopes {
         })
     }
 
+    /// Create a PublishOnly permission scope for a specific topic in a specific cache.
     pub fn topic_publish_only(
         cache_selector: impl Into<CacheSelector>,
         topic_selector: impl Into<TopicSelector>,
