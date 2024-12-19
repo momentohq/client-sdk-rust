@@ -14,7 +14,7 @@ use momento_protos::token::generate_disposable_token_request::Expires;
 /// Optional arguments for generating a disposable token.
 /// Currently, the only optional argument is the `token_id`,
 /// which can be used to identify which token was used for
-/// publishing messages on Momento Topics.
+/// messages published on Momento Topics.
 pub struct DisposableTokenProps {
     pub token_id: Option<String>,
 }

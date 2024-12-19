@@ -2,6 +2,10 @@ pub mod expiration;
 pub use expiration::{Expiration, ExpiresAt, ExpiresIn};
 
 pub mod permissions;
+pub use permissions::disposable_token_scope::*;
+pub use permissions::disposable_token_scopes::DisposableTokenScopes;
+pub use permissions::permission_scope::*;
+pub use permissions::permission_scopes::PermissionScopes;
 
 pub mod messages;
 pub use messages::generate_disposable_token::{
