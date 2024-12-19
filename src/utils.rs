@@ -5,7 +5,10 @@ use tonic::{
     Request,
 };
 
-use crate::MomentoResult;
+use crate::{
+    auth::{expiration::ExpiresIn, Expiration},
+    MomentoResult,
+};
 use crate::{
     config::grpc_configuration::GrpcConfiguration,
     {ErrorSource, MomentoError, MomentoErrorCode},
@@ -106,6 +109,46 @@ pub(crate) fn is_store_name_valid(store_name: &str) -> Result<(), MomentoError> 
     if store_name.trim().is_empty() {
         return Err(MomentoError {
             message: "Store name cannot be empty".into(),
+            error_code: MomentoErrorCode::InvalidArgumentError,
+            inner_error: None,
+            details: None,
+        });
+    }
+    Ok(())
+}
+
+pub(crate) fn is_disposable_token_expiry_valid(expires_in: ExpiresIn) -> Result<(), MomentoError> {
+    if !expires_in.does_expire() {
+        return Err(MomentoError {
+            message: "Disposable tokens must have an expiry".into(),
+            error_code: MomentoErrorCode::InvalidArgumentError,
+            inner_error: None,
+            details: None,
+        });
+    }
+    if expires_in.to_seconds() < 1 {
+        return Err(MomentoError {
+            message: "Disposable tokens expiry must be positive".into(),
+            error_code: MomentoErrorCode::InvalidArgumentError,
+            inner_error: None,
+            details: None,
+        });
+    }
+    if expires_in.to_seconds() > 60 * 60 {
+        return Err(MomentoError {
+            message: "Disposable tokens must expire within 1 hour".into(),
+            error_code: MomentoErrorCode::InvalidArgumentError,
+            inner_error: None,
+            details: None,
+        });
+    }
+    Ok(())
+}
+
+pub(crate) fn is_disposable_token_id_valid(token_id: &str) -> Result<(), MomentoError> {
+    if token_id.trim().len() > 64 {
+        return Err(MomentoError {
+            message: "Token ID must be less than or equal to 64 characters".into(),
             error_code: MomentoErrorCode::InvalidArgumentError,
             inner_error: None,
             details: None,
@@ -393,5 +436,38 @@ mod tests {
             result,
             vec![vec![104, 101, 108, 108, 111], vec![119, 111, 114, 108, 100]]
         );
+    }
+
+    #[test]
+    fn test_is_disposable_token_id_valid() {
+        let short_token_id = "short";
+        assert!(is_disposable_token_id_valid(short_token_id).is_ok());
+
+        let long_token_id = "this_is_a_long_token_id_that_is_longer_than_64_characters_for_sure";
+        assert!(is_disposable_token_id_valid(long_token_id).is_err());
+    }
+
+    #[test]
+    fn test_is_disposable_token_expiry_valid() {
+        let expires_in = ExpiresIn::seconds(30);
+        assert!(is_disposable_token_expiry_valid(expires_in).is_ok());
+
+        let expires_in = ExpiresIn::minutes(59);
+        assert!(is_disposable_token_expiry_valid(expires_in).is_ok());
+
+        let expires_in = ExpiresIn::hours(1);
+        assert!(is_disposable_token_expiry_valid(expires_in).is_ok());
+
+        let expires_in = ExpiresIn::minutes(61);
+        assert!(is_disposable_token_expiry_valid(expires_in).is_err());
+
+        let expires_in = ExpiresIn::seconds(0);
+        assert!(is_disposable_token_expiry_valid(expires_in).is_err());
+
+        let expires_in = ExpiresIn::days(1);
+        assert!(is_disposable_token_expiry_valid(expires_in).is_err());
+
+        let never_expires = ExpiresIn::never();
+        assert!(is_disposable_token_expiry_valid(never_expires).is_err());
     }
 }

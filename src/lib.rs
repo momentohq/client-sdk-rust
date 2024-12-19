@@ -142,3 +142,7 @@ pub use crate::utils::{IntoBytes, IntoBytesIterable};
 
 /// Represents the result of a Momento operation.
 pub type MomentoResult<T> = Result<T, MomentoError>;
+
+/// Contains the [AuthClient] for calling Momento Auth APIs.
+pub mod auth;
+pub use auth::AuthClient;
