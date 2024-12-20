@@ -80,7 +80,7 @@ pub fn get_test_store_name() -> String {
 }
 
 pub fn get_test_auth_cache_name() -> String {
-    env::var("TEST_CACHE_NAME").unwrap_or("rust-sdk-test-cache-auth".to_string())
+    env::var("TEST_AUTH_CACHE_NAME").unwrap_or("rust-sdk-test-cache-auth".to_string())
 }
 
 #[allow(clippy::expect_used)] // we want to panic if the env var is not set
