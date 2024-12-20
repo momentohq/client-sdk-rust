@@ -219,40 +219,32 @@ mod disposable_tokens_cache_key {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should be able to read this key in both caches
-        assert_get_success(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_success(&cache_client, second_cache, test_item.key()).await?;
+        assert_get_success(&cc, first_cache, test_item.key()).await?;
+        assert_get_success(&cc, second_cache, test_item.key()).await?;
 
         // should not be able to read another key in either cache
         let other_key = unique_key();
-        assert_get_failure(&cache_client, first_cache, &other_key).await?;
-        assert_get_failure(&cache_client, second_cache, &other_key).await?;
+        assert_get_failure(&cc, first_cache, &other_key).await?;
+        assert_get_failure(&cc, second_cache, &other_key).await?;
 
         // should not be able to write the key in either cache
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
+
+        // should not be able to write another key in either cache
+        assert_set_failure(&cc, first_cache, &other_key, test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, &other_key, test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -267,40 +259,32 @@ mod disposable_tokens_cache_key {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should be able to read this key in only first cache
-        assert_get_success(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
+        assert_get_success(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
 
         // should not be able to read another key in either cache
         let other_key = unique_key();
-        assert_get_failure(&cache_client, first_cache, &other_key).await?;
-        assert_get_failure(&cache_client, second_cache, &other_key).await?;
+        assert_get_failure(&cc, first_cache, &other_key).await?;
+        assert_get_failure(&cc, second_cache, &other_key).await?;
 
         // should not be able to write the key in either cache
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
+
+        // should not be able to write another key in either cache
+        assert_set_failure(&cc, first_cache, &other_key, test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, &other_key, test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -315,40 +299,32 @@ mod disposable_tokens_cache_key {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should not be able to read this key in either cache
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
 
         // should not be able to read another key in either cache
         let other_key = unique_key();
-        assert_get_failure(&cache_client, first_cache, &other_key).await?;
-        assert_get_failure(&cache_client, second_cache, &other_key).await?;
+        assert_get_failure(&cc, first_cache, &other_key).await?;
+        assert_get_failure(&cc, second_cache, &other_key).await?;
 
         // should be able to write the key in both caches
-        assert_set_success(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_success(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_set_success(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_success(&cc, second_cache, test_item.key(), test_item.value()).await?;
+
+        // should not be able to write another key in either cache
+        assert_set_failure(&cc, first_cache, &other_key, test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, &other_key, test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -363,40 +339,32 @@ mod disposable_tokens_cache_key {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should not be able to read this key in either cache
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
 
         // should not be able to read another key in either cache
         let other_key = unique_key();
-        assert_get_failure(&cache_client, first_cache, &other_key).await?;
-        assert_get_failure(&cache_client, second_cache, &other_key).await?;
+        assert_get_failure(&cc, first_cache, &other_key).await?;
+        assert_get_failure(&cc, second_cache, &other_key).await?;
 
         // should be able to write the key in only first cache
-        assert_set_success(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_set_success(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
+
+        // should not be able to write another key in either cache
+        assert_set_failure(&cc, first_cache, &other_key, test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, &other_key, test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -411,40 +379,32 @@ mod disposable_tokens_cache_key {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should be able to read this key in both caches
-        assert_get_success(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_success(&cache_client, second_cache, test_item.key()).await?;
+        assert_get_success(&cc, first_cache, test_item.key()).await?;
+        assert_get_success(&cc, second_cache, test_item.key()).await?;
 
         // should not be able to read another key in either cache
         let other_key = unique_key();
-        assert_get_failure(&cache_client, first_cache, &other_key).await?;
-        assert_get_failure(&cache_client, second_cache, &other_key).await?;
+        assert_get_failure(&cc, first_cache, &other_key).await?;
+        assert_get_failure(&cc, second_cache, &other_key).await?;
 
         // should be able to write the key in both caches
-        assert_set_success(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_success(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_set_success(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_success(&cc, second_cache, test_item.key(), test_item.value()).await?;
+
+        // should not be able to write another key in both caches
+        assert_set_failure(&cc, first_cache, &other_key, test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, &other_key, test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -459,40 +419,32 @@ mod disposable_tokens_cache_key {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should be able to read this key in only first cache
-        assert_get_success(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
+        assert_get_success(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
 
         // should not be able to read another key in either cache
         let other_key = unique_key();
-        assert_get_failure(&cache_client, first_cache, &other_key).await?;
-        assert_get_failure(&cache_client, second_cache, &other_key).await?;
+        assert_get_failure(&cc, first_cache, &other_key).await?;
+        assert_get_failure(&cc, second_cache, &other_key).await?;
 
         // should be able to write the key in only first cache
-        assert_set_success(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_set_success(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
+
+        // should not be able to write another key in either cache
+        assert_set_failure(&cc, first_cache, &other_key, test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, &other_key, test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -511,45 +463,37 @@ mod disposable_tokens_cache_key_prefix {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should be able to read this key in only first cache
-        assert_get_success(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
+        assert_get_success(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
 
         // should be able to read a prefixed key in only first cache
         let prefixed_key = format!("{}-smth-else", test_item.key());
-        assert_get_success(&cache_client, first_cache, &prefixed_key).await?;
-        assert_get_failure(&cache_client, second_cache, &prefixed_key).await?;
+        assert_get_success(&cc, first_cache, &prefixed_key).await?;
+        assert_get_failure(&cc, second_cache, &prefixed_key).await?;
 
         // should not be able to read another key in either cache
         let other_key = unique_key();
-        assert_get_failure(&cache_client, first_cache, &other_key).await?;
-        assert_get_failure(&cache_client, second_cache, &other_key).await?;
+        assert_get_failure(&cc, first_cache, &other_key).await?;
+        assert_get_failure(&cc, second_cache, &other_key).await?;
 
         // should not be able to write the key in either cache
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
+
+        // should not be able to write another key in either cache
+        assert_set_failure(&cc, first_cache, &other_key, test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, &other_key, test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -566,45 +510,37 @@ mod disposable_tokens_cache_key_prefix {
             ))
             .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should be able to read this key in both caches
-        assert_get_success(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_success(&cache_client, second_cache, test_item.key()).await?;
+        assert_get_success(&cc, first_cache, test_item.key()).await?;
+        assert_get_success(&cc, second_cache, test_item.key()).await?;
 
         // should be able to read a prefixed key in both caches
         let prefixed_key = format!("{}-smth-else", test_item.key());
-        assert_get_success(&cache_client, first_cache, &prefixed_key).await?;
-        assert_get_success(&cache_client, second_cache, &prefixed_key).await?;
+        assert_get_success(&cc, first_cache, &prefixed_key).await?;
+        assert_get_success(&cc, second_cache, &prefixed_key).await?;
 
         // should not be able to read another key in either cache
         let other_key = unique_key();
-        assert_get_failure(&cache_client, first_cache, &other_key).await?;
-        assert_get_failure(&cache_client, second_cache, &other_key).await?;
+        assert_get_failure(&cc, first_cache, &other_key).await?;
+        assert_get_failure(&cc, second_cache, &other_key).await?;
 
         // should not be able to write the key in either cache
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
+
+        // should not be able to write another key in either cache
+        assert_set_failure(&cc, first_cache, &other_key, test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, &other_key, test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -621,45 +557,37 @@ mod disposable_tokens_cache_key_prefix {
             ))
             .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should not be able to read this key in either cache
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
 
         // should not be able to read a prefixed key in either cache
         let prefixed_key = format!("{}-smth-else", test_item.key());
-        assert_get_failure(&cache_client, first_cache, &prefixed_key).await?;
-        assert_get_failure(&cache_client, second_cache, &prefixed_key).await?;
+        assert_get_failure(&cc, first_cache, &prefixed_key).await?;
+        assert_get_failure(&cc, second_cache, &prefixed_key).await?;
 
         // should not be able to read another key in either cache
         let other_key = unique_key();
-        assert_get_failure(&cache_client, first_cache, &other_key).await?;
-        assert_get_failure(&cache_client, second_cache, &other_key).await?;
+        assert_get_failure(&cc, first_cache, &other_key).await?;
+        assert_get_failure(&cc, second_cache, &other_key).await?;
 
         // should be able to write the key in only first cache
-        assert_set_success(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_set_success(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
+
+        // should not be able to write another key in either cache
+        assert_set_failure(&cc, first_cache, &other_key, test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, &other_key, test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -676,45 +604,37 @@ mod disposable_tokens_cache_key_prefix {
             ))
             .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should not be able to read this key in either cache
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
 
         // should not be able to read a prefixed key in either cache
         let prefixed_key = format!("{}-smth-else", test_item.key());
-        assert_get_failure(&cache_client, first_cache, &prefixed_key).await?;
-        assert_get_failure(&cache_client, second_cache, &prefixed_key).await?;
+        assert_get_failure(&cc, first_cache, &prefixed_key).await?;
+        assert_get_failure(&cc, second_cache, &prefixed_key).await?;
 
         // should not be able to read another key in either cache
         let other_key = unique_key();
-        assert_get_failure(&cache_client, first_cache, &other_key).await?;
-        assert_get_failure(&cache_client, second_cache, &other_key).await?;
+        assert_get_failure(&cc, first_cache, &other_key).await?;
+        assert_get_failure(&cc, second_cache, &other_key).await?;
 
         // should be able to write the key in both caches
-        assert_set_success(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_success(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_set_success(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_success(&cc, second_cache, test_item.key(), test_item.value()).await?;
+
+        // should be able to write another key in either cache
+        assert_set_failure(&cc, first_cache, &other_key, test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, &other_key, test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -731,45 +651,37 @@ mod disposable_tokens_cache_key_prefix {
             ))
             .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should be able to read this key in only first cache
-        assert_get_success(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
+        assert_get_success(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
 
         // should be able to read a prefixed key in only first cache
         let prefixed_key = format!("{}-smth-else", test_item.key());
-        assert_get_success(&cache_client, first_cache, &prefixed_key).await?;
-        assert_get_failure(&cache_client, second_cache, &prefixed_key).await?;
+        assert_get_success(&cc, first_cache, &prefixed_key).await?;
+        assert_get_failure(&cc, second_cache, &prefixed_key).await?;
 
         // should not be able to read another key in either cache
         let other_key = unique_key();
-        assert_get_failure(&cache_client, first_cache, &other_key).await?;
-        assert_get_failure(&cache_client, second_cache, &other_key).await?;
+        assert_get_failure(&cc, first_cache, &other_key).await?;
+        assert_get_failure(&cc, second_cache, &other_key).await?;
 
         // should be able to write the key in only first cache
-        assert_set_success(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_set_success(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
+
+        // should not be able to write another key in either cache
+        assert_set_failure(&cc, first_cache, &other_key, test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, &other_key, test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -786,45 +698,37 @@ mod disposable_tokens_cache_key_prefix {
             ))
             .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should be able to read this key in both caches
-        assert_get_success(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_success(&cache_client, second_cache, test_item.key()).await?;
+        assert_get_success(&cc, first_cache, test_item.key()).await?;
+        assert_get_success(&cc, second_cache, test_item.key()).await?;
 
         // should be able to read a prefixed key in both caches
         let prefixed_key = format!("{}-smth-else", test_item.key());
-        assert_get_success(&cache_client, first_cache, &prefixed_key).await?;
-        assert_get_success(&cache_client, second_cache, &prefixed_key).await?;
+        assert_get_success(&cc, first_cache, &prefixed_key).await?;
+        assert_get_success(&cc, second_cache, &prefixed_key).await?;
 
         // should not be able to read another key in either cache
         let other_key = unique_key();
-        assert_get_failure(&cache_client, first_cache, &other_key).await?;
-        assert_get_failure(&cache_client, second_cache, &other_key).await?;
+        assert_get_failure(&cc, first_cache, &other_key).await?;
+        assert_get_failure(&cc, second_cache, &other_key).await?;
 
         // should be able to write the key in both caches
-        assert_set_success(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_success(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_set_success(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_success(&cc, second_cache, test_item.key(), test_item.value()).await?;
+
+        // should not be able to write another key in either cache
+        assert_set_failure(&cc, first_cache, &other_key, test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, &other_key, test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -847,34 +751,22 @@ mod disposable_tokens_cache {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should be able to read and write in only first cache
         let test_item = TestScalar::new();
-        assert_get_success(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
-        assert_set_success(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_get_success(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
+        assert_set_success(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -893,34 +785,22 @@ mod disposable_tokens_cache {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should be able to read and write in both caches
         let test_item = TestScalar::new();
-        assert_get_success(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_success(&cache_client, second_cache, test_item.key()).await?;
-        assert_set_success(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_success(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_get_success(&cc, first_cache, test_item.key()).await?;
+        assert_get_success(&cc, second_cache, test_item.key()).await?;
+        assert_set_success(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_success(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -939,36 +819,24 @@ mod disposable_tokens_cache {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should be able to read in only first cache
         let test_item = TestScalar::new();
-        assert_get_success(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
+        assert_get_success(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
 
         // should not be able to write in either cache
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -987,36 +855,24 @@ mod disposable_tokens_cache {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should be able to read in both caches
         let test_item = TestScalar::new();
-        assert_get_success(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_success(&cache_client, second_cache, test_item.key()).await?;
+        assert_get_success(&cc, first_cache, test_item.key()).await?;
+        assert_get_success(&cc, second_cache, test_item.key()).await?;
 
         // should not be able to write in either cache
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -1035,36 +891,24 @@ mod disposable_tokens_cache {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should not be able to read in either cache
         let test_item = TestScalar::new();
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
 
         // should be able to write in only first cache
-        assert_set_success(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_set_success(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -1083,36 +927,24 @@ mod disposable_tokens_cache {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should not be able to read in either cache
         let test_item = TestScalar::new();
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
 
         // should be able to write in both caches
-        assert_set_success(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_success(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_set_success(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_success(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
         // should not be able to use topics
         let topic = TestScalar::new();
-        assert_publish_failure(&topic_client, first_cache, topic.key(), topic.value()).await?;
-        assert_publish_failure(&topic_client, second_cache, topic.key(), topic.value()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, topic.key(), topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, topic.key(), topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, topic.key()).await?;
 
         Ok(())
     }
@@ -1127,57 +959,36 @@ mod disposable_tokens_topics {
     async fn test_topics_publish_subscribe_specific_topic_specific_cache() -> MomentoResult<()> {
         let first_cache = &CACHE_TEST_STATE.cache_name;
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
-        let test_topic = TestScalar::new();
+        let first_topic = TestScalar::new();
+        let second_topic = TestScalar::new();
         let response = generate_disposable_token_success(
             DisposableTokenScope::Permissions::<String>(Permissions {
                 permissions: vec![Permission::TopicPermission(TopicPermission {
                     cache: (*first_cache).clone().into(),
-                    topic: test_topic.key().into(),
+                    topic: first_topic.key().into(),
                     role: TopicRole::PublishSubscribe,
                 })],
             }),
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let topic_client = new_topic_client(creds.clone());
-        let cache_client = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds.clone());
+        let cc = new_cache_client(creds.clone());
 
         // should not be able to use cache directly
         let test_item = TestScalar::new();
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
         // should be able to publish and subscribe in only first cache on only the specific topic
-        assert_publish_success(
-            &topic_client,
-            first_cache,
-            test_topic.key(),
-            test_topic.value(),
-        )
-        .await?;
-        assert_subscribe_success(&topic_client, first_cache, test_topic.key()).await?;
-        assert_publish_failure(
-            &topic_client,
-            second_cache,
-            test_topic.key(),
-            test_topic.value(),
-        )
-        .await?;
-        assert_subscribe_failure(&topic_client, second_cache, test_topic.key()).await?;
+        assert_publish_success(&tc, first_cache, first_topic.key(), first_topic.value()).await?;
+        assert_subscribe_success(&tc, first_cache, first_topic.key()).await?;
+        assert_publish_failure(&tc, second_cache, first_topic.key(), first_topic.value()).await?;
+        assert_subscribe_failure(&tc, second_cache, first_topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, second_topic.key(), second_topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, second_topic.key()).await?;
 
         Ok(())
     }
@@ -1186,57 +997,36 @@ mod disposable_tokens_topics {
     async fn test_topics_publish_subscribe_specific_topic_all_caches() -> MomentoResult<()> {
         let first_cache = &CACHE_TEST_STATE.cache_name;
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
-        let test_topic = TestScalar::new();
+        let first_topic = TestScalar::new();
+        let second_topic = TestScalar::new();
         let response = generate_disposable_token_success(
             DisposableTokenScope::Permissions::<String>(Permissions {
                 permissions: vec![Permission::TopicPermission(TopicPermission {
                     cache: CacheSelector::AllCaches,
-                    topic: test_topic.key().into(),
+                    topic: first_topic.key().into(),
                     role: TopicRole::PublishSubscribe,
                 })],
             }),
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let topic_client = new_topic_client(creds.clone());
-        let cache_client = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds.clone());
+        let cc = new_cache_client(creds.clone());
 
         // should not be able to use cache directly
         let test_item = TestScalar::new();
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
         // should be able to publish and subscribe in both caches on only the specific topic
-        assert_publish_success(
-            &topic_client,
-            first_cache,
-            test_topic.key(),
-            test_topic.value(),
-        )
-        .await?;
-        assert_subscribe_success(&topic_client, first_cache, test_topic.key()).await?;
-        assert_publish_success(
-            &topic_client,
-            second_cache,
-            test_topic.key(),
-            test_topic.value(),
-        )
-        .await?;
-        assert_subscribe_success(&topic_client, second_cache, test_topic.key()).await?;
+        assert_publish_success(&tc, first_cache, first_topic.key(), first_topic.value()).await?;
+        assert_subscribe_success(&tc, first_cache, first_topic.key()).await?;
+        assert_publish_success(&tc, second_cache, first_topic.key(), first_topic.value()).await?;
+        assert_subscribe_success(&tc, second_cache, first_topic.key()).await?;
+        assert_publish_failure(&tc, first_cache, second_topic.key(), second_topic.value()).await?;
+        assert_subscribe_failure(&tc, first_cache, second_topic.key()).await?;
 
         Ok(())
     }
@@ -1258,61 +1048,25 @@ mod disposable_tokens_topics {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let topic_client = new_topic_client(creds.clone());
-        let cache_client = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds.clone());
+        let cc = new_cache_client(creds.clone());
 
         // should not be able to use cache directly
         let test_item = TestScalar::new();
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
         // should be able to publish and subscribe in only first cache on all topics
-        assert_publish_success(
-            &topic_client,
-            first_cache,
-            first_topic.key(),
-            first_topic.value(),
-        )
-        .await?;
-        assert_subscribe_success(&topic_client, first_cache, first_topic.key()).await?;
-        assert_publish_failure(
-            &topic_client,
-            second_cache,
-            first_topic.key(),
-            first_topic.value(),
-        )
-        .await?;
-        assert_subscribe_failure(&topic_client, second_cache, first_topic.key()).await?;
-        assert_publish_success(
-            &topic_client,
-            first_cache,
-            second_topic.key(),
-            second_topic.value(),
-        )
-        .await?;
-        assert_subscribe_success(&topic_client, first_cache, second_topic.key()).await?;
-        assert_publish_failure(
-            &topic_client,
-            second_cache,
-            second_topic.key(),
-            second_topic.value(),
-        )
-        .await?;
-        assert_subscribe_failure(&topic_client, second_cache, second_topic.key()).await?;
+        assert_publish_success(&tc, first_cache, first_topic.key(), first_topic.value()).await?;
+        assert_subscribe_success(&tc, first_cache, first_topic.key()).await?;
+        assert_publish_failure(&tc, second_cache, first_topic.key(), first_topic.value()).await?;
+        assert_subscribe_failure(&tc, second_cache, first_topic.key()).await?;
+        assert_publish_success(&tc, first_cache, second_topic.key(), second_topic.value()).await?;
+        assert_subscribe_success(&tc, first_cache, second_topic.key()).await?;
+        assert_publish_failure(&tc, second_cache, second_topic.key(), second_topic.value()).await?;
+        assert_subscribe_failure(&tc, second_cache, second_topic.key()).await?;
 
         Ok(())
     }
@@ -1334,61 +1088,25 @@ mod disposable_tokens_topics {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let topic_client = new_topic_client(creds.clone());
-        let cache_client = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds.clone());
+        let cc = new_cache_client(creds.clone());
 
         // should not be able to use cache directly
         let test_item = TestScalar::new();
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
         // should be able to publish and subscribe in both caches on all topics
-        assert_publish_success(
-            &topic_client,
-            first_cache,
-            first_topic.key(),
-            first_topic.value(),
-        )
-        .await?;
-        assert_subscribe_success(&topic_client, first_cache, first_topic.key()).await?;
-        assert_publish_success(
-            &topic_client,
-            second_cache,
-            first_topic.key(),
-            first_topic.value(),
-        )
-        .await?;
-        assert_subscribe_success(&topic_client, second_cache, first_topic.key()).await?;
-        assert_publish_success(
-            &topic_client,
-            first_cache,
-            second_topic.key(),
-            second_topic.value(),
-        )
-        .await?;
-        assert_subscribe_success(&topic_client, first_cache, second_topic.key()).await?;
-        assert_publish_success(
-            &topic_client,
-            second_cache,
-            second_topic.key(),
-            second_topic.value(),
-        )
-        .await?;
-        assert_subscribe_success(&topic_client, second_cache, second_topic.key()).await?;
+        assert_publish_success(&tc, first_cache, first_topic.key(), first_topic.value()).await?;
+        assert_subscribe_success(&tc, first_cache, first_topic.key()).await?;
+        assert_publish_success(&tc, second_cache, first_topic.key(), first_topic.value()).await?;
+        assert_subscribe_success(&tc, second_cache, first_topic.key()).await?;
+        assert_publish_success(&tc, first_cache, second_topic.key(), second_topic.value()).await?;
+        assert_subscribe_success(&tc, first_cache, second_topic.key()).await?;
+        assert_publish_success(&tc, second_cache, second_topic.key(), second_topic.value()).await?;
+        assert_subscribe_success(&tc, second_cache, second_topic.key()).await?;
 
         Ok(())
     }
@@ -1397,59 +1115,39 @@ mod disposable_tokens_topics {
     async fn test_topics_subscribe_only_specific_topic_specific_cache() -> MomentoResult<()> {
         let first_cache = &CACHE_TEST_STATE.cache_name;
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
-        let test_topic = TestScalar::new();
+        let first_topic = TestScalar::new();
+        let second_topic = TestScalar::new();
         let response = generate_disposable_token_success(
             DisposableTokenScope::Permissions::<String>(Permissions {
                 permissions: vec![Permission::TopicPermission(TopicPermission {
                     cache: (*first_cache).clone().into(),
-                    topic: test_topic.key().into(),
+                    topic: first_topic.key().into(),
                     role: TopicRole::SubscribeOnly,
                 })],
             }),
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let topic_client = new_topic_client(creds.clone());
-        let cache_client = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds.clone());
+        let cc = new_cache_client(creds.clone());
 
         // should not be able to use cache directly
         let test_item = TestScalar::new();
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
-        // should not be able to publish in either cache on only the specific topic
-        assert_publish_failure(
-            &topic_client,
-            first_cache,
-            test_topic.key(),
-            test_topic.value(),
-        )
-        .await?;
-        assert_publish_failure(
-            &topic_client,
-            second_cache,
-            test_topic.key(),
-            test_topic.value(),
-        )
-        .await?;
+        // should not be able to publish in either cache on either topic
+        assert_publish_failure(&tc, first_cache, first_topic.key(), first_topic.value()).await?;
+        assert_publish_failure(&tc, first_cache, second_topic.key(), second_topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, first_topic.key(), first_topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, second_topic.key(), second_topic.value()).await?;
 
-        // should be able to subscribe in only first cache on only the specific topic
-        assert_subscribe_success(&topic_client, first_cache, test_topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, test_topic.key()).await?;
+        // should be able to subscribe in only first cache to the specific topic
+        assert_subscribe_success(&tc, first_cache, first_topic.key()).await?;
+        assert_subscribe_failure(&tc, first_cache, second_topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, first_topic.key()).await?;
 
         Ok(())
     }
@@ -1458,59 +1156,40 @@ mod disposable_tokens_topics {
     async fn test_topics_subscribe_only_specific_topic_all_caches() -> MomentoResult<()> {
         let first_cache = &CACHE_TEST_STATE.cache_name;
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
-        let test_topic = TestScalar::new();
+        let first_topic = TestScalar::new();
+        let second_topic = TestScalar::new();
         let response = generate_disposable_token_success(
             DisposableTokenScope::Permissions::<String>(Permissions {
                 permissions: vec![Permission::TopicPermission(TopicPermission {
                     cache: CacheSelector::AllCaches,
-                    topic: test_topic.key().into(),
+                    topic: first_topic.key().into(),
                     role: TopicRole::SubscribeOnly,
                 })],
             }),
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let topic_client = new_topic_client(creds.clone());
-        let cache_client = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds.clone());
+        let cc = new_cache_client(creds.clone());
 
         // should not be able to use cache directly
         let test_item = TestScalar::new();
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
-        // should not be able to publish in either cache
-        assert_publish_failure(
-            &topic_client,
-            first_cache,
-            test_topic.key(),
-            test_topic.value(),
-        )
-        .await?;
-        assert_publish_failure(
-            &topic_client,
-            second_cache,
-            test_topic.key(),
-            test_topic.value(),
-        )
-        .await?;
+        // should not be able to publish in either cache on either topic
+        assert_publish_failure(&tc, first_cache, first_topic.key(), first_topic.value()).await?;
+        assert_publish_failure(&tc, first_cache, second_topic.key(), second_topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, first_topic.key(), first_topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, second_topic.key(), second_topic.value()).await?;
 
-        // should be able to subscribe in both caches
-        assert_subscribe_success(&topic_client, first_cache, test_topic.key()).await?;
-        assert_subscribe_success(&topic_client, second_cache, test_topic.key()).await?;
+        // should be able to subscribe in both caches to only the specific topic
+        assert_subscribe_success(&tc, first_cache, first_topic.key()).await?;
+        assert_subscribe_failure(&tc, first_cache, second_topic.key()).await?;
+        assert_subscribe_success(&tc, second_cache, first_topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, second_topic.key()).await?;
 
         Ok(())
     }
@@ -1532,61 +1211,27 @@ mod disposable_tokens_topics {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let topic_client = new_topic_client(creds.clone());
-        let cache_client = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds.clone());
+        let cc = new_cache_client(creds.clone());
 
         // should not be able to use cache directly
         let test_item = TestScalar::new();
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
-        // should not be able to publish in either cache on all topics
-        assert_publish_failure(
-            &topic_client,
-            first_cache,
-            first_topic.key(),
-            first_topic.value(),
-        )
-        .await?;
-        assert_publish_failure(
-            &topic_client,
-            second_cache,
-            first_topic.key(),
-            first_topic.value(),
-        )
-        .await?;
-        assert_publish_failure(
-            &topic_client,
-            first_cache,
-            second_topic.key(),
-            second_topic.value(),
-        )
-        .await?;
-        assert_publish_failure(
-            &topic_client,
-            second_cache,
-            second_topic.key(),
-            second_topic.value(),
-        )
-        .await?;
+        // should not be able to publish in either cache on either topic
+        assert_publish_failure(&tc, first_cache, first_topic.key(), first_topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, first_topic.key(), first_topic.value()).await?;
+        assert_publish_failure(&tc, first_cache, second_topic.key(), second_topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, second_topic.key(), second_topic.value()).await?;
 
-        // should be able to subscribe in only first cache on all topics
-        assert_subscribe_success(&topic_client, first_cache, first_topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, first_topic.key()).await?;
+        // should be able to subscribe in only first cache on either topic
+        assert_subscribe_success(&tc, first_cache, first_topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, first_topic.key()).await?;
+        assert_subscribe_success(&tc, first_cache, second_topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, second_topic.key()).await?;
 
         Ok(())
     }
@@ -1608,63 +1253,27 @@ mod disposable_tokens_topics {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let topic_client = new_topic_client(creds.clone());
-        let cache_client = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds.clone());
+        let cc = new_cache_client(creds.clone());
 
         // should not be able to use cache directly
         let test_item = TestScalar::new();
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
-        // should not be able to publish in either cache on all topics
-        assert_publish_failure(
-            &topic_client,
-            first_cache,
-            first_topic.key(),
-            first_topic.value(),
-        )
-        .await?;
-        assert_publish_failure(
-            &topic_client,
-            second_cache,
-            first_topic.key(),
-            first_topic.value(),
-        )
-        .await?;
-        assert_publish_failure(
-            &topic_client,
-            first_cache,
-            second_topic.key(),
-            second_topic.value(),
-        )
-        .await?;
-        assert_publish_failure(
-            &topic_client,
-            second_cache,
-            second_topic.key(),
-            second_topic.value(),
-        )
-        .await?;
+        // should not be able to publish in either cache on either topic
+        assert_publish_failure(&tc, first_cache, first_topic.key(), first_topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, first_topic.key(), first_topic.value()).await?;
+        assert_publish_failure(&tc, first_cache, second_topic.key(), second_topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, second_topic.key(), second_topic.value()).await?;
 
-        // should be able to subscribe in both caches on all topics
-        assert_subscribe_success(&topic_client, first_cache, first_topic.key()).await?;
-        assert_subscribe_success(&topic_client, second_cache, first_topic.key()).await?;
-        assert_subscribe_success(&topic_client, first_cache, second_topic.key()).await?;
-        assert_subscribe_success(&topic_client, second_cache, second_topic.key()).await?;
+        // should be able to subscribe in both caches on both topics
+        assert_subscribe_success(&tc, first_cache, first_topic.key()).await?;
+        assert_subscribe_success(&tc, second_cache, first_topic.key()).await?;
+        assert_subscribe_success(&tc, first_cache, second_topic.key()).await?;
+        assert_subscribe_success(&tc, second_cache, second_topic.key()).await?;
 
         Ok(())
     }
@@ -1673,59 +1282,40 @@ mod disposable_tokens_topics {
     async fn test_topics_publish_only_specific_topic_specific_cache() -> MomentoResult<()> {
         let first_cache = &CACHE_TEST_STATE.cache_name;
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
-        let test_topic = TestScalar::new();
+        let first_topic = TestScalar::new();
+        let second_topic = TestScalar::new();
         let response = generate_disposable_token_success(
             DisposableTokenScope::Permissions::<String>(Permissions {
                 permissions: vec![Permission::TopicPermission(TopicPermission {
                     cache: (*first_cache).clone().into(),
-                    topic: test_topic.key().into(),
+                    topic: first_topic.key().into(),
                     role: TopicRole::PublishOnly,
                 })],
             }),
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let topic_client = new_topic_client(creds.clone());
-        let cache_client = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds.clone());
+        let cc = new_cache_client(creds.clone());
 
         // should not be able to use cache directly
         let test_item = TestScalar::new();
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
         // should be able to publish in only first cache on only the specific topic
-        assert_publish_success(
-            &topic_client,
-            first_cache,
-            test_topic.key(),
-            test_topic.value(),
-        )
-        .await?;
-        assert_publish_failure(
-            &topic_client,
-            second_cache,
-            test_topic.key(),
-            test_topic.value(),
-        )
-        .await?;
+        assert_publish_success(&tc, first_cache, first_topic.key(), first_topic.value()).await?;
+        assert_publish_failure(&tc, first_cache, second_topic.key(), second_topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, first_topic.key(), first_topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, second_topic.key(), second_topic.value()).await?;
 
-        // should not be able to subscribe in either cache on only the specific topic
-        assert_subscribe_failure(&topic_client, first_cache, test_topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, test_topic.key()).await?;
+        // should not be able to subscribe in either cache on either topic
+        assert_subscribe_failure(&tc, first_cache, first_topic.key()).await?;
+        assert_subscribe_failure(&tc, first_cache, second_topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, first_topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, second_topic.key()).await?;
 
         Ok(())
     }
@@ -1734,59 +1324,40 @@ mod disposable_tokens_topics {
     async fn test_topics_publish_only_specific_topic_all_caches() -> MomentoResult<()> {
         let first_cache = &CACHE_TEST_STATE.cache_name;
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
-        let test_topic = TestScalar::new();
+        let first_topic = TestScalar::new();
+        let second_topic = TestScalar::new();
         let response = generate_disposable_token_success(
             DisposableTokenScope::Permissions::<String>(Permissions {
                 permissions: vec![Permission::TopicPermission(TopicPermission {
                     cache: CacheSelector::AllCaches,
-                    topic: test_topic.key().into(),
+                    topic: first_topic.key().into(),
                     role: TopicRole::PublishOnly,
                 })],
             }),
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let topic_client = new_topic_client(creds.clone());
-        let cache_client = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds.clone());
+        let cc = new_cache_client(creds.clone());
 
         // should not be able to use cache directly
         let test_item = TestScalar::new();
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
         // should be able to publish in both caches on only the specific topic
-        assert_publish_success(
-            &topic_client,
-            first_cache,
-            test_topic.key(),
-            test_topic.value(),
-        )
-        .await?;
-        assert_publish_success(
-            &topic_client,
-            second_cache,
-            test_topic.key(),
-            test_topic.value(),
-        )
-        .await?;
+        assert_publish_success(&tc, first_cache, first_topic.key(), first_topic.value()).await?;
+        assert_publish_success(&tc, second_cache, first_topic.key(), first_topic.value()).await?;
+        assert_publish_failure(&tc, first_cache, second_topic.key(), second_topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, second_topic.key(), second_topic.value()).await?;
 
-        // should not be able to subscribe in either cache on only the specific topic
-        assert_subscribe_failure(&topic_client, first_cache, test_topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, test_topic.key()).await?;
+        // should not be able to subscribe in either cache on either topic
+        assert_subscribe_failure(&tc, first_cache, first_topic.key()).await?;
+        assert_subscribe_failure(&tc, first_cache, second_topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, first_topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, second_topic.key()).await?;
 
         Ok(())
     }
@@ -1808,63 +1379,27 @@ mod disposable_tokens_topics {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let topic_client = new_topic_client(creds.clone());
-        let cache_client = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds.clone());
+        let cc = new_cache_client(creds.clone());
 
         // should not be able to use cache directly
         let test_item = TestScalar::new();
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
         // should be able to publish in only first cache on all topics
-        assert_publish_success(
-            &topic_client,
-            first_cache,
-            first_topic.key(),
-            first_topic.value(),
-        )
-        .await?;
-        assert_publish_failure(
-            &topic_client,
-            second_cache,
-            first_topic.key(),
-            first_topic.value(),
-        )
-        .await?;
-        assert_publish_success(
-            &topic_client,
-            first_cache,
-            second_topic.key(),
-            second_topic.value(),
-        )
-        .await?;
-        assert_publish_failure(
-            &topic_client,
-            second_cache,
-            second_topic.key(),
-            second_topic.value(),
-        )
-        .await?;
+        assert_publish_success(&tc, first_cache, first_topic.key(), first_topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, first_topic.key(), first_topic.value()).await?;
+        assert_publish_success(&tc, first_cache, second_topic.key(), second_topic.value()).await?;
+        assert_publish_failure(&tc, second_cache, second_topic.key(), second_topic.value()).await?;
 
         // should not be able to subscribe in either cache on all topics
-        assert_subscribe_failure(&topic_client, first_cache, first_topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, first_topic.key()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, second_topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, second_topic.key()).await?;
+        assert_subscribe_failure(&tc, first_cache, first_topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, first_topic.key()).await?;
+        assert_subscribe_failure(&tc, first_cache, second_topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, second_topic.key()).await?;
 
         Ok(())
     }
@@ -1886,63 +1421,27 @@ mod disposable_tokens_topics {
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let topic_client = new_topic_client(creds.clone());
-        let cache_client = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds.clone());
+        let cc = new_cache_client(creds.clone());
 
         // should not be able to use cache directly
         let test_item = TestScalar::new();
-        assert_get_failure(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_failure(&cache_client, second_cache, test_item.key()).await?;
-        assert_set_failure(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_failure(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_get_failure(&cc, first_cache, test_item.key()).await?;
+        assert_get_failure(&cc, second_cache, test_item.key()).await?;
+        assert_set_failure(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
-        // should be able to publish in both caches on all topics
-        assert_publish_success(
-            &topic_client,
-            first_cache,
-            first_topic.key(),
-            first_topic.value(),
-        )
-        .await?;
-        assert_publish_success(
-            &topic_client,
-            second_cache,
-            first_topic.key(),
-            first_topic.value(),
-        )
-        .await?;
-        assert_publish_success(
-            &topic_client,
-            first_cache,
-            second_topic.key(),
-            second_topic.value(),
-        )
-        .await?;
-        assert_publish_success(
-            &topic_client,
-            second_cache,
-            second_topic.key(),
-            second_topic.value(),
-        )
-        .await?;
+        // should be able to publish in both caches on both topics
+        assert_publish_success(&tc, first_cache, first_topic.key(), first_topic.value()).await?;
+        assert_publish_success(&tc, second_cache, first_topic.key(), first_topic.value()).await?;
+        assert_publish_success(&tc, first_cache, second_topic.key(), second_topic.value()).await?;
+        assert_publish_success(&tc, second_cache, second_topic.key(), second_topic.value()).await?;
 
-        // should not be able to subscribe in either cache on all topics
-        assert_subscribe_failure(&topic_client, first_cache, first_topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, first_topic.key()).await?;
-        assert_subscribe_failure(&topic_client, first_cache, second_topic.key()).await?;
-        assert_subscribe_failure(&topic_client, second_cache, second_topic.key()).await?;
+        // should not be able to subscribe in either cache on either topic
+        assert_subscribe_failure(&tc, first_cache, first_topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, first_topic.key()).await?;
+        assert_subscribe_failure(&tc, first_cache, second_topic.key()).await?;
+        assert_subscribe_failure(&tc, second_cache, second_topic.key()).await?;
 
         Ok(())
     }
@@ -1955,69 +1454,33 @@ mod disposable_tokens_all_data {
     async fn test_all_data_read_write() -> MomentoResult<()> {
         let first_cache = &CACHE_TEST_STATE.cache_name;
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
-        let first_topic = TestScalar::new();
-        let second_topic = TestScalar::new();
         let response = generate_disposable_token_success(
             DisposableTokenScope::Permissions::<String>(Permissions::all_data_read_write()),
         )
         .await?;
         let creds = new_credential_provider_from_token(response.auth_token());
-        let cache_client = new_cache_client(creds.clone());
-        let topic_client = new_topic_client(creds);
+        let cc = new_cache_client(creds.clone());
+        let tc = new_topic_client(creds);
 
         // should be able to read and write in both caches
         let test_item = TestScalar::new();
-        assert_get_success(&cache_client, first_cache, test_item.key()).await?;
-        assert_get_success(&cache_client, second_cache, test_item.key()).await?;
-        assert_set_success(
-            &cache_client,
-            first_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_set_success(
-            &cache_client,
-            second_cache,
-            test_item.key(),
-            test_item.value(),
-        )
-        .await?;
+        assert_get_success(&cc, first_cache, test_item.key()).await?;
+        assert_get_success(&cc, second_cache, test_item.key()).await?;
+        assert_set_success(&cc, first_cache, test_item.key(), test_item.value()).await?;
+        assert_set_success(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
         // should be able to publish and subscribe in both caches on both topics
-        assert_publish_success(
-            &topic_client,
-            first_cache,
-            first_topic.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_subscribe_success(&topic_client, first_cache, first_topic.key()).await?;
-        assert_publish_success(
-            &topic_client,
-            second_cache,
-            first_topic.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_subscribe_success(&topic_client, second_cache, first_topic.key()).await?;
+        let first_topic = TestScalar::new();
+        assert_publish_success(&tc, first_cache, first_topic.key(), test_item.value()).await?;
+        assert_subscribe_success(&tc, first_cache, first_topic.key()).await?;
+        assert_publish_success(&tc, second_cache, first_topic.key(), test_item.value()).await?;
+        assert_subscribe_success(&tc, second_cache, first_topic.key()).await?;
 
-        assert_publish_success(
-            &topic_client,
-            first_cache,
-            second_topic.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_subscribe_success(&topic_client, first_cache, second_topic.key()).await?;
-        assert_publish_success(
-            &topic_client,
-            second_cache,
-            second_topic.key(),
-            test_item.value(),
-        )
-        .await?;
-        assert_subscribe_success(&topic_client, second_cache, second_topic.key()).await?;
+        let second_topic = TestScalar::new();
+        assert_publish_success(&tc, first_cache, second_topic.key(), test_item.value()).await?;
+        assert_subscribe_success(&tc, first_cache, second_topic.key()).await?;
+        assert_publish_success(&tc, second_cache, second_topic.key(), test_item.value()).await?;
+        assert_subscribe_success(&tc, second_cache, second_topic.key()).await?;
 
         Ok(())
     }
