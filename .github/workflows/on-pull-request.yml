@@ -9,6 +9,7 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   TEST_CACHE_NAME: rust-integration-test-ci-cache-${{ github.sha }}
   TEST_STORE_NAME: rust-integration-test-ci-store-${{ github.sha }}
+  TEST_AUTH_CACHE_NAME: rust-integration-test-ci-cache-auth-${{ github.sha }}
 
 jobs:
   rustfmt:
