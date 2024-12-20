@@ -49,7 +49,6 @@ pub struct DisposableTokenProps {
 /// # })
 /// # }
 /// ```
-/// ```
 pub struct GenerateDisposableTokenRequest<K: IntoBytes> {
     scope: DisposableTokenScope<K>,
     expires_in: ExpiresIn,

@@ -79,6 +79,10 @@ pub fn get_test_store_name() -> String {
     env::var("TEST_STORE_NAME").unwrap_or("rust-sdk-test-store".to_string())
 }
 
+pub fn get_test_auth_cache_name() -> String {
+    env::var("TEST_CACHE_NAME").unwrap_or("rust-sdk-test-cache-auth".to_string())
+}
+
 #[allow(clippy::expect_used)] // we want to panic if the env var is not set
 pub fn get_test_credential_provider() -> CredentialProvider {
     CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
