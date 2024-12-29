@@ -17,34 +17,26 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let momento_key = env::var("MOMENTO_API_KEY").expect("MOMENTO_API_KEY is required");
     // create a new Momento client
-    let topic_client = match TopicClient::builder()
+    let topic_client = TopicClient::builder()
         .configuration(momento::topics::configurations::Laptop::latest())
         .credential_provider(CredentialProvider::from_string(momento_key).unwrap())
-        .build()
-    {
-        Ok(c) => c,
-        Err(_) => panic!("error with momento client"),
-    };
+        .build()?;
 
     let cache = env::var("CACHE").expect("CACHE Variable is required");
     let topic = env::var("TOPIC").expect("TOPIC Variable is required");
 
-    let mut subscription: Subscription = topic_client
-        .subscribe(cache, topic)
-        .await
-        .expect("subscribe rpc failed");
-
+    let mut subscription: Subscription = topic_client.subscribe(cache, topic).await?;
     // Consume the subscription
     while let Some(item) = subscription.next().await {
         info!("Received subscription item: {item:?}");
         let value: Result<String, MomentoError> = item.try_into();
         match value {
             Ok(v) => {
-                let o: MomentoModel = serde_json::from_str(v.as_str()).unwrap();
+                let o: MomentoModel = serde_json::from_str(v.as_str())?;
                 info!(
-                    "(Value)={}|(MoModel)={o:?}|(TimeBetween)={}",
+                    "(Value)={}|(MoModel)={o:?}|(MillisecondsBetween)={}",
                     v,
-                    o.time_between_publish_and_received()
+                    o.milliseconds_between_publish_and_received()
                 );
             }
             Err(e) => {

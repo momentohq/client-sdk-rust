@@ -6,9 +6,9 @@
 
 # Momento Rust SDK - Topic Subscription
 
-This directory contains an example project defining a Rust-based program that subscribes to a Momento Cache's Topic, deserializes the payload into. Rust struct, and prints the output.
+This project is a Rust-based example program that subscribes to a Momento Cache's Topic and prints the output.  The `main` function handles the topic subscription, deserializes the payloads that it receives into a Rust struct, and prints the output.
 
-This is Rust program which can be taken into a container or run locally.
+This is Rust program can be taken into a container or run locally.
 
 ## Example Requirements
 
@@ -33,7 +33,7 @@ cargo run
 
 ## Interesting Files in this Example
 
-- `src/models.rs` - this file holds the `struct` definition that will be deserialized.  Make sure when posting sample payloads, that your example JSON looks like this
+- `src/models.rs` - this file holds the `struct` definition that will be deserialized.  Make sure when posting sample payloads that your example JSON has the below shape and data types.
 
   ```json
   {
@@ -44,7 +44,18 @@ cargo run
   }
   ```
 
-- `src/main.rs` - holds the Rust `main` function which is the entry point and the execution for your code.  Establishes a loop that subscribes to the Momento Topic and responds to change
+  ```rust
+  pub struct MomentoModel {
+      pub key_one: String,
+      pub key_two: String,
+      pub key_three: i64,
+      #[serde()]
+      #[serde(rename(deserialize = "timestamp"))]
+      pub published_timestamp: DateTime<Utc>,
+  }
+  ```
+
+- `src/main.rs` - holds the Rust `main` function which is the entry point of execution for your code.  The function also establishes a topic subscription that responds to data posted to the Momento Topic.  From there, the data is deserialized and printed to the console.
 
 ----------------------------------------------------------------------------------------
 For more info, visit our website at [https://gomomento.com](https://gomomento.com)!
