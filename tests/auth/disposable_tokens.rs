@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use momento::auth::CacheSelector;
+use momento::auth::Expiration;
 use momento::auth::{CachePermission, CacheRole, Permission, Permissions};
 use momento::{
     auth::{
@@ -71,7 +72,7 @@ async fn assert_get_failure(
     match cache_client.get(cache_name, key).await {
         Ok(_) => Err(MomentoError {
             message: format!(
-                "Expected getting key '{}' from cache '{}' to fail",
+                "Expected getting key '{}' from cache '{}' to fail but it did not",
                 key, cache_name
             ),
             error_code: MomentoErrorCode::UnknownError,
@@ -79,7 +80,17 @@ async fn assert_get_failure(
             details: None,
         }),
         Err(e) => {
-            assert_eq!(e.error_code, MomentoErrorCode::PermissionError);
+            match e.error_code {
+                MomentoErrorCode::PermissionError => {}
+                MomentoErrorCode::AuthenticationError => {}
+                _ => {
+                    eprintln!(
+                        "Expected getting key '{}' from cache '{}' to fail with permission or authentication error. Failed with error code '{:?}' instead",
+                        key, cache_name, e.error_code
+                    );
+                    return Err(e);
+                }
+            }
             Ok(())
         }
     }
@@ -112,7 +123,7 @@ async fn assert_set_failure(
     match cache_client.set(cache_name, key, value).await {
         Ok(_) => Err(MomentoError {
             message: format!(
-                "Expected setting value '{}' for key '{}' from cache '{}' to fail",
+                "Expected setting value '{}' for key '{}' from cache '{}' to fail but it did not",
                 value, key, cache_name
             ),
             error_code: MomentoErrorCode::UnknownError,
@@ -120,7 +131,17 @@ async fn assert_set_failure(
             details: None,
         }),
         Err(e) => {
-            assert_eq!(e.error_code, MomentoErrorCode::PermissionError);
+            match e.error_code {
+                MomentoErrorCode::PermissionError => {}
+                MomentoErrorCode::AuthenticationError => {}
+                _ => {
+                    eprintln!(
+                        "Expected setting key '{}' in cache '{}' to fail with permission or authentication error. Failed with error code '{:?}' instead",
+                        key, cache_name, e.error_code
+                    );
+                    return Err(e);
+                }
+            }
             Ok(())
         }
     }
@@ -153,7 +174,7 @@ async fn assert_publish_failure(
     match topic_client.publish(cache_name, topic_name, value).await {
         Ok(_) => Err(MomentoError {
             message: format!(
-                "Expected publishing value '{}' for topic '{}' in cache '{}' to fail",
+                "Expected publishing value '{}' for topic '{}' in cache '{}' to fail but it did not",
                 value, topic_name, cache_name
             ),
             error_code: MomentoErrorCode::UnknownError,
@@ -161,7 +182,17 @@ async fn assert_publish_failure(
             details: None,
         }),
         Err(e) => {
-            assert_eq!(e.error_code, MomentoErrorCode::PermissionError);
+            match e.error_code {
+                MomentoErrorCode::PermissionError => {},
+                MomentoErrorCode::AuthenticationError => {},
+                _ => {
+                    eprintln!(
+                        "Expected publishing to topic '{}' in cache '{}' to fail with permission or authentication error. Failed with error code '{:?}' instead",
+                        topic_name, cache_name, e.error_code
+                    );
+                    return Err(e);
+                }
+            }
             Ok(())
         }
     }
@@ -192,7 +223,7 @@ async fn assert_subscribe_failure(
     match topic_client.subscribe(cache_name, topic_name).await {
         Ok(_) => Err(MomentoError {
             message: format!(
-                "Expected subscribe to topic '{}' in cache '{}' to fail",
+                "Expected subscribe to topic '{}' in cache '{}' to fail but it did not",
                 topic_name, cache_name
             ),
             error_code: MomentoErrorCode::UnknownError,
@@ -200,7 +231,17 @@ async fn assert_subscribe_failure(
             details: None,
         }),
         Err(e) => {
-            assert_eq!(e.error_code, MomentoErrorCode::PermissionError);
+            match e.error_code {
+                MomentoErrorCode::PermissionError => {}
+                MomentoErrorCode::AuthenticationError => {}
+                _ => {
+                    eprintln!(
+                        "Expected subscribing to topic '{}' cache '{}' to fail with permission or authentication error. Failed with error code '{:?}' instead",
+                        topic_name, cache_name, e.error_code
+                    );
+                    return Err(e);
+                }
+            }
             Ok(())
         }
     }
@@ -578,6 +619,10 @@ mod disposable_tokens_cache_key_prefix {
         assert_set_success(&cc, first_cache, test_item.key(), test_item.value()).await?;
         assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
+        // should be able to write a prefixed key in only first cache
+        assert_set_success(&cc, first_cache, &prefixed_key, test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, &prefixed_key, test_item.value()).await?;
+
         // should not be able to write another key in either cache
         assert_set_failure(&cc, first_cache, &other_key, test_item.value()).await?;
         assert_set_failure(&cc, second_cache, &other_key, test_item.value()).await?;
@@ -624,6 +669,10 @@ mod disposable_tokens_cache_key_prefix {
         // should be able to write the key in both caches
         assert_set_success(&cc, first_cache, test_item.key(), test_item.value()).await?;
         assert_set_success(&cc, second_cache, test_item.key(), test_item.value()).await?;
+
+        // should be able to write a prefixed key in both caches
+        assert_set_success(&cc, first_cache, &prefixed_key, test_item.value()).await?;
+        assert_set_success(&cc, second_cache, &prefixed_key, test_item.value()).await?;
 
         // should be able to write another key in either cache
         assert_set_failure(&cc, first_cache, &other_key, test_item.value()).await?;
@@ -672,6 +721,10 @@ mod disposable_tokens_cache_key_prefix {
         assert_set_success(&cc, first_cache, test_item.key(), test_item.value()).await?;
         assert_set_failure(&cc, second_cache, test_item.key(), test_item.value()).await?;
 
+        // should be able to write a prefixed key in first cache
+        assert_set_success(&cc, first_cache, &prefixed_key, test_item.value()).await?;
+        assert_set_failure(&cc, second_cache, &prefixed_key, test_item.value()).await?;
+
         // should not be able to write another key in either cache
         assert_set_failure(&cc, first_cache, &other_key, test_item.value()).await?;
         assert_set_failure(&cc, second_cache, &other_key, test_item.value()).await?;
@@ -718,6 +771,10 @@ mod disposable_tokens_cache_key_prefix {
         // should be able to write the key in both caches
         assert_set_success(&cc, first_cache, test_item.key(), test_item.value()).await?;
         assert_set_success(&cc, second_cache, test_item.key(), test_item.value()).await?;
+
+        // should be able to write a prefixed key in both caches
+        assert_set_success(&cc, first_cache, &prefixed_key, test_item.value()).await?;
+        assert_set_success(&cc, second_cache, &prefixed_key, test_item.value()).await?;
 
         // should not be able to write another key in either cache
         assert_set_failure(&cc, first_cache, &other_key, test_item.value()).await?;
@@ -1481,6 +1538,61 @@ mod disposable_tokens_all_data {
         assert_subscribe_success(&tc, first_cache, second_topic.key()).await?;
         assert_publish_success(&tc, second_cache, second_topic.key(), test_item.value()).await?;
         assert_subscribe_success(&tc, second_cache, second_topic.key()).await?;
+
+        Ok(())
+    }
+}
+
+mod disposable_tokens_expiry {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_expiry() -> MomentoResult<()> {
+        // Generate a token that expires soon
+        let expiry = ExpiresIn::seconds(5);
+        let scope = momento::auth::DisposableTokenScope::Permissions::<String>(
+            Permissions::all_data_read_write(),
+        );
+        let response = CACHE_TEST_STATE
+            .auth_client
+            .generate_disposable_token(scope, expiry)
+            .await?;
+
+        // Verify the received token exists and will expire
+        let auth_token = response.clone().auth_token();
+        assert!(!auth_token.clone().is_empty());
+        let expires_at = response.expires_at();
+        assert!(expires_at.does_expire());
+
+        let creds = new_credential_provider_from_token(auth_token);
+        let cc = new_cache_client(creds.clone());
+
+        // Should be able to read and write in auth cache
+        let test_item = TestScalar::new();
+        assert_get_success(&cc, &CACHE_TEST_STATE.auth_cache_name, test_item.key()).await?;
+        assert_set_success(
+            &cc,
+            &CACHE_TEST_STATE.auth_cache_name,
+            test_item.key(),
+            test_item.value(),
+        )
+        .await?;
+
+        // Wait for token to expire (with some buffer time)
+        let instant = tokio::time::Instant::now();
+        let wait_time = tokio::time::Duration::from_secs(10);
+        tokio::time::sleep(wait_time).await;
+        assert!(instant.elapsed() >= wait_time);
+
+        // Should not be able to read and write in auth cache
+        assert_get_failure(&cc, &CACHE_TEST_STATE.auth_cache_name, test_item.key()).await?;
+        assert_set_failure(
+            &cc,
+            &CACHE_TEST_STATE.auth_cache_name,
+            test_item.key(),
+            test_item.value(),
+        )
+        .await?;
 
         Ok(())
     }
