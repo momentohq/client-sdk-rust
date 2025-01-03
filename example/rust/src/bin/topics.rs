@@ -1,13 +1,18 @@
 use futures::StreamExt;
+use momento::auth::{
+    DisposableTokenScope, ExpiresIn, GenerateDisposableTokenRequest, Permission, Permissions,
+    TopicPermission, TopicRole,
+};
 use momento::topics::configurations;
-use momento::{CredentialProvider, MomentoResult, TopicClient};
+use momento::{AuthClient, CredentialProvider, MomentoResult, TopicClient};
 use tokio::time::sleep;
 
 #[tokio::main]
 async fn main() -> MomentoResult<()> {
+    let auth_token = get_topic_client_auth_token().await?;
     let topic_client = TopicClient::builder()
         .configuration(configurations::Laptop::latest())
-        .credential_provider(CredentialProvider::from_env_var("MOMENTO_API_KEY")?)
+        .credential_provider(CredentialProvider::from_string(auth_token)?)
         .build()?;
 
     /*******************************************************************************/
@@ -73,4 +78,24 @@ async fn main() -> MomentoResult<()> {
     }
 
     Ok(())
+}
+
+// This function generates a disposable token with a token ID for the topic client.
+// The token ID shows up as the publisher ID on the messages received by the subscriber.
+async fn get_topic_client_auth_token() -> MomentoResult<String> {
+    let auth_client = AuthClient::builder()
+        .credential_provider(CredentialProvider::from_env_var("MOMENTO_API_KEY")?)
+        .build()?;
+    let expiry = ExpiresIn::minutes(1);
+    let scope = DisposableTokenScope::Permissions::<String>(Permissions {
+        permissions: vec![Permission::TopicPermission(TopicPermission {
+            cache: "cache".into(),
+            topic: "my-topic".into(),
+            role: TopicRole::PublishSubscribe,
+        })],
+    });
+    let request =
+        GenerateDisposableTokenRequest::new(scope, expiry).token_id("my-token-id".to_string());
+    let response = auth_client.send_request(request).await?;
+    Ok(response.clone().auth_token())
 }
