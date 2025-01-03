@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.47.1](https://github.com/momentohq/client-sdk-rust/compare/v0.47.0...v0.47.1) (2025-01-03)
+
+
+### Miscellaneous
+
+* add unit tests for expiration objects and expand all_data_read_write disposable token test for completeness ([#425](https://github.com/momentohq/client-sdk-rust/issues/425)) ([feb9ec4](https://github.com/momentohq/client-sdk-rust/commit/feb9ec41f4b80a50c00bf53d18bb01f205969141))
+
 ## [0.47.0](https://github.com/momentohq/client-sdk-rust/compare/v0.46.1...v0.47.0) (2025-01-03)
 
 
