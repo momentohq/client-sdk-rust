@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.47.0](https://github.com/momentohq/client-sdk-rust/compare/v0.46.1...v0.47.0) (2025-01-03)
+
+
+### Features
+
+* add auth client and generate_disposable_token api ([#420](https://github.com/momentohq/client-sdk-rust/issues/420)) ([432babf](https://github.com/momentohq/client-sdk-rust/commit/432babf2d708e052fd6d6c87f7c1bc9a33a9cfed))
+
+
+### Miscellaneous
+
+* update vscode workspace to match directory structure ([#417](https://github.com/momentohq/client-sdk-rust/issues/417)) ([f28a368](https://github.com/momentohq/client-sdk-rust/commit/f28a36858b33ba2adc1ee0c57a4aa1c1f7d16997))
+
 ## [0.46.1](https://github.com/momentohq/client-sdk-rust/compare/v0.46.0...v0.46.1) (2024-12-16)
 
 
