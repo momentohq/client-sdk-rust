@@ -1583,7 +1583,6 @@ mod disposable_tokens_all_data {
             }
         }?;
 
-
         Ok(())
     }
 }
