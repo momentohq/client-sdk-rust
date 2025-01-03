@@ -1539,6 +1539,51 @@ mod disposable_tokens_all_data {
         assert_publish_success(&tc, second_cache, second_topic.key(), test_item.value()).await?;
         assert_subscribe_success(&tc, second_cache, second_topic.key()).await?;
 
+        // cannot create caches
+        match cc.create_cache(second_cache).await {
+            Ok(_) => Err(MomentoError {
+                message: "Expected creating cache using AllDataReadWrite disposable token to fail but it did not".into(),
+                error_code: MomentoErrorCode::UnknownError,
+                inner_error: None,
+                details: None,
+            }),
+            Err(e) => {
+                match e.error_code {
+                    MomentoErrorCode::PermissionError => Ok(()),
+                    _ => {
+                        eprintln!(
+                            "Expected creating cache using AllDataReadWrite disposable token to fail with permission error. Failed with error code '{:?}' instead",
+                            e.error_code
+                        );
+                        Err(e)
+                    }
+                }
+            }
+        }?;
+
+        // cannot delete caches
+        match cc.delete_cache(second_cache).await {
+            Ok(_) => Err(MomentoError {
+                message: "Expected deleting cache using AllDataReadWrite disposable token to fail but it did not".into(),
+                error_code: MomentoErrorCode::UnknownError,
+                inner_error: None,
+                details: None,
+            }),
+            Err(e) => {
+                match e.error_code {
+                    MomentoErrorCode::PermissionError => Ok(()),
+                    _ => {
+                        eprintln!(
+                            "Expected deleting cache using AllDataReadWrite disposable token to fail with permission error. Failed with error code '{:?}' instead",
+                            e.error_code
+                        );
+                        Err(e)
+                    }
+                }
+            }
+        }?;
+
+
         Ok(())
     }
 }
