@@ -119,3 +119,61 @@ impl ExpiresAt {
         self.valid_until
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::auth::Expiration;
+
+    #[test]
+    fn expires_in_never_is_valid() {
+        let expires_in = super::ExpiresIn::never();
+        assert_eq!(expires_in.to_seconds(), u64::MAX);
+        assert!(!expires_in.does_expire());
+    }
+
+    #[test]
+    fn expires_in_seconds_is_valid() {
+        let expires_in = super::ExpiresIn::seconds(10);
+        assert_eq!(expires_in.to_seconds(), 10);
+        assert!(expires_in.does_expire());
+    }
+
+    #[test]
+    fn expires_in_minutes_is_valid() {
+        let expires_in = super::ExpiresIn::minutes(10);
+        assert_eq!(expires_in.to_seconds(), 600);
+        assert!(expires_in.does_expire());
+    }
+
+    #[test]
+    fn expires_in_hours_is_valid() {
+        let expires_in = super::ExpiresIn::hours(10);
+        assert_eq!(expires_in.to_seconds(), 36000);
+        assert!(expires_in.does_expire());
+    }
+
+    #[test]
+    fn expires_in_days_is_valid() {
+        let expires_in = super::ExpiresIn::days(10);
+        assert_eq!(expires_in.to_seconds(), 864000);
+        assert!(expires_in.does_expire());
+    }
+
+    #[test]
+    fn expires_at_from_epoch_when_epoch_is_none() {
+        let expires_at = super::ExpiresAt::new(None);
+        assert_eq!(expires_at.epoch(), u64::MAX);
+        assert!(!expires_at.does_expire());
+    }
+
+    #[test]
+    fn expires_at_from_epoch_when_epoch_is_some() {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let expires_at = super::ExpiresAt::new(Some(now));
+        assert_eq!(expires_at.epoch(), now);
+        assert!(expires_at.does_expire());
+    }
+}
