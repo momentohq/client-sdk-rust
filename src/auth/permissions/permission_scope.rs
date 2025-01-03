@@ -1,5 +1,6 @@
 /// A component of a [CachePermission].
 /// Type of access granted by the permission.
+#[derive(Debug, Clone, PartialEq)]
 pub enum CacheRole {
     /// Allows read-write access to a cache
     ReadWrite,
@@ -11,6 +12,7 @@ pub enum CacheRole {
 
 /// A component of a [CachePermission].
 /// A permission can be restricted to a specific cache or to all caches.
+#[derive(Debug, Clone, PartialEq)]
 pub enum CacheSelector {
     /// Apply permission to all caches
     AllCaches,
@@ -38,6 +40,7 @@ impl From<&str> for CacheSelector {
 }
 
 /// Defines access permissions for a cache.
+#[derive(Debug, Clone, PartialEq)]
 pub struct CachePermission {
     /// The type of access granted by the permission.
     pub role: CacheRole,
@@ -47,6 +50,7 @@ pub struct CachePermission {
 
 /// A component of a [TopicPermission].
 /// Type of access granted by the permission.
+#[derive(Debug, Clone, PartialEq)]
 pub enum TopicRole {
     /// Allows both publishing and subscribing to a topic
     PublishSubscribe,
@@ -58,6 +62,7 @@ pub enum TopicRole {
 
 /// A component of a [TopicPermission].
 /// A permission can be restricted to a specific topic or to all topics in a cache.
+#[derive(Debug, Clone, PartialEq)]
 pub enum TopicSelector {
     /// Apply permission to all topics
     AllTopics,
@@ -85,6 +90,7 @@ impl From<&str> for TopicSelector {
 }
 
 /// Defines access permissions for a topic in a cache.
+#[derive(Debug, Clone, PartialEq)]
 pub struct TopicPermission {
     /// The type of access granted by the permission.
     pub role: TopicRole,
@@ -95,6 +101,7 @@ pub struct TopicPermission {
 }
 
 /// A component of a [PermissionScope].
+#[derive(Debug, Clone, PartialEq)]
 pub enum Permission {
     /// Defines the permissions for a cache.
     CachePermission(CachePermission),
@@ -103,6 +110,7 @@ pub enum Permission {
 }
 
 /// Permissions object contains the set of permissions to be granted to a new API key.
+#[derive(Debug, Clone, PartialEq)]
 pub struct Permissions {
     /// The set of permissions to be granted to a new API key.
     pub permissions: Vec<Permission>,
@@ -131,6 +139,4 @@ impl Permissions {
 pub enum PermissionScope {
     /// Set of permissions to be granted to a new API key
     Permissions(Permissions),
-    /// PredefinedScope for internal use
-    PredefinedScope,
 }
