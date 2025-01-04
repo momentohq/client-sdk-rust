@@ -136,7 +136,506 @@ impl Permissions {
 }
 
 /// The permission scope for creating a new API key.
+#[derive(Debug, Clone, PartialEq)]
 pub enum PermissionScope {
     /// Set of permissions to be granted to a new API key
     Permissions(Permissions),
+}
+
+impl From<Permissions> for PermissionScope {
+    fn from(permissions: Permissions) -> Self {
+        PermissionScope::Permissions(permissions)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::auth::{
+        CachePermission, CacheRole, CacheSelector, Permission, PermissionScope, PermissionScopes,
+        Permissions, TopicPermission, TopicRole, TopicSelector,
+    };
+
+    #[test]
+    fn should_support_assignment_from_all_data_read_write() {
+        let scope: PermissionScope = Permissions::all_data_read_write().into();
+        let expected_permissions = vec![
+            Permission::CachePermission(crate::auth::CachePermission {
+                role: crate::auth::CacheRole::ReadWrite,
+                cache: crate::auth::CacheSelector::AllCaches,
+            }),
+            Permission::TopicPermission(TopicPermission {
+                role: TopicRole::PublishSubscribe,
+                cache: crate::auth::CacheSelector::AllCaches,
+                topic: crate::auth::TopicSelector::AllTopics,
+            }),
+        ];
+        assert_eq!(
+            PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions
+            }),
+            scope
+        );
+    }
+
+    mod from_permissions_literals {
+        use super::*;
+
+        #[test]
+        fn cache_selectors_in_cache_permission() {
+            let expected_permissions = vec![Permission::CachePermission(CachePermission {
+                cache: CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                role: CacheRole::ReadWrite,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+
+            // Accepts string literal as cache selector
+            let perm_literal = Permissions {
+                permissions: vec![Permission::CachePermission(CachePermission {
+                    cache: "my-cache".into(),
+                    role: CacheRole::ReadWrite,
+                })],
+            };
+            let perm_scope: PermissionScope = perm_literal.into();
+            assert_eq!(expected_scope, perm_scope);
+
+            // Accepts CacheName as cache selector
+            let perm_literal = Permissions {
+                permissions: vec![Permission::CachePermission(CachePermission {
+                    cache: CacheSelector::CacheName {
+                        name: "my-cache".into(),
+                    },
+                    role: CacheRole::ReadWrite,
+                })],
+            };
+            let perm_scope: PermissionScope = perm_literal.into();
+            assert_eq!(expected_scope, perm_scope);
+
+            // Accepts AllCaches as cache selector
+            let expected_permissions = vec![Permission::CachePermission(CachePermission {
+                cache: CacheSelector::AllCaches,
+                role: CacheRole::ReadWrite,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+            let perm_literal = Permissions {
+                permissions: vec![Permission::CachePermission(CachePermission {
+                    cache: CacheSelector::AllCaches,
+                    role: CacheRole::ReadWrite,
+                })],
+            };
+            let perm_scope: PermissionScope = perm_literal.into();
+            assert_eq!(expected_scope, perm_scope);
+        }
+
+        #[test]
+        fn cache_selectors_in_topic_permission() {
+            let expected_permissions = vec![Permission::TopicPermission(TopicPermission {
+                cache: CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                topic: "my-topic".into(),
+                role: TopicRole::PublishSubscribe,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+
+            // Accepts string literal as cache selector
+            let perm_literal = Permissions {
+                permissions: vec![Permission::TopicPermission(TopicPermission {
+                    cache: "my-cache".into(),
+                    topic: "my-topic".into(),
+                    role: TopicRole::PublishSubscribe,
+                })],
+            };
+            let perm_scope: PermissionScope = perm_literal.into();
+            assert_eq!(expected_scope, perm_scope);
+
+            // Accepts CacheName as cache selector
+            let perm_literal = Permissions {
+                permissions: vec![Permission::TopicPermission(TopicPermission {
+                    cache: CacheSelector::CacheName {
+                        name: "my-cache".into(),
+                    },
+                    topic: "my-topic".into(),
+                    role: TopicRole::PublishSubscribe,
+                })],
+            };
+            let perm_scope: PermissionScope = perm_literal.into();
+            assert_eq!(expected_scope, perm_scope);
+
+            // Accepts AllCaches as cache selector
+            let expected_permissions = vec![Permission::TopicPermission(TopicPermission {
+                cache: CacheSelector::AllCaches,
+                topic: "my-topic".into(),
+                role: TopicRole::PublishSubscribe,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+            let perm_literal = Permissions {
+                permissions: vec![Permission::TopicPermission(TopicPermission {
+                    cache: CacheSelector::AllCaches,
+                    topic: "my-topic".into(),
+                    role: TopicRole::PublishSubscribe,
+                })],
+            };
+            let perm_scope: PermissionScope = perm_literal.into();
+            assert_eq!(expected_scope, perm_scope);
+        }
+
+        #[test]
+        fn topics_selectors_in_topic_permission() {
+            let expected_permissions = vec![Permission::TopicPermission(TopicPermission {
+                cache: CacheSelector::AllCaches,
+                topic: TopicSelector::TopicName {
+                    name: "my-topic".into(),
+                },
+                role: TopicRole::PublishSubscribe,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+
+            // Accepts string literal as topic selector
+            let perm_literal = Permissions {
+                permissions: vec![Permission::TopicPermission(TopicPermission {
+                    cache: CacheSelector::AllCaches,
+                    topic: "my-topic".into(),
+                    role: TopicRole::PublishSubscribe,
+                })],
+            };
+            let perm_scope: PermissionScope = perm_literal.into();
+            assert_eq!(expected_scope, perm_scope);
+
+            // Accepts TopicName as cache selector
+            let perm_literal = Permissions {
+                permissions: vec![Permission::TopicPermission(TopicPermission {
+                    cache: CacheSelector::AllCaches,
+                    topic: TopicSelector::TopicName {
+                        name: "my-topic".into(),
+                    },
+                    role: TopicRole::PublishSubscribe,
+                })],
+            };
+            let perm_scope: PermissionScope = perm_literal.into();
+            assert_eq!(expected_scope, perm_scope);
+
+            // Accepts AllTopics as topic selector
+            let expected_permissions = vec![Permission::TopicPermission(TopicPermission {
+                cache: CacheSelector::AllCaches,
+                topic: TopicSelector::AllTopics,
+                role: TopicRole::PublishSubscribe,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+            let perm_literal = Permissions {
+                permissions: vec![Permission::TopicPermission(TopicPermission {
+                    cache: CacheSelector::AllCaches,
+                    topic: TopicSelector::AllTopics,
+                    role: TopicRole::PublishSubscribe,
+                })],
+            };
+            let perm_scope: PermissionScope = perm_literal.into();
+            assert_eq!(expected_scope, perm_scope);
+        }
+
+        #[test]
+        fn mixed_cache_and_topic_permissions() {
+            let expected_permissions = vec![
+                Permission::CachePermission(CachePermission {
+                    cache: CacheSelector::CacheName {
+                        name: "my-cache".into(),
+                    },
+                    role: CacheRole::ReadOnly,
+                }),
+                Permission::TopicPermission(TopicPermission {
+                    cache: CacheSelector::CacheName {
+                        name: "my-cache".into(),
+                    },
+                    topic: TopicSelector::AllTopics,
+                    role: TopicRole::SubscribeOnly,
+                }),
+            ];
+
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+
+            let perm_literal = Permissions {
+                permissions: vec![
+                    Permission::CachePermission(CachePermission {
+                        cache: "my-cache".into(),
+                        role: CacheRole::ReadOnly,
+                    }),
+                    Permission::TopicPermission(TopicPermission {
+                        cache: "my-cache".into(),
+                        topic: TopicSelector::AllTopics,
+                        role: TopicRole::SubscribeOnly,
+                    }),
+                ],
+            };
+            let perm_scope: PermissionScope = perm_literal.into();
+            assert_eq!(expected_scope, perm_scope);
+        }
+    }
+
+    mod from_permission_scopes_factory_functions {
+        use super::*;
+
+        #[test]
+        fn cache_read_write() {
+            let expected_permissions = vec![Permission::CachePermission(CachePermission {
+                cache: CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                role: CacheRole::ReadWrite,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+
+            // String literal cache name
+            let perm_scope: PermissionScope = PermissionScopes::cache_read_write("my-cache");
+            assert_eq!(expected_scope, perm_scope);
+
+            // CacheName
+            let perm_scope: PermissionScope =
+                PermissionScopes::cache_read_write(CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                });
+            assert_eq!(expected_scope, perm_scope);
+
+            // AllCaches
+            let expected_permissions = vec![Permission::CachePermission(CachePermission {
+                cache: CacheSelector::AllCaches,
+                role: CacheRole::ReadWrite,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+            let perm_scope: PermissionScope =
+                PermissionScopes::cache_read_write(CacheSelector::AllCaches);
+            assert_eq!(expected_scope, perm_scope);
+        }
+
+        #[test]
+        fn cache_write_only() {
+            let expected_permissions = vec![Permission::CachePermission(CachePermission {
+                cache: CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                role: CacheRole::WriteOnly,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+
+            // String literal cache name
+            let perm_scope: PermissionScope = PermissionScopes::cache_write_only("my-cache");
+            assert_eq!(expected_scope, perm_scope);
+
+            // CacheName
+            let perm_scope: PermissionScope =
+                PermissionScopes::cache_write_only(CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                });
+            assert_eq!(expected_scope, perm_scope);
+
+            // AllCaches
+            let expected_permissions = vec![Permission::CachePermission(CachePermission {
+                cache: CacheSelector::AllCaches,
+                role: CacheRole::WriteOnly,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+            let perm_scope: PermissionScope =
+                PermissionScopes::cache_write_only(CacheSelector::AllCaches);
+            assert_eq!(expected_scope, perm_scope);
+        }
+
+        #[test]
+        fn cache_read_only() {
+            let expected_permissions = vec![Permission::CachePermission(CachePermission {
+                cache: CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                role: CacheRole::ReadOnly,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+
+            // String literal cache name
+            let perm_scope: PermissionScope = PermissionScopes::cache_read_only("my-cache");
+            assert_eq!(expected_scope, perm_scope);
+
+            // CacheName
+            let perm_scope: PermissionScope =
+                PermissionScopes::cache_read_only(CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                });
+            assert_eq!(expected_scope, perm_scope);
+
+            // AllCaches
+            let expected_permissions = vec![Permission::CachePermission(CachePermission {
+                cache: CacheSelector::AllCaches,
+                role: CacheRole::ReadOnly,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+            let perm_scope: PermissionScope =
+                PermissionScopes::cache_read_only(CacheSelector::AllCaches);
+            assert_eq!(expected_scope, perm_scope);
+        }
+
+        #[test]
+        fn topic_publish_subscribe() {
+            let expected_permissions = vec![Permission::TopicPermission(TopicPermission {
+                cache: CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                topic: TopicSelector::TopicName {
+                    name: "my-topic".into(),
+                },
+                role: TopicRole::PublishSubscribe,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+
+            // String literal  topic name
+            let perm_scope: PermissionScope =
+                PermissionScopes::topic_publish_subscribe("my-cache", "my-topic");
+            assert_eq!(expected_scope, perm_scope);
+
+            // TopicName
+            let perm_scope: PermissionScope = PermissionScopes::topic_publish_subscribe(
+                CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                TopicSelector::TopicName {
+                    name: "my-topic".into(),
+                },
+            );
+            assert_eq!(expected_scope, perm_scope);
+
+            // AllTopics
+            let expected_permissions = vec![Permission::TopicPermission(TopicPermission {
+                cache: CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                topic: TopicSelector::AllTopics,
+                role: TopicRole::PublishSubscribe,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+            let perm_scope: PermissionScope =
+                PermissionScopes::topic_publish_subscribe("my-cache", TopicSelector::AllTopics);
+            assert_eq!(expected_scope, perm_scope);
+        }
+
+        #[test]
+        fn topic_publish_only() {
+            let expected_permissions = vec![Permission::TopicPermission(TopicPermission {
+                cache: CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                topic: TopicSelector::TopicName {
+                    name: "my-topic".into(),
+                },
+                role: TopicRole::PublishOnly,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+
+            // String literal topic name
+            let perm_scope: PermissionScope =
+                PermissionScopes::topic_publish_only("my-cache", "my-topic");
+            assert_eq!(expected_scope, perm_scope);
+
+            // TopicName
+            let perm_scope: PermissionScope = PermissionScopes::topic_publish_only(
+                CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                TopicSelector::TopicName {
+                    name: "my-topic".into(),
+                },
+            );
+            assert_eq!(expected_scope, perm_scope);
+
+            // AllTopics
+            let expected_permissions = vec![Permission::TopicPermission(TopicPermission {
+                cache: CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                topic: TopicSelector::AllTopics,
+                role: TopicRole::PublishOnly,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+            let perm_scope: PermissionScope =
+                PermissionScopes::topic_publish_only("my-cache", TopicSelector::AllTopics);
+            assert_eq!(expected_scope, perm_scope);
+        }
+
+        #[test]
+        fn topic_subscribe_only() {
+            let expected_permissions = vec![Permission::TopicPermission(TopicPermission {
+                cache: CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                topic: TopicSelector::TopicName {
+                    name: "my-topic".into(),
+                },
+                role: TopicRole::SubscribeOnly,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+
+            // String literal topic name
+            let perm_scope: PermissionScope =
+                PermissionScopes::topic_subscribe_only("my-cache", "my-topic");
+            assert_eq!(expected_scope, perm_scope);
+
+            // TopicName
+            let perm_scope: PermissionScope = PermissionScopes::topic_subscribe_only(
+                CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                TopicSelector::TopicName {
+                    name: "my-topic".into(),
+                },
+            );
+            assert_eq!(expected_scope, perm_scope);
+
+            // AllTopics
+            let expected_permissions = vec![Permission::TopicPermission(TopicPermission {
+                cache: CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                topic: TopicSelector::AllTopics,
+                role: TopicRole::SubscribeOnly,
+            })];
+            let expected_scope = PermissionScope::Permissions(Permissions {
+                permissions: expected_permissions,
+            });
+            let perm_scope: PermissionScope =
+                PermissionScopes::topic_subscribe_only("my-cache", TopicSelector::AllTopics);
+            assert_eq!(expected_scope, perm_scope);
+        }
+    }
 }
