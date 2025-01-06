@@ -96,9 +96,10 @@ mod tests {
     use crate::auth::{
         CacheItemKey, CacheItemKeyPrefix, CacheItemSelector, CachePermission, CacheRole,
         CacheSelector, DisposableTokenCachePermission, DisposableTokenCachePermissions,
-        DisposableTokenScope, Permission, PermissionScopes, Permissions, TopicPermission,
-        TopicRole, TopicSelector,
+        DisposableTokenScope, DisposableTokenScopes, Permission, PermissionScopes, Permissions,
+        TopicPermission, TopicRole, TopicSelector,
     };
+    use crate::IntoBytes;
 
     #[test]
     fn should_support_assignment_from_all_data_read_write() {
@@ -717,24 +718,393 @@ mod tests {
     }
 
     mod from_disposable_token_scopes_factory_functions {
-        // use super::*;
+        use super::*;
+
+        // Note: usage of `<impl IntoBytes>` means we cannot use assert statements as we have above
+        // (IntoBytes does not implement Debug, which is needed to use asserts) and it seems we cannot
+        // compare `DisposableTokenScope<impl IntoBytes>` (returned by the factory functions) with a
+        // manually crafted `DisposableTokenScope<String>`.
+
+        fn assert_eq_prefix_disposable_token_scope(
+            scope: DisposableTokenScope<impl IntoBytes>,
+            expected_cache_selector: CacheSelector,
+            expected_cache_role: CacheRole,
+            expected_item: impl IntoBytes,
+        ) {
+            match scope {
+                DisposableTokenScope::DisposableTokenPermissions(perms) => {
+                    let mut perms_list = perms.permissions;
+                    assert_eq!(perms_list.len(), 1);
+                    let cache_perm = perms_list.pop().unwrap();
+
+                    assert_eq!(cache_perm.cache, expected_cache_selector);
+                    assert_eq!(cache_perm.role, expected_cache_role);
+
+                    let item_selector = cache_perm.item_selector;
+                    match item_selector {
+                        CacheItemSelector::CacheItemKeyPrefix(CacheItemKeyPrefix {
+                            key_prefix,
+                        }) => {
+                            assert_eq!(key_prefix.into_bytes(), expected_item.into_bytes());
+                        }
+                        _ => panic!("Did not receive CacheItemKeyPrefix"),
+                    }
+                }
+                DisposableTokenScope::Permissions(_) => {
+                    panic!("Did not recieve DisposableTokenScope::DisposableTokenPermissions")
+                }
+            }
+        }
+
+        fn assert_eq_key_disposable_token_scope(
+            scope: DisposableTokenScope<impl IntoBytes>,
+            expected_cache_selector: CacheSelector,
+            expected_cache_role: CacheRole,
+            expected_item: impl IntoBytes,
+        ) {
+            match scope {
+                DisposableTokenScope::DisposableTokenPermissions(perms) => {
+                    let mut perms_list = perms.permissions;
+                    assert_eq!(perms_list.len(), 1);
+                    let cache_perm = perms_list.pop().unwrap();
+
+                    assert_eq!(cache_perm.cache, expected_cache_selector);
+                    assert_eq!(cache_perm.role, expected_cache_role);
+
+                    let item_selector = cache_perm.item_selector;
+                    match item_selector {
+                        CacheItemSelector::CacheItemKey(CacheItemKey { key }) => {
+                            assert_eq!(key.into_bytes(), expected_item.into_bytes());
+                        }
+                        _ => panic!("Did not receive CacheItemKey"),
+                    }
+                }
+                DisposableTokenScope::Permissions(_) => {
+                    panic!("Did not recieve DisposableTokenScope::DisposableTokenPermissions")
+                }
+            }
+        }
 
         #[test]
-        fn cache_key_prefix_read_write() {}
+        fn cache_key_prefix_read_write() {
+            // String literal cache name
+            let disp_token_scope =
+                DisposableTokenScopes::cache_key_prefix_read_write("my-cache", "my-key-prefix");
+            assert_eq_prefix_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                CacheRole::ReadWrite,
+                "my-key-prefix",
+            );
+
+            // CacheName
+            let disp_token_scope = DisposableTokenScopes::cache_key_prefix_read_write(
+                CacheSelector::CacheName {
+                    name: "my-cache".to_string(),
+                },
+                "my-key-prefix",
+            );
+            assert_eq_prefix_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                CacheRole::ReadWrite,
+                "my-key-prefix",
+            );
+
+            // AllCaches
+            let disp_token_scope = DisposableTokenScopes::cache_key_prefix_read_write(
+                CacheSelector::AllCaches,
+                "my-key-prefix",
+            );
+            assert_eq_prefix_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::AllCaches,
+                CacheRole::ReadWrite,
+                "my-key-prefix",
+            );
+
+            // Byte key prefix
+            let disp_token_scope = DisposableTokenScopes::cache_key_prefix_read_write(
+                CacheSelector::AllCaches,
+                "my-key-prefix".as_bytes(),
+            );
+            assert_eq_prefix_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::AllCaches,
+                CacheRole::ReadWrite,
+                "my-key-prefix".as_bytes(),
+            );
+        }
 
         #[test]
-        fn cache_key_prefix_write_only() {}
+        fn cache_key_prefix_write_only() {
+            // String literal cache name
+            let disp_token_scope =
+                DisposableTokenScopes::cache_key_prefix_write_only("my-cache", "my-key-prefix");
+            assert_eq_prefix_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                CacheRole::WriteOnly,
+                "my-key-prefix",
+            );
+
+            // CacheName
+            let disp_token_scope = DisposableTokenScopes::cache_key_prefix_write_only(
+                CacheSelector::CacheName {
+                    name: "my-cache".to_string(),
+                },
+                "my-key-prefix",
+            );
+            assert_eq_prefix_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                CacheRole::WriteOnly,
+                "my-key-prefix",
+            );
+
+            // AllCaches
+            let disp_token_scope = DisposableTokenScopes::cache_key_prefix_write_only(
+                CacheSelector::AllCaches,
+                "my-key-prefix",
+            );
+            assert_eq_prefix_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::AllCaches,
+                CacheRole::WriteOnly,
+                "my-key-prefix",
+            );
+
+            // Byte key prefix
+            let disp_token_scope = DisposableTokenScopes::cache_key_prefix_write_only(
+                CacheSelector::AllCaches,
+                "my-key-prefix".as_bytes(),
+            );
+            assert_eq_prefix_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::AllCaches,
+                CacheRole::WriteOnly,
+                "my-key-prefix".as_bytes(),
+            );
+        }
 
         #[test]
-        fn cache_key_prefix_read_only() {}
+        fn cache_key_prefix_read_only() {
+            // String literal cache name
+            let disp_token_scope =
+                DisposableTokenScopes::cache_key_prefix_read_only("my-cache", "my-key-prefix");
+            assert_eq_prefix_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                CacheRole::ReadOnly,
+                "my-key-prefix",
+            );
+
+            // CacheName
+            let disp_token_scope = DisposableTokenScopes::cache_key_prefix_read_only(
+                CacheSelector::CacheName {
+                    name: "my-cache".to_string(),
+                },
+                "my-key-prefix",
+            );
+            assert_eq_prefix_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                CacheRole::ReadOnly,
+                "my-key-prefix",
+            );
+
+            // AllCaches
+            let disp_token_scope = DisposableTokenScopes::cache_key_prefix_read_only(
+                CacheSelector::AllCaches,
+                "my-key-prefix",
+            );
+            assert_eq_prefix_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::AllCaches,
+                CacheRole::ReadOnly,
+                "my-key-prefix",
+            );
+
+            // Byte key prefix
+            let disp_token_scope = DisposableTokenScopes::cache_key_prefix_read_only(
+                CacheSelector::AllCaches,
+                "my-key-prefix".as_bytes(),
+            );
+            assert_eq_prefix_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::AllCaches,
+                CacheRole::ReadOnly,
+                "my-key-prefix".as_bytes(),
+            );
+        }
 
         #[test]
-        fn cache_key_read_write() {}
+        fn cache_key_read_write() {
+            // String literal cache name
+            let disp_token_scope =
+                DisposableTokenScopes::cache_key_read_write("my-cache", "my-key");
+            assert_eq_key_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                CacheRole::ReadWrite,
+                "my-key",
+            );
+
+            // CacheName
+            let disp_token_scope = DisposableTokenScopes::cache_key_read_write(
+                CacheSelector::CacheName {
+                    name: "my-cache".to_string(),
+                },
+                "my-key",
+            );
+            assert_eq_key_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                CacheRole::ReadWrite,
+                "my-key",
+            );
+            // AllCaches
+            let disp_token_scope =
+                DisposableTokenScopes::cache_key_read_write(CacheSelector::AllCaches, "my-key");
+            assert_eq_key_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::AllCaches,
+                CacheRole::ReadWrite,
+                "my-key",
+            );
+
+            // Byte key
+            let disp_token_scope = DisposableTokenScopes::cache_key_read_write(
+                CacheSelector::AllCaches,
+                "my-key".as_bytes(),
+            );
+            assert_eq_key_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::AllCaches,
+                CacheRole::ReadWrite,
+                "my-key".as_bytes(),
+            );
+        }
 
         #[test]
-        fn cache_key_write_only() {}
+        fn cache_key_write_only() {
+            // String literal cache name
+            let disp_token_scope =
+                DisposableTokenScopes::cache_key_write_only("my-cache", "my-key");
+            assert_eq_key_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                CacheRole::WriteOnly,
+                "my-key",
+            );
+
+            // CacheName
+            let disp_token_scope = DisposableTokenScopes::cache_key_write_only(
+                CacheSelector::CacheName {
+                    name: "my-cache".to_string(),
+                },
+                "my-key",
+            );
+            assert_eq_key_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                CacheRole::WriteOnly,
+                "my-key",
+            );
+
+            // AllCaches
+            let disp_token_scope =
+                DisposableTokenScopes::cache_key_write_only(CacheSelector::AllCaches, "my-key");
+            assert_eq_key_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::AllCaches,
+                CacheRole::WriteOnly,
+                "my-key",
+            );
+
+            // Byte key
+            let disp_token_scope = DisposableTokenScopes::cache_key_write_only(
+                CacheSelector::AllCaches,
+                "my-key".as_bytes(),
+            );
+            assert_eq_key_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::AllCaches,
+                CacheRole::WriteOnly,
+                "my-key".as_bytes(),
+            );
+        }
 
         #[test]
-        fn cache_key_read_only() {}
+        fn cache_key_read_only() {
+            // String literal cache name
+            let disp_token_scope = DisposableTokenScopes::cache_key_read_only("my-cache", "my-key");
+            assert_eq_key_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                CacheRole::ReadOnly,
+                "my-key",
+            );
+
+            // CacheName
+            let disp_token_scope = DisposableTokenScopes::cache_key_read_only(
+                CacheSelector::CacheName {
+                    name: "my-cache".to_string(),
+                },
+                "my-key",
+            );
+            assert_eq_key_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                CacheRole::ReadOnly,
+                "my-key",
+            );
+
+            // AllCaches
+            let disp_token_scope =
+                DisposableTokenScopes::cache_key_read_only(CacheSelector::AllCaches, "my-key");
+            assert_eq_key_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::AllCaches,
+                CacheRole::ReadOnly,
+                "my-key",
+            );
+
+            // Byte key
+            let disp_token_scope = DisposableTokenScopes::cache_key_read_only(
+                CacheSelector::AllCaches,
+                "my-key".as_bytes(),
+            );
+            assert_eq_key_disposable_token_scope(
+                disp_token_scope,
+                CacheSelector::AllCaches,
+                CacheRole::ReadOnly,
+                "my-key".as_bytes(),
+            );
+        }
     }
 }
