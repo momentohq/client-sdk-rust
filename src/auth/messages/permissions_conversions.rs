@@ -164,3 +164,291 @@ fn disposable_token_permission_to_grpc_permission(
         kind: Some(permissions_type::Kind::CachePermissions(grpc_perm)),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::auth::{DisposableTokenCachePermissions, DisposableTokenScope, Permissions};
+
+    #[test]
+    fn creates_expected_grpc_permissions_from_all_data_read_write() {
+        let sdk_permissions =
+            DisposableTokenScope::Permissions::<String>(Permissions::all_data_read_write());
+        let converted_permissions = permissions_from_disposable_token_scope(sdk_permissions);
+        let expected_permissions = permission_messages::Permissions {
+            kind: Some(permission_messages::permissions::Kind::Explicit(
+                permission_messages::ExplicitPermissions {
+                    permissions: vec![
+                        permission_messages::PermissionsType {
+                            kind: Some(
+                                permission_messages::permissions_type::Kind::CachePermissions(
+                                    permission_messages::permissions_type::CachePermissions {
+                                        role: permission_messages::CacheRole::CacheReadWrite as i32,
+                                        cache: Some(cache_permissions::Cache::AllCaches(All {})),
+                                        cache_item: None,
+                                    },
+                                ),
+                            ),
+                        },
+                        permission_messages::PermissionsType {
+                            kind: Some(
+                                permission_messages::permissions_type::Kind::TopicPermissions(
+                                    permission_messages::permissions_type::TopicPermissions {
+                                        role: permission_messages::TopicRole::TopicReadWrite as i32,
+                                        cache: Some(topic_permissions::Cache::AllCaches(All {})),
+                                        topic: Some(topic_permissions::Topic::AllTopics(All {})),
+                                    },
+                                ),
+                            ),
+                        },
+                    ],
+                },
+            )),
+        };
+        assert_eq!(converted_permissions, expected_permissions);
+    }
+
+    #[test]
+    fn creates_expected_grpc_permissions_from_mixed_cache_topics_permissions() {
+        // Construct sdk permissions object
+        let sdk_permissions = DisposableTokenScope::Permissions::<String>(Permissions {
+            permissions: vec![
+                // read only for all caches
+                Permission::CachePermission(CachePermission {
+                    role: CacheRole::ReadOnly,
+                    cache: CacheSelector::AllCaches,
+                }),
+                // read write for cache "foo"
+                Permission::CachePermission(CachePermission {
+                    role: CacheRole::ReadWrite,
+                    cache: CacheSelector::CacheName {
+                        name: "foo".to_string(),
+                    },
+                }),
+                // subscribe only to all topics in all caches
+                Permission::TopicPermission(TopicPermission {
+                    role: TopicRole::SubscribeOnly,
+                    cache: CacheSelector::AllCaches,
+                    topic: TopicSelector::AllTopics,
+                }),
+                // publish subscribe to all topics in cache "foo"
+                Permission::TopicPermission(TopicPermission {
+                    role: TopicRole::PublishSubscribe,
+                    cache: CacheSelector::CacheName {
+                        name: "foo".to_string(),
+                    },
+                    topic: TopicSelector::AllTopics,
+                }),
+                // publish subscribe to topic "bar" in all caches
+                Permission::TopicPermission(TopicPermission {
+                    role: TopicRole::PublishSubscribe,
+                    cache: CacheSelector::AllCaches,
+                    topic: TopicSelector::TopicName {
+                        name: "bar".to_string(),
+                    },
+                }),
+                // publish only to topic "cat" in cache "dog"
+                Permission::TopicPermission(TopicPermission {
+                    role: TopicRole::PublishOnly,
+                    cache: CacheSelector::CacheName {
+                        name: "dog".to_string(),
+                    },
+                    topic: TopicSelector::TopicName {
+                        name: "cat".to_string(),
+                    },
+                }),
+            ],
+        });
+
+        // Construct expected grpc permissions object
+
+        // read only for all caches
+        let read_only_all_caches = permission_messages::PermissionsType {
+            kind: Some(
+                permission_messages::permissions_type::Kind::CachePermissions(
+                    permission_messages::permissions_type::CachePermissions {
+                        role: permission_messages::CacheRole::CacheReadOnly as i32,
+                        cache: Some(cache_permissions::Cache::AllCaches(All {})),
+                        cache_item: None,
+                    },
+                ),
+            ),
+        };
+
+        // read write for cache "foo"
+        let read_write_foo = permission_messages::PermissionsType {
+            kind: Some(
+                permission_messages::permissions_type::Kind::CachePermissions(
+                    permission_messages::permissions_type::CachePermissions {
+                        role: permission_messages::CacheRole::CacheReadWrite as i32,
+                        cache: Some(cache_permissions::Cache::CacheSelector(
+                            permission_messages::permissions_type::CacheSelector {
+                                kind: Some(cache_selector::Kind::CacheName("foo".to_string())),
+                            },
+                        )),
+                        cache_item: None,
+                    },
+                ),
+            ),
+        };
+
+        // publish subscribe to all topics in cache "foo"
+        let pub_sub_foo = permission_messages::PermissionsType {
+            kind: Some(
+                permission_messages::permissions_type::Kind::TopicPermissions(
+                    permission_messages::permissions_type::TopicPermissions {
+                        role: permission_messages::TopicRole::TopicReadWrite as i32,
+                        cache: Some(topic_permissions::Cache::CacheSelector(
+                            permission_messages::permissions_type::CacheSelector {
+                                kind: Some(cache_selector::Kind::CacheName("foo".to_string())),
+                            },
+                        )),
+                        topic: Some(topic_permissions::Topic::AllTopics(All {})),
+                    },
+                ),
+            ),
+        };
+        // subscribe only to all topics in all caches
+        let sub_only_all_topics = permission_messages::PermissionsType {
+            kind: Some(
+                permission_messages::permissions_type::Kind::TopicPermissions(
+                    permission_messages::permissions_type::TopicPermissions {
+                        role: permission_messages::TopicRole::TopicReadOnly as i32,
+                        cache: Some(topic_permissions::Cache::AllCaches(All {})),
+                        topic: Some(topic_permissions::Topic::AllTopics(All {})),
+                    },
+                ),
+            ),
+        };
+
+        // publish subscribe to topic "bar" in all caches
+        let pub_sub_bar = permission_messages::PermissionsType {
+            kind: Some(
+                permission_messages::permissions_type::Kind::TopicPermissions(
+                    permission_messages::permissions_type::TopicPermissions {
+                        role: permission_messages::TopicRole::TopicReadWrite as i32,
+                        cache: Some(topic_permissions::Cache::AllCaches(All {})),
+                        topic: Some(topic_permissions::Topic::TopicSelector(
+                            permission_messages::permissions_type::TopicSelector {
+                                kind: Some(topic_selector::Kind::TopicName("bar".to_string())),
+                            },
+                        )),
+                    },
+                ),
+            ),
+        };
+
+        // publish only to topic "cat" in cache "dog"
+        let pub_only_cat_dog = permission_messages::PermissionsType {
+            kind: Some(
+                permission_messages::permissions_type::Kind::TopicPermissions(
+                    permission_messages::permissions_type::TopicPermissions {
+                        role: permission_messages::TopicRole::TopicWriteOnly as i32,
+                        cache: Some(topic_permissions::Cache::CacheSelector(
+                            permission_messages::permissions_type::CacheSelector {
+                                kind: Some(cache_selector::Kind::CacheName("dog".to_string())),
+                            },
+                        )),
+                        topic: Some(topic_permissions::Topic::TopicSelector(
+                            permission_messages::permissions_type::TopicSelector {
+                                kind: Some(topic_selector::Kind::TopicName("cat".to_string())),
+                            },
+                        )),
+                    },
+                ),
+            ),
+        };
+
+        let grpc_permissions = permission_messages::Permissions {
+            kind: Some(permission_messages::permissions::Kind::Explicit(
+                permission_messages::ExplicitPermissions {
+                    permissions: vec![
+                        read_only_all_caches,
+                        read_write_foo,
+                        sub_only_all_topics,
+                        pub_sub_foo,
+                        pub_sub_bar,
+                        pub_only_cat_dog,
+                    ],
+                },
+            )),
+        };
+
+        let converted_permissions = permissions_from_disposable_token_scope(sdk_permissions);
+        assert_eq!(converted_permissions, grpc_permissions);
+    }
+
+    #[test]
+    fn creates_expected_grpc_permissions_for_key_specific_read_write_cache_permissions() {
+        // Construct sdk permissions object
+        let sdk_permissions =
+            DisposableTokenScope::DisposableTokenPermissions(DisposableTokenCachePermissions {
+                permissions: vec![
+                    DisposableTokenCachePermission {
+                        role: CacheRole::ReadWrite,
+                        cache: CacheSelector::AllCaches,
+                        item_selector: CacheItemSelector::CacheItemKey(CacheItemKey {
+                            key: "specific-key".to_string(),
+                        }),
+                    },
+                    DisposableTokenCachePermission {
+                        role: CacheRole::ReadWrite,
+                        cache: CacheSelector::CacheName {
+                            name: "foo".to_string(),
+                        },
+                        item_selector: CacheItemSelector::CacheItemKeyPrefix(CacheItemKeyPrefix {
+                            key_prefix: "key-prefix".to_string(),
+                        }),
+                    },
+                ],
+            });
+
+        // Construct expected grpc permissions object
+        let key_perm = permission_messages::PermissionsType {
+            kind: Some(
+                permission_messages::permissions_type::Kind::CachePermissions(
+                    permission_messages::permissions_type::CachePermissions {
+                        role: permission_messages::CacheRole::CacheReadWrite as i32,
+                        cache: Some(cache_permissions::Cache::AllCaches(All {})),
+                        cache_item: Some(cache_permissions::CacheItem::ItemSelector(
+                            permission_messages::permissions_type::CacheItemSelector {
+                                kind: Some(cache_item_selector::Kind::Key("specific-key".into())),
+                            },
+                        )),
+                    },
+                ),
+            ),
+        };
+        let key_prefix_perm = permission_messages::PermissionsType {
+            kind: Some(
+                permission_messages::permissions_type::Kind::CachePermissions(
+                    permission_messages::permissions_type::CachePermissions {
+                        role: permission_messages::CacheRole::CacheReadWrite as i32,
+                        cache: Some(cache_permissions::Cache::CacheSelector(
+                            permission_messages::permissions_type::CacheSelector {
+                                kind: Some(cache_selector::Kind::CacheName("foo".to_string())),
+                            },
+                        )),
+                        cache_item: Some(cache_permissions::CacheItem::ItemSelector(
+                            permission_messages::permissions_type::CacheItemSelector {
+                                kind: Some(cache_item_selector::Kind::KeyPrefix(
+                                    "key-prefix".into(),
+                                )),
+                            },
+                        )),
+                    },
+                ),
+            ),
+        };
+        let grpc_permissions = permission_messages::Permissions {
+            kind: Some(permission_messages::permissions::Kind::Explicit(
+                permission_messages::ExplicitPermissions {
+                    permissions: vec![key_perm, key_prefix_perm],
+                },
+            )),
+        };
+
+        let converted_permissions = permissions_from_disposable_token_scope(sdk_permissions);
+        assert_eq!(converted_permissions, grpc_permissions);
+    }
+}
