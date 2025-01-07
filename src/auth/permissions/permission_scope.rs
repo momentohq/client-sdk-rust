@@ -1,6 +1,8 @@
+use derive_more::Display;
+
 /// A component of a [CachePermission].
 /// Type of access granted by the permission.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Display, Clone, PartialEq)]
 pub enum CacheRole {
     /// Allows read-write access to a cache
     ReadWrite,
@@ -12,7 +14,7 @@ pub enum CacheRole {
 
 /// A component of a [CachePermission].
 /// A permission can be restricted to a specific cache or to all caches.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Display, Clone, PartialEq)]
 pub enum CacheSelector {
     /// Apply permission to all caches
     AllCaches,
@@ -48,9 +50,19 @@ pub struct CachePermission {
     pub cache: CacheSelector,
 }
 
+impl std::fmt::Display for CachePermission {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "CachePermission {{ role: {}, cache: {} }}",
+            self.role, self.cache
+        )
+    }
+}
+
 /// A component of a [TopicPermission].
 /// Type of access granted by the permission.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Display, Clone, PartialEq)]
 pub enum TopicRole {
     /// Allows both publishing and subscribing to a topic
     PublishSubscribe,
@@ -62,7 +74,7 @@ pub enum TopicRole {
 
 /// A component of a [TopicPermission].
 /// A permission can be restricted to a specific topic or to all topics in a cache.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Display, Clone, PartialEq)]
 pub enum TopicSelector {
     /// Apply permission to all topics
     AllTopics,
@@ -100,8 +112,18 @@ pub struct TopicPermission {
     pub topic: TopicSelector,
 }
 
+impl std::fmt::Display for TopicPermission {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "TopicPermission {{ role: {}, cache: {}, topic: {} }}",
+            self.role, self.cache, self.topic
+        )
+    }
+}
+
 /// A component of a [PermissionScope].
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Display, Clone, PartialEq)]
 pub enum Permission {
     /// Defines the permissions for a cache.
     CachePermission(CachePermission),
@@ -114,6 +136,12 @@ pub enum Permission {
 pub struct Permissions {
     /// The set of permissions to be granted to a new API key.
     pub permissions: Vec<Permission>,
+}
+
+impl std::fmt::Display for Permissions {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Permissions {{ permissions: {:?} }}", self.permissions)
+    }
 }
 
 impl Permissions {
@@ -136,7 +164,7 @@ impl Permissions {
 }
 
 /// The permission scope for creating a new API key.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Display, Clone, PartialEq)]
 pub enum PermissionScope {
     /// Set of permissions to be granted to a new API key
     Permissions(Permissions),

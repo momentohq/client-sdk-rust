@@ -1,9 +1,10 @@
 use crate::{auth::PermissionScope, IntoBytes};
 
 use super::permission_scope::{CacheRole, CacheSelector, Permissions};
+use derive_more::Display;
 
 /// A key for a specific item in a cache.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Display, Clone, PartialEq)]
 pub struct CacheItemKey<K: IntoBytes> {
     /// The cache item key
     pub key: K,
@@ -17,7 +18,7 @@ impl<K: IntoBytes> From<K> for CacheItemKey<K> {
 }
 
 /// A key prefix for items in a cache.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Display, Clone, PartialEq)]
 pub struct CacheItemKeyPrefix<K: IntoBytes> {
     /// The key prefix
     pub key_prefix: K,
@@ -32,7 +33,7 @@ impl<K: IntoBytes> From<K> for CacheItemKeyPrefix<K> {
 
 /// A component of a [DisposableTokenCachePermission].
 /// Specifies the cache item(s) to which the permission applies.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Display, Clone, PartialEq)]
 pub enum CacheItemSelector<K: IntoBytes> {
     /// Access to all cache items
     AllCacheItems,
@@ -54,14 +55,24 @@ pub struct DisposableTokenCachePermission<K: IntoBytes> {
     pub item_selector: CacheItemSelector<K>,
 }
 
+impl<K: IntoBytes + std::fmt::Display> std::fmt::Display for DisposableTokenCachePermission<K> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "DisposableTokenCachePermission {{ role: {}, cache: {}, item_selector: {} }}",
+            self.role, self.cache, self.item_selector
+        )
+    }
+}
+
 /// A set of permissions to be granted to a new disposable access token.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Display, Clone, PartialEq)]
 pub struct DisposableTokenCachePermissions<K: IntoBytes> {
     pub(crate) permissions: Vec<DisposableTokenCachePermission<K>>,
 }
 
 /// The permission scope for creating a new disposable access token.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Display, Clone, PartialEq)]
 pub enum DisposableTokenScope<K: IntoBytes> {
     /// Set of permissions to be granted to a new token on the level of a cache or topic
     Permissions(Permissions),
