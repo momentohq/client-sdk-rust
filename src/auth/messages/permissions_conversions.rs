@@ -24,7 +24,7 @@ use crate::{
 
 // Create protobuf Permissions from DisposableTokenScope
 pub(crate) fn permissions_from_disposable_token_scope(
-    scope: DisposableTokenScope<impl IntoBytes>,
+    scope: DisposableTokenScope,
 ) -> permission_messages::Permissions {
     match scope {
         DisposableTokenScope::Permissions(permissions) => permission_messages::Permissions {
@@ -132,9 +132,7 @@ fn topic_permission_to_grpc_permission(permission: TopicPermission) -> Permissio
     }
 }
 
-fn assign_cache_item_selector(
-    item_selector: CacheItemSelector<impl IntoBytes>,
-) -> cache_permissions::CacheItem {
+fn assign_cache_item_selector(item_selector: CacheItemSelector) -> cache_permissions::CacheItem {
     match item_selector {
         CacheItemSelector::AllCacheItems => cache_permissions::CacheItem::AllItems(All {}),
         CacheItemSelector::CacheItemKey(CacheItemKey { key }) => {
@@ -153,7 +151,7 @@ fn assign_cache_item_selector(
 }
 
 fn disposable_token_permission_to_grpc_permission(
-    permission: DisposableTokenCachePermission<impl IntoBytes>,
+    permission: DisposableTokenCachePermission,
 ) -> PermissionsType {
     let grpc_perm = permissions_type::CachePermissions {
         role: assign_cache_role(permission.role).into(),
@@ -172,8 +170,7 @@ mod tests {
 
     #[test]
     fn creates_expected_grpc_permissions_from_all_data_read_write() {
-        let sdk_permissions =
-            DisposableTokenScope::Permissions::<String>(Permissions::all_data_read_write());
+        let sdk_permissions = DisposableTokenScope::Permissions(Permissions::all_data_read_write());
         let converted_permissions = permissions_from_disposable_token_scope(sdk_permissions);
         let expected_permissions = permission_messages::Permissions {
             kind: Some(permission_messages::permissions::Kind::Explicit(
@@ -211,7 +208,7 @@ mod tests {
     #[test]
     fn creates_expected_grpc_permissions_from_mixed_cache_topics_permissions() {
         // Construct sdk permissions object
-        let sdk_permissions = DisposableTokenScope::Permissions::<String>(Permissions {
+        let sdk_permissions = DisposableTokenScope::Permissions(Permissions {
             permissions: vec![
                 // read only for all caches
                 Permission::CachePermission(CachePermission {
@@ -388,7 +385,7 @@ mod tests {
                         role: CacheRole::ReadWrite,
                         cache: CacheSelector::AllCaches,
                         item_selector: CacheItemSelector::CacheItemKey(CacheItemKey {
-                            key: "specific-key".to_string(),
+                            key: "specific-key".into(),
                         }),
                     },
                     DisposableTokenCachePermission {
@@ -397,7 +394,7 @@ mod tests {
                             name: "foo".to_string(),
                         },
                         item_selector: CacheItemSelector::CacheItemKeyPrefix(CacheItemKeyPrefix {
-                            key_prefix: "key-prefix".to_string(),
+                            key_prefix: "key-prefix".into(),
                         }),
                     },
                 ],

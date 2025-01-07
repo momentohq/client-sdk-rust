@@ -7,7 +7,7 @@ use momento::{
     auth::{
         DisposableTokenScope, DisposableTokenScopes, ExpiresIn, GenerateDisposableTokenResponse,
     },
-    CacheClient, CredentialProvider, IntoBytes, MomentoResult, TopicClient,
+    CacheClient, CredentialProvider, MomentoResult, TopicClient,
 };
 use momento::{MomentoError, MomentoErrorCode};
 use momento_test_util::{unique_key, TestScalar, CACHE_TEST_STATE};
@@ -15,7 +15,7 @@ use momento_test_util::{unique_key, TestScalar, CACHE_TEST_STATE};
 // Helper function that generates a disposable token with the given scope
 // that expires in 5 minutes.
 async fn generate_disposable_token_success(
-    scope: DisposableTokenScope<impl IntoBytes>,
+    scope: DisposableTokenScope,
 ) -> MomentoResult<GenerateDisposableTokenResponse> {
     let expiry = ExpiresIn::minutes(5);
     let response = CACHE_TEST_STATE
