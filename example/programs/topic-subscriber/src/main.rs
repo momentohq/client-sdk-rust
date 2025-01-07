@@ -22,6 +22,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .credential_provider(CredentialProvider::from_string(momento_key).unwrap())
         .build()?;
 
+    // variables for topic and cache are required
     let cache = env::var("CACHE").expect("CACHE Variable is required");
     let topic = env::var("TOPIC").expect("TOPIC Variable is required");
 
