@@ -49,15 +49,15 @@ pub struct DisposableTokenProps {
 /// # })
 /// # }
 /// ```
-pub struct GenerateDisposableTokenRequest<K: IntoBytes> {
-    scope: DisposableTokenScope<K>,
+pub struct GenerateDisposableTokenRequest {
+    scope: DisposableTokenScope,
     expires_in: ExpiresIn,
     props: Option<DisposableTokenProps>,
 }
 
-impl<K: IntoBytes> GenerateDisposableTokenRequest<K> {
+impl GenerateDisposableTokenRequest {
     /// Construct a new GenerateDisposableTokenRequest.
-    pub fn new(scope: DisposableTokenScope<K>, expires_in: ExpiresIn) -> Self {
+    pub fn new(scope: DisposableTokenScope, expires_in: ExpiresIn) -> Self {
         Self {
             scope,
             expires_in,
@@ -80,7 +80,7 @@ impl<K: IntoBytes> GenerateDisposableTokenRequest<K> {
     }
 }
 
-impl<K: IntoBytes> MomentoRequest for GenerateDisposableTokenRequest<K> {
+impl MomentoRequest for GenerateDisposableTokenRequest {
     type Response = GenerateDisposableTokenResponse;
 
     async fn send(self, client: &AuthClient) -> MomentoResult<Self::Response> {

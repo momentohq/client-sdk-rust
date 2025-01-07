@@ -114,7 +114,7 @@ impl AuthClient {
     /// You can also use the [send_request](AuthClient::send_request) method to get an item using a [GenerateDisposableTokenRequest].
     pub async fn generate_disposable_token(
         &self,
-        scope: DisposableTokenScope<impl IntoBytes>,
+        scope: DisposableTokenScope,
         expires_in: ExpiresIn,
     ) -> MomentoResult<GenerateDisposableTokenResponse> {
         utils::is_disposable_token_expiry_valid(expires_in.clone())?;

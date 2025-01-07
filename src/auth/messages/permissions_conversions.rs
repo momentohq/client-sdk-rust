@@ -24,7 +24,7 @@ use crate::{
 
 // Create protobuf Permissions from DisposableTokenScope
 pub(crate) fn permissions_from_disposable_token_scope(
-    scope: DisposableTokenScope<impl IntoBytes>,
+    scope: DisposableTokenScope,
 ) -> permission_messages::Permissions {
     match scope {
         DisposableTokenScope::Permissions(permissions) => permission_messages::Permissions {
@@ -133,19 +133,19 @@ fn topic_permission_to_grpc_permission(permission: TopicPermission) -> Permissio
 }
 
 fn assign_cache_item_selector(
-    item_selector: CacheItemSelector<impl IntoBytes>,
+    item_selector: CacheItemSelector,
 ) -> cache_permissions::CacheItem {
     match item_selector {
         CacheItemSelector::AllCacheItems => cache_permissions::CacheItem::AllItems(All {}),
         CacheItemSelector::CacheItemKey(CacheItemKey { key }) => {
             cache_permissions::CacheItem::ItemSelector(permissions_type::CacheItemSelector {
-                kind: Some(cache_item_selector::Kind::Key(key.into_bytes())),
+                kind: Some(cache_item_selector::Kind::Key(key)),
             })
         }
         CacheItemSelector::CacheItemKeyPrefix(CacheItemKeyPrefix { key_prefix }) => {
             cache_permissions::CacheItem::ItemSelector(permissions_type::CacheItemSelector {
                 kind: Some(cache_item_selector::Kind::KeyPrefix(
-                    key_prefix.into_bytes(),
+                    key_prefix,
                 )),
             })
         }
@@ -153,7 +153,7 @@ fn assign_cache_item_selector(
 }
 
 fn disposable_token_permission_to_grpc_permission(
-    permission: DisposableTokenCachePermission<impl IntoBytes>,
+    permission: DisposableTokenCachePermission,
 ) -> PermissionsType {
     let grpc_perm = permissions_type::CachePermissions {
         role: assign_cache_role(permission.role).into(),

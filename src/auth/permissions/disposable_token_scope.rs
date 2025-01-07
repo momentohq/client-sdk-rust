@@ -4,95 +4,89 @@ use super::permission_scope::{CacheRole, CacheSelector, Permissions};
 use derive_more::Display;
 
 /// A key for a specific item in a cache.
-#[derive(Debug, Display, Clone, PartialEq)]
-pub struct CacheItemKey<K: IntoBytes> {
+#[derive(Debug, Clone, PartialEq)]
+pub struct CacheItemKey {
     /// The cache item key
-    pub key: K,
+    pub key: Vec<u8>,
 }
 
 // An [IntoBytes] type can be passed in as a CacheItemKey.
-impl<K: IntoBytes> From<K> for CacheItemKey<K> {
+impl<K: IntoBytes> From<K> for CacheItemKey {
     fn from(key: K) -> Self {
-        CacheItemKey { key }
+        CacheItemKey {
+            key: key.into_bytes(),
+        }
     }
 }
 
 /// A key prefix for items in a cache.
-#[derive(Debug, Display, Clone, PartialEq)]
-pub struct CacheItemKeyPrefix<K: IntoBytes> {
+#[derive(Debug, Clone, PartialEq)]
+pub struct CacheItemKeyPrefix {
     /// The key prefix
-    pub key_prefix: K,
+    pub key_prefix: Vec<u8>,
 }
 
 /// An [IntoBytes] type can be passed in as a CacheItemKeyPrefix.
-impl<K: IntoBytes> From<K> for CacheItemKeyPrefix<K> {
+impl<K: IntoBytes> From<K> for CacheItemKeyPrefix {
     fn from(key_prefix: K) -> Self {
-        CacheItemKeyPrefix { key_prefix }
+        CacheItemKeyPrefix {
+            key_prefix: key_prefix.into_bytes(),
+        }
     }
 }
 
 /// A component of a [DisposableTokenCachePermission].
 /// Specifies the cache item(s) to which the permission applies.
-#[derive(Debug, Display, Clone, PartialEq)]
-pub enum CacheItemSelector<K: IntoBytes> {
+#[derive(Debug, Clone, PartialEq)]
+pub enum CacheItemSelector {
     /// Access to all cache items
     AllCacheItems,
     /// Access to a specific cache item
-    CacheItemKey(CacheItemKey<K>),
+    CacheItemKey(CacheItemKey),
     /// Access to all cache items with a specific key prefix
-    CacheItemKeyPrefix(CacheItemKeyPrefix<K>),
+    CacheItemKeyPrefix(CacheItemKeyPrefix),
 }
 
 /// A permission to be granted to a new disposable access token, specifying
 /// access to specific cache items.
 #[derive(Debug, Clone, PartialEq)]
-pub struct DisposableTokenCachePermission<K: IntoBytes> {
+pub struct DisposableTokenCachePermission {
     /// The type of access granted by the permission.
     pub role: CacheRole,
     /// The cache(s) to which the permission applies.
     pub cache: CacheSelector,
     /// The cache item(s) to which the permission applies.
-    pub item_selector: CacheItemSelector<K>,
-}
-
-impl<K: IntoBytes + std::fmt::Display> std::fmt::Display for DisposableTokenCachePermission<K> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "DisposableTokenCachePermission {{ role: {}, cache: {}, item_selector: {} }}",
-            self.role, self.cache, self.item_selector
-        )
-    }
+    pub item_selector: CacheItemSelector,
 }
 
 /// A set of permissions to be granted to a new disposable access token.
-#[derive(Debug, Display, Clone, PartialEq)]
-pub struct DisposableTokenCachePermissions<K: IntoBytes> {
-    pub(crate) permissions: Vec<DisposableTokenCachePermission<K>>,
+#[derive(Debug, Clone, PartialEq)]
+pub struct DisposableTokenCachePermissions {
+    pub(crate) permissions: Vec<DisposableTokenCachePermission>,
 }
 
 /// The permission scope for creating a new disposable access token.
-#[derive(Debug, Display, Clone, PartialEq)]
-pub enum DisposableTokenScope<K: IntoBytes> {
+#[derive(Debug, Clone, PartialEq)]
+pub enum DisposableTokenScope {
     /// Set of permissions to be granted to a new token on the level of a cache or topic
     Permissions(Permissions),
     /// Set of permissions to be granted to a new token on the level of a cache item (key or key prefix)
-    DisposableTokenPermissions(DisposableTokenCachePermissions<K>),
+    DisposableTokenPermissions(DisposableTokenCachePermissions),
 }
 
-impl From<Permissions> for DisposableTokenScope<String> {
+impl From<Permissions> for DisposableTokenScope {
     fn from(permissions: Permissions) -> Self {
         DisposableTokenScope::Permissions(permissions)
     }
 }
 
-impl From<DisposableTokenCachePermissions<String>> for DisposableTokenScope<String> {
-    fn from(permissions: DisposableTokenCachePermissions<String>) -> Self {
+impl From<DisposableTokenCachePermissions> for DisposableTokenScope {
+    fn from(permissions: DisposableTokenCachePermissions) -> Self {
         DisposableTokenScope::DisposableTokenPermissions(permissions)
     }
 }
 
-impl From<PermissionScope> for DisposableTokenScope<String> {
+impl From<PermissionScope> for DisposableTokenScope {
     fn from(permission_scope: PermissionScope) -> Self {
         match permission_scope {
             PermissionScope::Permissions(permissions) => {
@@ -195,9 +189,7 @@ mod tests {
             let expected_permissions = vec![DisposableTokenCachePermission {
                 cache: CacheSelector::AllCaches,
                 role: CacheRole::ReadWrite,
-                item_selector: CacheItemSelector::CacheItemKey(CacheItemKey::<&str> {
-                    key: "my-key",
-                }),
+                item_selector: CacheItemSelector::CacheItemKey(CacheItemKey { key: "my-key" }),
             }];
             let expected_scope =
                 DisposableTokenScope::DisposableTokenPermissions(DisposableTokenCachePermissions {
@@ -785,7 +777,7 @@ mod tests {
                     let item_selector = cache_perm.item_selector;
                     match item_selector {
                         CacheItemSelector::CacheItemKey(CacheItemKey { key }) => {
-                            assert_eq!(key.into_bytes(), expected_item.into_bytes());
+                            assert_eq!(key, expected_item.into_bytes());
                         }
                         _ => panic!("Did not receive CacheItemKey"),
                     }
