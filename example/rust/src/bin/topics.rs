@@ -52,7 +52,6 @@ async fn main() -> MomentoResult<()> {
         println!("\nSubscriber [2] should receive 10 messages then exit");
         for _ in 0..10 {
             let message = subscription2.next().await;
-            // println!("[2] Received message: {:?}", message);
             match message {
                 Some(message) => {
                     println!(
