@@ -128,6 +128,9 @@ pub use errors::*;
 
 mod grpc;
 
+pub mod leaderboard;
+pub use leaderboard::LeaderboardClient;
+
 /// Contains the [TopicClient] for interacting with Momento Topics.
 pub mod topics;
 pub use topics::TopicClient;
