@@ -5,6 +5,7 @@ use momento::auth::{
 };
 use momento::topics::configurations;
 use momento::{AuthClient, CredentialProvider, MomentoResult, TopicClient};
+use tokio::sync::mpsc;
 use tokio::time::sleep;
 
 #[tokio::main]
@@ -45,12 +46,14 @@ async fn main() -> MomentoResult<()> {
 
     /*******************************************************************************/
 
-    // Example 2: spawn a task that consumes messages from a subscription and
-    // let the task end after receiving 10 messages.
+    // Example 2: spawn a task that consumes messages from a subscription and use a
+    // message-passing channel to end the task after receiving 10 messages.
+    let (sender, mut receiver) = mpsc::channel(10);
+
     let mut subscription2 = topic_client.subscribe("cache", "my-topic").await?;
     tokio::spawn(async move {
         println!("\nSubscriber [2] should receive 10 messages then exit");
-        for _ in 0..10 {
+        loop {
             let message = subscription2.next().await;
             match message {
                 Some(message) => {
@@ -66,6 +69,19 @@ async fn main() -> MomentoResult<()> {
                     println!("[2] Received None item from subscription");
                 }
             }
+
+            match receiver.recv().await {
+                Some(val) => {
+                    if val == 9 {
+                        println!("[2] Received 10 messages, exiting");
+                        return;
+                    }
+                }
+                None => {
+                    println!("[2] Channel is closed");
+                    return;
+                }
+            }
         }
     });
 
@@ -73,6 +89,15 @@ async fn main() -> MomentoResult<()> {
         topic_client
             .publish("cache", "my-topic", format!("Hello, World! {}", i))
             .await?;
+        match sender.send(i).await {
+            Ok(_) => {}
+            Err(err) => {
+                panic!(
+                    "[2] Error sending synchronization message, exiting: {:?}",
+                    err
+                );
+            }
+        }
         sleep(std::time::Duration::from_millis(400)).await;
     }
 
