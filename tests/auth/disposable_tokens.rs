@@ -2,12 +2,12 @@ use std::time::Duration;
 
 use momento::auth::CacheSelector;
 use momento::auth::Expiration;
-use momento::auth::{CachePermission, CacheRole, Permission, Permissions};
+use momento::auth::Permissions;
 use momento::{
     auth::{
         DisposableTokenScope, DisposableTokenScopes, ExpiresIn, GenerateDisposableTokenResponse,
     },
-    CacheClient, CredentialProvider, IntoBytes, MomentoResult, TopicClient,
+    CacheClient, CredentialProvider, MomentoResult, TopicClient,
 };
 use momento::{MomentoError, MomentoErrorCode};
 use momento_test_util::{unique_key, TestScalar, CACHE_TEST_STATE};
@@ -15,7 +15,7 @@ use momento_test_util::{unique_key, TestScalar, CACHE_TEST_STATE};
 // Helper function that generates a disposable token with the given scope
 // that expires in 5 minutes.
 async fn generate_disposable_token_success(
-    scope: DisposableTokenScope<impl IntoBytes>,
+    scope: DisposableTokenScope,
 ) -> MomentoResult<GenerateDisposableTokenResponse> {
     let expiry = ExpiresIn::minutes(5);
     let response = CACHE_TEST_STATE
@@ -792,21 +792,16 @@ mod disposable_tokens_cache_key_prefix {
 }
 
 mod disposable_tokens_cache {
+    use momento::auth::PermissionScopes;
+
     use super::*;
 
     #[tokio::test]
     async fn test_cache_read_write_specific_cache() -> MomentoResult<()> {
         let first_cache = &CACHE_TEST_STATE.cache_name;
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::CachePermission(CachePermission {
-                    cache: (*first_cache).clone().into(),
-                    role: CacheRole::ReadWrite,
-                })],
-            }),
-        )
-        .await?;
+        let scope = PermissionScopes::cache_read_write(first_cache.clone()).into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let cc = new_cache_client(creds.clone());
         let tc = new_topic_client(creds);
@@ -832,15 +827,8 @@ mod disposable_tokens_cache {
     async fn test_cache_read_write_all_caches() -> MomentoResult<()> {
         let first_cache = &CACHE_TEST_STATE.cache_name;
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::CachePermission(CachePermission {
-                    cache: CacheSelector::AllCaches,
-                    role: CacheRole::ReadWrite,
-                })],
-            }),
-        )
-        .await?;
+        let scope = PermissionScopes::cache_read_write(CacheSelector::AllCaches).into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let cc = new_cache_client(creds.clone());
         let tc = new_topic_client(creds);
@@ -866,15 +854,8 @@ mod disposable_tokens_cache {
     async fn test_cache_read_only_specific_cache() -> MomentoResult<()> {
         let first_cache = &CACHE_TEST_STATE.cache_name;
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::CachePermission(CachePermission {
-                    cache: (*first_cache).clone().into(),
-                    role: CacheRole::ReadOnly,
-                })],
-            }),
-        )
-        .await?;
+        let scope = PermissionScopes::cache_read_only(first_cache.clone()).into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let cc = new_cache_client(creds.clone());
         let tc = new_topic_client(creds);
@@ -902,15 +883,8 @@ mod disposable_tokens_cache {
     async fn test_cache_read_only_all_caches() -> MomentoResult<()> {
         let first_cache = &CACHE_TEST_STATE.cache_name;
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::CachePermission(CachePermission {
-                    cache: CacheSelector::AllCaches,
-                    role: CacheRole::ReadOnly,
-                })],
-            }),
-        )
-        .await?;
+        let scope = PermissionScopes::cache_read_only(CacheSelector::AllCaches).into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let cc = new_cache_client(creds.clone());
         let tc = new_topic_client(creds);
@@ -938,15 +912,8 @@ mod disposable_tokens_cache {
     async fn test_cache_write_only_specific_cache() -> MomentoResult<()> {
         let first_cache = &CACHE_TEST_STATE.cache_name;
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::CachePermission(CachePermission {
-                    cache: (*first_cache).clone().into(),
-                    role: CacheRole::WriteOnly,
-                })],
-            }),
-        )
-        .await?;
+        let scope = PermissionScopes::cache_write_only(first_cache.clone()).into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let cc = new_cache_client(creds.clone());
         let tc = new_topic_client(creds);
@@ -974,15 +941,8 @@ mod disposable_tokens_cache {
     async fn test_cache_write_only_all_caches() -> MomentoResult<()> {
         let first_cache = &CACHE_TEST_STATE.cache_name;
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::CachePermission(CachePermission {
-                    cache: CacheSelector::AllCaches,
-                    role: CacheRole::WriteOnly,
-                })],
-            }),
-        )
-        .await?;
+        let scope = PermissionScopes::cache_write_only(CacheSelector::AllCaches).into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let cc = new_cache_client(creds.clone());
         let tc = new_topic_client(creds);
@@ -1008,7 +968,7 @@ mod disposable_tokens_cache {
 }
 
 mod disposable_tokens_topics {
-    use momento::auth::{TopicPermission, TopicRole, TopicSelector};
+    use momento::auth::{PermissionScopes, TopicSelector};
 
     use super::*;
 
@@ -1018,16 +978,10 @@ mod disposable_tokens_topics {
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
         let first_topic = TestScalar::new();
         let second_topic = TestScalar::new();
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::TopicPermission(TopicPermission {
-                    cache: (*first_cache).clone().into(),
-                    topic: first_topic.key().into(),
-                    role: TopicRole::PublishSubscribe,
-                })],
-            }),
-        )
-        .await?;
+        let scope =
+            PermissionScopes::topic_publish_subscribe(first_cache.clone(), first_topic.key())
+                .into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let tc = new_topic_client(creds.clone());
         let cc = new_cache_client(creds.clone());
@@ -1056,16 +1010,10 @@ mod disposable_tokens_topics {
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
         let first_topic = TestScalar::new();
         let second_topic = TestScalar::new();
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::TopicPermission(TopicPermission {
-                    cache: CacheSelector::AllCaches,
-                    topic: first_topic.key().into(),
-                    role: TopicRole::PublishSubscribe,
-                })],
-            }),
-        )
-        .await?;
+        let scope =
+            PermissionScopes::topic_publish_subscribe(CacheSelector::AllCaches, first_topic.key())
+                .into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let tc = new_topic_client(creds.clone());
         let cc = new_cache_client(creds.clone());
@@ -1094,16 +1042,12 @@ mod disposable_tokens_topics {
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
         let first_topic = TestScalar::new();
         let second_topic = TestScalar::new();
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::TopicPermission(TopicPermission {
-                    cache: (*first_cache).clone().into(),
-                    topic: TopicSelector::AllTopics,
-                    role: TopicRole::PublishSubscribe,
-                })],
-            }),
+        let scope = PermissionScopes::topic_publish_subscribe(
+            first_cache.clone(),
+            TopicSelector::AllTopics,
         )
-        .await?;
+        .into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let tc = new_topic_client(creds.clone());
         let cc = new_cache_client(creds.clone());
@@ -1134,16 +1078,12 @@ mod disposable_tokens_topics {
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
         let first_topic = TestScalar::new();
         let second_topic = TestScalar::new();
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::TopicPermission(TopicPermission {
-                    cache: CacheSelector::AllCaches,
-                    topic: TopicSelector::AllTopics,
-                    role: TopicRole::PublishSubscribe,
-                })],
-            }),
+        let scope = PermissionScopes::topic_publish_subscribe(
+            CacheSelector::AllCaches,
+            TopicSelector::AllTopics,
         )
-        .await?;
+        .into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let tc = new_topic_client(creds.clone());
         let cc = new_cache_client(creds.clone());
@@ -1174,16 +1114,9 @@ mod disposable_tokens_topics {
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
         let first_topic = TestScalar::new();
         let second_topic = TestScalar::new();
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::TopicPermission(TopicPermission {
-                    cache: (*first_cache).clone().into(),
-                    topic: first_topic.key().into(),
-                    role: TopicRole::SubscribeOnly,
-                })],
-            }),
-        )
-        .await?;
+        let scope =
+            PermissionScopes::topic_subscribe_only(first_cache.clone(), first_topic.key()).into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let tc = new_topic_client(creds.clone());
         let cc = new_cache_client(creds.clone());
@@ -1215,16 +1148,10 @@ mod disposable_tokens_topics {
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
         let first_topic = TestScalar::new();
         let second_topic = TestScalar::new();
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::TopicPermission(TopicPermission {
-                    cache: CacheSelector::AllCaches,
-                    topic: first_topic.key().into(),
-                    role: TopicRole::SubscribeOnly,
-                })],
-            }),
-        )
-        .await?;
+        let scope =
+            PermissionScopes::topic_subscribe_only(CacheSelector::AllCaches, first_topic.key())
+                .into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let tc = new_topic_client(creds.clone());
         let cc = new_cache_client(creds.clone());
@@ -1257,16 +1184,10 @@ mod disposable_tokens_topics {
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
         let first_topic = TestScalar::new();
         let second_topic = TestScalar::new();
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::TopicPermission(TopicPermission {
-                    cache: (*first_cache).clone().into(),
-                    topic: TopicSelector::AllTopics,
-                    role: TopicRole::SubscribeOnly,
-                })],
-            }),
-        )
-        .await?;
+        let scope =
+            PermissionScopes::topic_subscribe_only(first_cache.clone(), TopicSelector::AllTopics)
+                .into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let tc = new_topic_client(creds.clone());
         let cc = new_cache_client(creds.clone());
@@ -1299,16 +1220,12 @@ mod disposable_tokens_topics {
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
         let first_topic = TestScalar::new();
         let second_topic = TestScalar::new();
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::TopicPermission(TopicPermission {
-                    cache: CacheSelector::AllCaches,
-                    topic: TopicSelector::AllTopics,
-                    role: TopicRole::SubscribeOnly,
-                })],
-            }),
+        let scope = PermissionScopes::topic_subscribe_only(
+            CacheSelector::AllCaches,
+            TopicSelector::AllTopics,
         )
-        .await?;
+        .into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let tc = new_topic_client(creds.clone());
         let cc = new_cache_client(creds.clone());
@@ -1341,16 +1258,9 @@ mod disposable_tokens_topics {
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
         let first_topic = TestScalar::new();
         let second_topic = TestScalar::new();
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::TopicPermission(TopicPermission {
-                    cache: (*first_cache).clone().into(),
-                    topic: first_topic.key().into(),
-                    role: TopicRole::PublishOnly,
-                })],
-            }),
-        )
-        .await?;
+        let scope =
+            PermissionScopes::topic_publish_only(first_cache.clone(), first_topic.key()).into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let tc = new_topic_client(creds.clone());
         let cc = new_cache_client(creds.clone());
@@ -1383,16 +1293,10 @@ mod disposable_tokens_topics {
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
         let first_topic = TestScalar::new();
         let second_topic = TestScalar::new();
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::TopicPermission(TopicPermission {
-                    cache: CacheSelector::AllCaches,
-                    topic: first_topic.key().into(),
-                    role: TopicRole::PublishOnly,
-                })],
-            }),
-        )
-        .await?;
+        let scope =
+            PermissionScopes::topic_publish_only(CacheSelector::AllCaches, first_topic.key())
+                .into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let tc = new_topic_client(creds.clone());
         let cc = new_cache_client(creds.clone());
@@ -1425,16 +1329,10 @@ mod disposable_tokens_topics {
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
         let first_topic = TestScalar::new();
         let second_topic = TestScalar::new();
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::TopicPermission(TopicPermission {
-                    cache: (*first_cache).clone().into(),
-                    topic: TopicSelector::AllTopics,
-                    role: TopicRole::PublishOnly,
-                })],
-            }),
-        )
-        .await?;
+        let scope =
+            PermissionScopes::topic_publish_only(first_cache.clone(), TopicSelector::AllTopics)
+                .into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let tc = new_topic_client(creds.clone());
         let cc = new_cache_client(creds.clone());
@@ -1467,16 +1365,12 @@ mod disposable_tokens_topics {
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
         let first_topic = TestScalar::new();
         let second_topic = TestScalar::new();
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions {
-                permissions: vec![Permission::TopicPermission(TopicPermission {
-                    cache: CacheSelector::AllCaches,
-                    topic: TopicSelector::AllTopics,
-                    role: TopicRole::PublishOnly,
-                })],
-            }),
+        let scope = PermissionScopes::topic_publish_only(
+            CacheSelector::AllCaches,
+            TopicSelector::AllTopics,
         )
-        .await?;
+        .into();
+        let response = generate_disposable_token_success(scope).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let tc = new_topic_client(creds.clone());
         let cc = new_cache_client(creds.clone());
@@ -1511,10 +1405,8 @@ mod disposable_tokens_all_data {
     async fn test_all_data_read_write() -> MomentoResult<()> {
         let first_cache = &CACHE_TEST_STATE.cache_name;
         let second_cache = &CACHE_TEST_STATE.auth_cache_name;
-        let response = generate_disposable_token_success(
-            DisposableTokenScope::Permissions::<String>(Permissions::all_data_read_write()),
-        )
-        .await?;
+        let response =
+            generate_disposable_token_success(Permissions::all_data_read_write().into()).await?;
         let creds = new_credential_provider_from_token(response.auth_token());
         let cc = new_cache_client(creds.clone());
         let tc = new_topic_client(creds);
@@ -1594,9 +1486,7 @@ mod disposable_tokens_expiry {
     async fn test_expiry() -> MomentoResult<()> {
         // Generate a token that expires soon
         let expiry = ExpiresIn::seconds(5);
-        let scope = momento::auth::DisposableTokenScope::Permissions::<String>(
-            Permissions::all_data_read_write(),
-        );
+        let scope = Permissions::all_data_read_write().into();
         let response = CACHE_TEST_STATE
             .auth_client
             .generate_disposable_token(scope, expiry)
