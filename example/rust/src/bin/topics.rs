@@ -5,8 +5,7 @@ use momento::auth::{
 };
 use momento::topics::configurations;
 use momento::{AuthClient, CredentialProvider, MomentoResult, TopicClient};
-use tokio::sync::mpsc;
-use tokio::time::sleep;
+use tokio::sync::oneshot;
 
 #[tokio::main]
 async fn main() -> MomentoResult<()> {
@@ -38,7 +37,6 @@ async fn main() -> MomentoResult<()> {
         topic_client
             .publish("cache", "my-topic", format!("Hello, World! {}", i))
             .await?;
-        sleep(std::time::Duration::from_millis(400)).await;
     }
 
     // Abort the spawned task after messages are published
@@ -47,13 +45,13 @@ async fn main() -> MomentoResult<()> {
     /*******************************************************************************/
 
     // Example 2: spawn a task that consumes messages from a subscription and use a
-    // message-passing channel to end the task after receiving 10 messages.
-    let (sender, mut receiver) = mpsc::channel(10);
+    // single-message channel to indicate the subscriber is done.
+    let (sender, receiver) = oneshot::channel();
 
     let mut subscription2 = topic_client.subscribe("cache", "my-topic").await?;
-    tokio::spawn(async move {
-        println!("\nSubscriber [2] should receive 10 messages then exit");
-        loop {
+    let subscriber_handle2 = tokio::spawn(async move {
+        println!("\nSubscriber [2] should receive 10 messages then send done message");
+        for _ in 0..10 {
             let message = subscription2.next().await;
             match message {
                 Some(message) => {
@@ -69,19 +67,10 @@ async fn main() -> MomentoResult<()> {
                     println!("[2] Received None item from subscription");
                 }
             }
-
-            match receiver.recv().await {
-                Some(val) => {
-                    if val == 9 {
-                        println!("[2] Received 10 messages, exiting");
-                        return;
-                    }
-                }
-                None => {
-                    println!("[2] Channel is closed");
-                    return;
-                }
-            }
+        }
+        match sender.send("done") {
+            Ok(_) => println!("Subscriber [2] sent done message"),
+            Err(err) => println!("Subscriber [2] failed to send done message: {}", err),
         }
     });
 
@@ -89,16 +78,16 @@ async fn main() -> MomentoResult<()> {
         topic_client
             .publish("cache", "my-topic", format!("Hello, World! {}", i))
             .await?;
-        match sender.send(i).await {
-            Ok(_) => {}
-            Err(err) => {
-                panic!(
-                    "[2] Error sending synchronization message, exiting: {:?}",
-                    err
-                );
-            }
+    }
+
+    // After subscriber receives 10 messages, we should receive a "done" message
+    // on the oneshot channel and end the subscriber task.
+    match receiver.await {
+        Ok(_) => {
+            println!("Received done message, ending subscriber [2] task");
+            subscriber_handle2.abort();
         }
-        sleep(std::time::Duration::from_millis(400)).await;
+        Err(err) => println!("Failed to receive done message: {}", err),
     }
 
     Ok(())
