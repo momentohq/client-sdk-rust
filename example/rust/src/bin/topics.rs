@@ -6,7 +6,6 @@ use momento::auth::{
 use momento::topics::configurations;
 use momento::{AuthClient, CredentialProvider, MomentoResult, TopicClient};
 use tokio::sync::oneshot;
-use tokio::time::sleep;
 
 #[tokio::main]
 async fn main() -> MomentoResult<()> {
@@ -38,7 +37,6 @@ async fn main() -> MomentoResult<()> {
         topic_client
             .publish("cache", "my-topic", format!("Hello, World! {}", i))
             .await?;
-        sleep(std::time::Duration::from_millis(400)).await;
     }
 
     // Abort the spawned task after messages are published
@@ -80,7 +78,6 @@ async fn main() -> MomentoResult<()> {
         topic_client
             .publish("cache", "my-topic", format!("Hello, World! {}", i))
             .await?;
-        sleep(std::time::Duration::from_millis(400)).await;
     }
 
     // After subscriber receives 10 messages, we should receive a "done" message
