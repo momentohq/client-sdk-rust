@@ -6,7 +6,7 @@
 
 # Momento Rust SDK - Topic Subscription
 
-This project is a Rust-based example program that subscribes to a Momento Cache's Topic and prints the output.  The `main` function handles the topic subscription, deserializes the payloads that it receives into a Rust struct, and prints the output.
+This project is a Rust-based example program that subscribes to a Momento Topic and prints the output.  The `main` function handles the topic subscription, deserializes the payloads that it receives into a Rust struct, and prints the output.
 
 This is Rust program can be taken into a container or run locally.
 
