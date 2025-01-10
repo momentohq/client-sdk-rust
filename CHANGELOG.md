@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.47.1](https://github.com/momentohq/client-sdk-rust/compare/v0.47.0...v0.47.1) (2025-01-09)
+
+
+### Bug Fixes
+
+* add permission scope unit tests and From conversions for convenience ([#427](https://github.com/momentohq/client-sdk-rust/issues/427)) ([dbfdf6d](https://github.com/momentohq/client-sdk-rust/commit/dbfdf6d3cd2cb4c8911936bf02f51076fc839f6e))
+
+
+### Miscellaneous
+
+* add auth client docs snippets ([#424](https://github.com/momentohq/client-sdk-rust/issues/424)) ([477795c](https://github.com/momentohq/client-sdk-rust/commit/477795c755a2e88928e296b07238eea82d3cb315))
+* add unit tests for expiration objects and expand all_data_read_write disposable token test for completeness ([#425](https://github.com/momentohq/client-sdk-rust/issues/425)) ([feb9ec4](https://github.com/momentohq/client-sdk-rust/commit/feb9ec41f4b80a50c00bf53d18bb01f205969141))
+* showcase publisher_id in topics example ([#418](https://github.com/momentohq/client-sdk-rust/issues/418)) ([0f06884](https://github.com/momentohq/client-sdk-rust/commit/0f06884778d67907c022df10f82995301315e35b))
+
+## [0.47.0](https://github.com/momentohq/client-sdk-rust/compare/v0.46.1...v0.47.0) (2025-01-03)
+
+
+### Features
+
+* add auth client and generate_disposable_token api ([#420](https://github.com/momentohq/client-sdk-rust/issues/420)) ([432babf](https://github.com/momentohq/client-sdk-rust/commit/432babf2d708e052fd6d6c87f7c1bc9a33a9cfed))
+
+
+### Miscellaneous
+
+* update vscode workspace to match directory structure ([#417](https://github.com/momentohq/client-sdk-rust/issues/417)) ([f28a368](https://github.com/momentohq/client-sdk-rust/commit/f28a36858b33ba2adc1ee0c57a4aa1c1f7d16997))
+
 ## [0.46.1](https://github.com/momentohq/client-sdk-rust/compare/v0.46.0...v0.46.1) (2024-12-16)
 
 

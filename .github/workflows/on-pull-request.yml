@@ -1,7 +1,7 @@
 name: on-pull-request
 
 on:
-  pull_request:
+  pull_request_target:
     branches: [main]
 
 env:
@@ -9,8 +9,26 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   TEST_CACHE_NAME: rust-integration-test-ci-cache-${{ github.sha }}
   TEST_STORE_NAME: rust-integration-test-ci-store-${{ github.sha }}
+  TEST_AUTH_CACHE_NAME: rust-integration-test-ci-cache-auth-${{ github.sha }}
 
 jobs:
+  verify-user-permissions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get User Permission
+        id: checkAccess
+        uses: actions-cool/check-user-permission@v2
+        with:
+          require: write
+          username: ${{ github.triggering_actor }}
+      - name: Check User Permission
+        if: steps.checkAccess.outputs.require-result == 'false'
+        run: |
+          echo "${{ github.triggering_actor }} does not have permissions on this repo."
+          echo "Current permission level is ${{ steps.checkAccess.outputs.user-permission }}"
+          echo "Job originally triggered by ${{ github.actor }}"
+          exit 1
+
   rustfmt:
     name: main - Style & Lint
     runs-on: ubuntu-latest
@@ -82,6 +100,7 @@ jobs:
         run: make docs
 
   build_rust:
+    needs: verify-user-permissions
     runs-on: ubuntu-24.04
     env:
       MOMENTO_API_KEY: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}

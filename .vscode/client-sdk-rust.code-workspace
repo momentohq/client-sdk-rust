@@ -5,15 +5,11 @@
 		"path": ".."
 	},
 	{
-		"name": "sdk",
-		"path": "../sdk"
-	},
-	{
 		"name": "example/rust",
 		"path": "../example/rust"
 	}
 ],
   "settings": {
-    "rust-analyzer.linkedProjects": ["./example/rust/Cargo.toml", "./sdk/Cargo.toml"]
+    "rust-analyzer.linkedProjects": ["./example/rust/Cargo.toml", "./Cargo.toml"]
   }
 }

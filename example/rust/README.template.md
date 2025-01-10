@@ -35,4 +35,6 @@ MOMENTO_API_KEY=<YOUR API KEY> cargo run --bin=topics
 
 Example Code: [topics.rs](src/bin/topics.rs)
 
+Note: to see a non-null `publisher_id` on a received [`SubscriptionValue`](https://docs.rs/momento/0.46.1/momento/topics/struct.SubscriptionValue.html), you'll need to set the optional `token_id` argument when programmatically creating a [disposable token](https://docs.momentohq.com/cache/develop/api-reference/auth#generatedisposabletoken). An example of this is provided in [topics.rs](src/bin/topics.rs).
+
 {{ ossFooter }}

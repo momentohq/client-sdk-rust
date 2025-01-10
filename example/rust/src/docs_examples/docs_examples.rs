@@ -25,6 +25,7 @@ use momento::cache::{
     SetIfPresentResponse, SetIfPresentAndNotEqualResponse, SortedSetFetchResponse, SortedSetOrder, UpdateTtlResponse,
 };
 use momento::topics::TopicClient;
+use momento::auth::{AuthClient, CacheSelector, DisposableTokenScopes, ExpiresIn, GenerateDisposableTokenRequest};
 use momento::{CacheClient, CredentialProvider, MomentoError, PreviewStorageClient};
 use std::collections::HashMap;
 use std::convert::TryInto;
@@ -729,6 +730,41 @@ pub async fn example_API_Storage_Delete(storage_client: &PreviewStorageClient, s
     Ok(())
 }
 
+#[allow(non_snake_case)]
+pub fn example_API_InstantiateAuthClient() -> Result<(), MomentoError> {
+    let _auth_client = AuthClient::builder()
+        .credential_provider(CredentialProvider::from_env_var("MOMENTO_API_KEY")?)
+        .build()?;
+    Ok(())
+}
+
+#[allow(non_snake_case)]
+pub async fn example_API_GenerateDisposableToken(auth_client: &AuthClient) -> Result<(), MomentoError> {
+    // Basic example
+    let expiry = ExpiresIn::minutes(30);
+    let scope = DisposableTokenScopes::cache_key_read_only(CacheSelector::AllCaches, "key");
+    let response = auth_client
+        .generate_disposable_token(scope, expiry)
+        .await?;
+    let token = response.clone().auth_token();
+    println!(
+        "Generated disposable token ending with '{}' that expires at epoch {}", 
+        &token[token.len() - 10 .. token.len() - 1], response.expires_at()
+    );
+
+    // Generate a token with optional token ID that can be used with Momento Topics
+    let expiry = ExpiresIn::minutes(30);
+    let scope = DisposableTokenScopes::cache_key_read_only(CacheSelector::AllCaches, "key");
+    let request = GenerateDisposableTokenRequest::new(scope, expiry).token_id("my-token-id".to_string());
+    let response = auth_client.send_request(request).await?;
+    let token = response.clone().auth_token();
+    println!(
+        "Generated disposable token ending with '{}' that expires at epoch {}", 
+        &token[token.len() - 10 .. token.len() - 1], response.expires_at()
+    );
+    Ok(())
+}
+
 #[tokio::main]
 pub async fn main() -> Result<(), MomentoError> {
     example_API_CredentialProviderFromString();
@@ -840,6 +876,15 @@ pub async fn main() -> Result<(), MomentoError> {
     example_API_Storage_Delete(&storage_client, &store_name).await?;
 
     example_API_Storage_DeleteStore(&storage_client, &store_name).await?;
+
+    example_API_InstantiateAuthClient()?;
+
+    let auth_client = AuthClient::builder()
+        .credential_provider(CredentialProvider::from_env_var(
+            "MOMENTO_API_KEY".to_string())?)
+            .build()?;
+
+    example_API_GenerateDisposableToken(&auth_client).await?;
 
     Ok(())
 }
