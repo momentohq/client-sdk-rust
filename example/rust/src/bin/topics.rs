@@ -1,8 +1,5 @@
 use futures::StreamExt;
-use momento::auth::{
-    DisposableTokenScope, ExpiresIn, GenerateDisposableTokenRequest, Permission, Permissions,
-    TopicPermission, TopicRole,
-};
+use momento::auth::{ExpiresIn, GenerateDisposableTokenRequest, PermissionScopes};
 use momento::topics::configurations;
 use momento::{AuthClient, CredentialProvider, MomentoResult, TopicClient};
 use tokio::sync::oneshot;
@@ -100,13 +97,7 @@ async fn get_topic_client_auth_token() -> MomentoResult<String> {
         .credential_provider(CredentialProvider::from_env_var("MOMENTO_API_KEY")?)
         .build()?;
     let expiry = ExpiresIn::minutes(1);
-    let scope = DisposableTokenScope::Permissions::<String>(Permissions {
-        permissions: vec![Permission::TopicPermission(TopicPermission {
-            cache: "cache".into(),
-            topic: "my-topic".into(),
-            role: TopicRole::PublishSubscribe,
-        })],
-    });
+    let scope = PermissionScopes::topic_publish_subscribe("cache", "my-topic").into();
     let request =
         GenerateDisposableTokenRequest::new(scope, expiry).token_id("my-token-id".to_string());
     let response = auth_client.send_request(request).await?;
