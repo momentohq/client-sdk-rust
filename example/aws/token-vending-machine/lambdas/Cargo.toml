@@ -1,0 +1,15 @@
+[package]
+name = "vending-machine"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+tokio = { version = "1", features = ["macros"] }
+serde = { version = "1.0.215", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1.41"
+lambda_http = "0.13.0"
+momento = "0.47.0"
+aws-config = "1.5.13"
+aws-sdk-secretsmanager = "1.57.0"
