@@ -23,7 +23,6 @@ export class FunctionConstruct extends Construct {
       manifestPath: path.join(__dirname, `../../../lambdas/Cargo.toml`),
       memorySize: 256,
       environment: {
-        MOMENTO_API_KEY: process.env.MOMENTO_API_KEY!,
         RUST_LOG: 'info',
       },
     })
