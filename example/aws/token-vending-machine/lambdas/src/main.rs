@@ -1,7 +1,7 @@
 mod models;
 
 use aws_config::BehaviorVersion;
-use lambda_http::{run, service_fn, tracing, Error, IntoResponse, Request, Response};
+use lambda_http::{run, service_fn, Error, IntoResponse, Request, Response};
 use models::{MomentoSecretString, TokenRequest, VendedToken};
 use momento::{
     auth::{
@@ -11,6 +11,7 @@ use momento::{
     AuthClient, CredentialProvider,
 };
 use std::env;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, Registry};
 
 // generate_token
 //
@@ -24,7 +25,7 @@ async fn generate_token(
     topic_name: String,
 ) -> Result<VendedToken, Error> {
     let expires_in = ExpiresIn::minutes(expires_in_minutes);
-    let scopes = DisposableTokenScope::Permissions::<String>(Permissions {
+    let scopes: DisposableTokenScope = DisposableTokenScope::Permissions(Permissions {
         permissions: vec![Permission::TopicPermission(TopicPermission {
             role: TopicRole::PublishSubscribe,
             cache: CacheSelector::CacheName { name: cache_name },
@@ -91,7 +92,15 @@ async fn handler(
 // supplied to Lambda runtime
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    tracing::init_default_subscriber();
+    let fmt_layer = tracing_subscriber::fmt::layer()
+        .json()
+        .with_target(false)
+        .without_time();
+
+    Registry::default()
+        .with(fmt_layer)
+        .with(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
 
     // aws client and secrets sdk
     let config = aws_config::load_defaults(BehaviorVersion::latest()).await;
