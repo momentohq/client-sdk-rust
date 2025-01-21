@@ -4,10 +4,7 @@ use aws_config::BehaviorVersion;
 use lambda_http::{run, service_fn, Error, IntoResponse, Request, Response};
 use models::{MomentoSecretString, TokenRequest, VendedToken};
 use momento::{
-    auth::{
-        CacheSelector, DisposableTokenScope, ExpiresIn, Permission, Permissions, TopicPermission,
-        TopicRole, TopicSelector,
-    },
+    auth::{ExpiresIn, PermissionScopes},
     AuthClient, CredentialProvider,
 };
 use std::env;
@@ -25,13 +22,7 @@ async fn generate_token(
     topic_name: String,
 ) -> Result<VendedToken, Error> {
     let expires_in = ExpiresIn::minutes(expires_in_minutes);
-    let scopes: DisposableTokenScope = DisposableTokenScope::Permissions(Permissions {
-        permissions: vec![Permission::TopicPermission(TopicPermission {
-            role: TopicRole::PublishSubscribe,
-            cache: CacheSelector::CacheName { name: cache_name },
-            topic: TopicSelector::TopicName { name: topic_name },
-        })],
-    });
+    let scopes = PermissionScopes::topic_publish_subscribe(cache_name, topic_name).into();
     let token = client.generate_disposable_token(scopes, expires_in).await?;
     let expires_at = token.clone().expires_at();
     let vended_token = VendedToken {

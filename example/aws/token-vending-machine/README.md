@@ -17,7 +17,7 @@ This directory contains a working implementation of a Token Vending Machine that
 
 - Follow the [installation guide](https://doc.rust-lang.org/cargo/getting-started/installation.html) to install Rust and Cargo.
 - You will also need the [cargo-lambda cargo extension](https://www.cargo-lambda.info/)
-- The CDK code in this repo is written in TypeScript, so you will need `Node.js` version 16 or later, and a compatible
+- The CDK code in this repo is written in TypeScript, so you will need `Node.js` version 18 or later, and a compatible
   version of `npm` installed. If you don't have these, we recommend [nodenv](https://github.com/nodenv/nodenv).
 - To get started with Momento you will need a Momento API key. You can get one from the [Momento Console](https://console.gomomento.com).
 
@@ -26,7 +26,7 @@ This directory contains a working implementation of a Token Vending Machine that
 To build and test the Lambda function
 
 ```bash
-npm -gi aws-cdk
+npm install -g aws-cdk
 cd infra
 npm i
 export MOMENTO_API_KEY=<YOUR_MOMENTO_API_KEY>
@@ -39,7 +39,7 @@ After the lambda is deployed, you can visit the AWS console and click the "Test"
 echo ewogICAgImNhY2hlTmFtZSI6ICJTYW1wbGVDYWNoZSIsCiAgICAidG9waWNOYW1lIjogInNhbXBsZS10b3BpYyIKfQ== | base64 --decode
 {
     "cacheName": "SampleCache",
-    "topicName": "sample-topic"
+    "topicName": "SampleTopic"
 }
 ```
 
