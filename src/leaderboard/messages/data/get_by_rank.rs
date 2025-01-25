@@ -5,9 +5,10 @@ use crate::{LeaderboardClient, MomentoResult};
 
 use std::ops::Range;
 
+/// Represents a range of ranks used to request elements by rank.
 pub struct RankRange {
-    pub start_inclusive: u32,
-    pub end_exclusive: u32,
+    start_inclusive: u32,
+    end_exclusive: u32,
 }
 
 impl From<Range<u32>> for RankRange {
@@ -36,6 +37,7 @@ pub struct GetByRankRequest {
     order: Order,
 }
 
+/// The response type for a successful `GetByRankRequest`.
 pub struct GetByRankResponse {
     elements: Vec<RankedElement>,
 }

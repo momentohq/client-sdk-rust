@@ -50,6 +50,7 @@ pub struct GetByScoreRequest {
     order: Order,
 }
 
+/// The response type for a successful `GetByScoreResponse`.
 pub struct GetByScoreResponse {
     elements: Vec<RankedElement>,
 }
@@ -75,7 +76,6 @@ impl GetByScoreRequest {
     }
 }
 
-/// The response type for a successful `GetByScoreRequest`
 impl GetByScoreResponse {
     /// Returns the ranked elements in the response.
     pub fn elements(&self) -> &[RankedElement] {

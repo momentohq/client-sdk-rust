@@ -2,6 +2,8 @@ use crate::leaderboard::MomentoRequest;
 use crate::utils::prep_request_with_timeout;
 use crate::{LeaderboardClient, MomentoResult};
 
+/// A request to remove a set of elements from a leaderboard using their element
+/// ids.
 pub struct RemoveElementsRequest {
     cache_name: String,
     leaderboard: String,
@@ -9,7 +11,7 @@ pub struct RemoveElementsRequest {
 }
 
 impl RemoveElementsRequest {
-    /// Constructs a new SortedSetPutElementsRequest.
+    /// Constructs a new `RemoveElementsRequest`.
     pub fn new(
         cache_name: impl Into<String>,
         leaderboard: impl Into<String>,

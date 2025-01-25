@@ -1,3 +1,4 @@
+/// Containts the request and response types for leaderboard operations.
 pub mod messages;
 
 pub use messages::MomentoRequest;

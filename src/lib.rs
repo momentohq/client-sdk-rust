@@ -128,6 +128,7 @@ pub use errors::*;
 
 mod grpc;
 
+/// Containts the [LeaderboardClient] for interacting with Momento Leaderboards.
 pub mod leaderboard;
 pub use leaderboard::LeaderboardClient;
 

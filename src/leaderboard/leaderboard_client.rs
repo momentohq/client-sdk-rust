@@ -36,6 +36,7 @@ static NEXT_DATA_CLIENT_INDEX: AtomicUsize = AtomicUsize::new(0);
 
 pub use crate::leaderboard::messages::data::Order;
 
+/// Client to work with Momento Leaderboards.
 #[derive(Clone, Debug)]
 pub struct LeaderboardClient {
     data_clients: Vec<SLbClient<InterceptedService<Channel, HeaderInterceptor>>>,
@@ -45,10 +46,12 @@ pub struct LeaderboardClient {
 }
 
 impl LeaderboardClient {
+    /// Returns a builder to construct a `LeaderboardClient`.
     pub fn builder() -> LeaderboardClientBuilder<NeedsConfiguration> {
         LeaderboardClientBuilder(NeedsConfiguration {})
     }
 
+    /// Delete a leaderboard.
     pub async fn delete_leaderboard(
         &self,
         cache_name: impl Into<String>,
@@ -58,6 +61,7 @@ impl LeaderboardClient {
         request.send(self).await
     }
 
+    /// Get elements from a leaderboard by rank.
     pub async fn get_by_rank<T: Into<RankRange>>(
         &self,
         cache_name: impl Into<String>,
@@ -69,6 +73,7 @@ impl LeaderboardClient {
         request.send(self).await
     }
 
+    /// Get elements from a leaderboard by score.
     pub async fn get_by_score(
         &self,
         cache_name: impl Into<String>,
@@ -89,6 +94,7 @@ impl LeaderboardClient {
         request.send(self).await
     }
 
+    /// Get the length of a leaderboard.
     pub async fn get_leaderboard_length(
         &self,
         cache_name: impl Into<String>,
@@ -98,6 +104,7 @@ impl LeaderboardClient {
         request.send(self).await
     }
 
+    /// Get elements from a leaderboard using their element ids.
     pub async fn get_rank<T: Into<Vec<u32>>>(
         &self,
         cache_name: impl Into<String>,
@@ -109,6 +116,7 @@ impl LeaderboardClient {
         request.send(self).await
     }
 
+    /// Remove elements from a leaderboard using their element ids.
     pub async fn remove_elements<T: Into<Vec<u32>>>(
         &self,
         cache_name: impl Into<String>,
@@ -119,6 +127,7 @@ impl LeaderboardClient {
         request.send(self).await
     }
 
+    /// Upsert (update/insert) elements into a leaderboard.
     pub async fn upsert_elements<E: IntoElements>(
         &self,
         cache_name: impl Into<String>,

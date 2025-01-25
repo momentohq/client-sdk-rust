@@ -10,8 +10,9 @@ pub trait IntoElements: Send {
     fn into_elements(self) -> Vec<Element>;
 }
 
+/// Collects elements from an iterator into an owned collection.
 #[cfg(not(doctest))]
-pub fn map_and_collect_elements<I>(iter: I) -> Vec<Element>
+pub(crate) fn map_and_collect_elements<I>(iter: I) -> Vec<Element>
 where
     I: Iterator<Item = (u32, f64)>,
 {
@@ -24,13 +25,12 @@ impl IntoElements for Vec<(u32, f64)> {
     }
 }
 
-/// Represents an element in a sorted set.
-/// Used by the various sorted set fetch methods to allow named access to value and score.
+/// Represents an element to be inserted into a leaderboard.
 #[derive(Debug, PartialEq, Clone)]
 pub struct Element {
-    /// The value to be stored in the sorted set.
+    /// The id of the element.
     pub id: u32,
-    /// The score associated with the value.
+    /// The score associated with the element.
     pub score: f64,
 }
 
@@ -42,7 +42,7 @@ pub struct UpsertElementsRequest<E: IntoElements> {
 }
 
 impl<E: IntoElements> UpsertElementsRequest<E> {
-    /// Constructs a new UpsertElementsRequest.
+    /// Constructs a new `UpsertElementsRequest`.
     pub fn new(cache_name: impl Into<String>, leaderboard: impl Into<String>, elements: E) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -82,6 +82,6 @@ impl<E: IntoElements> MomentoRequest for UpsertElementsRequest<E> {
     }
 }
 
-/// The response type for a successful `UpsertLeaderboardRequest`
+/// The response type for a successful `UpsertElementsRequest`
 #[derive(Debug, PartialEq, Eq)]
 pub struct UpsertElementsResponse {}
