@@ -3,6 +3,7 @@ use crate::leaderboard::MomentoRequest;
 use crate::utils::prep_request_with_timeout;
 use crate::{LeaderboardClient, MomentoResult};
 
+/// A request to get ranked elements by providing a list of element IDs.
 pub struct GetRankRequest {
     cache_name: String,
     leaderboard: String,
@@ -11,7 +12,7 @@ pub struct GetRankRequest {
 }
 
 impl GetRankRequest {
-    /// Constructs a new SortedSetPutElementsRequest.
+    /// Constructs a new `GetRankRequest`.
     pub fn new(
         cache_name: impl Into<String>,
         leaderboard: impl Into<String>,
@@ -70,6 +71,7 @@ pub struct GetRankResponse {
 }
 
 impl GetRankResponse {
+    /// Returns the ranked elements in the response.
     pub fn elements(&self) -> &[RankedElement] {
         &self.elements
     }

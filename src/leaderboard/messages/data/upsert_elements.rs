@@ -4,9 +4,9 @@ use crate::{LeaderboardClient, MomentoResult};
 
 use momento_protos::leaderboard::Element as ProtoElement;
 
-/// This trait defines an interface for converting a type into a vector of [SortedSetElement].
+/// This trait defines an interface for converting a type into a vector of [Element].
 pub trait IntoElements: Send {
-    /// Converts the type into a vector of [SortedSetElement].
+    /// Converts the type into a vector of [Element].
     fn into_elements(self) -> Vec<Element>;
 }
 
@@ -34,6 +34,7 @@ pub struct Element {
     pub score: f64,
 }
 
+/// A request to upsert (insert/update) elements into a leaderboard.
 pub struct UpsertElementsRequest<E: IntoElements> {
     cache_name: String,
     leaderboard: String,
@@ -41,7 +42,7 @@ pub struct UpsertElementsRequest<E: IntoElements> {
 }
 
 impl<E: IntoElements> UpsertElementsRequest<E> {
-    /// Constructs a new SortedSetPutElementsRequest.
+    /// Constructs a new UpsertElementsRequest.
     pub fn new(cache_name: impl Into<String>, leaderboard: impl Into<String>, elements: E) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -81,6 +82,6 @@ impl<E: IntoElements> MomentoRequest for UpsertElementsRequest<E> {
     }
 }
 
-/// The response type for a successful `DeleteLeaderboardRequest`
+/// The response type for a successful `UpsertLeaderboardRequest`
 #[derive(Debug, PartialEq, Eq)]
 pub struct UpsertElementsResponse {}

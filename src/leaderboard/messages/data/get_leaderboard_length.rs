@@ -3,21 +3,14 @@ use crate::{utils, LeaderboardClient, MomentoResult};
 
 use tonic::Request;
 
-/// Request to delete a leaderboard
-///
-/// # Arguments
-///
-/// * `cache_name` - The name of the cache containing the leaderboard.
-/// * `leaderboard` - The name of the leaderboard.
+/// A request to get the number of elements in a leaderboard.
 pub struct GetLeaderboardLengthRequest {
-    /// The name of the cache containing the leaderboard.
-    pub cache_name: String,
-    /// The leaderboard to be deleted.
-    pub leaderboard: String,
+    cache_name: String,
+    leaderboard: String,
 }
 
 impl GetLeaderboardLengthRequest {
-    /// Constructs a new `DeleteLeaderboardRequest`.
+    /// Constructs a new `GetLeaderboardLengthRequest`.
     pub fn new(cache_name: impl Into<String>, leaderboard: impl Into<String>) -> Self {
         Self {
             cache_name: cache_name.into(),
@@ -57,6 +50,7 @@ pub struct GetLeaderboardLengthResponse {
 }
 
 impl GetLeaderboardLengthResponse {
+    /// Returns the number of elements that were in the leaderboard.
     pub fn count(&self) -> u32 {
         self.count
     }

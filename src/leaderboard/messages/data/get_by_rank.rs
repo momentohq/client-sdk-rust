@@ -28,6 +28,7 @@ impl From<RankRange> for momento_protos::leaderboard::RankRange {
     }
 }
 
+/// A request to get ranked elements by rank.
 pub struct GetByRankRequest {
     cache_name: String,
     leaderboard: String,
@@ -40,7 +41,7 @@ pub struct GetByRankResponse {
 }
 
 impl GetByRankRequest {
-    /// Constructs a new SortedSetPutElementsRequest.
+    /// Constructs a new `GetByRankRequest`.
     pub fn new<T: Into<RankRange>>(
         cache_name: impl Into<String>,
         leaderboard: impl Into<String>,
@@ -57,6 +58,7 @@ impl GetByRankRequest {
 }
 
 impl GetByRankResponse {
+    /// Returns the ranked elements in the response.
     pub fn elements(&self) -> &[RankedElement] {
         &self.elements
     }

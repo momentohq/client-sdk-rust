@@ -7,9 +7,10 @@ use momento_protos::leaderboard::score_range::{Max, Min};
 
 use std::ops::Range;
 
+/// Represents a range of scores used to request elements by score.
 pub struct ScoreRange {
-    pub min: Option<f64>,
-    pub max: Option<f64>,
+    min: Option<f64>,
+    max: Option<f64>,
 }
 
 impl From<Range<f64>> for ScoreRange {
@@ -33,12 +34,13 @@ impl From<Range<f64>> for ScoreRange {
 impl From<ScoreRange> for momento_protos::leaderboard::ScoreRange {
     fn from(val: ScoreRange) -> Self {
         let min = val.min.map(Min::MinInclusive);
-        let max = val.min.map(Max::MaxExclusive);
+        let max = val.max.map(Max::MaxExclusive);
 
         momento_protos::leaderboard::ScoreRange { min, max }
     }
 }
 
+/// A request to retrieve ranked elements by score.
 pub struct GetByScoreRequest {
     cache_name: String,
     leaderboard: String,
@@ -53,7 +55,7 @@ pub struct GetByScoreResponse {
 }
 
 impl GetByScoreRequest {
-    /// Constructs a new SortedSetPutElementsRequest.
+    /// Constructs a new `GetByScoreRequest`.
     pub fn new(
         cache_name: impl Into<String>,
         leaderboard: impl Into<String>,
@@ -75,6 +77,7 @@ impl GetByScoreRequest {
 
 /// The response type for a successful `GetByScoreRequest`
 impl GetByScoreResponse {
+    /// Returns the ranked elements in the response.
     pub fn elements(&self) -> &[RankedElement] {
         &self.elements
     }
