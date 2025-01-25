@@ -5,7 +5,7 @@ use crate::auth::auth_client_builder::{AuthClientBuilder, NeedsCredentialProvide
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
 use crate::auth::messages::MomentoRequest;
-use crate::{utils, CredentialProvider, IntoBytes, MomentoResult};
+use crate::{utils, CredentialProvider, MomentoResult};
 
 use crate::auth::expiration::ExpiresIn;
 
@@ -114,7 +114,7 @@ impl AuthClient {
     /// You can also use the [send_request](AuthClient::send_request) method to get an item using a [GenerateDisposableTokenRequest].
     pub async fn generate_disposable_token(
         &self,
-        scope: DisposableTokenScope<impl IntoBytes>,
+        scope: DisposableTokenScope,
         expires_in: ExpiresIn,
     ) -> MomentoResult<GenerateDisposableTokenResponse> {
         utils::is_disposable_token_expiry_valid(expires_in.clone())?;
