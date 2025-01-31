@@ -24,7 +24,6 @@ use crate::leaderboard::messages::data::upsert_elements::{
 use crate::leaderboard::{Configuration, MomentoRequest};
 use crate::MomentoResult;
 
-use momento_protos::control_client::scs_control_client::ScsControlClient;
 use momento_protos::leaderboard::leaderboard_client::LeaderboardClient as SLbClient;
 use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
@@ -40,8 +39,6 @@ pub use crate::leaderboard::messages::data::Order;
 #[derive(Clone, Debug)]
 pub struct LeaderboardClient {
     data_clients: Vec<SLbClient<InterceptedService<Channel, HeaderInterceptor>>>,
-    #[allow(dead_code)]
-    control_client: ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>,
     configuration: Configuration,
 }
 
@@ -141,25 +138,16 @@ impl LeaderboardClient {
     /* helper fns */
     pub(crate) fn new(
         data_clients: Vec<SLbClient<InterceptedService<Channel, HeaderInterceptor>>>,
-        control_client: ScsControlClient<InterceptedService<Channel, HeaderInterceptor>>,
         configuration: Configuration,
     ) -> Self {
         Self {
             data_clients,
-            control_client,
             configuration,
         }
     }
 
     pub(crate) fn deadline_millis(&self) -> Duration {
         self.configuration.deadline_millis()
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn control_client(
-        &self,
-    ) -> ScsControlClient<InterceptedService<Channel, HeaderInterceptor>> {
-        self.control_client.clone()
     }
 
     pub(crate) fn next_data_client(
