@@ -43,7 +43,7 @@ impl Configuration {
     }
 
     /// Returns the duration the client will wait before terminating an RPC with a DeadlineExceeded error.
-    pub fn deadline_millis(&self) -> Duration {
+    pub fn deadline(&self) -> Duration {
         self.transport_strategy.grpc_configuration.deadline
     }
 }

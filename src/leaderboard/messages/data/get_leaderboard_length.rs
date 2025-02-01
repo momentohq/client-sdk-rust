@@ -1,37 +1,38 @@
 use crate::leaderboard::messages::MomentoRequest;
-use crate::{utils, LeaderboardClient, MomentoResult};
-
-use tonic::Request;
+use crate::utils::prep_leaderboard_request_with_timeout;
+use crate::{Leaderboard, MomentoResult};
 
 /// A request to get the number of elements in a leaderboard.
-pub struct GetLeaderboardLengthRequest {
-    cache_name: String,
-    leaderboard: String,
-}
+pub struct GetLeaderboardLengthRequest {}
 
 impl GetLeaderboardLengthRequest {
     /// Constructs a new `GetLeaderboardLengthRequest`.
-    pub fn new(cache_name: impl Into<String>, leaderboard: impl Into<String>) -> Self {
-        Self {
-            cache_name: cache_name.into(),
-            leaderboard: leaderboard.into(),
-        }
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl Default for GetLeaderboardLengthRequest {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
 impl MomentoRequest for GetLeaderboardLengthRequest {
     type Response = GetLeaderboardLengthResponse;
 
-    async fn send(self, leaderboard_client: &LeaderboardClient) -> MomentoResult<Self::Response> {
-        let cache_name = &self.cache_name;
+    async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {
+        let cache_name = leaderboard.cache_name();
+        let request = prep_leaderboard_request_with_timeout(
+            cache_name,
+            leaderboard.deadline(),
+            momento_protos::leaderboard::GetLeaderboardLengthRequest {
+                cache_name: cache_name.clone(),
+                leaderboard: leaderboard.leaderboard_name().clone(),
+            },
+        )?;
 
-        utils::is_cache_name_valid(cache_name)?;
-        let request = Request::new(momento_protos::leaderboard::GetLeaderboardLengthRequest {
-            cache_name: cache_name.to_string(),
-            leaderboard: self.leaderboard.to_string(),
-        });
-
-        let response = leaderboard_client
+        let response = leaderboard
             .next_data_client()
             .get_leaderboard_length(request)
             .await?

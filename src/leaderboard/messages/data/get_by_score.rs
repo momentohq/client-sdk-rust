@@ -1,7 +1,7 @@
 use super::{Order, RankedElement};
 use crate::leaderboard::MomentoRequest;
-use crate::utils::prep_request_with_timeout;
-use crate::{LeaderboardClient, MomentoResult};
+use crate::utils::prep_leaderboard_request_with_timeout;
+use crate::{Leaderboard, MomentoResult};
 
 use momento_protos::leaderboard::score_range::{Max, Min};
 
@@ -42,8 +42,6 @@ impl From<ScoreRange> for momento_protos::leaderboard::ScoreRange {
 
 /// A request to retrieve ranked elements by score.
 pub struct GetByScoreRequest {
-    cache_name: String,
-    leaderboard: String,
     score_range: Option<ScoreRange>,
     offset: u32,
     limit_elements: u32,
@@ -58,16 +56,12 @@ pub struct GetByScoreResponse {
 impl GetByScoreRequest {
     /// Constructs a new `GetByScoreRequest`.
     pub fn new(
-        cache_name: impl Into<String>,
-        leaderboard: impl Into<String>,
         score_range: impl Into<Option<ScoreRange>>,
         offset: u32,
         limit_elements: u32,
         order: Order,
     ) -> Self {
         Self {
-            cache_name: cache_name.into(),
-            leaderboard: leaderboard.into(),
             score_range: score_range.into(),
             offset,
             limit_elements,
@@ -86,14 +80,14 @@ impl GetByScoreResponse {
 impl MomentoRequest for GetByScoreRequest {
     type Response = GetByScoreResponse;
 
-    async fn send(self, leaderboard_client: &LeaderboardClient) -> MomentoResult<Self::Response> {
-        let cache_name = self.cache_name.clone();
-        let request = prep_request_with_timeout(
-            &self.cache_name,
-            leaderboard_client.deadline_millis(),
+    async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {
+        let cache_name = leaderboard.cache_name();
+        let request = prep_leaderboard_request_with_timeout(
+            cache_name,
+            leaderboard.deadline(),
             momento_protos::leaderboard::GetByScoreRequest {
-                cache_name,
-                leaderboard: self.leaderboard,
+                cache_name: cache_name.clone(),
+                leaderboard: leaderboard.leaderboard_name().clone(),
                 score_range: self.score_range.map(|v| v.into()),
                 offset: self.offset,
                 limit_elements: self.limit_elements,
@@ -101,7 +95,7 @@ impl MomentoRequest for GetByScoreRequest {
             },
         )?;
 
-        let response = leaderboard_client
+        let response = leaderboard
             .next_data_client()
             .get_by_score(request)
             .await?

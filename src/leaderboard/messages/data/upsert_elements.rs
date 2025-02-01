@@ -1,6 +1,6 @@
 use crate::leaderboard::MomentoRequest;
-use crate::utils::prep_request_with_timeout;
-use crate::{LeaderboardClient, MomentoResult};
+use crate::utils::prep_leaderboard_request_with_timeout;
+use crate::{Leaderboard, MomentoResult};
 
 use momento_protos::leaderboard::Element as ProtoElement;
 
@@ -36,34 +36,28 @@ pub struct Element {
 
 /// A request to upsert (insert/update) elements into a leaderboard.
 pub struct UpsertElementsRequest<E: IntoElements> {
-    cache_name: String,
-    leaderboard: String,
     elements: E,
 }
 
 impl<E: IntoElements> UpsertElementsRequest<E> {
     /// Constructs a new `UpsertElementsRequest`.
-    pub fn new(cache_name: impl Into<String>, leaderboard: impl Into<String>, elements: E) -> Self {
-        Self {
-            cache_name: cache_name.into(),
-            leaderboard: leaderboard.into(),
-            elements,
-        }
+    pub fn new(elements: E) -> Self {
+        Self { elements }
     }
 }
 
 impl<E: IntoElements> MomentoRequest for UpsertElementsRequest<E> {
     type Response = UpsertElementsResponse;
 
-    async fn send(self, leaderboard_client: &LeaderboardClient) -> MomentoResult<Self::Response> {
+    async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {
         let elements = self.elements.into_elements();
-        let cache_name = self.cache_name.clone();
-        let request = prep_request_with_timeout(
-            &self.cache_name,
-            leaderboard_client.deadline_millis(),
+        let cache_name = leaderboard.cache_name();
+        let request = prep_leaderboard_request_with_timeout(
+            cache_name,
+            leaderboard.deadline(),
             momento_protos::leaderboard::UpsertElementsRequest {
-                cache_name,
-                leaderboard: self.leaderboard,
+                cache_name: cache_name.clone(),
+                leaderboard: leaderboard.leaderboard_name().clone(),
                 elements: elements
                     .into_iter()
                     .map(|v| ProtoElement {
@@ -74,7 +68,7 @@ impl<E: IntoElements> MomentoRequest for UpsertElementsRequest<E> {
             },
         )?;
 
-        let _ = leaderboard_client
+        let _ = leaderboard
             .next_data_client()
             .upsert_elements(request)
             .await?;

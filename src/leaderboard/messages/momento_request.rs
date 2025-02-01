@@ -1,4 +1,4 @@
-use crate::{LeaderboardClient, MomentoResult};
+use crate::{Leaderboard, MomentoResult};
 
 /// A trait that allows Momento request types to define their interaction with the gRPC client.
 pub trait MomentoRequest {
@@ -12,6 +12,6 @@ pub trait MomentoRequest {
     #[doc(hidden)]
     fn send(
         self,
-        leaderboard_client: &LeaderboardClient,
+        leaderboard: &Leaderboard,
     ) -> impl std::future::Future<Output = MomentoResult<Self::Response>> + Send;
 }

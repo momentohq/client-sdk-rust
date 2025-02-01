@@ -1,7 +1,7 @@
 use super::{Order, RankedElement};
 use crate::leaderboard::MomentoRequest;
-use crate::utils::prep_request_with_timeout;
-use crate::{LeaderboardClient, MomentoResult};
+use crate::utils::prep_leaderboard_request_with_timeout;
+use crate::{Leaderboard, MomentoResult};
 
 use std::ops::Range;
 
@@ -31,8 +31,6 @@ impl From<RankRange> for momento_protos::leaderboard::RankRange {
 
 /// A request to get ranked elements by rank.
 pub struct GetByRankRequest {
-    cache_name: String,
-    leaderboard: String,
     rank_range: Option<RankRange>,
     order: Order,
 }
@@ -44,15 +42,8 @@ pub struct GetByRankResponse {
 
 impl GetByRankRequest {
     /// Constructs a new `GetByRankRequest`.
-    pub fn new<T: Into<RankRange>>(
-        cache_name: impl Into<String>,
-        leaderboard: impl Into<String>,
-        rank_range: Option<T>,
-        order: Order,
-    ) -> Self {
+    pub fn new<T: Into<RankRange>>(rank_range: Option<T>, order: Order) -> Self {
         Self {
-            cache_name: cache_name.into(),
-            leaderboard: leaderboard.into(),
             rank_range: rank_range.map(|v| v.into()),
             order,
         }
@@ -69,20 +60,20 @@ impl GetByRankResponse {
 impl MomentoRequest for GetByRankRequest {
     type Response = GetByRankResponse;
 
-    async fn send(self, leaderboard_client: &LeaderboardClient) -> MomentoResult<Self::Response> {
-        let cache_name = self.cache_name.clone();
-        let request = prep_request_with_timeout(
-            &self.cache_name,
-            leaderboard_client.deadline_millis(),
+    async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {
+        let cache_name = leaderboard.cache_name();
+        let request = prep_leaderboard_request_with_timeout(
+            cache_name,
+            leaderboard.deadline(),
             momento_protos::leaderboard::GetByRankRequest {
-                cache_name,
-                leaderboard: self.leaderboard,
+                cache_name: cache_name.clone(),
+                leaderboard: leaderboard.leaderboard_name().clone(),
                 rank_range: self.rank_range.map(|v| v.into()),
                 order: self.order as i32,
             },
         )?;
 
-        let response = leaderboard_client
+        let response = leaderboard
             .next_data_client()
             .get_by_rank(request)
             .await?

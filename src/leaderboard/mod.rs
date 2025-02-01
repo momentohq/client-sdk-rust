@@ -10,4 +10,4 @@ mod leaderboard_client_builder;
 pub use config::configuration::Configuration;
 pub use config::configurations;
 
-pub use leaderboard_client::LeaderboardClient;
+pub use leaderboard_client::{Leaderboard, LeaderboardClient};

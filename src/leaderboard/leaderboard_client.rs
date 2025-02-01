@@ -48,94 +48,6 @@ impl LeaderboardClient {
         LeaderboardClientBuilder(NeedsConfiguration {})
     }
 
-    /// Delete a leaderboard.
-    pub async fn delete_leaderboard(
-        &self,
-        cache_name: impl Into<String>,
-        leaderboard: impl Into<String>,
-    ) -> MomentoResult<DeleteLeaderboardResponse> {
-        let request = DeleteLeaderboardRequest::new(cache_name, leaderboard);
-        request.send(self).await
-    }
-
-    /// Get elements from a leaderboard by rank.
-    pub async fn get_by_rank<T: Into<RankRange>>(
-        &self,
-        cache_name: impl Into<String>,
-        leaderboard: impl Into<String>,
-        rank_range: Option<T>,
-        order: Order,
-    ) -> MomentoResult<GetByRankResponse> {
-        let request = GetByRankRequest::new(cache_name, leaderboard, rank_range, order);
-        request.send(self).await
-    }
-
-    /// Get elements from a leaderboard by score.
-    pub async fn get_by_score(
-        &self,
-        cache_name: impl Into<String>,
-        leaderboard: impl Into<String>,
-        score_range: impl Into<Option<ScoreRange>>,
-        offset: u32,
-        limit_elements: u32,
-        order: Order,
-    ) -> MomentoResult<GetByScoreResponse> {
-        let request = GetByScoreRequest::new(
-            cache_name,
-            leaderboard,
-            score_range,
-            offset,
-            limit_elements,
-            order,
-        );
-        request.send(self).await
-    }
-
-    /// Get the length of a leaderboard.
-    pub async fn get_leaderboard_length(
-        &self,
-        cache_name: impl Into<String>,
-        leaderboard: impl Into<String>,
-    ) -> MomentoResult<GetLeaderboardLengthResponse> {
-        let request = GetLeaderboardLengthRequest::new(cache_name, leaderboard);
-        request.send(self).await
-    }
-
-    /// Get elements from a leaderboard using their element ids.
-    pub async fn get_rank<T: Into<Vec<u32>>>(
-        &self,
-        cache_name: impl Into<String>,
-        leaderboard: impl Into<String>,
-        ids: T,
-        order: Order,
-    ) -> MomentoResult<GetRankResponse> {
-        let request = GetRankRequest::new(cache_name, leaderboard, ids, order);
-        request.send(self).await
-    }
-
-    /// Remove elements from a leaderboard using their element ids.
-    pub async fn remove_elements<T: Into<Vec<u32>>>(
-        &self,
-        cache_name: impl Into<String>,
-        leaderboard: impl Into<String>,
-        ids: T,
-    ) -> MomentoResult<RemoveElementsResponse> {
-        let request = RemoveElementsRequest::new(cache_name, leaderboard, ids);
-        request.send(self).await
-    }
-
-    /// Upsert (update/insert) elements into a leaderboard.
-    pub async fn upsert_elements<E: IntoElements>(
-        &self,
-        cache_name: impl Into<String>,
-        leaderboard: impl Into<String>,
-        elements: E,
-    ) -> MomentoResult<UpsertElementsResponse> {
-        let request = UpsertElementsRequest::new(cache_name, leaderboard, elements);
-        request.send(self).await
-    }
-
-    /* helper fns */
     pub(crate) fn new(
         data_clients: Vec<SLbClient<InterceptedService<Channel, HeaderInterceptor>>>,
         configuration: Configuration,
@@ -146,8 +58,105 @@ impl LeaderboardClient {
         }
     }
 
-    pub(crate) fn deadline_millis(&self) -> Duration {
-        self.configuration.deadline_millis()
+    /// Returns a `Leaderboard` client to work with a specific leaderboard.
+    pub fn leaderboard(
+        &self,
+        cache_name: impl Into<String>,
+        leaderboard_name: impl Into<String>,
+    ) -> Leaderboard {
+        Leaderboard::new(
+            self.data_clients.clone(),
+            self.configuration.deadline(),
+            cache_name,
+            leaderboard_name,
+        )
+    }
+}
+
+/// A client to work with a specific leaderboard.
+pub struct Leaderboard {
+    data_clients: Vec<SLbClient<InterceptedService<Channel, HeaderInterceptor>>>,
+    deadline: Duration,
+    cache_name: String,
+    leaderboard_name: String,
+}
+
+impl Leaderboard {
+    /// Delete a leaderboard.
+    pub async fn delete_leaderboard(&self) -> MomentoResult<DeleteLeaderboardResponse> {
+        let request = DeleteLeaderboardRequest::new();
+        request.send(self).await
+    }
+
+    /// Get elements from a leaderboard by rank.
+    pub async fn get_by_rank<T: Into<RankRange>>(
+        &self,
+        rank_range: Option<T>,
+        order: Order,
+    ) -> MomentoResult<GetByRankResponse> {
+        let request = GetByRankRequest::new(rank_range, order);
+        request.send(self).await
+    }
+
+    /// Get elements from a leaderboard by score.
+    pub async fn get_by_score(
+        &self,
+        score_range: impl Into<Option<ScoreRange>>,
+        offset: u32,
+        limit_elements: u32,
+        order: Order,
+    ) -> MomentoResult<GetByScoreResponse> {
+        let request = GetByScoreRequest::new(score_range, offset, limit_elements, order);
+        request.send(self).await
+    }
+
+    /// Get the length of a leaderboard.
+    pub async fn get_leaderboard_length(&self) -> MomentoResult<GetLeaderboardLengthResponse> {
+        let request = GetLeaderboardLengthRequest::new();
+        request.send(self).await
+    }
+
+    /// Get elements from a leaderboard using their element ids.
+    pub async fn get_rank<T: Into<Vec<u32>>>(
+        &self,
+        ids: T,
+        order: Order,
+    ) -> MomentoResult<GetRankResponse> {
+        let request = GetRankRequest::new(ids, order);
+        request.send(self).await
+    }
+
+    /// Remove elements from a leaderboard using their element ids.
+    pub async fn remove_elements<T: Into<Vec<u32>>>(
+        &self,
+        ids: T,
+    ) -> MomentoResult<RemoveElementsResponse> {
+        let request = RemoveElementsRequest::new(ids);
+        request.send(self).await
+    }
+
+    /// Upsert (update/insert) elements into a leaderboard.
+    pub async fn upsert_elements<E: IntoElements>(
+        &self,
+        elements: E,
+    ) -> MomentoResult<UpsertElementsResponse> {
+        let request = UpsertElementsRequest::new(elements);
+        request.send(self).await
+    }
+
+    /* helper fns */
+    pub(crate) fn new(
+        data_clients: Vec<SLbClient<InterceptedService<Channel, HeaderInterceptor>>>,
+        deadline: Duration,
+        cache_name: impl Into<String>,
+        leaderboard_name: impl Into<String>,
+    ) -> Self {
+        Self {
+            data_clients,
+            deadline,
+            cache_name: cache_name.into(),
+            leaderboard_name: leaderboard_name.into(),
+        }
     }
 
     pub(crate) fn next_data_client(
@@ -156,5 +165,17 @@ impl LeaderboardClient {
         let next_index =
             NEXT_DATA_CLIENT_INDEX.fetch_add(1, Ordering::Relaxed) % self.data_clients.len();
         self.data_clients[next_index].clone()
+    }
+
+    pub(crate) fn deadline(&self) -> Duration {
+        self.deadline
+    }
+
+    pub(crate) fn cache_name(&self) -> &String {
+        &self.cache_name
+    }
+
+    pub(crate) fn leaderboard_name(&self) -> &String {
+        &self.leaderboard_name
     }
 }

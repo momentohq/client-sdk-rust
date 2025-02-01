@@ -1,27 +1,18 @@
 use super::{IntoIds, Order, RankedElement};
 use crate::leaderboard::MomentoRequest;
-use crate::utils::prep_request_with_timeout;
-use crate::{LeaderboardClient, MomentoResult};
+use crate::utils::prep_leaderboard_request_with_timeout;
+use crate::{Leaderboard, MomentoResult};
 
 /// A request to get ranked elements by providing a list of element IDs.
 pub struct GetRankRequest {
-    cache_name: String,
-    leaderboard: String,
     ids: Vec<u32>,
     order: Order,
 }
 
 impl GetRankRequest {
     /// Constructs a new `GetRankRequest`.
-    pub fn new(
-        cache_name: impl Into<String>,
-        leaderboard: impl Into<String>,
-        ids: impl Into<Vec<u32>>,
-        order: Order,
-    ) -> Self {
+    pub fn new(ids: impl Into<Vec<u32>>, order: Order) -> Self {
         Self {
-            cache_name: cache_name.into(),
-            leaderboard: leaderboard.into(),
             ids: ids.into(),
             order,
         }
@@ -31,21 +22,21 @@ impl GetRankRequest {
 impl MomentoRequest for GetRankRequest {
     type Response = GetRankResponse;
 
-    async fn send(self, leaderboard_client: &LeaderboardClient) -> MomentoResult<Self::Response> {
+    async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {
         let ids = self.ids.into_ids();
-        let cache_name = self.cache_name.clone();
-        let request = prep_request_with_timeout(
-            &self.cache_name,
-            leaderboard_client.deadline_millis(),
+        let cache_name = leaderboard.cache_name();
+        let request = prep_leaderboard_request_with_timeout(
+            cache_name,
+            leaderboard.deadline(),
             momento_protos::leaderboard::GetRankRequest {
-                cache_name,
-                leaderboard: self.leaderboard,
+                cache_name: cache_name.clone(),
+                leaderboard: leaderboard.leaderboard_name().clone(),
                 ids,
                 order: self.order as i32,
             },
         )?;
 
-        let response = leaderboard_client
+        let response = leaderboard
             .next_data_client()
             .get_rank(request)
             .await?
