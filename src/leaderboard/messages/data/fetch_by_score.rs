@@ -1,4 +1,4 @@
-use super::{Order, RankedElement};
+use super::{fetch::FetchResponse, Order, RankedElement};
 use crate::leaderboard::MomentoRequest;
 use crate::utils::prep_leaderboard_request_with_timeout;
 use crate::{Leaderboard, MomentoResult};
@@ -41,20 +41,15 @@ impl From<ScoreRange> for momento_protos::leaderboard::ScoreRange {
 }
 
 /// A request to retrieve ranked elements by score.
-pub struct GetByScoreRequest {
+pub struct FetchByScoreRequest {
     score_range: Option<ScoreRange>,
     offset: u32,
     limit_elements: u32,
     order: Order,
 }
 
-/// The response type for a successful `GetByScoreResponse`.
-pub struct GetByScoreResponse {
-    elements: Vec<RankedElement>,
-}
-
-impl GetByScoreRequest {
-    /// Constructs a new `GetByScoreRequest`.
+impl FetchByScoreRequest {
+    /// Constructs a new `FetchByScoreRequest`.
     pub fn new(
         score_range: impl Into<Option<ScoreRange>>,
         offset: u32,
@@ -70,15 +65,8 @@ impl GetByScoreRequest {
     }
 }
 
-impl GetByScoreResponse {
-    /// Returns the ranked elements in the response.
-    pub fn elements(&self) -> &[RankedElement] {
-        &self.elements
-    }
-}
-
-impl MomentoRequest for GetByScoreRequest {
-    type Response = GetByScoreResponse;
+impl MomentoRequest for FetchByScoreRequest {
+    type Response = FetchResponse;
 
     async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {
         let cache_name = leaderboard.cache_name();
@@ -101,8 +89,8 @@ impl MomentoRequest for GetByScoreRequest {
             .await?
             .into_inner();
 
-        Ok(Self::Response {
-            elements: response
+        Ok(Self::Response::new(
+            response
                 .elements
                 .iter()
                 .map(|v| RankedElement {
@@ -111,6 +99,6 @@ impl MomentoRequest for GetByScoreRequest {
                     score: v.score,
                 })
                 .collect(),
-        })
+        ))
     }
 }

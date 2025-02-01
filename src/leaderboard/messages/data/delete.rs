@@ -3,23 +3,23 @@ use crate::utils::prep_leaderboard_request_with_timeout;
 use crate::{Leaderboard, MomentoResult};
 
 /// Request to delete a leaderboard
-pub struct DeleteLeaderboardRequest {}
+pub struct DeleteRequest {}
 
-impl DeleteLeaderboardRequest {
-    /// Constructs a new `DeleteLeaderboardRequest`.
+impl DeleteRequest {
+    /// Constructs a new `DeleteRequest`.
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl Default for DeleteLeaderboardRequest {
+impl Default for DeleteRequest {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MomentoRequest for DeleteLeaderboardRequest {
-    type Response = DeleteLeaderboardResponse;
+impl MomentoRequest for DeleteRequest {
+    type Response = DeleteResponse;
 
     async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {
         let cache_name = leaderboard.cache_name();
@@ -40,6 +40,6 @@ impl MomentoRequest for DeleteLeaderboardRequest {
     }
 }
 
-/// The response type for a successful `DeleteLeaderboardRequest`
+/// The response type for a successful `DeleteRequest`
 #[derive(Debug, PartialEq, Eq)]
-pub struct DeleteLeaderboardResponse {}
+pub struct DeleteResponse {}

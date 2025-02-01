@@ -3,23 +3,23 @@ use crate::utils::prep_leaderboard_request_with_timeout;
 use crate::{Leaderboard, MomentoResult};
 
 /// A request to get the number of elements in a leaderboard.
-pub struct GetLeaderboardLengthRequest {}
+pub struct LengthRequest {}
 
-impl GetLeaderboardLengthRequest {
-    /// Constructs a new `GetLeaderboardLengthRequest`.
+impl LengthRequest {
+    /// Constructs a new `LengthRequest`.
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl Default for GetLeaderboardLengthRequest {
+impl Default for LengthRequest {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MomentoRequest for GetLeaderboardLengthRequest {
-    type Response = GetLeaderboardLengthResponse;
+impl MomentoRequest for LengthRequest {
+    type Response = LengthResponse;
 
     async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {
         let cache_name = leaderboard.cache_name();
@@ -44,13 +44,13 @@ impl MomentoRequest for GetLeaderboardLengthRequest {
     }
 }
 
-/// The response type for a successful `GetLeaderboardLengthRequest`
+/// The response type for a successful `LengthRequest`
 #[derive(Debug, PartialEq, Eq)]
-pub struct GetLeaderboardLengthResponse {
+pub struct LengthResponse {
     count: u32,
 }
 
-impl GetLeaderboardLengthResponse {
+impl LengthResponse {
     /// Returns the number of elements that were in the leaderboard.
     pub fn count(&self) -> u32 {
         self.count

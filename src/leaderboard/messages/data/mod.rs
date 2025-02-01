@@ -1,23 +1,26 @@
 /// Contains the request and response types for deleting a leaderboard.
-pub mod delete_leaderboard;
+pub mod delete;
+/// Contains the shared response type for fetching elements from a
+/// leaderboard.
+pub mod fetch;
 /// Contains the request and response types for requesting elements from a
 /// leaderboard by rank.
-pub mod get_by_rank;
+pub mod fetch_by_rank;
 /// Contains the request and response types for requesting elements from a
 /// leaderboard by score.
-pub mod get_by_score;
-/// Contains the request and response types for getting the length of a
-/// leaderboard.
-pub mod get_leaderboard_length;
+pub mod fetch_by_score;
 /// Contains the request and response types for requesting elements from a
 /// leaderboard using their element ids.
 pub mod get_rank;
+/// Contains the request and response types for getting the length of a
+/// leaderboard.
+pub mod length;
 /// Contains the request and response types for removing elements from a
 /// leaderboard.
 pub mod remove_elements;
 /// Contains the request and response types for upserting (inserting/updating)
 /// elements into a leaderboard.
-pub mod upsert_elements;
+pub mod upsert;
 
 // Common traits and enums
 

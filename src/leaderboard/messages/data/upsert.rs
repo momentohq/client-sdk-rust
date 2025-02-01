@@ -35,19 +35,19 @@ pub struct Element {
 }
 
 /// A request to upsert (insert/update) elements into a leaderboard.
-pub struct UpsertElementsRequest<E: IntoElements> {
+pub struct UpsertRequest<E: IntoElements> {
     elements: E,
 }
 
-impl<E: IntoElements> UpsertElementsRequest<E> {
-    /// Constructs a new `UpsertElementsRequest`.
+impl<E: IntoElements> UpsertRequest<E> {
+    /// Constructs a new `UpsertRequest`.
     pub fn new(elements: E) -> Self {
         Self { elements }
     }
 }
 
-impl<E: IntoElements> MomentoRequest for UpsertElementsRequest<E> {
-    type Response = UpsertElementsResponse;
+impl<E: IntoElements> MomentoRequest for UpsertRequest<E> {
+    type Response = UpsertResponse;
 
     async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {
         let elements = self.elements.into_elements();
@@ -76,6 +76,6 @@ impl<E: IntoElements> MomentoRequest for UpsertElementsRequest<E> {
     }
 }
 
-/// The response type for a successful `UpsertElementsRequest`
+/// The response type for a successful `UpsertRequest`
 #[derive(Debug, PartialEq, Eq)]
-pub struct UpsertElementsResponse {}
+pub struct UpsertResponse {}

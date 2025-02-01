@@ -2,25 +2,16 @@ use crate::grpc::header_interceptor::HeaderInterceptor;
 use crate::leaderboard::leaderboard_client_builder::{
     LeaderboardClientBuilder, NeedsConfiguration,
 };
-use crate::leaderboard::messages::data::delete_leaderboard::{
-    DeleteLeaderboardRequest, DeleteLeaderboardResponse,
-};
-use crate::leaderboard::messages::data::get_by_rank::{
-    GetByRankRequest, GetByRankResponse, RankRange,
-};
-use crate::leaderboard::messages::data::get_by_score::{
-    GetByScoreRequest, GetByScoreResponse, ScoreRange,
-};
-use crate::leaderboard::messages::data::get_leaderboard_length::{
-    GetLeaderboardLengthRequest, GetLeaderboardLengthResponse,
-};
+use crate::leaderboard::messages::data::delete::{DeleteRequest, DeleteResponse};
+use crate::leaderboard::messages::data::fetch::FetchResponse;
+use crate::leaderboard::messages::data::fetch_by_rank::{FetchByRankRequest, RankRange};
+use crate::leaderboard::messages::data::fetch_by_score::{FetchByScoreRequest, ScoreRange};
 use crate::leaderboard::messages::data::get_rank::{GetRankRequest, GetRankResponse};
+use crate::leaderboard::messages::data::length::{LengthRequest, LengthResponse};
 use crate::leaderboard::messages::data::remove_elements::{
     RemoveElementsRequest, RemoveElementsResponse,
 };
-use crate::leaderboard::messages::data::upsert_elements::{
-    IntoElements, UpsertElementsRequest, UpsertElementsResponse,
-};
+use crate::leaderboard::messages::data::upsert::{IntoElements, UpsertRequest, UpsertResponse};
 use crate::leaderboard::{Configuration, MomentoRequest};
 use crate::MomentoResult;
 
@@ -83,36 +74,36 @@ pub struct Leaderboard {
 
 impl Leaderboard {
     /// Delete a leaderboard.
-    pub async fn delete_leaderboard(&self) -> MomentoResult<DeleteLeaderboardResponse> {
-        let request = DeleteLeaderboardRequest::new();
+    pub async fn delete(&self) -> MomentoResult<DeleteResponse> {
+        let request = DeleteRequest::new();
         request.send(self).await
     }
 
-    /// Get elements from a leaderboard by rank.
-    pub async fn get_by_rank<T: Into<RankRange>>(
+    /// Fetch elements from a leaderboard by rank.
+    pub async fn fetch_by_rank<T: Into<RankRange>>(
         &self,
         rank_range: Option<T>,
         order: Order,
-    ) -> MomentoResult<GetByRankResponse> {
-        let request = GetByRankRequest::new(rank_range, order);
+    ) -> MomentoResult<FetchResponse> {
+        let request = FetchByRankRequest::new(rank_range, order);
         request.send(self).await
     }
 
     /// Get elements from a leaderboard by score.
-    pub async fn get_by_score(
+    pub async fn fetch_by_score(
         &self,
         score_range: impl Into<Option<ScoreRange>>,
         offset: u32,
         limit_elements: u32,
         order: Order,
-    ) -> MomentoResult<GetByScoreResponse> {
-        let request = GetByScoreRequest::new(score_range, offset, limit_elements, order);
+    ) -> MomentoResult<FetchResponse> {
+        let request = FetchByScoreRequest::new(score_range, offset, limit_elements, order);
         request.send(self).await
     }
 
     /// Get the length of a leaderboard.
-    pub async fn get_leaderboard_length(&self) -> MomentoResult<GetLeaderboardLengthResponse> {
-        let request = GetLeaderboardLengthRequest::new();
+    pub async fn length(&self) -> MomentoResult<LengthResponse> {
+        let request = LengthRequest::new();
         request.send(self).await
     }
 
@@ -136,11 +127,8 @@ impl Leaderboard {
     }
 
     /// Upsert (update/insert) elements into a leaderboard.
-    pub async fn upsert_elements<E: IntoElements>(
-        &self,
-        elements: E,
-    ) -> MomentoResult<UpsertElementsResponse> {
-        let request = UpsertElementsRequest::new(elements);
+    pub async fn upsert<E: IntoElements>(&self, elements: E) -> MomentoResult<UpsertResponse> {
+        let request = UpsertRequest::new(elements);
         request.send(self).await
     }
 
