@@ -19,6 +19,14 @@ impl ScoreRange {
     pub fn new(min: Option<f64>, max: Option<f64>) -> Self {
         Self { min, max }
     }
+
+    /// Constructs a new `ScoreRange` with no bounds.
+    pub fn unbounded() -> Self {
+        Self {
+            min: None,
+            max: None,
+        }
+    }
 }
 
 impl From<Option<ScoreRange>> for ScoreRange {

@@ -1,5 +1,5 @@
-use momento::MomentoResult;
-use momento::{leaderboard::Order, Leaderboard};
+use momento::leaderboard::{Order, ScoreRange};
+use momento::{Leaderboard, MomentoResult};
 use momento_test_util::{unique_leaderboard_name, TestLeaderboard, CACHE_TEST_STATE};
 
 fn unique_leaderboard() -> Leaderboard {
@@ -18,9 +18,7 @@ mod upsert {
         let test_data = TestLeaderboard::new();
         leaderboard.upsert(test_data.elements()).await?;
 
-        let response = leaderboard
-            .fetch_by_score(-f64::INFINITY..f64::INFINITY)
-            .await?;
+        let response = leaderboard.fetch_by_score(ScoreRange::unbounded()).await?;
         assert_eq!(
             test_data.ranked_elements(),
             response.elements(),
@@ -121,9 +119,7 @@ mod remove_elements {
         leaderboard
             .remove_elements(vec![test_leaderboard.elements()[0].id])
             .await?;
-        let leaderboard_response = leaderboard
-            .fetch_by_score(-f64::INFINITY..f64::INFINITY)
-            .await?;
+        let leaderboard_response = leaderboard.fetch_by_score(ScoreRange::unbounded()).await?;
 
         let mut second_element = test_leaderboard.ranked_elements()[1].clone();
         second_element.rank = 0;
@@ -256,9 +252,7 @@ mod fetch_by_score {
         let test_leaderboard = TestLeaderboard::new();
         leaderboard.upsert(test_leaderboard.elements()).await?;
 
-        let response = leaderboard
-            .fetch_by_score(-f64::INFINITY..f64::INFINITY)
-            .await?;
+        let response = leaderboard.fetch_by_score(ScoreRange::unbounded()).await?;
 
         assert_eq!(
             test_leaderboard.ranked_elements(),
@@ -340,7 +334,7 @@ mod fetch_by_score {
 
         let response = leaderboard
             .send_request(
-                FetchByScoreRequest::new(-f64::INFINITY..f64::INFINITY)
+                FetchByScoreRequest::new(ScoreRange::unbounded())
                     .offset(1)
                     .count(1),
             )
