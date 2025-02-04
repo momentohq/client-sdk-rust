@@ -25,6 +25,12 @@ impl IntoElements for Vec<(u32, f64)> {
     }
 }
 
+impl IntoElements for Vec<Element> {
+    fn into_elements(self) -> Vec<Element> {
+        self
+    }
+}
+
 /// Represents an element to be inserted into a leaderboard.
 #[derive(Debug, PartialEq, Clone)]
 pub struct Element {

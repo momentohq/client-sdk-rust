@@ -2,6 +2,8 @@ use crate::leaderboard::MomentoRequest;
 use crate::utils::prep_leaderboard_request_with_timeout;
 use crate::{Leaderboard, MomentoResult};
 
+use super::IntoIds;
+
 /// A request to remove a set of elements from a leaderboard using their element
 /// ids.
 pub struct RemoveElementsRequest {
@@ -10,8 +12,10 @@ pub struct RemoveElementsRequest {
 
 impl RemoveElementsRequest {
     /// Constructs a new `RemoveElementsRequest`.
-    pub fn new(ids: impl Into<Vec<u32>>) -> Self {
-        Self { ids: ids.into() }
+    pub fn new(ids: impl IntoIds) -> Self {
+        Self {
+            ids: ids.into_ids(),
+        }
     }
 }
 

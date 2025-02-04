@@ -36,12 +36,26 @@ pub struct RankedElement {
 }
 
 /// Specifies an ordering when requesting elements by rank or score.
-#[repr(i32)]
 pub enum Order {
     /// Elements will be ordered in ascending order.
-    Ascending = 0,
+    Ascending,
     /// Elements will be ordered in descending order.
-    Descending = 1,
+    Descending,
+}
+
+impl From<Order> for momento_protos::leaderboard::Order {
+    fn from(order: Order) -> Self {
+        match order {
+            Order::Ascending => momento_protos::leaderboard::Order::Ascending,
+            Order::Descending => momento_protos::leaderboard::Order::Descending,
+        }
+    }
+}
+
+impl Order {
+    pub fn into_proto(self) -> momento_protos::leaderboard::Order {
+        self.into()
+    }
 }
 
 /// This trait defines an interface for converting a type into a vector of

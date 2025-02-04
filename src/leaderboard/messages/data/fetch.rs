@@ -2,6 +2,7 @@ use super::RankedElement;
 
 /// The response type for a successful `FetchByRankRequest` or
 /// `FetchByScoreRequest`.
+#[derive(Debug, PartialEq)]
 pub struct FetchResponse {
     elements: Vec<RankedElement>,
 }

@@ -31,17 +31,23 @@ impl From<RankRange> for momento_protos::leaderboard::RankRange {
 
 /// A request to get ranked elements by rank.
 pub struct FetchByRankRequest {
-    rank_range: Option<RankRange>,
+    rank_range: RankRange,
     order: Order,
 }
 
 impl FetchByRankRequest {
     /// Constructs a new `FetchByRankRequest`.
-    pub fn new<T: Into<RankRange>>(rank_range: Option<T>, order: Order) -> Self {
+    pub fn new<T: Into<RankRange>>(rank_range: T) -> Self {
         Self {
-            rank_range: rank_range.map(|v| v.into()),
-            order,
+            rank_range: rank_range.into(),
+            order: Order::Ascending,
         }
+    }
+
+    /// Sets the order of the elements to be fetched.
+    pub fn order(mut self, order: Order) -> Self {
+        self.order = order;
+        self
     }
 }
 
@@ -56,8 +62,8 @@ impl MomentoRequest for FetchByRankRequest {
             momento_protos::leaderboard::GetByRankRequest {
                 cache_name: cache_name.clone(),
                 leaderboard: leaderboard.leaderboard_name().clone(),
-                rank_range: self.rank_range.map(|v| v.into()),
-                order: self.order as i32,
+                rank_range: Some(self.rank_range.into()),
+                order: self.order.into_proto() as i32,
             },
         )?;
 

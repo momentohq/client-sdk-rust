@@ -39,7 +39,7 @@ impl MomentoRequest for LengthRequest {
             .into_inner();
 
         Ok(Self::Response {
-            count: response.count,
+            length: response.count,
         })
     }
 }
@@ -47,12 +47,12 @@ impl MomentoRequest for LengthRequest {
 /// The response type for a successful `LengthRequest`
 #[derive(Debug, PartialEq, Eq)]
 pub struct LengthResponse {
-    count: u32,
+    length: u32,
 }
 
 impl LengthResponse {
     /// Returns the number of elements that were in the leaderboard.
-    pub fn count(&self) -> u32 {
-        self.count
+    pub fn length(&self) -> u32 {
+        self.length
     }
 }

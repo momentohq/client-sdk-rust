@@ -22,7 +22,7 @@ use std::time::Duration;
 
 static NEXT_DATA_CLIENT_INDEX: AtomicUsize = AtomicUsize::new(0);
 
-pub use crate::leaderboard::messages::data::Order;
+use super::messages::data::IntoIds;
 
 /// Represents a remote leaderboard resource.
 pub struct Leaderboard {
@@ -40,24 +40,20 @@ impl Leaderboard {
     }
 
     /// Fetch elements from a leaderboard by rank.
-    pub async fn fetch_by_rank<T: Into<RankRange>>(
+    pub async fn fetch_by_rank(
         &self,
-        rank_range: Option<T>,
-        order: Order,
+        rank_range: impl Into<RankRange>,
     ) -> MomentoResult<FetchResponse> {
-        let request = FetchByRankRequest::new(rank_range, order);
+        let request = FetchByRankRequest::new(rank_range);
         request.send(self).await
     }
 
     /// Get elements from a leaderboard by score.
     pub async fn fetch_by_score(
         &self,
-        score_range: impl Into<Option<ScoreRange>>,
-        offset: u32,
-        limit_elements: u32,
-        order: Order,
+        score_range: impl Into<ScoreRange>,
     ) -> MomentoResult<FetchResponse> {
-        let request = FetchByScoreRequest::new(score_range, offset, limit_elements, order);
+        let request = FetchByScoreRequest::new(score_range);
         request.send(self).await
     }
 
@@ -67,18 +63,14 @@ impl Leaderboard {
         request.send(self).await
     }
 
-    /// Get elements from a leaderboard using their element ids.
-    pub async fn get_rank<T: Into<Vec<u32>>>(
-        &self,
-        ids: T,
-        order: Order,
-    ) -> MomentoResult<GetRankResponse> {
-        let request = GetRankRequest::new(ids, order);
+    /// Get rank of elements from a leaderboard using their element ids.
+    pub async fn get_rank<T: IntoIds>(&self, ids: T) -> MomentoResult<GetRankResponse> {
+        let request = GetRankRequest::new(ids);
         request.send(self).await
     }
 
     /// Remove elements from a leaderboard using their element ids.
-    pub async fn remove_elements<T: Into<Vec<u32>>>(
+    pub async fn remove_elements<T: IntoIds>(
         &self,
         ids: T,
     ) -> MomentoResult<RemoveElementsResponse> {
@@ -125,5 +117,12 @@ impl Leaderboard {
 
     pub(crate) fn leaderboard_name(&self) -> &String {
         &self.leaderboard_name
+    }
+
+    /// Lower-level API to send any type of MomentoRequest to the server. This is used for cases when
+    /// you want to set optional fields on a request that are not supported by the short-hand API for
+    /// that request type.
+    pub async fn send_request<R: MomentoRequest>(&self, request: R) -> MomentoResult<R::Response> {
+        request.send(self).await
     }
 }
