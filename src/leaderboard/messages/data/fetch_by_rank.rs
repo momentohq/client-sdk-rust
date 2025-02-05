@@ -20,6 +20,24 @@ impl From<Range<u32>> for RankRange {
     }
 }
 
+impl From<std::ops::RangeInclusive<u32>> for RankRange {
+    /// Converts a range inclusive into a range exclusive.
+    ///
+    /// Clamps the end value to u32::MAX if it is u32::MAX.
+    fn from(val: std::ops::RangeInclusive<u32>) -> Self {
+        let start_inclusive = *val.start();
+        let end_exclusive = if *val.end() < u32::MAX {
+            *val.end() + 1
+        } else {
+            *val.end()
+        };
+        RankRange {
+            start_inclusive,
+            end_exclusive,
+        }
+    }
+}
+
 impl From<RankRange> for momento_protos::leaderboard::RankRange {
     fn from(val: RankRange) -> Self {
         momento_protos::leaderboard::RankRange {
