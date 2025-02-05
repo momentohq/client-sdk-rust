@@ -13,7 +13,7 @@ use crate::leaderboard::messages::data::upsert::{IntoElements, UpsertRequest, Up
 use crate::leaderboard::MomentoRequest;
 use crate::MomentoResult;
 
-use momento_protos::leaderboard::leaderboard_client::LeaderboardClient as SLbClient;
+use momento_protos::leaderboard::leaderboard_client as leaderboard_proto;
 use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
 
@@ -26,7 +26,8 @@ use super::messages::data::IntoIds;
 
 /// Represents a remote leaderboard resource.
 pub struct Leaderboard {
-    data_clients: Vec<SLbClient<InterceptedService<Channel, HeaderInterceptor>>>,
+    data_clients:
+        Vec<leaderboard_proto::LeaderboardClient<InterceptedService<Channel, HeaderInterceptor>>>,
     deadline: Duration,
     cache_name: String,
     leaderboard_name: String,
@@ -86,7 +87,9 @@ impl Leaderboard {
 
     /* helper fns */
     pub(crate) fn new(
-        data_clients: Vec<SLbClient<InterceptedService<Channel, HeaderInterceptor>>>,
+        data_clients: Vec<
+            leaderboard_proto::LeaderboardClient<InterceptedService<Channel, HeaderInterceptor>>,
+        >,
         deadline: Duration,
         cache_name: impl Into<String>,
         leaderboard_name: impl Into<String>,
@@ -101,7 +104,7 @@ impl Leaderboard {
 
     pub(crate) fn next_data_client(
         &self,
-    ) -> SLbClient<InterceptedService<Channel, HeaderInterceptor>> {
+    ) -> leaderboard_proto::LeaderboardClient<InterceptedService<Channel, HeaderInterceptor>> {
         let next_index =
             NEXT_DATA_CLIENT_INDEX.fetch_add(1, Ordering::Relaxed) % self.data_clients.len();
         self.data_clients[next_index].clone()

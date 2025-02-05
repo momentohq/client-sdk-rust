@@ -5,14 +5,15 @@ use crate::leaderboard::leaderboard_client_builder::{
 use crate::leaderboard::Configuration;
 use crate::leaderboard::Leaderboard;
 
-use momento_protos::leaderboard::leaderboard_client::LeaderboardClient as SLbClient;
+use momento_protos::leaderboard::leaderboard_client as leaderboard_proto;
 use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
 
 /// Client to work with Momento Leaderboards.
 #[derive(Clone, Debug)]
 pub struct LeaderboardClient {
-    data_clients: Vec<SLbClient<InterceptedService<Channel, HeaderInterceptor>>>,
+    data_clients:
+        Vec<leaderboard_proto::LeaderboardClient<InterceptedService<Channel, HeaderInterceptor>>>,
     configuration: Configuration,
 }
 
@@ -23,7 +24,9 @@ impl LeaderboardClient {
     }
 
     pub(crate) fn new(
-        data_clients: Vec<SLbClient<InterceptedService<Channel, HeaderInterceptor>>>,
+        data_clients: Vec<
+            leaderboard_proto::LeaderboardClient<InterceptedService<Channel, HeaderInterceptor>>,
+        >,
         configuration: Configuration,
     ) -> Self {
         Self {

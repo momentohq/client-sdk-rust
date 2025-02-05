@@ -5,7 +5,7 @@ use crate::leaderboard::{Configuration, LeaderboardClient};
 use crate::utils::ChannelConnectError;
 use crate::{utils, CredentialProvider, MomentoResult};
 
-use momento_protos::leaderboard::leaderboard_client::LeaderboardClient as SLbClient;
+use momento_protos::leaderboard::leaderboard_client as leaderboard_proto;
 use tonic::codegen::InterceptedService;
 use tonic::transport::Channel;
 
@@ -87,17 +87,18 @@ impl LeaderboardClientBuilder<ReadyToBuild> {
 
         let data_channels = data_channels_result?;
 
-        let data_clients: Vec<SLbClient<InterceptedService<Channel, HeaderInterceptor>>> =
-            data_channels
-                .into_iter()
-                .map(|c| {
-                    let data_interceptor = InterceptedService::new(
-                        c,
-                        HeaderInterceptor::new(&self.0.credential_provider.auth_token, agent_value),
-                    );
-                    SLbClient::new(data_interceptor)
-                })
-                .collect();
+        let data_clients: Vec<
+            leaderboard_proto::LeaderboardClient<InterceptedService<Channel, HeaderInterceptor>>,
+        > = data_channels
+            .into_iter()
+            .map(|c| {
+                let data_interceptor = InterceptedService::new(
+                    c,
+                    HeaderInterceptor::new(&self.0.credential_provider.auth_token, agent_value),
+                );
+                leaderboard_proto::LeaderboardClient::new(data_interceptor)
+            })
+            .collect();
 
         Ok(LeaderboardClient::new(data_clients, self.0.configuration))
     }
