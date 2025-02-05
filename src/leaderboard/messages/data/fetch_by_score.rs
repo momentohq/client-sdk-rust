@@ -6,7 +6,7 @@ use crate::{Leaderboard, MomentoError, MomentoErrorCode, MomentoResult};
 use momento_protos::common::Unbounded;
 use momento_protos::leaderboard::score_range::{Max, Min};
 
-use std::ops::Range;
+use std::ops::{Range, RangeFrom, RangeTo};
 
 /// Represents a range of scores used to request elements by score.
 pub struct ScoreRange {
@@ -58,6 +58,24 @@ impl From<Range<f64>> for ScoreRange {
     fn from(val: std::ops::Range<f64>) -> Self {
         ScoreRange {
             min: Some(val.start),
+            max: Some(val.end),
+        }
+    }
+}
+
+impl From<RangeFrom<f64>> for ScoreRange {
+    fn from(val: std::ops::RangeFrom<f64>) -> Self {
+        ScoreRange {
+            min: Some(val.start),
+            max: None,
+        }
+    }
+}
+
+impl From<RangeTo<f64>> for ScoreRange {
+    fn from(val: std::ops::RangeTo<f64>) -> Self {
+        ScoreRange {
+            min: None,
             max: Some(val.end),
         }
     }
@@ -163,13 +181,19 @@ mod tests {
 
     #[test]
     fn test_score_range_validate() {
-        let sr = ScoreRange::new(Some(1.0), Some(2.0));
-        assert!(sr.validate().is_ok());
+        let score_range = ScoreRange::new(Some(1.0), Some(2.0));
+        assert!(score_range.validate().is_ok());
 
-        let sr = ScoreRange::new(Some(f64::INFINITY), Some(2.0));
-        assert!(sr.validate().is_err());
+        let score_range = ScoreRange::new(Some(f64::INFINITY), Some(2.0));
+        assert!(score_range.validate().is_err());
 
-        let sr = ScoreRange::new(Some(1.0), Some(f64::NEG_INFINITY));
-        assert!(sr.validate().is_err());
+        let score_range = ScoreRange::new(Some(1.0), Some(f64::NEG_INFINITY));
+        assert!(score_range.validate().is_err());
+
+        let score_range: ScoreRange = (1.0..).into();
+        assert!(score_range.validate().is_ok());
+
+        let score_range: ScoreRange = (..2.0).into();
+        assert!(score_range.validate().is_ok());
     }
 }
