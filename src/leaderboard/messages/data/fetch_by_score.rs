@@ -152,15 +152,7 @@ impl LeaderboardRequest for FetchByScoreRequest {
             .into_inner();
 
         Ok(Self::Response::new(
-            response
-                .elements
-                .iter()
-                .map(|v| RankedElement {
-                    id: v.id,
-                    rank: v.rank,
-                    score: v.score,
-                })
-                .collect(),
+            response.elements.iter().map(|v| v.into()).collect(),
         ))
     }
 }

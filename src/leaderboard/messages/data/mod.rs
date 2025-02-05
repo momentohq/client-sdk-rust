@@ -35,6 +35,16 @@ pub struct RankedElement {
     pub score: f64,
 }
 
+impl From<&momento_protos::leaderboard::RankedElement> for RankedElement {
+    fn from(proto: &momento_protos::leaderboard::RankedElement) -> Self {
+        Self {
+            id: proto.id,
+            rank: proto.rank,
+            score: proto.score,
+        }
+    }
+}
+
 /// Specifies an ordering when requesting elements by rank or score.
 pub enum Order {
     /// Elements will be ordered in ascending order.

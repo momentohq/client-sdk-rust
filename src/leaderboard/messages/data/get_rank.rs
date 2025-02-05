@@ -54,15 +54,7 @@ impl LeaderboardRequest for GetRankRequest {
             .into_inner();
 
         Ok(Self::Response {
-            elements: response
-                .elements
-                .iter()
-                .map(|v| RankedElement {
-                    id: v.id,
-                    rank: v.rank,
-                    score: v.score,
-                })
-                .collect(),
+            elements: response.elements.iter().map(|v| v.into()).collect(),
         })
     }
 }
