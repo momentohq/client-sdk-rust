@@ -1,7 +1,7 @@
 use super::{fetch::FetchResponse, Order, RankedElement};
 use crate::leaderboard::MomentoRequest;
 use crate::utils::prep_leaderboard_request_with_timeout;
-use crate::{Leaderboard, MomentoResult};
+use crate::{Leaderboard, MomentoError, MomentoErrorCode, MomentoResult};
 
 use momento_protos::common::Unbounded;
 use momento_protos::leaderboard::score_range::{Max, Min};
@@ -26,6 +26,44 @@ impl ScoreRange {
             min: None,
             max: None,
         }
+    }
+
+    /*
+            return Err(MomentoError {
+                message: format!(
+                    "TTL provided, {}, needs to be less than the maximum TTL {}",
+                    ttl.as_secs(),
+                    max_ttl.as_secs()
+                ),
+                error_code: MomentoErrorCode::InvalidArgumentError,
+                inner_error: None,
+                details: None,
+            });
+        }
+    */
+
+    pub fn validate(&self) -> MomentoResult<()> {
+        if let Some(min) = self.min {
+            if !min.is_finite() && min != f64::NEG_INFINITY {
+                return Err(MomentoError {
+                    message: format!("min score must be finite or negative infinity; got {}", min),
+                    error_code: MomentoErrorCode::InvalidArgumentError,
+                    inner_error: None,
+                    details: None,
+                });
+            }
+        }
+        if let Some(max) = self.max {
+            if !max.is_finite() && max != f64::INFINITY {
+                return Err(MomentoError {
+                    message: format!("max score must be finite or positive infinity; got {}", max),
+                    error_code: MomentoErrorCode::InvalidArgumentError,
+                    inner_error: None,
+                    details: None,
+                });
+            }
+        }
+        Ok(())
     }
 }
 
@@ -112,7 +150,7 @@ impl MomentoRequest for FetchByScoreRequest {
 
     async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {
         let cache_name = leaderboard.cache_name();
-        // TODO validate score range ie min not pos infinity
+        self.score_range.validate()?;
         let request = prep_leaderboard_request_with_timeout(
             cache_name,
             leaderboard.deadline(),
@@ -143,5 +181,22 @@ impl MomentoRequest for FetchByScoreRequest {
                 })
                 .collect(),
         ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_score_range_validate() {
+        let sr = ScoreRange::new(Some(1.0), Some(2.0));
+        assert!(sr.validate().is_ok());
+
+        let sr = ScoreRange::new(Some(f64::INFINITY), Some(2.0));
+        assert!(sr.validate().is_err());
+
+        let sr = ScoreRange::new(Some(1.0), Some(f64::NEG_INFINITY));
+        assert!(sr.validate().is_err());
     }
 }
