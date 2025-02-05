@@ -55,7 +55,7 @@ impl ScoreRange {
 }
 
 impl From<Range<f64>> for ScoreRange {
-    fn from(val: std::ops::Range<f64>) -> Self {
+    fn from(val: Range<f64>) -> Self {
         ScoreRange {
             min: Some(val.start),
             max: Some(val.end),
@@ -64,7 +64,7 @@ impl From<Range<f64>> for ScoreRange {
 }
 
 impl From<RangeFrom<f64>> for ScoreRange {
-    fn from(val: std::ops::RangeFrom<f64>) -> Self {
+    fn from(val: RangeFrom<f64>) -> Self {
         ScoreRange {
             min: Some(val.start),
             max: None,
@@ -73,7 +73,7 @@ impl From<RangeFrom<f64>> for ScoreRange {
 }
 
 impl From<RangeTo<f64>> for ScoreRange {
-    fn from(val: std::ops::RangeTo<f64>) -> Self {
+    fn from(val: RangeTo<f64>) -> Self {
         ScoreRange {
             min: None,
             max: Some(val.end),

@@ -3,7 +3,7 @@ use crate::leaderboard::LeaderboardRequest;
 use crate::utils::prep_leaderboard_request_with_timeout;
 use crate::{Leaderboard, MomentoResult};
 
-use std::ops::Range;
+use std::ops::{Range, RangeFrom, RangeInclusive, RangeTo};
 
 /// Represents a range of ranks used to request elements by rank.
 pub struct RankRange {
@@ -20,11 +20,29 @@ impl From<Range<u32>> for RankRange {
     }
 }
 
-impl From<std::ops::RangeInclusive<u32>> for RankRange {
+impl From<RangeFrom<u32>> for RankRange {
+    fn from(val: RangeFrom<u32>) -> Self {
+        RankRange {
+            start_inclusive: val.start,
+            end_exclusive: u32::MAX,
+        }
+    }
+}
+
+impl From<RangeTo<u32>> for RankRange {
+    fn from(val: RangeTo<u32>) -> Self {
+        RankRange {
+            start_inclusive: 0,
+            end_exclusive: val.end,
+        }
+    }
+}
+
+impl From<RangeInclusive<u32>> for RankRange {
     /// Converts a range inclusive into a range exclusive.
     ///
     /// Clamps the end value to u32::MAX if it is u32::MAX.
-    fn from(val: std::ops::RangeInclusive<u32>) -> Self {
+    fn from(val: RangeInclusive<u32>) -> Self {
         let start_inclusive = *val.start();
         let end_exclusive = if *val.end() < u32::MAX {
             *val.end() + 1
