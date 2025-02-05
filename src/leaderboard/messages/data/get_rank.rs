@@ -40,8 +40,8 @@ impl MomentoRequest for GetRankRequest {
             cache_name,
             leaderboard.client_timeout(),
             momento_protos::leaderboard::GetRankRequest {
-                cache_name: cache_name.clone(),
-                leaderboard: leaderboard.leaderboard_name().clone(),
+                cache_name: cache_name.to_string(),
+                leaderboard: leaderboard.leaderboard_name().to_string(),
                 ids,
                 order: self.order.into_proto() as i32,
             },

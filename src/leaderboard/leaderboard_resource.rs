@@ -128,11 +128,11 @@ impl Leaderboard {
         self.client_timeout
     }
 
-    pub(crate) fn cache_name(&self) -> &String {
+    pub(crate) fn cache_name(&self) -> &str {
         &self.cache_name
     }
 
-    pub(crate) fn leaderboard_name(&self) -> &String {
+    pub(crate) fn leaderboard_name(&self) -> &str {
         &self.leaderboard_name
     }
 

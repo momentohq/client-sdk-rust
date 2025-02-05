@@ -142,8 +142,8 @@ impl MomentoRequest for FetchByScoreRequest {
             cache_name,
             leaderboard.client_timeout(),
             momento_protos::leaderboard::GetByScoreRequest {
-                cache_name: cache_name.clone(),
-                leaderboard: leaderboard.leaderboard_name().clone(),
+                cache_name: cache_name.to_string(),
+                leaderboard: leaderboard.leaderboard_name().to_string(),
                 score_range: Some(self.score_range.into()),
                 offset: self.offset.unwrap_or(0),
                 limit_elements: self.count.unwrap_or(8192),

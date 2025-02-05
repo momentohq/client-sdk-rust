@@ -65,8 +65,8 @@ impl MomentoRequest for FetchByRankRequest {
             cache_name,
             leaderboard.client_timeout(),
             momento_protos::leaderboard::GetByRankRequest {
-                cache_name: cache_name.clone(),
-                leaderboard: leaderboard.leaderboard_name().clone(),
+                cache_name: cache_name.to_string(),
+                leaderboard: leaderboard.leaderboard_name().to_string(),
                 rank_range: Some(self.rank_range.into()),
                 order: self.order.into_proto() as i32,
             },

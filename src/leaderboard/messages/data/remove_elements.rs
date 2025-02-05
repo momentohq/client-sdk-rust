@@ -28,8 +28,8 @@ impl MomentoRequest for RemoveElementsRequest {
             cache_name,
             leaderboard.client_timeout(),
             momento_protos::leaderboard::RemoveElementsRequest {
-                cache_name: cache_name.clone(),
-                leaderboard: leaderboard.leaderboard_name().clone(),
+                cache_name: cache_name.to_string(),
+                leaderboard: leaderboard.leaderboard_name().to_string(),
                 ids: self.ids,
             },
         )?;
