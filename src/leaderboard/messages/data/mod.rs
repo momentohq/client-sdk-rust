@@ -53,6 +53,7 @@ impl From<Order> for momento_protos::leaderboard::Order {
 }
 
 impl Order {
+    /// Converts the order into a proto enum.
     pub fn into_proto(self) -> momento_protos::leaderboard::Order {
         self.into()
     }

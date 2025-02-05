@@ -28,20 +28,7 @@ impl ScoreRange {
         }
     }
 
-    /*
-            return Err(MomentoError {
-                message: format!(
-                    "TTL provided, {}, needs to be less than the maximum TTL {}",
-                    ttl.as_secs(),
-                    max_ttl.as_secs()
-                ),
-                error_code: MomentoErrorCode::InvalidArgumentError,
-                inner_error: None,
-                details: None,
-            });
-        }
-    */
-
+    /// Validates the score range.
     pub fn validate(&self) -> MomentoResult<()> {
         if let Some(min) = self.min {
             if !min.is_finite() && min != f64::NEG_INFINITY {
@@ -69,10 +56,7 @@ impl ScoreRange {
 
 impl From<Option<ScoreRange>> for ScoreRange {
     fn from(val: Option<ScoreRange>) -> Self {
-        val.unwrap_or_else(|| ScoreRange {
-            min: None,
-            max: None,
-        })
+        val.unwrap_or_else(ScoreRange::unbounded)
     }
 }
 
