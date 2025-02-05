@@ -84,6 +84,6 @@ impl IntoIds for Vec<u32> {
 
 impl IntoIds for &[u32] {
     fn into_ids(self) -> Vec<u32> {
-        self.iter().cloned().collect()
+        self.to_vec()
     }
 }

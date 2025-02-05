@@ -1,4 +1,4 @@
-use super::{fetch::FetchResponse, Order, RankedElement};
+use super::{fetch::FetchResponse, Order};
 use crate::leaderboard::LeaderboardRequest;
 use crate::utils::prep_leaderboard_request_with_timeout;
 use crate::{Leaderboard, MomentoResult};
