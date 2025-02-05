@@ -26,7 +26,7 @@ impl MomentoRequest for RemoveElementsRequest {
         let cache_name = leaderboard.cache_name();
         let request = prep_leaderboard_request_with_timeout(
             cache_name,
-            leaderboard.deadline(),
+            leaderboard.client_timeout(),
             momento_protos::leaderboard::RemoveElementsRequest {
                 cache_name: cache_name.clone(),
                 leaderboard: leaderboard.leaderboard_name().clone(),

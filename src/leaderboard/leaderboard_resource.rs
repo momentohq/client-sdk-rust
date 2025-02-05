@@ -28,7 +28,7 @@ use super::messages::data::IntoIds;
 pub struct Leaderboard {
     data_clients:
         Vec<leaderboard_proto::LeaderboardClient<InterceptedService<Channel, HeaderInterceptor>>>,
-    deadline: Duration,
+    client_timeout: Duration,
     cache_name: String,
     leaderboard_name: String,
 }
@@ -90,13 +90,13 @@ impl Leaderboard {
         data_clients: Vec<
             leaderboard_proto::LeaderboardClient<InterceptedService<Channel, HeaderInterceptor>>,
         >,
-        deadline: Duration,
+        client_timeout: Duration,
         cache_name: impl Into<String>,
         leaderboard_name: impl Into<String>,
     ) -> Self {
         Self {
             data_clients,
-            deadline,
+            client_timeout,
             cache_name: cache_name.into(),
             leaderboard_name: leaderboard_name.into(),
         }
@@ -110,8 +110,8 @@ impl Leaderboard {
         self.data_clients[next_index].clone()
     }
 
-    pub(crate) fn deadline(&self) -> Duration {
-        self.deadline
+    pub(crate) fn client_timeout(&self) -> Duration {
+        self.client_timeout
     }
 
     pub(crate) fn cache_name(&self) -> &String {

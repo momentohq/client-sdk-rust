@@ -135,7 +135,7 @@ impl MomentoRequest for FetchByScoreRequest {
         self.score_range.validate()?;
         let request = prep_leaderboard_request_with_timeout(
             cache_name,
-            leaderboard.deadline(),
+            leaderboard.client_timeout(),
             momento_protos::leaderboard::GetByScoreRequest {
                 cache_name: cache_name.clone(),
                 leaderboard: leaderboard.leaderboard_name().clone(),

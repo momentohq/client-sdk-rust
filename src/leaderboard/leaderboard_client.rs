@@ -43,7 +43,7 @@ impl LeaderboardClient {
     ) -> Leaderboard {
         Leaderboard::new(
             self.data_clients.clone(),
-            self.configuration.deadline(),
+            self.configuration.client_timeout(),
             cache_name,
             leaderboard_name,
         )
