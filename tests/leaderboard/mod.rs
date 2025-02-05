@@ -35,7 +35,7 @@ mod length {
     async fn length_of_existing_leaderboard() -> MomentoResult<()> {
         let leaderboard = unique_leaderboard();
         leaderboard.upsert(vec![(123, 1.0), (456, 2.0)]).await?;
-        let response = leaderboard.length().await?;
+        let response = leaderboard.len().await?;
 
         assert_eq!(
             2,
@@ -48,7 +48,7 @@ mod length {
     #[tokio::test]
     async fn length_of_non_existent_leaderboard() -> MomentoResult<()> {
         let leaderboard = unique_leaderboard();
-        let response = leaderboard.length().await?;
+        let response = leaderboard.len().await?;
 
         assert_eq!(
             0,
@@ -66,7 +66,7 @@ mod delete {
     async fn delete_existing_leaderboard() -> MomentoResult<()> {
         let leaderboard = unique_leaderboard();
         leaderboard.upsert(vec![(123, 1.0), (456, 2.0)]).await?;
-        let length_response = leaderboard.length().await?;
+        let length_response = leaderboard.len().await?;
         assert_eq!(
             2,
             length_response.length(),
@@ -74,7 +74,7 @@ mod delete {
         );
 
         leaderboard.delete().await?;
-        let length_response2 = leaderboard.length().await?;
+        let length_response2 = leaderboard.len().await?;
 
         assert_eq!(
             0,
@@ -90,7 +90,7 @@ mod delete {
 
         leaderboard.delete().await?;
 
-        let response = leaderboard.length().await?;
+        let response = leaderboard.len().await?;
         assert_eq!(
             0,
             response.length(),
@@ -109,7 +109,7 @@ mod remove_elements {
         let test_leaderboard = TestLeaderboard::new();
 
         leaderboard.upsert(test_leaderboard.elements()).await?;
-        let length_response = leaderboard.length().await?;
+        let length_response = leaderboard.len().await?;
         assert_eq!(
             2,
             length_response.length(),

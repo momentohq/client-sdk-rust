@@ -59,7 +59,7 @@ impl Leaderboard {
     }
 
     /// Get the length of a leaderboard.
-    pub async fn length(&self) -> MomentoResult<LengthResponse> {
+    pub async fn len(&self) -> MomentoResult<LengthResponse> {
         let request = LengthRequest::new();
         request.send(self).await
     }
