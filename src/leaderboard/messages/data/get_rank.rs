@@ -11,6 +11,9 @@ pub struct GetRankRequest {
 
 impl GetRankRequest {
     /// Constructs a new `GetRankRequest`.
+    ///
+    /// Defaults to ascending order, meaning that rank 0
+    /// is the element with the lowest score.
     pub fn new(ids: impl IntoIds) -> Self {
         Self {
             ids: ids.into_ids(),
@@ -18,7 +21,9 @@ impl GetRankRequest {
         }
     }
 
-    /// Sets the order of the elements to be fetched.
+    /// Sets the order ranking.
+    ///
+    /// Defaults to ascending order.
     pub fn order(mut self, order: Order) -> Self {
         self.order = order;
         self

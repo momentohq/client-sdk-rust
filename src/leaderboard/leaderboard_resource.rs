@@ -41,6 +41,12 @@ impl Leaderboard {
     }
 
     /// Fetch elements from a leaderboard by rank.
+    ///
+    /// Note: can fetch a maximum of 8192 elements at a time and rank
+    /// is 0-based (index begins at 0).
+    ///
+    /// Defaults to ascending order, meaning rank 0 is the element with
+    /// the lowest score.
     pub async fn fetch_by_rank(
         &self,
         rank_range: impl Into<RankRange>,
@@ -50,6 +56,11 @@ impl Leaderboard {
     }
 
     /// Get elements from a leaderboard by score.
+    ///
+    /// Note: can fetch a maximum of 8192 elements at a time.
+    ///
+    /// Defaults to ascending order, meaning the results will be
+    /// ordered from lowest to highest score.
     pub async fn fetch_by_score(
         &self,
         score_range: impl Into<ScoreRange>,
@@ -65,6 +76,9 @@ impl Leaderboard {
     }
 
     /// Get rank of elements from a leaderboard using their element ids.
+    ///
+    /// Defaults to ascending order rank, meaning rank 0 is the element with
+    /// the lowest score.
     pub async fn get_rank<T: IntoIds>(&self, ids: T) -> MomentoResult<GetRankResponse> {
         let request = GetRankRequest::new(ids);
         request.send(self).await

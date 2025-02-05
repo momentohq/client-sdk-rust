@@ -37,6 +37,9 @@ pub struct FetchByRankRequest {
 
 impl FetchByRankRequest {
     /// Constructs a new `FetchByRankRequest`.
+    ///
+    /// Defaults to ascending order, meaning rank 0 is the element
+    /// with the lowest score.
     pub fn new<T: Into<RankRange>>(rank_range: T) -> Self {
         Self {
             rank_range: rank_range.into(),
@@ -45,6 +48,8 @@ impl FetchByRankRequest {
     }
 
     /// Sets the order of the elements to be fetched.
+    ///
+    /// Otherwise the default is ascending order.
     pub fn order(mut self, order: Order) -> Self {
         self.order = order;
         self

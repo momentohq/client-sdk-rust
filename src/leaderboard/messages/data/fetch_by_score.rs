@@ -99,6 +99,9 @@ pub struct FetchByScoreRequest {
 
 impl FetchByScoreRequest {
     /// Constructs a new `FetchByScoreRequest`.
+    ///
+    /// Defaults to ascending order, meaning that the results will be
+    /// ordered from lowest to highest score.
     pub fn new(score_range: impl Into<ScoreRange>) -> Self {
         Self {
             score_range: score_range.into(),
@@ -121,6 +124,8 @@ impl FetchByScoreRequest {
     }
 
     /// Sets the order of the elements to be fetched.
+    ///
+    /// Otherwise the default is ascending order.
     pub fn order(mut self, order: Order) -> Self {
         self.order = order;
         self
