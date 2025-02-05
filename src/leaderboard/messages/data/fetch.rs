@@ -17,4 +17,9 @@ impl FetchResponse {
     pub fn elements(&self) -> &[RankedElement] {
         &self.elements
     }
+
+    /// Consumes the `FetchResponse` and returns the ranked elements.
+    pub fn into_elements(self) -> Vec<RankedElement> {
+        self.elements
+    }
 }
