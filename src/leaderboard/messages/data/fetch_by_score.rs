@@ -29,7 +29,7 @@ impl ScoreRange {
     }
 
     /// Validates the score range.
-    pub fn validate(&self) -> MomentoResult<()> {
+    pub(crate) fn validate(&self) -> MomentoResult<()> {
         if let Some(min) = self.min {
             if !min.is_finite() && min != f64::NEG_INFINITY {
                 return Err(MomentoError {
@@ -56,28 +56,19 @@ impl ScoreRange {
 
 impl From<Range<f64>> for ScoreRange {
     fn from(val: Range<f64>) -> Self {
-        ScoreRange {
-            min: Some(val.start),
-            max: Some(val.end),
-        }
+        ScoreRange::new(Some(val.start), Some(val.end))
     }
 }
 
 impl From<RangeFrom<f64>> for ScoreRange {
     fn from(val: RangeFrom<f64>) -> Self {
-        ScoreRange {
-            min: Some(val.start),
-            max: None,
-        }
+        ScoreRange::new(Some(val.start), None)
     }
 }
 
 impl From<RangeTo<f64>> for ScoreRange {
     fn from(val: RangeTo<f64>) -> Self {
-        ScoreRange {
-            min: None,
-            max: Some(val.end),
-        }
+        ScoreRange::new(None, Some(val.end))
     }
 }
 
@@ -177,23 +168,20 @@ impl LeaderboardRequest for FetchByScoreRequest {
 
 #[cfg(test)]
 mod tests {
+    use tokio_test::{assert_err, assert_ok};
+
     use super::*;
 
     #[test]
     fn test_score_range_validate() {
-        let score_range = ScoreRange::new(Some(1.0), Some(2.0));
-        assert!(score_range.validate().is_ok());
+        assert_ok!(ScoreRange::new(Some(1.0), Some(2.0)).validate());
+        assert_err!(ScoreRange::new(Some(f64::INFINITY), Some(2.0)).validate());
+        assert_err!(ScoreRange::new(Some(1.0), Some(f64::NEG_INFINITY)).validate());
 
-        let score_range = ScoreRange::new(Some(f64::INFINITY), Some(2.0));
-        assert!(score_range.validate().is_err());
-
-        let score_range = ScoreRange::new(Some(1.0), Some(f64::NEG_INFINITY));
-        assert!(score_range.validate().is_err());
-
-        let score_range: ScoreRange = (1.0..).into();
-        assert!(score_range.validate().is_ok());
+        let score_range: ScoreRange = (f64::NEG_INFINITY..).into();
+        assert_ok!(score_range.validate());
 
         let score_range: ScoreRange = (..2.0).into();
-        assert!(score_range.validate().is_ok());
+        assert_ok!(score_range.validate());
     }
 }
