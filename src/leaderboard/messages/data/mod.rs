@@ -66,14 +66,6 @@ pub trait IntoIds: Send {
     fn into_ids(self) -> Vec<u32>;
 }
 
-#[cfg(not(doctest))]
-pub(crate) fn map_and_collect_elements<'a, I>(iter: I) -> Vec<u32>
-where
-    I: Iterator<Item = &'a u32>,
-{
-    iter.copied().collect()
-}
-
 impl IntoIds for Vec<u32> {
     fn into_ids(self) -> Vec<u32> {
         self
@@ -82,6 +74,6 @@ impl IntoIds for Vec<u32> {
 
 impl IntoIds for &[u32] {
     fn into_ids(self) -> Vec<u32> {
-        map_and_collect_elements(self.iter())
+        self.iter().cloned().collect()
     }
 }
