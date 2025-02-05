@@ -73,13 +73,11 @@ impl From<ScoreRange> for momento_protos::leaderboard::ScoreRange {
     fn from(val: ScoreRange) -> Self {
         let min = val
             .min
-            // TODO validate score range ie min not pos infinity
             .filter(|&v| v.is_finite())
             .map(Min::MinInclusive)
             .unwrap_or_else(|| Min::UnboundedMin(Unbounded {}));
         let max = val
             .max
-            // TODO validate score range ie max not neg infinity
             .filter(|&v| v.is_finite())
             .map(Max::MaxExclusive)
             .unwrap_or_else(|| Max::UnboundedMax(Unbounded {}));
