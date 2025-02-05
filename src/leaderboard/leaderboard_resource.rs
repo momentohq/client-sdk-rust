@@ -10,7 +10,7 @@ use crate::leaderboard::messages::data::remove_elements::{
     RemoveElementsRequest, RemoveElementsResponse,
 };
 use crate::leaderboard::messages::data::upsert::{IntoElements, UpsertRequest, UpsertResponse};
-use crate::leaderboard::MomentoRequest;
+use crate::leaderboard::LeaderboardRequest;
 use crate::MomentoResult;
 
 use momento_protos::leaderboard::leaderboard_client as leaderboard_proto;
@@ -139,7 +139,10 @@ impl Leaderboard {
     /// Lower-level API to send any type of MomentoRequest to the server. This is used for cases when
     /// you want to set optional fields on a request that are not supported by the short-hand API for
     /// that request type.
-    pub async fn send_request<R: MomentoRequest>(&self, request: R) -> MomentoResult<R::Response> {
+    pub async fn send_request<R: LeaderboardRequest>(
+        &self,
+        request: R,
+    ) -> MomentoResult<R::Response> {
         request.send(self).await
     }
 }

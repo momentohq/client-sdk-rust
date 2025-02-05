@@ -1,5 +1,5 @@
 use super::{fetch::FetchResponse, Order, RankedElement};
-use crate::leaderboard::MomentoRequest;
+use crate::leaderboard::LeaderboardRequest;
 use crate::utils::prep_leaderboard_request_with_timeout;
 use crate::{Leaderboard, MomentoError, MomentoErrorCode, MomentoResult};
 
@@ -132,7 +132,7 @@ impl FetchByScoreRequest {
     }
 }
 
-impl MomentoRequest for FetchByScoreRequest {
+impl LeaderboardRequest for FetchByScoreRequest {
     type Response = FetchResponse;
 
     async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {

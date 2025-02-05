@@ -1,4 +1,4 @@
-use crate::leaderboard::messages::MomentoRequest;
+use crate::leaderboard::messages::LeaderboardRequest;
 use crate::utils::prep_leaderboard_request_with_timeout;
 use crate::{Leaderboard, MomentoResult};
 
@@ -18,7 +18,7 @@ impl Default for DeleteRequest {
     }
 }
 
-impl MomentoRequest for DeleteRequest {
+impl LeaderboardRequest for DeleteRequest {
     type Response = DeleteResponse;
 
     async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {

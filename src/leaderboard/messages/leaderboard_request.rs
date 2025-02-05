@@ -1,7 +1,7 @@
 use crate::{Leaderboard, MomentoResult};
 
 /// A trait that allows Momento request types to define their interaction with the gRPC client.
-pub trait MomentoRequest {
+pub trait LeaderboardRequest {
     /// The response type for this request.
     type Response;
 

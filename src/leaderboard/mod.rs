@@ -1,7 +1,7 @@
 /// Containts the request and response types for leaderboard operations.
 pub mod messages;
 
-pub use messages::MomentoRequest;
+pub use messages::LeaderboardRequest;
 
 pub use messages::data::delete::{DeleteRequest, DeleteResponse};
 pub use messages::data::fetch_by_rank::{FetchByRankRequest, RankRange};

@@ -1,4 +1,4 @@
-use crate::leaderboard::MomentoRequest;
+use crate::leaderboard::LeaderboardRequest;
 use crate::utils::prep_leaderboard_request_with_timeout;
 use crate::{Leaderboard, MomentoResult};
 
@@ -19,7 +19,7 @@ impl RemoveElementsRequest {
     }
 }
 
-impl MomentoRequest for RemoveElementsRequest {
+impl LeaderboardRequest for RemoveElementsRequest {
     type Response = RemoveElementsResponse;
 
     async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {

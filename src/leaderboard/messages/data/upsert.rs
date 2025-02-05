@@ -1,4 +1,4 @@
-use crate::leaderboard::MomentoRequest;
+use crate::leaderboard::LeaderboardRequest;
 use crate::utils::prep_leaderboard_request_with_timeout;
 use crate::{Leaderboard, MomentoResult};
 
@@ -52,7 +52,7 @@ impl<E: IntoElements> UpsertRequest<E> {
     }
 }
 
-impl<E: IntoElements> MomentoRequest for UpsertRequest<E> {
+impl<E: IntoElements> LeaderboardRequest for UpsertRequest<E> {
     type Response = UpsertResponse;
 
     async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {

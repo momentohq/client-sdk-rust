@@ -1,5 +1,5 @@
 use super::{IntoIds, Order, RankedElement};
-use crate::leaderboard::MomentoRequest;
+use crate::leaderboard::LeaderboardRequest;
 use crate::utils::prep_leaderboard_request_with_timeout;
 use crate::{Leaderboard, MomentoResult};
 
@@ -30,7 +30,7 @@ impl GetRankRequest {
     }
 }
 
-impl MomentoRequest for GetRankRequest {
+impl LeaderboardRequest for GetRankRequest {
     type Response = GetRankResponse;
 
     async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {
