@@ -54,12 +54,6 @@ impl ScoreRange {
     }
 }
 
-impl From<Option<ScoreRange>> for ScoreRange {
-    fn from(val: Option<ScoreRange>) -> Self {
-        val.unwrap_or_else(ScoreRange::unbounded)
-    }
-}
-
 impl From<Range<f64>> for ScoreRange {
     fn from(val: std::ops::Range<f64>) -> Self {
         ScoreRange {
