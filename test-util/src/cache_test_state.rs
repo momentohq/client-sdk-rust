@@ -9,7 +9,7 @@ use crate::test_utils::get_test_auth_cache_name;
 use crate::{get_test_cache_name, get_test_credential_provider, get_test_store_name};
 use momento::cache::configurations;
 use momento::storage::CreateStoreResponse;
-use momento::{AuthClient, CacheClient, PreviewStorageClient, TopicClient};
+use momento::{AuthClient, CacheClient, LeaderboardClient, PreviewStorageClient, TopicClient};
 
 pub static CACHE_TEST_STATE: Lazy<Arc<CacheTestState>> =
     Lazy::new(|| Arc::new(CacheTestState::new()));
@@ -18,6 +18,7 @@ pub struct CacheTestState {
     pub client: Arc<CacheClient>,
     pub cache_name: String,
     pub store_name: String,
+    pub leaderboard_client: Arc<LeaderboardClient>,
     pub topic_client: Arc<TopicClient>,
     pub storage_client: Arc<PreviewStorageClient>,
     pub auth_client: Arc<AuthClient>,
@@ -68,6 +69,12 @@ impl CacheTestState {
                 Err(e) => panic!("Failed to create cache: {:?}", e),
             }
 
+            let leaderboard_client = momento::LeaderboardClient::builder()
+                .configuration(momento::leaderboard::configurations::Laptop::latest())
+                .credential_provider(credential_provider.clone())
+                .build()
+                .expect("Failed to create leaderboard client");
+
             let topic_client = TopicClient::builder()
                 .configuration(momento::topics::configurations::Laptop::latest())
                 .credential_provider(credential_provider.clone())
@@ -108,6 +115,7 @@ impl CacheTestState {
             sender
                 .send(Some((
                     cache_client,
+                    leaderboard_client,
                     topic_client,
                     storage_client,
                     auth_client,
@@ -118,14 +126,16 @@ impl CacheTestState {
         barrier.wait();
 
         // Retrieve the client from the runtime that created it.
-        let (client, topic_client, storage_client, auth_client) = client_receiver
-            .borrow()
-            .as_ref()
-            .expect("Clients should already exist")
-            .clone();
+        let (client, leaderboard_client, topic_client, storage_client, auth_client) =
+            client_receiver
+                .borrow()
+                .as_ref()
+                .expect("Clients should already exist")
+                .clone();
 
         CacheTestState {
             client: Arc::new(client.clone()),
+            leaderboard_client: Arc::new(leaderboard_client.clone()),
             topic_client: Arc::new(topic_client.clone()),
             storage_client: Arc::new(storage_client.clone()),
             auth_client: Arc::new(auth_client.clone()),

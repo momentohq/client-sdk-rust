@@ -76,6 +76,19 @@ pub(crate) fn prep_storage_request_with_timeout<R>(
     Ok(request)
 }
 
+pub(crate) fn prep_leaderboard_request_with_timeout<R>(
+    cache_name: &str,
+    timeout: Duration,
+    request: R,
+) -> MomentoResult<Request<R>> {
+    is_cache_name_valid(cache_name)?;
+
+    let mut request = Request::new(request);
+    request_meta_data(&mut request, cache_name)?;
+    request.set_timeout(timeout);
+    Ok(request)
+}
+
 pub(crate) fn is_ttl_valid(ttl: Duration) -> MomentoResult<()> {
     let max_ttl = Duration::from_millis(u64::MAX);
     if ttl > max_ttl {
