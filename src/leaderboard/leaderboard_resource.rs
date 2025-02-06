@@ -22,8 +22,6 @@ use std::time::Duration;
 
 static NEXT_DATA_CLIENT_INDEX: AtomicUsize = AtomicUsize::new(0);
 
-use super::messages::data::IntoIds;
-
 /// Represents a remote leaderboard resource.
 pub struct Leaderboard {
     data_clients:
@@ -79,15 +77,18 @@ impl Leaderboard {
     ///
     /// Defaults to ascending order rank, meaning rank 0 is the element with
     /// the lowest score.
-    pub async fn get_rank<T: IntoIds>(&self, ids: T) -> MomentoResult<GetRankResponse> {
+    pub async fn get_rank(
+        &self,
+        ids: impl IntoIterator<Item = u32>,
+    ) -> MomentoResult<GetRankResponse> {
         let request = GetRankRequest::new(ids);
         request.send(self).await
     }
 
     /// Remove elements from a leaderboard using their element ids.
-    pub async fn remove_elements<T: IntoIds>(
+    pub async fn remove_elements(
         &self,
-        ids: T,
+        ids: impl IntoIterator<Item = u32>,
     ) -> MomentoResult<RemoveElementsResponse> {
         let request = RemoveElementsRequest::new(ids);
         request.send(self).await

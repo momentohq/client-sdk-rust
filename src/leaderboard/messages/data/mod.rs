@@ -68,22 +68,3 @@ impl Order {
         self.into()
     }
 }
-
-/// This trait defines an interface for converting a type into a vector of
-/// element ids.
-pub trait IntoIds: Send {
-    /// Converts the type into a vector of element ids.
-    fn into_ids(self) -> Vec<u32>;
-}
-
-impl IntoIds for Vec<u32> {
-    fn into_ids(self) -> Vec<u32> {
-        self
-    }
-}
-
-impl IntoIds for &[u32] {
-    fn into_ids(self) -> Vec<u32> {
-        self.to_vec()
-    }
-}

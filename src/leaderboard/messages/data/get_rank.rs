@@ -1,4 +1,4 @@
-use super::{IntoIds, Order, RankedElement};
+use super::{Order, RankedElement};
 use crate::leaderboard::LeaderboardRequest;
 use crate::utils::prep_leaderboard_request_with_timeout;
 use crate::{Leaderboard, MomentoResult};
@@ -14,9 +14,9 @@ impl GetRankRequest {
     ///
     /// Defaults to ascending order, meaning that rank 0
     /// is the element with the lowest score.
-    pub fn new(ids: impl IntoIds) -> Self {
+    pub fn new(ids: impl IntoIterator<Item = u32>) -> Self {
         Self {
-            ids: ids.into_ids(),
+            ids: ids.into_iter().collect(),
             order: Order::Ascending,
         }
     }
@@ -34,7 +34,6 @@ impl LeaderboardRequest for GetRankRequest {
     type Response = GetRankResponse;
 
     async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {
-        let ids = self.ids.into_ids();
         let cache_name = leaderboard.cache_name();
         let request = prep_leaderboard_request_with_timeout(
             cache_name,
@@ -42,7 +41,7 @@ impl LeaderboardRequest for GetRankRequest {
             momento_protos::leaderboard::GetRankRequest {
                 cache_name: cache_name.to_string(),
                 leaderboard: leaderboard.leaderboard_name().to_string(),
-                ids,
+                ids: self.ids,
                 order: self.order.into_proto() as i32,
             },
         )?;
