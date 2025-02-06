@@ -9,8 +9,8 @@ use crate::leaderboard::messages::data::length::{LengthRequest, LengthResponse};
 use crate::leaderboard::messages::data::remove_elements::{
     RemoveElementsRequest, RemoveElementsResponse,
 };
-use crate::leaderboard::messages::data::upsert::{IntoElements, UpsertRequest, UpsertResponse};
-use crate::leaderboard::LeaderboardRequest;
+use crate::leaderboard::messages::data::upsert::{UpsertRequest, UpsertResponse};
+use crate::leaderboard::{Element, LeaderboardRequest};
 use crate::MomentoResult;
 
 use momento_protos::leaderboard::leaderboard_client as leaderboard_proto;
@@ -95,7 +95,10 @@ impl Leaderboard {
     }
 
     /// Upsert (update/insert) elements into a leaderboard.
-    pub async fn upsert<E: IntoElements>(&self, elements: E) -> MomentoResult<UpsertResponse> {
+    pub async fn upsert(
+        &self,
+        elements: impl IntoIterator<Item = impl Into<Element>> + Send,
+    ) -> MomentoResult<UpsertResponse> {
         let request = UpsertRequest::new(elements);
         request.send(self).await
     }

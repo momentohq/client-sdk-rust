@@ -4,33 +4,6 @@ use crate::{Leaderboard, MomentoResult};
 
 use momento_protos::leaderboard::Element as ProtoElement;
 
-/// This trait defines an interface for converting a type into a vector of [Element].
-pub trait IntoElements: Send {
-    /// Converts the type into a vector of [Element].
-    fn into_elements(self) -> Vec<Element>;
-}
-
-/// Collects elements from an iterator into an owned collection.
-#[cfg(not(doctest))]
-pub(crate) fn map_and_collect_elements<I>(iter: I) -> Vec<Element>
-where
-    I: Iterator<Item = (u32, f64)>,
-{
-    iter.map(|(id, score)| Element { id, score }).collect()
-}
-
-impl IntoElements for Vec<(u32, f64)> {
-    fn into_elements(self) -> Vec<Element> {
-        map_and_collect_elements(self.into_iter())
-    }
-}
-
-impl IntoElements for Vec<Element> {
-    fn into_elements(self) -> Vec<Element> {
-        self
-    }
-}
-
 /// Represents an element to be inserted into a leaderboard.
 #[derive(Debug, PartialEq, Clone)]
 pub struct Element {
@@ -40,23 +13,49 @@ pub struct Element {
     pub score: f64,
 }
 
+impl From<(u32, f64)> for Element {
+    fn from((id, score): (u32, f64)) -> Self {
+        Self { id, score }
+    }
+}
+
+impl From<Element> for ProtoElement {
+    fn from(element: Element) -> Self {
+        Self {
+            id: element.id,
+            score: element.score,
+        }
+    }
+}
+
 /// A request to upsert (insert/update) elements into a leaderboard.
-pub struct UpsertRequest<E: IntoElements> {
+pub struct UpsertRequest<E, I>
+where
+    E: IntoIterator<Item = I> + Send,
+    I: Into<Element>,
+{
     elements: E,
 }
 
-impl<E: IntoElements> UpsertRequest<E> {
+impl<E, I> UpsertRequest<E, I>
+where
+    E: IntoIterator<Item = I> + Send,
+    I: Into<Element>,
+{
     /// Constructs a new `UpsertRequest`.
     pub fn new(elements: E) -> Self {
         Self { elements }
     }
 }
 
-impl<E: IntoElements> LeaderboardRequest for UpsertRequest<E> {
+impl<E, I> LeaderboardRequest for UpsertRequest<E, I>
+where
+    E: IntoIterator<Item = I> + Send,
+    I: Into<Element>,
+{
     type Response = UpsertResponse;
 
     async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {
-        let elements = self.elements.into_elements();
         let cache_name = leaderboard.cache_name();
         let request = prep_leaderboard_request_with_timeout(
             cache_name,
@@ -64,12 +63,11 @@ impl<E: IntoElements> LeaderboardRequest for UpsertRequest<E> {
             momento_protos::leaderboard::UpsertElementsRequest {
                 cache_name: cache_name.to_string(),
                 leaderboard: leaderboard.leaderboard_name().to_string(),
-                elements: elements
+                elements: self
+                    .elements
                     .into_iter()
-                    .map(|v| ProtoElement {
-                        id: v.id,
-                        score: v.score,
-                    })
+                    .map(Into::into)
+                    .map(Into::into)
                     .collect(),
             },
         )?;
