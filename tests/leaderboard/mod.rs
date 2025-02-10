@@ -79,7 +79,7 @@ mod delete {
         assert_eq!(
             0,
             length_response2.length(),
-            "Expected two elements in the leaderboard"
+            "Expected zero elements in the leaderboard"
         );
         Ok(())
     }

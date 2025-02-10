@@ -37,7 +37,7 @@ pub struct Configuration {
 }
 
 impl Configuration {
-    /// First level of constructing a CacheClient configuration. Must provide a [TransportStrategy] to continue.
+    /// First level of constructing a LeaderboardClient configuration. Must provide a [TransportStrategy] to continue.
     pub fn builder() -> ConfigurationBuilder<NeedsTransportStrategy> {
         ConfigurationBuilder(NeedsTransportStrategy(()))
     }
