@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.48.0](https://github.com/momentohq/client-sdk-rust/compare/v0.47.1...v0.48.0) (2025-02-11)
+
+
+### Features
+
+* momento leaderboard client ([#438](https://github.com/momentohq/client-sdk-rust/issues/438)) ([1223adc](https://github.com/momentohq/client-sdk-rust/commit/1223adcd25b358c939752b05c4a2e0fcd377d832))
+
+
+### Miscellaneous
+
+* **deps:** bump momento from 0.47.0 to 0.47.1 in /example/rust ([#433](https://github.com/momentohq/client-sdk-rust/issues/433)) ([08b5664](https://github.com/momentohq/client-sdk-rust/commit/08b566417dfb4765ddb1ec9e44062520a936cb73))
+* update topics example to use oneshot synchronization instead ([#430](https://github.com/momentohq/client-sdk-rust/issues/430)) ([1eb846d](https://github.com/momentohq/client-sdk-rust/commit/1eb846d6c0b6047aaa4622382449a5eef3fd8afd))
+* update topics example to use updated auth client UX ([#434](https://github.com/momentohq/client-sdk-rust/issues/434)) ([7727e3f](https://github.com/momentohq/client-sdk-rust/commit/7727e3ffcb8204f4b7c3bea606daa9a34f94548a))
+
 ## [0.47.1](https://github.com/momentohq/client-sdk-rust/compare/v0.47.0...v0.47.1) (2025-01-09)
 
 
