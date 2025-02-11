@@ -4,6 +4,9 @@ use crate::leaderboard::messages::data::delete::{DeleteRequest, DeleteResponse};
 use crate::leaderboard::messages::data::fetch::FetchResponse;
 use crate::leaderboard::messages::data::fetch_by_rank::{FetchByRankRequest, RankRange};
 use crate::leaderboard::messages::data::fetch_by_score::{FetchByScoreRequest, ScoreRange};
+use crate::leaderboard::messages::data::get_competition_rank::{
+    GetCompetitionRankRequest, GetCompetitionRankResponse,
+};
 use crate::leaderboard::messages::data::get_rank::{GetRankRequest, GetRankResponse};
 use crate::leaderboard::messages::data::length::{LengthRequest, LengthResponse};
 use crate::leaderboard::messages::data::remove_elements::{
@@ -100,6 +103,14 @@ impl Leaderboard {
         elements: impl IntoIterator<Item = impl Into<Element>> + Send,
     ) -> MomentoResult<UpsertResponse> {
         let request = UpsertRequest::new(elements);
+        request.send(self).await
+    }
+
+    pub async fn get_competition_rank(
+        &self,
+        ids: impl IntoIterator<Item = u32>,
+    ) -> MomentoResult<GetCompetitionRankResponse> {
+        let request = GetCompetitionRankRequest::new(ids);
         request.send(self).await
     }
 

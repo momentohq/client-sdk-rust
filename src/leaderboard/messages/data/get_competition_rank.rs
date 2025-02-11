@@ -3,51 +3,43 @@ use crate::leaderboard::LeaderboardRequest;
 use crate::utils::prep_leaderboard_request_with_timeout;
 use crate::{Leaderboard, MomentoResult};
 
-/// A request to get ranked elements by providing a list of element IDs.
-pub struct GetRankRequest {
+pub struct GetCompetitionRankRequest {
     ids: Vec<u32>,
     order: Order,
 }
 
-impl GetRankRequest {
-    /// Constructs a new `GetRankRequest`.
-    ///
-    /// Defaults to ascending order, meaning that rank 0
-    /// is the element with the lowest score.
+impl GetCompetitionRankRequest {
     pub fn new(ids: impl IntoIterator<Item = u32>) -> Self {
         Self {
             ids: ids.into_iter().collect(),
-            order: Order::Ascending,
+            order: Order::Descending,
         }
     }
 
-    /// Sets the order ranking.
-    ///
-    /// Defaults to ascending order.
     pub fn order(mut self, order: Order) -> Self {
         self.order = order;
         self
     }
 }
 
-impl LeaderboardRequest for GetRankRequest {
-    type Response = GetRankResponse;
+impl LeaderboardRequest for GetCompetitionRankRequest {
+    type Response = GetCompetitionRankResponse;
 
     async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {
         let cache_name = leaderboard.cache_name();
         let request = prep_leaderboard_request_with_timeout(
             cache_name,
             leaderboard.client_timeout(),
-            momento_protos::leaderboard::GetRankRequest {
+            momento_protos::leaderboard::GetCompetitionRankRequest {
                 leaderboard: leaderboard.leaderboard_name().to_string(),
                 ids: self.ids,
-                order: self.order.into_proto() as i32,
+                order: Some(self.order.into_proto() as i32),
             },
         )?;
 
         let response = leaderboard
             .next_data_client()
-            .get_rank(request)
+            .get_competition_rank(request)
             .await?
             .into_inner();
 
@@ -57,18 +49,15 @@ impl LeaderboardRequest for GetRankRequest {
     }
 }
 
-/// The response type for a successful `GetRankRequest`
-pub struct GetRankResponse {
+pub struct GetCompetitionRankResponse {
     elements: Vec<RankedElement>,
 }
 
-impl GetRankResponse {
-    /// Returns the ranked elements in the response.
+impl GetCompetitionRankResponse {
     pub fn elements(&self) -> &[RankedElement] {
         &self.elements
     }
 
-    /// Consumes the response and returns the ranked elements.
     pub fn into_elements(self) -> Vec<RankedElement> {
         self.elements
     }

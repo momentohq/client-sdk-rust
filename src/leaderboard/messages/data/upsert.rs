@@ -61,7 +61,6 @@ where
             cache_name,
             leaderboard.client_timeout(),
             momento_protos::leaderboard::UpsertElementsRequest {
-                cache_name: cache_name.to_string(),
                 leaderboard: leaderboard.leaderboard_name().to_string(),
                 elements: self
                     .elements
