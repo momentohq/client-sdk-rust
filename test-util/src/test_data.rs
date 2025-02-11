@@ -1,4 +1,7 @@
-use momento::cache::{GetResponse, ListFetchResponse, SortedSetElements, SortedSetFetchResponse};
+use momento::{
+    cache::{GetResponse, ListFetchResponse, SortedSetElements, SortedSetFetchResponse},
+    leaderboard::{messages::data::fetch::FetchResponse, Element, RankedElement},
+};
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -8,6 +11,10 @@ pub fn unique_string(prefix: impl Into<String>) -> String {
 
 pub fn unique_cache_name() -> String {
     unique_string("rust-sdk")
+}
+
+pub fn unique_leaderboard_name() -> String {
+    unique_string("leaderboard")
 }
 
 pub fn unique_key() -> String {
@@ -205,5 +212,62 @@ impl From<&TestList> for ListFetchResponse {
 impl From<TestList> for ListFetchResponse {
     fn from(test_list: TestList) -> Self {
         test_list.values().clone().into()
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct TestLeaderboard {
+    pub ranked_elements: Vec<RankedElement>,
+}
+
+impl TestLeaderboard {
+    pub fn new() -> Self {
+        Self {
+            ranked_elements: vec![
+                RankedElement {
+                    id: 0,
+                    rank: 0,
+                    score: 1.0,
+                },
+                RankedElement {
+                    id: 1,
+                    rank: 1,
+                    score: 2.0,
+                },
+            ],
+        }
+    }
+
+    pub fn ranked_elements(&self) -> Vec<RankedElement> {
+        self.ranked_elements.clone()
+    }
+
+    pub fn elements(&self) -> Vec<Element> {
+        self.ranked_elements
+            .iter()
+            .map(|element| Element {
+                id: element.id,
+                score: element.score,
+            })
+            .collect()
+    }
+
+    pub fn ids(&self) -> Vec<u32> {
+        self.ranked_elements
+            .iter()
+            .map(|element| element.id)
+            .collect()
+    }
+}
+
+impl Default for TestLeaderboard {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl From<&TestLeaderboard> for FetchResponse {
+    fn from(test_leaderboard: &TestLeaderboard) -> Self {
+        FetchResponse::new(test_leaderboard.ranked_elements().clone())
     }
 }
