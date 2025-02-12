@@ -1,4 +1,5 @@
-use super::{Order, RankedElement};
+use super::fetch::FetchResponse;
+use super::Order;
 use crate::leaderboard::LeaderboardRequest;
 use crate::utils::prep_leaderboard_request_with_timeout;
 use crate::{Leaderboard, MomentoResult};
@@ -9,21 +10,16 @@ pub struct GetCompetitionRankRequest {
 }
 
 impl GetCompetitionRankRequest {
-    pub fn new(ids: impl IntoIterator<Item = u32>) -> Self {
+    pub fn new(ids: impl IntoIterator<Item = u32>, order: Option<Order>) -> Self {
         Self {
             ids: ids.into_iter().collect(),
-            order: Order::Descending,
+            order: order.unwrap_or(Order::Descending),
         }
-    }
-
-    pub fn order(mut self, order: Order) -> Self {
-        self.order = order;
-        self
     }
 }
 
 impl LeaderboardRequest for GetCompetitionRankRequest {
-    type Response = GetCompetitionRankResponse;
+    type Response = FetchResponse;
 
     async fn send(self, leaderboard: &Leaderboard) -> MomentoResult<Self::Response> {
         let cache_name = leaderboard.cache_name();
@@ -43,22 +39,8 @@ impl LeaderboardRequest for GetCompetitionRankRequest {
             .await?
             .into_inner();
 
-        Ok(Self::Response {
-            elements: response.elements.iter().map(|v| v.into()).collect(),
-        })
-    }
-}
-
-pub struct GetCompetitionRankResponse {
-    elements: Vec<RankedElement>,
-}
-
-impl GetCompetitionRankResponse {
-    pub fn elements(&self) -> &[RankedElement] {
-        &self.elements
-    }
-
-    pub fn into_elements(self) -> Vec<RankedElement> {
-        self.elements
+        Ok(FetchResponse::new(
+            response.elements.iter().map(|v| v.into()).collect(),
+        ))
     }
 }

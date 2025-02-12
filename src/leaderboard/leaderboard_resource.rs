@@ -4,10 +4,8 @@ use crate::leaderboard::messages::data::delete::{DeleteRequest, DeleteResponse};
 use crate::leaderboard::messages::data::fetch::FetchResponse;
 use crate::leaderboard::messages::data::fetch_by_rank::{FetchByRankRequest, RankRange};
 use crate::leaderboard::messages::data::fetch_by_score::{FetchByScoreRequest, ScoreRange};
-use crate::leaderboard::messages::data::get_competition_rank::{
-    GetCompetitionRankRequest, GetCompetitionRankResponse,
-};
-use crate::leaderboard::messages::data::get_rank::{GetRankRequest, GetRankResponse};
+use crate::leaderboard::messages::data::get_competition_rank::GetCompetitionRankRequest;
+use crate::leaderboard::messages::data::get_rank::GetRankRequest;
 use crate::leaderboard::messages::data::length::{LengthRequest, LengthResponse};
 use crate::leaderboard::messages::data::remove_elements::{
     RemoveElementsRequest, RemoveElementsResponse,
@@ -22,6 +20,8 @@ use tonic::transport::Channel;
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
+
+use super::Order;
 
 static NEXT_DATA_CLIENT_INDEX: AtomicUsize = AtomicUsize::new(0);
 
@@ -83,7 +83,7 @@ impl Leaderboard {
     pub async fn get_rank(
         &self,
         ids: impl IntoIterator<Item = u32>,
-    ) -> MomentoResult<GetRankResponse> {
+    ) -> MomentoResult<FetchResponse> {
         let request = GetRankRequest::new(ids);
         request.send(self).await
     }
@@ -109,8 +109,9 @@ impl Leaderboard {
     pub async fn get_competition_rank(
         &self,
         ids: impl IntoIterator<Item = u32>,
-    ) -> MomentoResult<GetCompetitionRankResponse> {
-        let request = GetCompetitionRankRequest::new(ids);
+        rank: Option<Order>,
+    ) -> MomentoResult<FetchResponse> {
+        let request = GetCompetitionRankRequest::new(ids, rank);
         request.send(self).await
     }
 

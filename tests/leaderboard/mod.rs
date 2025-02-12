@@ -350,3 +350,50 @@ mod fetch_by_score {
         Ok(())
     }
 }
+
+mod get_competition_rank {
+    use momento::leaderboard::GetRankRequest;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn get_competition_rank_of_elements() -> MomentoResult<()> {
+        let leaderboard = unique_leaderboard();
+        let test_leaderboard = TestLeaderboard::new();
+        leaderboard.upsert(test_leaderboard.elements()).await?;
+
+        let response = leaderboard.get_rank(test_leaderboard.ids()).await?;
+
+        assert_eq!(
+            test_leaderboard.ranked_elements(),
+            response.elements(),
+            "Expected the leaderboard to contain the elements that were upserted"
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn get_rank_of_elements_asc() -> MomentoResult<()> {
+        let leaderboard = unique_leaderboard();
+        let test_leaderboard = TestLeaderboard::new();
+        leaderboard.upsert(test_leaderboard.elements()).await?;
+
+        let response = leaderboard
+            .send_request(GetRankRequest::new(test_leaderboard.ids()).order(Order::Ascending))
+            .await?;
+
+        let mut ranked_elements = test_leaderboard.ranked_elements();
+        let num_elements = ranked_elements.len();
+        // adjust ranks
+        for (i, e) in ranked_elements.iter_mut().enumerate() {
+            e.rank = (num_elements - i - 1) as u32;
+        }
+
+        assert_eq!(
+            ranked_elements,
+            response.elements(),
+            "Expected the leaderboard to contain the elements that were upserted"
+        );
+        Ok(())
+    }
+}
