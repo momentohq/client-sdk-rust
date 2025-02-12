@@ -6,7 +6,7 @@ pub use messages::LeaderboardRequest;
 pub use messages::data::delete::{DeleteRequest, DeleteResponse};
 pub use messages::data::fetch_by_rank::{FetchByRankRequest, RankRange};
 pub use messages::data::fetch_by_score::{FetchByScoreRequest, ScoreRange};
-pub use messages::data::get_rank::{GetRankRequest, GetRankResponse};
+pub use messages::data::get_rank::GetRankRequest;
 pub use messages::data::length::{LengthRequest, LengthResponse};
 pub use messages::data::remove_elements::{RemoveElementsRequest, RemoveElementsResponse};
 pub use messages::data::upsert::{Element, UpsertRequest, UpsertResponse};

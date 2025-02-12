@@ -350,3 +350,94 @@ mod fetch_by_score {
         Ok(())
     }
 }
+
+mod get_competition_rank {
+    use momento::leaderboard::{
+        messages::data::get_competition_rank::GetCompetitionRankRequest, Element, RankedElement,
+    };
+
+    use super::*;
+
+    fn test_competition_leaderboard() -> Vec<Element> {
+        vec![
+            Element { id: 0, score: 20.0 },
+            Element { id: 1, score: 10.0 },
+            Element { id: 2, score: 10.0 },
+            Element { id: 3, score: 5.0 },
+        ]
+    }
+
+    #[tokio::test]
+    async fn get_competition_rank_of_elements() -> MomentoResult<()> {
+        let leaderboard = unique_leaderboard();
+        leaderboard.upsert(test_competition_leaderboard()).await?;
+
+        let response = leaderboard.get_competition_rank([0, 1, 2, 3, 4]).await?;
+
+        assert_eq!(
+            vec![
+                RankedElement {
+                    id: 0,
+                    score: 20.0,
+                    rank: 0
+                },
+                RankedElement {
+                    id: 1,
+                    score: 10.0,
+                    rank: 1
+                },
+                RankedElement {
+                    id: 2,
+                    score: 10.0,
+                    rank: 1
+                },
+                RankedElement {
+                    id: 3,
+                    score: 5.0,
+                    rank: 3
+                },
+            ],
+            response.elements(),
+            "Expected the leaderboard to be sorted in 0113 order"
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn get_rank_of_elements_asc() -> MomentoResult<()> {
+        let leaderboard = unique_leaderboard();
+        leaderboard.upsert(test_competition_leaderboard()).await?;
+
+        let response = leaderboard
+            .send_request(GetCompetitionRankRequest::new([0, 1, 2, 3, 4]).order(Order::Ascending))
+            .await?;
+
+        assert_eq!(
+            vec![
+                RankedElement {
+                    id: 0,
+                    score: 20.0,
+                    rank: 3
+                },
+                RankedElement {
+                    id: 1,
+                    score: 10.0,
+                    rank: 1
+                },
+                RankedElement {
+                    id: 2,
+                    score: 10.0,
+                    rank: 1
+                },
+                RankedElement {
+                    id: 3,
+                    score: 5.0,
+                    rank: 0
+                },
+            ],
+            response.elements(),
+            "Expected the leaderboard to be sorted in 3110 order"
+        );
+        Ok(())
+    }
+}

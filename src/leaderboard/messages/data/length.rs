@@ -27,7 +27,6 @@ impl LeaderboardRequest for LengthRequest {
             cache_name,
             leaderboard.client_timeout(),
             momento_protos::leaderboard::GetLeaderboardLengthRequest {
-                cache_name: cache_name.to_string(),
                 leaderboard: leaderboard.leaderboard_name().to_string(),
             },
         )?;
