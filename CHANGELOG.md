@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.49.0](https://github.com/momentohq/client-sdk-rust/compare/v0.48.0...v0.49.0) (2025-02-12)
+
+
+### Features
+
+* add competition ranking to leaderboard ([#439](https://github.com/momentohq/client-sdk-rust/issues/439)) ([df4bd46](https://github.com/momentohq/client-sdk-rust/commit/df4bd4675e8398ff31dbe61d56935c2dfad9f687))
+
 ## [0.48.0](https://github.com/momentohq/client-sdk-rust/compare/v0.47.1...v0.48.0) (2025-02-11)
 
 
