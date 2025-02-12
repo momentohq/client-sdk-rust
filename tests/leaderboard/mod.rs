@@ -352,7 +352,10 @@ mod fetch_by_score {
 }
 
 mod get_competition_rank {
-    use momento::leaderboard::{Element, GetRankRequest, RankedElement};
+    use momento::leaderboard::{
+        messages::data::get_competition_rank::GetCompetitionRankRequest, Element, GetRankRequest,
+        RankedElement,
+    };
 
     use super::*;
 
@@ -371,7 +374,7 @@ mod get_competition_rank {
         leaderboard.upsert(test_competition_leaderboard()).await?;
 
         let response = leaderboard
-            .get_competition_rank([0, 1, 2, 3, 4], None)
+            .send_request(GetCompetitionRankRequest::new([0, 1, 2, 3, 4]).order(Order::Ascending))
             .await?;
 
         assert_eq!(

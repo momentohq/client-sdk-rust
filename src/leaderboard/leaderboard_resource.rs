@@ -21,8 +21,6 @@ use tonic::transport::Channel;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
-use super::Order;
-
 static NEXT_DATA_CLIENT_INDEX: AtomicUsize = AtomicUsize::new(0);
 
 /// Represents a remote leaderboard resource.
@@ -109,9 +107,8 @@ impl Leaderboard {
     pub async fn get_competition_rank(
         &self,
         ids: impl IntoIterator<Item = u32>,
-        rank: Option<Order>,
     ) -> MomentoResult<FetchResponse> {
-        let request = GetCompetitionRankRequest::new(ids, rank);
+        let request = GetCompetitionRankRequest::new(ids);
         request.send(self).await
     }
 

@@ -10,11 +10,23 @@ pub struct GetCompetitionRankRequest {
 }
 
 impl GetCompetitionRankRequest {
-    pub fn new(ids: impl IntoIterator<Item = u32>, order: Option<Order>) -> Self {
+    /// Constructs a new `GetCompetitionRankRequest`.
+    ///
+    /// Defaults to DESCENDING order, meaning that rank 0
+    /// is the element with the highest score.
+    pub fn new(ids: impl IntoIterator<Item = u32>) -> Self {
         Self {
             ids: ids.into_iter().collect(),
-            order: order.unwrap_or(Order::Descending),
+            order: Order::Descending,
         }
+    }
+
+    /// Sets the order ranking.
+    ///
+    /// Defaults to DESCENDING order.
+    pub fn order(mut self, order: Order) -> Self {
+        self.order = order;
+        self
     }
 }
 
