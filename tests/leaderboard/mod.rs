@@ -352,22 +352,53 @@ mod fetch_by_score {
 }
 
 mod get_competition_rank {
-    use momento::leaderboard::GetRankRequest;
+    use momento::leaderboard::{Element, GetRankRequest, RankedElement};
 
     use super::*;
+
+    fn test_competition_leaderboard() -> Vec<Element> {
+        vec![
+            Element { id: 0, score: 20.0 },
+            Element { id: 1, score: 10.0 },
+            Element { id: 2, score: 10.0 },
+            Element { id: 3, score: 5.0 },
+        ]
+    }
 
     #[tokio::test]
     async fn get_competition_rank_of_elements() -> MomentoResult<()> {
         let leaderboard = unique_leaderboard();
-        let test_leaderboard = TestLeaderboard::new();
-        leaderboard.upsert(test_leaderboard.elements()).await?;
+        leaderboard.upsert(test_competition_leaderboard()).await?;
 
-        let response = leaderboard.get_rank(test_leaderboard.ids()).await?;
+        let response = leaderboard
+            .get_competition_rank([0, 1, 2, 3, 4], None)
+            .await?;
 
         assert_eq!(
-            test_leaderboard.ranked_elements(),
+            vec![
+                RankedElement {
+                    id: 0,
+                    score: 20.0,
+                    rank: 0
+                },
+                RankedElement {
+                    id: 1,
+                    score: 10.0,
+                    rank: 1
+                },
+                RankedElement {
+                    id: 2,
+                    score: 10.0,
+                    rank: 1
+                },
+                RankedElement {
+                    id: 3,
+                    score: 5.0,
+                    rank: 3
+                },
+            ],
             response.elements(),
-            "Expected the leaderboard to contain the elements that were upserted"
+            "Expected the leaderboard to be sorted in 0113 order"
         );
         Ok(())
     }
@@ -375,24 +406,37 @@ mod get_competition_rank {
     #[tokio::test]
     async fn get_rank_of_elements_asc() -> MomentoResult<()> {
         let leaderboard = unique_leaderboard();
-        let test_leaderboard = TestLeaderboard::new();
-        leaderboard.upsert(test_leaderboard.elements()).await?;
+        leaderboard.upsert(test_competition_leaderboard()).await?;
 
         let response = leaderboard
-            .send_request(GetRankRequest::new(test_leaderboard.ids()).order(Order::Ascending))
+            .get_competition_rank([0, 1, 2, 3, 4], Some(Order::Ascending))
             .await?;
 
-        let mut ranked_elements = test_leaderboard.ranked_elements();
-        let num_elements = ranked_elements.len();
-        // adjust ranks
-        for (i, e) in ranked_elements.iter_mut().enumerate() {
-            e.rank = (num_elements - i - 1) as u32;
-        }
-
         assert_eq!(
-            ranked_elements,
+            vec![
+                RankedElement {
+                    id: 0,
+                    score: 20.0,
+                    rank: 3
+                },
+                RankedElement {
+                    id: 1,
+                    score: 10.0,
+                    rank: 1
+                },
+                RankedElement {
+                    id: 2,
+                    score: 10.0,
+                    rank: 1
+                },
+                RankedElement {
+                    id: 3,
+                    score: 5.0,
+                    rank: 0
+                },
+            ],
             response.elements(),
-            "Expected the leaderboard to contain the elements that were upserted"
+            "Expected the leaderboard to be sorted in 3110 order"
         );
         Ok(())
     }
