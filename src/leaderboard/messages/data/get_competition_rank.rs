@@ -4,6 +4,7 @@ use crate::leaderboard::LeaderboardRequest;
 use crate::utils::prep_leaderboard_request_with_timeout;
 use crate::{Leaderboard, MomentoResult};
 
+/// A request to get ranked elements, sorted by competition ranking,  by providing a list of element IDs.
 pub struct GetCompetitionRankRequest {
     ids: Vec<u32>,
     order: Order,

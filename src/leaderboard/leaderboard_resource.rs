@@ -104,6 +104,10 @@ impl Leaderboard {
         request.send(self).await
     }
 
+    /// Get rank of elements, using competition ranking, from a leaderboard using their element ids.
+    ///
+    /// Defaults to DESCENDING order rank, meaning rank 0 is the element with
+    /// the highest score.
     pub async fn get_competition_rank(
         &self,
         ids: impl IntoIterator<Item = u32>,

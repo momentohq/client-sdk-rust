@@ -9,6 +9,8 @@ pub mod fetch_by_rank;
 /// Contains the request and response types for requesting elements from a
 /// leaderboard by score.
 pub mod fetch_by_score;
+/// Contains the request and response types for requesting elements, sorted
+/// by competition ranking, from a leaderboard using their element ids.
 pub mod get_competition_rank;
 /// Contains the request and response types for requesting elements from a
 /// leaderboard using their element ids.
