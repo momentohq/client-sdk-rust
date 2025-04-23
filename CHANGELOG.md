@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.50.0](https://github.com/momentohq/client-sdk-rust/compare/v0.49.0...v0.50.0) (2025-04-23)
+
+
+### Features
+
+* remove storage client ([#443](https://github.com/momentohq/client-sdk-rust/issues/443)) ([fb508a1](https://github.com/momentohq/client-sdk-rust/commit/fb508a18abeece6380ffc5ca66ac23f3085c4ef3))
+
 ## [0.49.0](https://github.com/momentohq/client-sdk-rust/compare/v0.48.0...v0.49.0) (2025-02-12)
 
 
