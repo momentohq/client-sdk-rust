@@ -177,11 +177,9 @@ impl Value {
     }
 }
 
-impl TryFrom<Value> for Vec<Vec<u8>> {
-    type Error = MomentoError;
-
-    fn try_from(value: Value) -> Result<Self, Self::Error> {
-        Ok(value.raw_item)
+impl From<Value> for Vec<Vec<u8>> {
+    fn from(value: Value) -> Self {
+        value.raw_item
     }
 }
 
@@ -198,7 +196,7 @@ impl TryFrom<ListFetchResponse> for Vec<Vec<u8>> {
 
     fn try_from(value: ListFetchResponse) -> Result<Self, Self::Error> {
         match value {
-            ListFetchResponse::Hit { values } => Ok(values.try_into()?),
+            ListFetchResponse::Hit { values } => Ok(values.into()),
             ListFetchResponse::Miss => Err(MomentoError::miss("ListFetch")),
         }
     }
