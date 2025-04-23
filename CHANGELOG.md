@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.50.1](https://github.com/momentohq/client-sdk-rust/compare/v0.50.0...v0.50.1) (2025-04-23)
+
+
+### Miscellaneous
+
+* add more from conversions and refactor to make less errorful ([#442](https://github.com/momentohq/client-sdk-rust/issues/442)) ([7692abe](https://github.com/momentohq/client-sdk-rust/commit/7692abe8bdefa5daed11ef9ebb53f7f303887732))
+
 ## [0.50.0](https://github.com/momentohq/client-sdk-rust/compare/v0.49.0...v0.50.0) (2025-04-23)
 
 
