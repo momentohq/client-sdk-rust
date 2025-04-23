@@ -79,7 +79,6 @@ run-examples:
 	&& cargo run --bin=readme \
 	&& cargo run --bin=cache \
 	&& cargo run --bin=topics \
-	&& cargo run --bin=storage \
 	&& cargo run --bin=docs_examples \
 	&& cargo run --bin=cheat_sheet_client_instantiation
 
