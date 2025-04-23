@@ -19,15 +19,14 @@ pub struct CredentialProvider {
     pub(crate) control_endpoint: String,
     pub(crate) cache_endpoint: String,
     pub(crate) token_endpoint: String,
-    pub(crate) storage_endpoint: String,
 }
 
 impl Display for CredentialProvider {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "CredentialProvider {{ auth_token: <redacted>, cache_endpoint: {}, control_endpoint: {}, token_endpoint: {}, storage_endpoint: {} }}",
-            self.cache_endpoint, self.control_endpoint, self.token_endpoint, self.storage_endpoint
+            "CredentialProvider {{ auth_token: <redacted>, cache_endpoint: {}, control_endpoint: {}, token_endpoint: {} }}",
+            self.cache_endpoint, self.control_endpoint, self.token_endpoint
         )
     }
 }
@@ -39,7 +38,6 @@ impl Debug for CredentialProvider {
             .field("cache_endpoint", &self.cache_endpoint)
             .field("control_endpoint", &self.control_endpoint)
             .field("token_endpoint", &self.token_endpoint)
-            .field("storage_endpoint", &self.storage_endpoint)
             .finish()
     }
 }
@@ -127,7 +125,6 @@ impl CredentialProvider {
         self.control_endpoint = https_endpoint(get_control_endpoint(endpoint));
         self.cache_endpoint = https_endpoint(get_cache_endpoint(endpoint));
         self.token_endpoint = https_endpoint(get_token_endpoint(endpoint));
-        self.storage_endpoint = https_endpoint(get_storage_endpoint(endpoint));
         self
     }
 }
@@ -148,7 +145,6 @@ fn process_v1_token(auth_token_bytes: Vec<u8>) -> MomentoResult<CredentialProvid
         cache_endpoint: https_endpoint(get_cache_endpoint(&json.endpoint)),
         control_endpoint: https_endpoint(get_control_endpoint(&json.endpoint)),
         token_endpoint: https_endpoint(get_token_endpoint(&json.endpoint)),
-        storage_endpoint: https_endpoint(get_storage_endpoint(&json.endpoint)),
     })
 }
 
@@ -162,10 +158,6 @@ fn get_control_endpoint(endpoint: &str) -> String {
 
 fn get_token_endpoint(endpoint: &str) -> String {
     format!("token.{endpoint}")
-}
-
-fn get_storage_endpoint(endpoint: &str) -> String {
-    format!("storage.{endpoint}")
 }
 
 fn https_endpoint(hostname: String) -> String {
@@ -208,10 +200,6 @@ mod tests {
             credential_provider.token_endpoint
         );
 
-        assert_eq!(
-            "https://storage.momento_endpoint",
-            credential_provider.storage_endpoint
-        );
         assert_eq!("eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0IHN1YmplY3QiLCJ2ZXIiOjEsInAiOiIifQ.hg2wMbWe-wesQVtA7wuJcRULjRphXLQwQTVYfQL3L7c", credential_provider.auth_token);
     }
 
@@ -267,10 +255,6 @@ mod tests {
             "https://token.momento_endpoint",
             credential_provider.token_endpoint
         );
-        assert_eq!(
-            "https://storage.momento_endpoint",
-            credential_provider.storage_endpoint
-        );
         assert_eq!("eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0IHN1YmplY3QiLCJ2ZXIiOjEsInAiOiIifQ.hg2wMbWe-wesQVtA7wuJcRULjRphXLQwQTVYfQL3L7c", credential_provider.auth_token);
     }
 
@@ -286,10 +270,6 @@ mod tests {
             credential_provider.control_endpoint
         );
         assert_eq!("https://token.foo.com", credential_provider.token_endpoint);
-        assert_eq!(
-            "https://storage.foo.com",
-            credential_provider.storage_endpoint
-        );
         assert_eq!("eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0IHN1YmplY3QiLCJ2ZXIiOjEsInAiOiIifQ.hg2wMbWe-wesQVtA7wuJcRULjRphXLQwQTVYfQL3L7c", credential_provider.auth_token);
 
         Ok(())

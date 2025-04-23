@@ -8,7 +8,6 @@ env:
   CARGO_TERM_COLOR: always
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   TEST_CACHE_NAME: rust-integration-test-ci-cache-${{ github.sha }}
-  TEST_STORE_NAME: rust-integration-test-ci-store-${{ github.sha }}
   TEST_AUTH_CACHE_NAME: rust-integration-test-ci-cache-auth-${{ github.sha }}
 
 jobs:
@@ -39,11 +38,11 @@ jobs:
 
       - name: Log rust versions
         run: |
-            set -e
-            set -x
-            rustc --version
-            cargo --version
-            rustup show
+          set -e
+          set -x
+          rustc --version
+          cargo --version
+          rustup show
 
       - name: Verify README generation
         uses: momentohq/standards-and-practices/github-actions/oss-readme-template@gh-actions-v2
@@ -109,8 +108,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.pull_request.head.sha }}
+# temporary so that storage examples won't run
+#        with:
+#          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.pull_request.head.sha }}
 
       - uses: Swatinem/rust-cache@v2
 
