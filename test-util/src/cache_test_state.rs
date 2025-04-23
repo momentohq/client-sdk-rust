@@ -6,7 +6,7 @@ use once_cell::sync::Lazy;
 use tokio::sync::watch::channel;
 
 use crate::test_utils::get_test_auth_cache_name;
-use crate::{get_test_cache_name, get_test_credential_provider, get_test_store_name};
+use crate::{get_test_cache_name, get_test_credential_provider};
 use momento::cache::configurations;
 use momento::{AuthClient, CacheClient, LeaderboardClient, TopicClient};
 
@@ -16,7 +16,6 @@ pub static CACHE_TEST_STATE: Lazy<Arc<CacheTestState>> =
 pub struct CacheTestState {
     pub client: Arc<CacheClient>,
     pub cache_name: String,
-    pub store_name: String,
     pub leaderboard_client: Arc<LeaderboardClient>,
     pub topic_client: Arc<TopicClient>,
     pub auth_client: Arc<AuthClient>,
@@ -31,10 +30,6 @@ impl CacheTestState {
         let cache_name = get_test_cache_name();
         println!("Using cache name: {}", cache_name);
         let thread_cache_name = cache_name.clone();
-
-        let store_name = get_test_store_name();
-        println!("Using store name: {}", store_name);
-        let thread_store_name = store_name.clone();
 
         let auth_cache_name = get_test_auth_cache_name();
         println!("Using auth cache name: {}", auth_cache_name);
@@ -121,7 +116,6 @@ impl CacheTestState {
             topic_client: Arc::new(topic_client.clone()),
             auth_client: Arc::new(auth_client.clone()),
             cache_name,
-            store_name,
             runtime,
             auth_cache_name,
         }
