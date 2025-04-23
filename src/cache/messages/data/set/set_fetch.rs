@@ -1,4 +1,7 @@
-use std::convert::{TryFrom, TryInto};
+use std::{
+    collections::HashSet,
+    convert::{TryFrom, TryInto},
+};
 
 use momento_protos::cache_client::set_fetch_response;
 
@@ -146,6 +149,12 @@ impl Value {
 impl From<Value> for Vec<Vec<u8>> {
     fn from(value: Value) -> Self {
         value.raw_item
+    }
+}
+
+impl From<Value> for HashSet<Vec<u8>> {
+    fn from(value: Value) -> Self {
+        value.raw_item.into_iter().collect()
     }
 }
 

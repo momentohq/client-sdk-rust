@@ -138,11 +138,9 @@ impl Value {
     }
 }
 
-impl TryFrom<Value> for Vec<u8> {
-    type Error = MomentoError;
-
-    fn try_from(value: Value) -> Result<Self, Self::Error> {
-        Ok(value.raw_item)
+impl From<Value> for Vec<u8> {
+    fn from(value: Value) -> Self {
+        value.raw_item
     }
 }
 
@@ -159,7 +157,7 @@ impl TryFrom<ListPopBackResponse> for Vec<u8> {
 
     fn try_from(value: ListPopBackResponse) -> Result<Self, Self::Error> {
         match value {
-            ListPopBackResponse::Hit { value } => Ok(value.try_into()?),
+            ListPopBackResponse::Hit { value } => Ok(value.into()),
             ListPopBackResponse::Miss => Err(MomentoError::miss("ListPopBack")),
         }
     }
