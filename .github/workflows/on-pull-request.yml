@@ -108,9 +108,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-# temporary so that storage examples won't run
-#        with:
-#          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.pull_request.head.sha }}
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.pull_request.head.sha }}
 
       - uses: Swatinem/rust-cache@v2
 
