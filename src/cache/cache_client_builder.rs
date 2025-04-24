@@ -11,23 +11,28 @@ use momento_protos::cache_client::scs_client::ScsClient;
 use momento_protos::control_client::scs_control_client::ScsControlClient;
 use tonic::transport::Channel;
 
+/// The initial state of the CacheClientBuilder.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct CacheClientBuilder<State>(pub State);
 
+/// The state of the CacheClientBuilder when it is waiting for a default TTL.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct NeedsDefaultTtl(pub ());
 
+/// The state of the CacheClientBuilder when it is waiting for a configuration.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct NeedsConfiguration {
     default_ttl: Duration,
 }
 
+/// The state of the CacheClientBuilder when it is waiting for a credential provider.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct NeedsCredentialProvider {
     default_ttl: Duration,
     configuration: Configuration,
 }
 
+/// The state of the CacheClientBuilder when it is ready to build a CacheClient.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct ReadyToBuild {
     default_ttl: Duration,
@@ -36,12 +41,14 @@ pub struct ReadyToBuild {
 }
 
 impl CacheClientBuilder<NeedsDefaultTtl> {
+    /// Constructs a new CacheClientBuilder in the NeedsDefaultTtl state.
     pub fn default_ttl(self, default_ttl: Duration) -> CacheClientBuilder<NeedsConfiguration> {
         CacheClientBuilder(NeedsConfiguration { default_ttl })
     }
 }
 
 impl CacheClientBuilder<NeedsConfiguration> {
+    /// Constructs a new CacheClientBuilder in the NeedsConfiguration state.
     pub fn configuration(
         self,
         configuration: impl Into<Configuration>,
@@ -54,6 +61,7 @@ impl CacheClientBuilder<NeedsConfiguration> {
 }
 
 impl CacheClientBuilder<NeedsCredentialProvider> {
+    /// Constructs a new CacheClientBuilder in the NeedsCredentialProvider state.
     pub fn credential_provider(
         self,
         credential_provider: CredentialProvider,
@@ -67,6 +75,7 @@ impl CacheClientBuilder<NeedsCredentialProvider> {
 }
 
 impl CacheClientBuilder<ReadyToBuild> {
+    /// Constructs a new CacheClientBuilder in the ReadyToBuild state.
     pub fn with_num_connections(self, num_connections: usize) -> CacheClientBuilder<ReadyToBuild> {
         let grpc_configuration = self.0.configuration.transport_strategy.grpc_configuration;
         let transport_strategy = TransportStrategy {
@@ -82,6 +91,7 @@ impl CacheClientBuilder<ReadyToBuild> {
         })
     }
 
+    /// Constructs a new CacheClientBuilder in the ReadyToBuild state.
     pub fn build(self) -> MomentoResult<CacheClient> {
         let agent_value = &utils::user_agent("cache");
 

@@ -33,8 +33,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.pull_request.head.sha }}
+#        with:
+#          ref: ${{ github.event.pull_request.merge_commit_sha || github.event.pull_request.head.sha }}
 
       - name: Log rust versions
         run: |
