@@ -1,7 +1,7 @@
 use crate::config::grpc_configuration::GrpcConfiguration;
 
 /// Low-level settings for communicating with Momento.
-#[derive(Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub struct TransportStrategy {
     /// Low-level gRPC settings for communicating with Momento.
     pub(crate) grpc_configuration: GrpcConfiguration,

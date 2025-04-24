@@ -11,19 +11,24 @@ use momento_protos::cache_client::scs_client::ScsClient;
 use momento_protos::control_client::scs_control_client::ScsControlClient;
 use tonic::transport::Channel;
 
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub struct CacheClientBuilder<State>(pub State);
 
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub struct NeedsDefaultTtl(pub ());
 
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub struct NeedsConfiguration {
     default_ttl: Duration,
 }
 
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub struct NeedsCredentialProvider {
     default_ttl: Duration,
     configuration: Configuration,
 }
 
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub struct ReadyToBuild {
     default_ttl: Duration,
     configuration: Configuration,
