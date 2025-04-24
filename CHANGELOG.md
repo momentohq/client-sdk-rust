@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.50.3](https://github.com/momentohq/client-sdk-rust/compare/v0.50.2...v0.50.3) (2025-04-24)
+
+
+### Miscellaneous
+
+* export cache client builder ([#450](https://github.com/momentohq/client-sdk-rust/issues/450)) ([01ee675](https://github.com/momentohq/client-sdk-rust/commit/01ee675c3f0461409adb2183c75ed65ec7c1ace4))
+
 ## [0.50.2](https://github.com/momentohq/client-sdk-rust/compare/v0.50.1...v0.50.2) (2025-04-24)
 
 
