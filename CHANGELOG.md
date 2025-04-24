@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.50.2](https://github.com/momentohq/client-sdk-rust/compare/v0.50.1...v0.50.2) (2025-04-24)
+
+
+### Miscellaneous
+
+* add basic trait derivations for cache client builder ([#448](https://github.com/momentohq/client-sdk-rust/issues/448)) ([9d510e8](https://github.com/momentohq/client-sdk-rust/commit/9d510e8f624a98b5970f68b671322717842ebe3f))
+
 ## [0.50.1](https://github.com/momentohq/client-sdk-rust/compare/v0.50.0...v0.50.1) (2025-04-23)
 
 
