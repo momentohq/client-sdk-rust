@@ -115,7 +115,7 @@
 
 /// Contains the [CacheClient] for interacting with Momento Cache.
 pub mod cache;
-pub use cache::{CacheClient, CacheClientBuilder};
+pub use cache::{CacheClient, CacheClientBuilder, ReadyToBuild};
 
 /// Contains configuration settings for the Momento SDK that are shared between the Cache and Topics clients.
 pub mod config;
