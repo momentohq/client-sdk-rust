@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.50.4](https://github.com/momentohq/client-sdk-rust/compare/v0.50.3...v0.50.4) (2025-04-24)
+
+
+### Miscellaneous
+
+* export readytobuild ([#453](https://github.com/momentohq/client-sdk-rust/issues/453)) ([4ceab52](https://github.com/momentohq/client-sdk-rust/commit/4ceab5240f5d847fc9a46895e4a7da5bf80bf190))
+
 ## [0.50.3](https://github.com/momentohq/client-sdk-rust/compare/v0.50.2...v0.50.3) (2025-04-24)
 
 

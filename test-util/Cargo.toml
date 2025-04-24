@@ -1,6 +1,6 @@
 [package]
 name = "momento-test-util"
-version = "0.50.3"
+version = "0.50.4"
 edition = "2021"
 publish = false
 
