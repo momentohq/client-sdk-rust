@@ -3,7 +3,7 @@ use std::time::Duration;
 const MAX_NUM_CHANNELS: usize = 200;
 
 /// Low-level gRPC settings for communicating with Momento.
-#[derive(Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub struct GrpcConfiguration {
     /// The duration the client is willing to wait for an RPC to complete before it is terminated
     /// with a DeadlineExceeded error.

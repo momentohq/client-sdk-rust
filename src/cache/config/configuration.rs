@@ -30,7 +30,7 @@ use crate::config::transport_strategy::TransportStrategy;
 ///             )
 ///     );
 
-#[derive(Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Configuration {
     /// Low-level options for network interactions with Momento.
     pub(crate) transport_strategy: TransportStrategy,

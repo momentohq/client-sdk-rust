@@ -13,7 +13,7 @@ struct V1Token {
 
 /// Provides information that the client needs in order to establish a connection to and
 /// authenticate with the Momento service.
-#[derive(Clone)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct CredentialProvider {
     pub(crate) auth_token: String,
     pub(crate) control_endpoint: String,
