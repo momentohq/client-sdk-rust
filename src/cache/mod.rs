@@ -132,5 +132,6 @@ mod collection_ttl;
 pub use collection_ttl::CollectionTtl;
 
 mod cache_client;
-mod cache_client_builder;
 pub use cache_client::CacheClient;
+mod cache_client_builder;
+pub use cache_client_builder::CacheClientBuilder;
