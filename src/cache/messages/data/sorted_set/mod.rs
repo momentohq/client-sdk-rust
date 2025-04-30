@@ -14,6 +14,8 @@ pub mod sorted_set_get_scores;
 pub mod sorted_set_increment_score;
 /// Contains the request and response types for getting the length of a sorted set.
 pub mod sorted_set_length;
+/// Contains the request and response types for getting the number of elements in a sorted set between a range of scores.
+pub mod sorted_set_length_by_score;
 /// Contains the request and response types for adding an element to a sorted set.
 pub mod sorted_set_put_element;
 /// Contains the request and response types for adding elements to a sorted set.

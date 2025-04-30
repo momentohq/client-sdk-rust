@@ -34,7 +34,8 @@ use crate::cache::{
     SetResponse, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetFetchResponse,
     SortedSetGetRankRequest, SortedSetGetRankResponse, SortedSetGetScoreRequest,
     SortedSetGetScoreResponse, SortedSetGetScoresRequest, SortedSetGetScoresResponse,
-    SortedSetLengthRequest, SortedSetLengthResponse, SortedSetOrder, SortedSetPutElementRequest,
+    SortedSetLengthByScoreRequest, SortedSetLengthByScoreResponse, SortedSetLengthRequest,
+    SortedSetLengthResponse, SortedSetOrder, SortedSetPutElementRequest,
     SortedSetPutElementResponse, SortedSetPutElementsRequest, SortedSetPutElementsResponse,
     SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse, UpdateTtlRequest,
     UpdateTtlResponse,
@@ -1327,7 +1328,7 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// GetResponse the number of entries in a sorted set collection.
+    /// Get the number of entries in a sorted set collection.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
@@ -1364,7 +1365,7 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// GetResponse the rank (position) of a specific element in a sorted set.
+    /// Get the rank (position) of a specific element in a sorted set.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
@@ -1411,7 +1412,7 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// GetResponse the score of a specific element in a sorted set.
+    /// Get the score of a specific element in a sorted set.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
@@ -1451,7 +1452,7 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Gets the scores of specific elements in a sorted set.
+    /// Get the scores of specific elements in a sorted set.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
@@ -1543,6 +1544,61 @@ impl CacheClient {
     ) -> MomentoResult<SortedSetIncrementScoreResponse> {
         let request =
             SortedSetIncrementScoreRequest::new(cache_name, sorted_set_name, value, score);
+        request.send(self).await
+    }
+
+    /// Get the number of entries in a sorted set collection that fall between a minimum and maximum score.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - The name of the cache containing the sorted set.
+    /// * `sorted_set_name` - The name of the sorted set to add an element to.
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to fetch elements using a
+    /// [SortedSetLengthByScoreRequest], you can also provide the following optional arguments:
+    ///
+    /// * `min_score` - The minimum score (inclusive) of the elements to fetch. Defaults to negative
+    ///   infinity.
+    /// * `max_score` - The maximum score (inclusive) of the elements to fetch. Defaults to positive
+    ///   infinity.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento::MomentoResult;
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{SortedSetLengthByScoreResponse, SortedSetLengthByScoreRequest};
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let sorted_set_name = "sorted_set";
+    ///
+    /// let length_response = cache_client.sorted_set_length_by_score(
+    ///     cache_name,
+    ///     sorted_set_name,
+    /// ).await?;
+    ///
+    /// match length_response {
+    ///     SortedSetLengthByScoreResponse::Hit{ length } => {
+    ///         println!("Length of sorted set: {}", length);
+    ///     }
+    ///     SortedSetLengthByScoreResponse::Miss => println!("Cache miss"),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetLengthByScoreRequest]
+    /// which will allow you to set [optional arguments](SortedSetLengthByScoreRequest#optional-arguments) as well.
+    ///
+    /// For more examples of handling the response, see [SortedSetLengthByScoreResponse].
+    pub async fn sorted_set_length_by_score(
+        &self,
+        cache_name: impl Into<String>,
+        sorted_set_name: impl IntoBytes,
+    ) -> MomentoResult<SortedSetLengthByScoreResponse> {
+        let request = SortedSetLengthByScoreRequest::new(cache_name, sorted_set_name);
         request.send(self).await
     }
 

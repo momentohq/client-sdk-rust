@@ -785,6 +785,58 @@ mod sorted_set_length {
     }
 }
 
-mod sorted_set_length_by_score {}
+mod sorted_set_length_by_score {
+    use momento::cache::{SortedSetLengthByScoreRequest, SortedSetLengthByScoreResponse};
+
+    use super::*;
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let item = TestSortedSet::new();
+
+        // Miss before sorted set exists
+        let result = client
+            .sorted_set_length_by_score(cache_name, item.name())
+            .await?;
+        assert_eq!(result, SortedSetLengthByScoreResponse::Miss);
+
+        let result = client
+            .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
+            .await?;
+        assert_eq!(result, SortedSetPutElementsResponse {});
+
+        // Nonzero length after sorted set exists
+        let result = client
+            .sorted_set_length_by_score(cache_name, item.name())
+            .await?;
+        assert_eq!(result, SortedSetLengthByScoreResponse::Hit { length: 2 });
+
+        // Nonzero length after specifying min and max score
+        let request = SortedSetLengthByScoreRequest::new(cache_name, item.name())
+            .min_score(0.0)
+            .max_score(1.0);
+        let result = client.send_request(request).await?;
+        assert_eq!(result, SortedSetLengthByScoreResponse::Hit { length: 1 });
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_key();
+        let sorted_set_name = "sorted-set";
+
+        let result = client
+            .sorted_set_length_by_score(cache_name, sorted_set_name)
+            .await
+            .unwrap_err();
+
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
+        Ok(())
+    }
+}
 
 mod delete_sorted_set {}
