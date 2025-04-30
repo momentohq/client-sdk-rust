@@ -274,6 +274,8 @@ mod sorted_set_fetch_by_score {
 }
 
 mod sorted_set_get_rank {
+    use momento::cache::SortedSetGetRankRequest;
+
     use super::*;
 
     #[tokio::test]
@@ -297,6 +299,74 @@ mod sorted_set_get_rank {
         let result = client
             .sorted_set_get_rank(cache_name, item.name(), "nonexistent")
             .await?;
+        assert_eq!(result, SortedSetGetRankResponse::Miss);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn happy_path_explicit_ascending_order() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let item = TestSortedSet::new();
+
+        let result = client
+            .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
+            .await?;
+        assert_eq!(result, SortedSetPutElementsResponse {});
+
+        // Hit for existing value 1
+        let request =
+            SortedSetGetRankRequest::new(cache_name, item.name(), item.value[0].0.as_str())
+                .order(Ascending);
+        let result = client.send_request(request).await?;
+        assert_eq!(result, SortedSetGetRankResponse::Hit { rank: 0 });
+
+        // Hit for existing value 2
+        let request =
+            SortedSetGetRankRequest::new(cache_name, item.name(), item.value[1].0.as_str())
+                .order(Ascending);
+        let result = client.send_request(request).await?;
+        assert_eq!(result, SortedSetGetRankResponse::Hit { rank: 1 });
+
+        // Miss for nonexistent value
+        let request =
+            SortedSetGetRankRequest::new(cache_name, item.name(), "nonexistent").order(Descending);
+        let result = client.send_request(request).await?;
+        assert_eq!(result, SortedSetGetRankResponse::Miss);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn happy_path_descending_order() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let item = TestSortedSet::new();
+
+        let result = client
+            .sorted_set_put_elements(cache_name, item.name(), item.value().to_vec())
+            .await?;
+        assert_eq!(result, SortedSetPutElementsResponse {});
+
+        // Hit for existing value 1
+        let request =
+            SortedSetGetRankRequest::new(cache_name, item.name(), item.value[0].0.as_str())
+                .order(Descending);
+        let result = client.send_request(request).await?;
+        assert_eq!(result, SortedSetGetRankResponse::Hit { rank: 1 });
+
+        // Hit for existing value 2
+        let request =
+            SortedSetGetRankRequest::new(cache_name, item.name(), item.value[1].0.as_str())
+                .order(Descending);
+        let result = client.send_request(request).await?;
+        assert_eq!(result, SortedSetGetRankResponse::Hit { rank: 0 });
+
+        // Miss for nonexistent value
+        let request =
+            SortedSetGetRankRequest::new(cache_name, item.name(), "nonexistent").order(Descending);
+        let result = client.send_request(request).await?;
         assert_eq!(result, SortedSetGetRankResponse::Miss);
 
         Ok(())

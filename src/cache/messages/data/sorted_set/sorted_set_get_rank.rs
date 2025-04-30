@@ -3,8 +3,9 @@ use std::convert::TryFrom;
 use momento_protos::cache_client::{sorted_set_get_rank_response::Rank, ECacheResult};
 
 use crate::{
-    cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
-    MomentoResult,
+    cache::{MomentoRequest, SortedSetOrder},
+    utils::prep_request_with_timeout,
+    CacheClient, IntoBytes, MomentoError, MomentoResult,
 };
 
 /// Get the rank (position) of a specific element in a sorted set.
@@ -14,6 +15,11 @@ use crate::{
 /// * `sorted_set_name` - name of the sorted set
 /// * `value` - the sorted set value to get the rank of
 ///
+/// # Optional Arguments
+///
+/// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
+///   Defaults to Ascending.
+///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -21,14 +27,15 @@ use crate::{
 /// # use momento_test_util::create_doctest_cache_client;
 /// # tokio_test::block_on(async {
 /// use std::convert::TryInto;
-/// use momento::cache::{SortedSetGetRankResponse, SortedSetGetRankRequest};
+/// use momento::cache::{SortedSetOrder, SortedSetGetRankResponse, SortedSetGetRankRequest};
 /// use momento::MomentoErrorCode;
 /// # let (cache_client, cache_name) = create_doctest_cache_client();
 /// let sorted_set_name = "sorted_set";
 ///
 /// # cache_client.sorted_set_put_elements(&cache_name, sorted_set_name.to_string(), vec![("value1", 1.0), ("value2", 2.0)]).await;
 ///
-/// let get_rank_request = SortedSetGetRankRequest::new(cache_name, sorted_set_name, "value1");
+/// let get_rank_request = SortedSetGetRankRequest::new(cache_name, sorted_set_name, "value1")
+///     .order(SortedSetOrder::Ascending);
 /// let rank: u64 = cache_client.send_request(get_rank_request).await?.try_into().expect("Expected a rank!");
 /// # assert_eq!(rank, 0);
 /// # Ok(())
@@ -39,6 +46,7 @@ pub struct SortedSetGetRankRequest<L: IntoBytes, V: IntoBytes> {
     cache_name: String,
     sorted_set_name: L,
     value: V,
+    order: SortedSetOrder,
 }
 
 impl<L: IntoBytes, V: IntoBytes> SortedSetGetRankRequest<L, V> {
@@ -48,7 +56,14 @@ impl<L: IntoBytes, V: IntoBytes> SortedSetGetRankRequest<L, V> {
             cache_name: cache_name.into(),
             sorted_set_name,
             value,
+            order: SortedSetOrder::Ascending,
         }
+    }
+
+    /// Set the rank order of the request.
+    pub fn order(mut self, order: impl Into<Option<SortedSetOrder>>) -> Self {
+        self.order = order.into().unwrap_or(SortedSetOrder::Ascending);
+        self
     }
 }
 
@@ -62,7 +77,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetRankRequest<L, V
             momento_protos::cache_client::SortedSetGetRankRequest {
                 set_name: self.sorted_set_name.into_bytes(),
                 value: self.value.into_bytes(),
-                order: 0,
+                order: self.order as i32,
             },
         )?;
 
@@ -134,5 +149,51 @@ impl TryFrom<SortedSetGetRankResponse> for u64 {
             SortedSetGetRankResponse::Hit { rank } => Ok(rank),
             SortedSetGetRankResponse::Miss => Err(MomentoError::miss("SortedSetGetRank")),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sorted_set_get_rank_request_builder() {
+        let cache_name = "my_cache";
+        let sorted_set_name = "my_sorted_set";
+
+        // Test with ascending order
+        let request = SortedSetGetRankRequest::new(cache_name, sorted_set_name, "value1")
+            .order(SortedSetOrder::Ascending);
+
+        assert_eq!(request.cache_name, cache_name);
+        assert_eq!(
+            request.sorted_set_name.into_bytes(),
+            sorted_set_name.as_bytes()
+        );
+        assert_eq!(request.value, "value1");
+        assert_eq!(request.order, SortedSetOrder::Ascending);
+
+        // Test with descending order
+        let request = SortedSetGetRankRequest::new(cache_name, sorted_set_name, "value1")
+            .order(SortedSetOrder::Descending);
+
+        assert_eq!(request.cache_name, cache_name);
+        assert_eq!(
+            request.sorted_set_name.into_bytes(),
+            sorted_set_name.as_bytes()
+        );
+        assert_eq!(request.value, "value1");
+        assert_eq!(request.order, SortedSetOrder::Descending);
+
+        // Test with default order
+        let request = SortedSetGetRankRequest::new(cache_name, sorted_set_name, "value1");
+
+        assert_eq!(request.cache_name, cache_name);
+        assert_eq!(
+            request.sorted_set_name.into_bytes(),
+            sorted_set_name.as_bytes()
+        );
+        assert_eq!(request.value, "value1");
+        assert_eq!(request.order, SortedSetOrder::Ascending);
     }
 }

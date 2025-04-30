@@ -1371,6 +1371,13 @@ impl CacheClient {
     /// * `sorted_set_name` - name of the sorted set
     /// * `value` - the sorted set value to get the rank of
     ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to fetch elements using a
+    /// [SortedSetGetRankRequest], you can also provide the following optional arguments:
+    ///
+    /// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
+    ///   Defaults to [SortedSetOrder::Ascending].
+    ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
     /// ```
