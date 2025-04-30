@@ -37,8 +37,8 @@ use crate::cache::{
     SortedSetLengthByScoreRequest, SortedSetLengthByScoreResponse, SortedSetLengthRequest,
     SortedSetLengthResponse, SortedSetOrder, SortedSetPutElementRequest,
     SortedSetPutElementResponse, SortedSetPutElementsRequest, SortedSetPutElementsResponse,
-    SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse, UpdateTtlRequest,
-    UpdateTtlResponse,
+    SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse, SortedSetUnionStoreRequest,
+    SortedSetUnionStoreResponse, SortedSetUnionStoreSource, UpdateTtlRequest, UpdateTtlResponse,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -1599,6 +1599,64 @@ impl CacheClient {
         sorted_set_name: impl IntoBytes,
     ) -> MomentoResult<SortedSetLengthByScoreResponse> {
         let request = SortedSetLengthByScoreRequest::new(cache_name, sorted_set_name);
+        request.send(self).await
+    }
+
+    /// Compute the union of multiple sorted sets and store the result in a destination sorted set.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - The name of the cache containing the sorted set.
+    /// * `sorted_set_name` - The name of the destination sorted set. This set is not implicitly included as a source.
+    /// * `sources` - The sorted sets to compute the union for.
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to fetch elements using a
+    /// [SortedSetUnionStoreRequest], you can also provide the following optional arguments:
+    ///
+    /// * `aggregate` - The aggregate function to use to determine the final score for an element that exists in multiple source sets. Defaults to [SortedSetAggregateFunction::Sum].
+    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento::MomentoResult;
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{
+    ///     SortedSetUnionStoreResponse, SortedSetUnionStoreRequest, CollectionTtl,
+    ///     SortedSetAggregateFunction, SortedSetUnionStoreSource
+    /// };
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    ///
+    /// let destination_sorted_set_name = "sorted_set";
+    /// let sources = vec![
+    ///     SortedSetUnionStoreSource::new("one_sorted_set", 1.0),
+    ///     SortedSetUnionStoreSource::new("two_sorted_set", 2.0),
+    /// ];
+    ///
+    /// let destination_length: u32 = cache_client.sorted_set_union_store(
+    ///     cache_name,
+    ///     destination_sorted_set_name,
+    ///     sources,
+    /// ).await?.into();
+    ///
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetUnionStoreRequest]
+    /// which will allow you to set [optional arguments](SortedSetUnionStoreRequest#optional-arguments) as well.
+    ///
+    /// For more examples of handling the response, see [SortedSetUnionStoreResponse].
+    pub async fn sorted_set_union_store<S: IntoBytes>(
+        &self,
+        cache_name: impl Into<String>,
+        sorted_set_name: S,
+        sources: impl Into<Vec<SortedSetUnionStoreSource<S>>>,
+    ) -> MomentoResult<SortedSetUnionStoreResponse> {
+        let request = SortedSetUnionStoreRequest::new(cache_name, sorted_set_name, sources);
         request.send(self).await
     }
 

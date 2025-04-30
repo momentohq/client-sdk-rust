@@ -1,11 +1,13 @@
 use std::sync::Arc;
 
 use momento::cache::{
-    IntoSortedSetElements, SortedSetElement, SortedSetElements, SortedSetFetchByRankRequest,
-    SortedSetFetchByScoreRequest, SortedSetFetchResponse, SortedSetGetRankResponse,
-    SortedSetGetScoreResponse, SortedSetLengthResponse,
+    IntoSortedSetElements, SortedSetAggregateFunction, SortedSetElement, SortedSetElements,
+    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetFetchResponse,
+    SortedSetGetRankResponse, SortedSetGetScoreResponse, SortedSetLengthByScoreRequest,
+    SortedSetLengthByScoreResponse, SortedSetLengthResponse,
     SortedSetOrder::{Ascending, Descending},
-    SortedSetPutElementsResponse, SortedSetRemoveElementsResponse,
+    SortedSetPutElementsResponse, SortedSetRemoveElementsResponse, SortedSetUnionStoreRequest,
+    SortedSetUnionStoreResponse, SortedSetUnionStoreSource,
 };
 use momento::{CacheClient, MomentoErrorCode, MomentoResult};
 
@@ -786,8 +788,6 @@ mod sorted_set_length {
 }
 
 mod sorted_set_length_by_score {
-    use momento::cache::{SortedSetLengthByScoreRequest, SortedSetLengthByScoreResponse};
-
     use super::*;
 
     #[tokio::test]
@@ -840,3 +840,269 @@ mod sorted_set_length_by_score {
 }
 
 mod delete_sorted_set {}
+
+mod sorted_set_union_store {
+    use super::*;
+
+    #[tokio::test]
+    async fn happy_path() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let destination_sorted_set_name = unique_key();
+        let sorted_set_one = TestSortedSet::new();
+        let sorted_set_two = TestSortedSet::new();
+        let sources = vec![
+            SortedSetUnionStoreSource::new(sorted_set_one.name(), 1.0),
+            SortedSetUnionStoreSource::new(sorted_set_two.name(), 1.0),
+        ];
+
+        // Union of empty (nonexistent) sets produces destination set with length 0
+        let result = client
+            .sorted_set_union_store(
+                cache_name,
+                destination_sorted_set_name.clone(),
+                sources.clone(),
+            )
+            .await?;
+        assert_eq!(result, SortedSetUnionStoreResponse { length: 0 });
+
+        // Insert two sets
+        let result = client
+            .sorted_set_put_elements(
+                cache_name,
+                sorted_set_one.name(),
+                sorted_set_one.value().to_vec(),
+            )
+            .await?;
+        assert_eq!(result, SortedSetPutElementsResponse {});
+        let result = client
+            .sorted_set_put_elements(
+                cache_name,
+                sorted_set_two.name(),
+                sorted_set_two.value().to_vec(),
+            )
+            .await?;
+        assert_eq!(result, SortedSetPutElementsResponse {});
+
+        // Nonzero length after sorted set exists
+        let result = client
+            .sorted_set_union_store(cache_name, destination_sorted_set_name, sources)
+            .await?;
+        assert_eq!(result, SortedSetUnionStoreResponse { length: 4 });
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn happy_path_with_sum_aggregation() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let destination_sorted_set_name = unique_key();
+        let sorted_set_one = TestSortedSet::new();
+        let sorted_set_two = TestSortedSet::new();
+        let sources = vec![
+            SortedSetUnionStoreSource::new(sorted_set_one.name(), 1.0),
+            SortedSetUnionStoreSource::new(sorted_set_two.name(), 1.0),
+        ];
+
+        // Insert two sets, but duplicate the values from the first set.
+        let result = client
+            .sorted_set_put_elements(
+                cache_name,
+                sorted_set_one.name(),
+                sorted_set_one.value().to_vec(),
+            )
+            .await?;
+        assert_eq!(result, SortedSetPutElementsResponse {});
+        let result = client
+            .sorted_set_put_elements(
+                cache_name,
+                sorted_set_two.name(),
+                sorted_set_one.value().to_vec(),
+            )
+            .await?;
+        assert_eq!(result, SortedSetPutElementsResponse {});
+
+        // Nonzero length after sorted set exists
+        let request = SortedSetUnionStoreRequest::new(
+            cache_name,
+            destination_sorted_set_name.clone(),
+            sources.clone(),
+        )
+        .aggregate(SortedSetAggregateFunction::Sum);
+        let result = client.send_request(request).await?;
+        assert_eq!(result, SortedSetUnionStoreResponse { length: 2 });
+
+        // Test that the destination set has the correct elements
+        let result = client
+            .sorted_set_fetch_by_score(cache_name, destination_sorted_set_name, Ascending)
+            .await?;
+        assert_fetched_sorted_set_eq_after_sorting(
+            result,
+            vec![
+                (
+                    sorted_set_one.value()[0].0.clone(),
+                    sorted_set_one.value()[0].1 * 2.0,
+                ),
+                (
+                    sorted_set_one.value()[1].0.clone(),
+                    sorted_set_one.value()[1].1 * 2.0,
+                ),
+            ],
+        )?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn happy_path_with_min_aggregation() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let destination_sorted_set_name = unique_key();
+        let sorted_set_one = TestSortedSet::new();
+        let sorted_set_two = TestSortedSet::new();
+        let sources = vec![
+            SortedSetUnionStoreSource::new(sorted_set_one.name(), 1.0),
+            SortedSetUnionStoreSource::new(sorted_set_two.name(), 2.0),
+        ];
+
+        // Insert two sets, but duplicate the values from the first set.
+        let result = client
+            .sorted_set_put_elements(
+                cache_name,
+                sorted_set_one.name(),
+                sorted_set_one.value().to_vec(),
+            )
+            .await?;
+        assert_eq!(result, SortedSetPutElementsResponse {});
+        let result = client
+            .sorted_set_put_elements(
+                cache_name,
+                sorted_set_two.name(),
+                sorted_set_one.value().to_vec(),
+            )
+            .await?;
+        assert_eq!(result, SortedSetPutElementsResponse {});
+
+        // Nonzero length after sorted set exists
+        let request = SortedSetUnionStoreRequest::new(
+            cache_name,
+            destination_sorted_set_name.clone(),
+            sources.clone(),
+        )
+        .aggregate(SortedSetAggregateFunction::Min);
+        let result = client.send_request(request).await?;
+        assert_eq!(result, SortedSetUnionStoreResponse { length: 2 });
+
+        // Test that the destination set has the correct elements
+        let result = client
+            .sorted_set_fetch_by_score(cache_name, destination_sorted_set_name, Ascending)
+            .await?;
+        assert_fetched_sorted_set_eq_after_sorting(
+            result,
+            vec![
+                (
+                    sorted_set_one.value()[0].0.clone(),
+                    sorted_set_one.value()[0].1,
+                ),
+                (
+                    sorted_set_one.value()[1].0.clone(),
+                    sorted_set_one.value()[1].1,
+                ),
+            ],
+        )?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn happy_path_with_max_aggregation() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let destination_sorted_set_name = unique_key();
+        let sorted_set_one = TestSortedSet::new();
+        let sorted_set_two = TestSortedSet::new();
+        let sources = vec![
+            SortedSetUnionStoreSource::new(sorted_set_one.name(), 1.0),
+            SortedSetUnionStoreSource::new(sorted_set_two.name(), 0.0),
+        ];
+
+        // Insert two sets, but duplicate the values from the first set.
+        let result = client
+            .sorted_set_put_elements(
+                cache_name,
+                sorted_set_one.name(),
+                sorted_set_one.value().to_vec(),
+            )
+            .await?;
+        assert_eq!(result, SortedSetPutElementsResponse {});
+        let result = client
+            .sorted_set_put_elements(
+                cache_name,
+                sorted_set_two.name(),
+                sorted_set_one.value().to_vec(),
+            )
+            .await?;
+        assert_eq!(result, SortedSetPutElementsResponse {});
+
+        // Nonzero length after sorted set exists
+        let request = SortedSetUnionStoreRequest::new(
+            cache_name,
+            destination_sorted_set_name.clone(),
+            sources.clone(),
+        )
+        .aggregate(SortedSetAggregateFunction::Max);
+        let result = client.send_request(request).await?;
+        assert_eq!(result, SortedSetUnionStoreResponse { length: 2 });
+
+        // Test that the destination set has the correct elements
+        let result = client
+            .sorted_set_fetch_by_score(cache_name, destination_sorted_set_name, Ascending)
+            .await?;
+        assert_fetched_sorted_set_eq_after_sorting(
+            result,
+            vec![
+                (
+                    sorted_set_one.value()[0].0.clone(),
+                    sorted_set_one.value()[0].1,
+                ),
+                (
+                    sorted_set_one.value()[1].0.clone(),
+                    sorted_set_one.value()[1].1,
+                ),
+            ],
+        )?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn empty_sources_list() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let sorted_set_name = "sorted-set";
+
+        let result = client
+            .sorted_set_union_store(cache_name, sorted_set_name, vec![])
+            .await
+            .unwrap_err();
+
+        assert_eq!(result.error_code, MomentoErrorCode::InvalidArgumentError);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn nonexistent_cache() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = unique_key();
+        let sorted_set_name = "sorted-set";
+        let sources = vec![
+            SortedSetUnionStoreSource::new("one_sorted_set", 1.0),
+            SortedSetUnionStoreSource::new("two_sorted_set", 2.0),
+        ];
+
+        let result = client
+            .sorted_set_union_store(cache_name, sorted_set_name, sources)
+            .await
+            .unwrap_err();
+
+        assert_eq!(result.error_code, MomentoErrorCode::CacheNotFoundError);
+        Ok(())
+    }
+}

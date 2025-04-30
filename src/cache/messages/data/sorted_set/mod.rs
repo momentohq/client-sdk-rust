@@ -22,3 +22,5 @@ pub mod sorted_set_put_element;
 pub mod sorted_set_put_elements;
 /// Contains the request and response types for removing multiple elements from a sorted set.
 pub mod sorted_set_remove_elements;
+/// Contains the request and response types for computing the union of two sorted sets and storing the result in a new sorted set.
+pub mod sorted_set_union_store;
