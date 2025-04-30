@@ -15,6 +15,8 @@ use crate::{
 /// # Arguments
 /// * `cache_name` - name of cache
 /// * `sorted_set_name` - name of the sorted set
+///
+/// # Optional Arguments
 /// * `min_score` - the minimum score (inclusive) of the elements to fetch. Defaults to negative
 ///   infinity.
 /// * `max_score` - the maximum score (inclusive) of the elements to fetch. Defaults to positive
