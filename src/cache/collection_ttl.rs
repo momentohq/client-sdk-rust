@@ -11,7 +11,7 @@ use std::time::Duration;
 ///
 /// The default behaviour is to refresh the TTL (to prolong the life of the collection)
 /// each time it is written using the client's default item TTL.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct CollectionTtl {
     ttl: Option<Duration>,
     refresh: bool,
