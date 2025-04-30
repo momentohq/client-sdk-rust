@@ -1614,7 +1614,7 @@ impl CacheClient {
     /// If you use [send_request](CacheClient::send_request) to fetch elements using a
     /// [SortedSetUnionStoreRequest], you can also provide the following optional arguments:
     ///
-    /// * `aggregate` - The aggregate function to use to determine the final score for an element that exists in multiple source sets. Defaults to [SortedSetAggregateFunction::Sum].
+    /// * `aggregate` - The aggregate function to use to determine the final score for an element that exists in multiple source sets. Defaults to [crate::cache::SortedSetAggregateFunction::Sum].
     /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
     ///
     /// # Examples

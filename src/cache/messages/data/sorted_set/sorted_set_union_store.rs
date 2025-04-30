@@ -7,6 +7,7 @@ use crate::utils::prep_request_with_timeout;
 use crate::{CacheClient, IntoBytes, MomentoResult};
 
 /// Aggregate function to determine the final score for an element that exists in multiple source sets.
+#[repr(i32)]
 #[derive(Debug, Display, PartialEq, Eq, Clone)]
 pub enum SortedSetAggregateFunction {
     /// Sum the weighted scores of an element across all the source sets. This is the default.
