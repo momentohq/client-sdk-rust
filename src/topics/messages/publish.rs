@@ -66,7 +66,10 @@ impl<V: IntoTopicValue + std::marker::Send> MomentoRequest for PublishRequest<V>
             },
         )?;
 
-        let _ = topic_client.client.clone().publish(request).await?;
+        let _ = topic_client
+            .get_next_unary_client()
+            .publish(request)
+            .await?;
         Ok(TopicPublishResponse {})
     }
 }
