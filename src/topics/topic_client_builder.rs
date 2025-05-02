@@ -68,7 +68,7 @@ impl TopicClientBuilder<ReadyToBuild> {
         // Create a pool of grpc channels for streaming operations. Default to 4 channels.
         // TODO: Make this configurable.
         let mut streaming_clients = Vec::new();
-        let num_stream_clients = 1;
+        let num_stream_clients = 4;
         for _ in 0..num_stream_clients {
             let stream_manager = TopicSubscriptionManager::new(create_pubsub_client(
                 &self.0.credential_provider.cache_endpoint,
