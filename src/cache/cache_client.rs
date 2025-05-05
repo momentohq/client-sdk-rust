@@ -34,10 +34,11 @@ use crate::cache::{
     SetResponse, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetFetchResponse,
     SortedSetGetRankRequest, SortedSetGetRankResponse, SortedSetGetScoreRequest,
     SortedSetGetScoreResponse, SortedSetGetScoresRequest, SortedSetGetScoresResponse,
-    SortedSetLengthRequest, SortedSetLengthResponse, SortedSetOrder, SortedSetPutElementRequest,
+    SortedSetLengthByScoreRequest, SortedSetLengthByScoreResponse, SortedSetLengthRequest,
+    SortedSetLengthResponse, SortedSetOrder, SortedSetPutElementRequest,
     SortedSetPutElementResponse, SortedSetPutElementsRequest, SortedSetPutElementsResponse,
-    SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse, UpdateTtlRequest,
-    UpdateTtlResponse,
+    SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse, SortedSetUnionStoreRequest,
+    SortedSetUnionStoreResponse, UpdateTtlRequest, UpdateTtlResponse,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -47,6 +48,8 @@ use crate::cache::messages::data::sorted_set::sorted_set_increment_score::{
 };
 use crate::utils::IntoBytesIterable;
 use crate::{utils, IntoBytes, MomentoResult};
+
+use super::IntoSortedSetUnionStoreSources;
 
 /// Client to work with Momento Cache, the serverless caching service.
 ///
@@ -1327,7 +1330,7 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// GetResponse the number of entries in a sorted set collection.
+    /// Get the number of entries in a sorted set collection.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
@@ -1364,12 +1367,19 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// GetResponse the rank (position) of a specific element in a sorted set.
+    /// Get the rank (position) of a specific element in a sorted set.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
     /// * `sorted_set_name` - name of the sorted set
     /// * `value` - the sorted set value to get the rank of
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to fetch elements using a
+    /// [SortedSetGetRankRequest], you can also provide the following optional arguments:
+    ///
+    /// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
+    ///   Defaults to [SortedSetOrder::Ascending].
     ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -1404,7 +1414,7 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// GetResponse the score of a specific element in a sorted set.
+    /// Get the score of a specific element in a sorted set.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
@@ -1444,7 +1454,7 @@ impl CacheClient {
         request.send(self).await
     }
 
-    /// Gets the scores of specific elements in a sorted set.
+    /// Get the scores of specific elements in a sorted set.
     ///
     /// # Arguments
     /// * `cache_name` - name of cache
@@ -1536,6 +1546,123 @@ impl CacheClient {
     ) -> MomentoResult<SortedSetIncrementScoreResponse> {
         let request =
             SortedSetIncrementScoreRequest::new(cache_name, sorted_set_name, value, score);
+        request.send(self).await
+    }
+
+    /// Get the number of entries in a sorted set collection that fall between a minimum and maximum score.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - The name of the cache containing the sorted set.
+    /// * `sorted_set_name` - The name of the sorted set to add an element to.
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to fetch elements using a
+    /// [SortedSetLengthByScoreRequest], you can also provide the following optional arguments:
+    ///
+    /// * `min_score` - The minimum score (inclusive) of the elements to fetch. Defaults to negative
+    ///   infinity.
+    /// * `max_score` - The maximum score (inclusive) of the elements to fetch. Defaults to positive
+    ///   infinity.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento::MomentoResult;
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{SortedSetLengthByScoreResponse, SortedSetLengthByScoreRequest};
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let sorted_set_name = "sorted_set";
+    ///
+    /// let length_response = cache_client.sorted_set_length_by_score(
+    ///     cache_name,
+    ///     sorted_set_name,
+    /// ).await?;
+    ///
+    /// match length_response {
+    ///     SortedSetLengthByScoreResponse::Hit{ length } => {
+    ///         println!("Length of sorted set: {}", length);
+    ///     }
+    ///     SortedSetLengthByScoreResponse::Miss => println!("Cache miss"),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetLengthByScoreRequest]
+    /// which will allow you to set [optional arguments](SortedSetLengthByScoreRequest#optional-arguments) as well.
+    ///
+    /// For more examples of handling the response, see [SortedSetLengthByScoreResponse].
+    pub async fn sorted_set_length_by_score(
+        &self,
+        cache_name: impl Into<String>,
+        sorted_set_name: impl IntoBytes,
+    ) -> MomentoResult<SortedSetLengthByScoreResponse> {
+        let request = SortedSetLengthByScoreRequest::new(cache_name, sorted_set_name);
+        request.send(self).await
+    }
+
+    /// Compute the union of multiple sorted sets and store the result in a destination sorted set.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - The name of the cache containing the sorted set.
+    /// * `sorted_set_name` - The name of the destination sorted set. This set is not implicitly included as a source.
+    /// * `sources` - The sorted sets to compute the union for.
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to fetch elements using a
+    /// [SortedSetUnionStoreRequest], you can also provide the following optional arguments:
+    ///
+    /// * `aggregate` - The aggregate function to use to determine the final score for an element that exists in multiple source sets. Defaults to [crate::cache::SortedSetAggregateFunction::Sum].
+    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento::MomentoResult;
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use momento::cache::{
+    ///     SortedSetUnionStoreResponse, SortedSetUnionStoreRequest, CollectionTtl,
+    ///     SortedSetAggregateFunction, SortedSetUnionStoreSource
+    /// };
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    ///
+    /// let destination_sorted_set_name = "sorted_set";
+    /// let sources = vec![
+    ///     SortedSetUnionStoreSource::new("one_sorted_set", 1.0),
+    ///     SortedSetUnionStoreSource::new("two_sorted_set", 2.0),
+    /// ];
+    ///
+    /// let destination_length: u32 = cache_client.sorted_set_union_store(
+    ///     cache_name,
+    ///     destination_sorted_set_name,
+    ///     sources,
+    /// ).await?.into();
+    ///
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetUnionStoreRequest]
+    /// which will allow you to set [optional arguments](SortedSetUnionStoreRequest#optional-arguments) as well.
+    ///
+    /// For more examples of handling the response, see [SortedSetUnionStoreResponse].
+    pub async fn sorted_set_union_store<
+        S: IntoBytes,
+        Z: IntoBytes,
+        U: IntoSortedSetUnionStoreSources<Z>,
+    >(
+        &self,
+        cache_name: impl Into<String>,
+        sorted_set_name: S,
+        sources: U,
+    ) -> MomentoResult<SortedSetUnionStoreResponse> {
+        let request = SortedSetUnionStoreRequest::new(cache_name, sorted_set_name, sources);
         request.send(self).await
     }
 

@@ -93,6 +93,9 @@ pub use messages::data::sorted_set::sorted_set_increment_score::{
 pub use messages::data::sorted_set::sorted_set_length::{
     SortedSetLengthRequest, SortedSetLengthResponse,
 };
+pub use messages::data::sorted_set::sorted_set_length_by_score::{
+    SortedSetLengthByScoreRequest, SortedSetLengthByScoreResponse,
+};
 pub use messages::data::sorted_set::sorted_set_put_element::{
     SortedSetPutElementRequest, SortedSetPutElementResponse,
 };
@@ -102,6 +105,10 @@ pub use messages::data::sorted_set::sorted_set_put_elements::{
 };
 pub use messages::data::sorted_set::sorted_set_remove_elements::{
     SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse,
+};
+pub use messages::data::sorted_set::sorted_set_union_store::{
+    IntoSortedSetUnionStoreSources, SortedSetAggregateFunction, SortedSetUnionStoreRequest,
+    SortedSetUnionStoreResponse, SortedSetUnionStoreSource,
 };
 
 pub use messages::data::list::list_concatenate_back::{
