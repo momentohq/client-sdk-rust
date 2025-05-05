@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.51.0](https://github.com/momentohq/client-sdk-rust/compare/v0.50.4...v0.51.0) (2025-05-05)
+
+
+### Features
+
+* add sorted_set_union_store and sorted_set_length_by_score + upgrades ([#456](https://github.com/momentohq/client-sdk-rust/issues/456)) ([49ab5ab](https://github.com/momentohq/client-sdk-rust/commit/49ab5ab661a30afe9454a236613c50b562cd5f0a))
+
 ## [0.50.4](https://github.com/momentohq/client-sdk-rust/compare/v0.50.3...v0.50.4) (2025-04-24)
 
 
