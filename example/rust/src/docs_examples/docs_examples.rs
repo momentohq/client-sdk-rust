@@ -596,8 +596,7 @@ pub async fn example_API_SortedSetUnionStore(cache_client: &CacheClient, cache_n
     let _destination_length: u32 = cache_client
         .send_request(request)
         .await?
-        .try_into()
-        .expect("Expected a list length!");
+        .into();
     Ok(())
 }
 
