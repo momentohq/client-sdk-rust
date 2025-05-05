@@ -858,6 +858,12 @@ mod sorted_set_union_store {
             SortedSetUnionStoreSource::new(sorted_set_two.name(), 1.0),
         ];
 
+        // Destination set should be empty
+        let result = client
+            .sorted_set_length(cache_name, destination_sorted_set_name.clone())
+            .await?;
+        assert_eq!(result, SortedSetLengthResponse::Miss);
+
         // Union of empty (nonexistent) sets produces destination set with length 0
         let result = client
             .sorted_set_union_store(
@@ -888,9 +894,15 @@ mod sorted_set_union_store {
 
         // Nonzero length after sorted set exists
         let result = client
-            .sorted_set_union_store(cache_name, destination_sorted_set_name, sources)
+            .sorted_set_union_store(cache_name, destination_sorted_set_name.clone(), sources)
             .await?;
         assert_eq!(result, SortedSetUnionStoreResponse { length: 4 });
+
+        // Destination set should be non-empty
+        let result = client
+            .sorted_set_length(cache_name, destination_sorted_set_name)
+            .await?;
+        assert_eq!(result, SortedSetLengthResponse::Hit { length: 4 });
         Ok(())
     }
 
@@ -905,6 +917,12 @@ mod sorted_set_union_store {
         sources.insert(sorted_set_one.name(), 1.0);
         sources.insert(sorted_set_two.name(), 2.0);
 
+        // Destination set should be empty
+        let result = client
+            .sorted_set_length(cache_name, destination_sorted_set_name.clone())
+            .await?;
+        assert_eq!(result, SortedSetLengthResponse::Miss);
+
         // Union of empty (nonexistent) sets produces destination set with length 0
         let result = client
             .sorted_set_union_store(
@@ -935,9 +953,15 @@ mod sorted_set_union_store {
 
         // Nonzero length after sorted set exists
         let result = client
-            .sorted_set_union_store(cache_name, destination_sorted_set_name, sources)
+            .sorted_set_union_store(cache_name, destination_sorted_set_name.clone(), sources)
             .await?;
         assert_eq!(result, SortedSetUnionStoreResponse { length: 4 });
+
+        // Destination set should be non-empty
+        let result = client
+            .sorted_set_length(cache_name, destination_sorted_set_name)
+            .await?;
+        assert_eq!(result, SortedSetLengthResponse::Hit { length: 4 });
         Ok(())
     }
 
@@ -952,6 +976,12 @@ mod sorted_set_union_store {
             SortedSetUnionStoreSource::new(sorted_set_one.name(), 1.0),
             SortedSetUnionStoreSource::new(sorted_set_two.name(), 1.0),
         ];
+
+        // Destination set should be empty
+        let result = client
+            .sorted_set_length(cache_name, destination_sorted_set_name.clone())
+            .await?;
+        assert_eq!(result, SortedSetLengthResponse::Miss);
 
         // Insert two sets, but duplicate the values from the first set.
         let result = client
@@ -1013,6 +1043,12 @@ mod sorted_set_union_store {
             SortedSetUnionStoreSource::new(sorted_set_two.name(), 2.0),
         ];
 
+        // Destination set should be empty
+        let result = client
+            .sorted_set_length(cache_name, destination_sorted_set_name.clone())
+            .await?;
+        assert_eq!(result, SortedSetLengthResponse::Miss);
+
         // Insert two sets, but duplicate the values from the first set.
         let result = client
             .sorted_set_put_elements(
@@ -1073,6 +1109,12 @@ mod sorted_set_union_store {
             SortedSetUnionStoreSource::new(sorted_set_two.name(), 0.0),
         ];
 
+        // Destination set should be empty
+        let result = client
+            .sorted_set_length(cache_name, destination_sorted_set_name.clone())
+            .await?;
+        assert_eq!(result, SortedSetLengthResponse::Miss);
+
         // Insert two sets, but duplicate the values from the first set.
         let result = client
             .sorted_set_put_elements(
@@ -1118,6 +1160,51 @@ mod sorted_set_union_store {
                 ),
             ],
         )?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn duplicate_sources() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let destination_sorted_set_name = unique_key();
+        let sorted_set_one = TestSortedSet::new();
+        let sources = vec![(sorted_set_one.name(), 1.0), (sorted_set_one.name(), 2.0)];
+
+        // Destination set should be empty
+        let result = client
+            .sorted_set_length(cache_name, destination_sorted_set_name.clone())
+            .await?;
+        assert_eq!(result, SortedSetLengthResponse::Miss);
+
+        // Insert the set
+        let result = client
+            .sorted_set_put_elements(
+                cache_name,
+                sorted_set_one.name(),
+                sorted_set_one.value().to_vec(),
+            )
+            .await?;
+        assert_eq!(result, SortedSetPutElementsResponse {});
+
+        // Union of the set with itself should produce a set with length 2
+        let result = client
+            .sorted_set_union_store(cache_name, destination_sorted_set_name.clone(), sources)
+            .await?;
+        assert_eq!(result, SortedSetUnionStoreResponse { length: 2 });
+
+        // Test that the destination set has the correct elements
+        let result = client
+            .sorted_set_fetch_by_score(cache_name, destination_sorted_set_name, Ascending)
+            .await?;
+        // Should have unioned the values with values*2 using sum aggregation
+        let expected_elements = sorted_set_one
+            .value()
+            .iter()
+            .cloned()
+            .map(|(k, v)| (k, v + v * 2.0))
+            .collect();
+        assert_fetched_sorted_set_eq_after_sorting(result, expected_elements)?;
         Ok(())
     }
 
