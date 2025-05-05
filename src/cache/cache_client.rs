@@ -38,7 +38,7 @@ use crate::cache::{
     SortedSetLengthResponse, SortedSetOrder, SortedSetPutElementRequest,
     SortedSetPutElementResponse, SortedSetPutElementsRequest, SortedSetPutElementsResponse,
     SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse, SortedSetUnionStoreRequest,
-    SortedSetUnionStoreResponse, SortedSetUnionStoreSource, UpdateTtlRequest, UpdateTtlResponse,
+    SortedSetUnionStoreResponse, UpdateTtlRequest, UpdateTtlResponse,
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
@@ -48,6 +48,8 @@ use crate::cache::messages::data::sorted_set::sorted_set_increment_score::{
 };
 use crate::utils::IntoBytesIterable;
 use crate::{utils, IntoBytes, MomentoResult};
+
+use super::IntoSortedSetUnionStoreSources;
 
 /// Client to work with Momento Cache, the serverless caching service.
 ///
@@ -1650,11 +1652,15 @@ impl CacheClient {
     /// which will allow you to set [optional arguments](SortedSetUnionStoreRequest#optional-arguments) as well.
     ///
     /// For more examples of handling the response, see [SortedSetUnionStoreResponse].
-    pub async fn sorted_set_union_store<S: IntoBytes>(
+    pub async fn sorted_set_union_store<
+        S: IntoBytes,
+        Z: IntoBytes,
+        U: IntoSortedSetUnionStoreSources<Z>,
+    >(
         &self,
         cache_name: impl Into<String>,
         sorted_set_name: S,
-        sources: impl Into<Vec<SortedSetUnionStoreSource<S>>>,
+        sources: U,
     ) -> MomentoResult<SortedSetUnionStoreResponse> {
         let request = SortedSetUnionStoreRequest::new(cache_name, sorted_set_name, sources);
         request.send(self).await

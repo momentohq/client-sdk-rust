@@ -842,6 +842,8 @@ mod sorted_set_length_by_score {
 mod delete_sorted_set {}
 
 mod sorted_set_union_store {
+    use std::collections::HashMap;
+
     use super::*;
 
     #[tokio::test]
@@ -855,6 +857,53 @@ mod sorted_set_union_store {
             SortedSetUnionStoreSource::new(sorted_set_one.name(), 1.0),
             SortedSetUnionStoreSource::new(sorted_set_two.name(), 1.0),
         ];
+
+        // Union of empty (nonexistent) sets produces destination set with length 0
+        let result = client
+            .sorted_set_union_store(
+                cache_name,
+                destination_sorted_set_name.clone(),
+                sources.clone(),
+            )
+            .await?;
+        assert_eq!(result, SortedSetUnionStoreResponse { length: 0 });
+
+        // Insert two sets
+        let result = client
+            .sorted_set_put_elements(
+                cache_name,
+                sorted_set_one.name(),
+                sorted_set_one.value().to_vec(),
+            )
+            .await?;
+        assert_eq!(result, SortedSetPutElementsResponse {});
+        let result = client
+            .sorted_set_put_elements(
+                cache_name,
+                sorted_set_two.name(),
+                sorted_set_two.value().to_vec(),
+            )
+            .await?;
+        assert_eq!(result, SortedSetPutElementsResponse {});
+
+        // Nonzero length after sorted set exists
+        let result = client
+            .sorted_set_union_store(cache_name, destination_sorted_set_name, sources)
+            .await?;
+        assert_eq!(result, SortedSetUnionStoreResponse { length: 4 });
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn happy_path_with_hash_map_of_sources() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let destination_sorted_set_name = unique_key();
+        let sorted_set_one = TestSortedSet::new();
+        let sorted_set_two = TestSortedSet::new();
+        let mut sources: HashMap<&str, f32> = HashMap::new();
+        sources.insert(sorted_set_one.name(), 1.0);
+        sources.insert(sorted_set_two.name(), 2.0);
 
         // Union of empty (nonexistent) sets produces destination set with length 0
         let result = client
@@ -1078,8 +1127,9 @@ mod sorted_set_union_store {
         let cache_name = &CACHE_TEST_STATE.cache_name;
         let sorted_set_name = "sorted-set";
 
+        let empty_sources: Vec<SortedSetUnionStoreSource<&str>> = vec![];
         let result = client
-            .sorted_set_union_store(cache_name, sorted_set_name, vec![])
+            .sorted_set_union_store(cache_name, sorted_set_name, empty_sources)
             .await
             .unwrap_err();
 

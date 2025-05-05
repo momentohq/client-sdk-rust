@@ -107,8 +107,8 @@ pub use messages::data::sorted_set::sorted_set_remove_elements::{
     SortedSetRemoveElementsRequest, SortedSetRemoveElementsResponse,
 };
 pub use messages::data::sorted_set::sorted_set_union_store::{
-    SortedSetAggregateFunction, SortedSetUnionStoreRequest, SortedSetUnionStoreResponse,
-    SortedSetUnionStoreSource,
+    IntoSortedSetUnionStoreSources, SortedSetAggregateFunction, SortedSetUnionStoreRequest,
+    SortedSetUnionStoreResponse, SortedSetUnionStoreSource,
 };
 
 pub use messages::data::list::list_concatenate_back::{
