@@ -20,9 +20,7 @@
 use futures::StreamExt;
 use momento::cache::configurations::Laptop;
 use momento::cache::{
-    CreateCacheResponse, DecreaseTtlResponse, DictionaryFetchResponse, DictionaryGetFieldResponse, DictionaryGetFieldsResponse, GetResponse,
-    IncreaseTtlResponse, ItemType, SetIfAbsentResponse, SetIfAbsentOrEqualResponse, SetIfEqualResponse, SetIfNotEqualResponse,
-    SetIfPresentResponse, SetIfPresentAndNotEqualResponse, SortedSetFetchResponse, SortedSetOrder, UpdateTtlResponse,
+    CreateCacheResponse, DecreaseTtlResponse, DictionaryFetchResponse, DictionaryGetFieldResponse, DictionaryGetFieldsResponse, GetResponse, IncreaseTtlResponse, ItemType, SetIfAbsentOrEqualResponse, SetIfAbsentResponse, SetIfEqualResponse, SetIfNotEqualResponse, SetIfPresentAndNotEqualResponse, SetIfPresentResponse, SortedSetAggregateFunction, SortedSetFetchResponse, SortedSetLengthByScoreRequest, SortedSetOrder, SortedSetUnionStoreRequest, UpdateTtlResponse
 };
 use momento::topics::TopicClient;
 use momento::auth::{AuthClient, CacheSelector, DisposableTokenScopes, ExpiresIn, GenerateDisposableTokenRequest};
@@ -566,11 +564,39 @@ pub async fn example_API_SortedSetLength(cache_client: &CacheClient, cache_name:
 }
 
 #[allow(non_snake_case)]
+pub async fn example_API_SortedSetLengthByScore(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
+    let request = SortedSetLengthByScoreRequest::new(cache_name, "sorted_set_name")
+        .min_score(Some(0.0))
+        .max_score(Some(100.0));
+    let _length: u32 = cache_client
+        .send_request(request)
+        .await?
+        .try_into()
+        .expect("Expected a list length!");
+    Ok(())
+}
+
+#[allow(non_snake_case)]
 pub async fn example_API_SortedSetRemoveElements(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client
         .sorted_set_remove_elements(cache_name, "sorted_set_name", vec!["value1", "value2"])
         .await?;
     println!("Elements removed from sorted set");
+    Ok(())
+}
+
+#[allow(non_snake_case)]
+pub async fn example_API_SortedSetUnionStore(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
+    let sources = vec![
+        ("one_set_name", 1.0),
+        ("another_set_name", 2.0),
+    ];
+    let request = SortedSetUnionStoreRequest::new(cache_name, "destination_sorted_set_name", sources)
+        .aggregate(SortedSetAggregateFunction::Min);
+    let _destination_length: u32 = cache_client
+        .send_request(request)
+        .await?
+        .into();
     Ok(())
 }
 
@@ -764,7 +790,9 @@ pub async fn main() -> Result<(), MomentoError> {
     example_API_SortedSetGetRank(&cache_client, &cache_name).await?;
     example_API_SortedSetGetScore(&cache_client, &cache_name).await?;
     example_API_SortedSetLength(&cache_client, &cache_name).await?;
+    example_API_SortedSetLengthByScore(&cache_client, &cache_name).await?;
     example_API_SortedSetRemoveElements(&cache_client, &cache_name).await?;
+    example_API_SortedSetUnionStore(&cache_client, &cache_name).await?;
 
     example_API_InstantiateTopicClient()?;
 
