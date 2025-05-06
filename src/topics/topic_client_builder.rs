@@ -9,9 +9,7 @@ use crate::{
 use momento_protos::cache_client::pubsub::pubsub_client::PubsubClient;
 use tonic::{service::interceptor::InterceptedService, transport::Channel};
 
-use super::topic_subscription_manager::{
-    TopicSubscriptionManager, MAX_CONCURRENT_STREAMS_PER_CHANNEL,
-};
+use super::topic_subscription_manager::TopicSubscriptionManager;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct TopicClientBuilder<State>(pub State);
@@ -83,7 +81,6 @@ impl TopicClientBuilder<ReadyToBuild> {
             unary_clients,
             streaming_clients,
             configuration: self.0.configuration,
-            max_concurrent_streams: num_stream_clients * MAX_CONCURRENT_STREAMS_PER_CHANNEL,
         })
     }
 }
