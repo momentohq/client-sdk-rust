@@ -122,7 +122,7 @@ impl MomentoError {
     ) -> Self {
         Self {
             message: format!("Number of active streams: {}; number of grpc channels: {}; max concurrent streams: {}; Already at maximum number of concurrent grpc streams, cannot make new subscribe requests", num_active_subscriptions, num_grpc_channels, max_concurrent_streams),
-            error_code: MomentoErrorCode::LimitExceededError,
+            error_code: MomentoErrorCode::ClientResourceExhausted,
             inner_error: None,
             details: None,
         }
