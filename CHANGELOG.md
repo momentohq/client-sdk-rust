@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.51.1](https://github.com/momentohq/client-sdk-rust/compare/v0.51.0...v0.51.1) (2025-05-06)
+
+
+### Bug Fixes
+
+* separate publish and subscribe channels in topic client ([#458](https://github.com/momentohq/client-sdk-rust/issues/458)) ([d083561](https://github.com/momentohq/client-sdk-rust/commit/d0835617c0468a035c0678991a119a8d776be0c2))
+
 ## [0.51.0](https://github.com/momentohq/client-sdk-rust/compare/v0.50.4...v0.51.0) (2025-05-05)
 
 
