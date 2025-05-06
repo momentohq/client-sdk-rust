@@ -114,6 +114,19 @@ impl MomentoError {
             details: None,
         }
     }
+
+    pub(crate) fn max_concurrent_streams_reached(
+        num_grpc_channels: usize,
+        num_active_subscriptions: usize,
+        max_concurrent_streams: usize,
+    ) -> Self {
+        Self {
+            message: format!("Number of active streams: {}; number of grpc channels: {}; max concurrent streams: {}; Already at maximum number of concurrent grpc streams, cannot make new subscribe requests", num_active_subscriptions, num_grpc_channels, max_concurrent_streams),
+            error_code: MomentoErrorCode::ClientResourceExhausted,
+            inner_error: None,
+            details: None,
+        }
+    }
 }
 
 /// Indicates an error source

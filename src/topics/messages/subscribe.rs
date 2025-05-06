@@ -87,14 +87,14 @@ impl MomentoRequest for SubscribeRequest {
             },
         )?;
 
-        let stream = topic_client
-            .client
+        let next_stream_client = topic_client.get_next_streaming_client()?;
+        let stream = next_stream_client
             .clone()
             .subscribe(request)
             .await?
             .into_inner();
         Ok(Subscription::new(
-            topic_client.client.clone(),
+            next_stream_client,
             self.cache_name,
             self.topic,
             self.resume_at_topic_sequence_number.unwrap_or_default(),

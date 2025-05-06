@@ -12,3 +12,5 @@ pub use config::configurations;
 mod topic_client;
 mod topic_client_builder;
 pub use topic_client::TopicClient;
+
+mod topic_subscription_manager;

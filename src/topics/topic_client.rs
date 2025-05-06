@@ -1,4 +1,7 @@
-use momento_protos::cache_client::pubsub;
+use std::sync::atomic::AtomicUsize;
+use std::sync::Arc;
+
+use momento_protos::cache_client::pubsub::pubsub_client::PubsubClient;
 use tonic::{codegen::InterceptedService, transport::Channel};
 
 use crate::grpc::header_interceptor::HeaderInterceptor;
@@ -10,7 +13,9 @@ use crate::{MomentoError, MomentoResult};
 use crate::topics::messages::publish::TopicPublishResponse;
 use crate::topics::messages::subscribe::SubscribeRequest;
 
-type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
+use super::topic_subscription_manager::{
+    TopicSubscriptionManager, MAX_CONCURRENT_STREAMS_PER_CHANNEL,
+};
 
 /// Client to work with Momento Topics, the pub/sub service.
 ///
@@ -40,7 +45,10 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 /// ```
 #[derive(Clone, Debug)]
 pub struct TopicClient {
-    pub(crate) client: pubsub::pubsub_client::PubsubClient<ChannelType>,
+    pub(crate) unary_client_index: Arc<AtomicUsize>,
+    pub(crate) streaming_client_index: Arc<AtomicUsize>,
+    pub(crate) unary_clients: Vec<PubsubClient<InterceptedService<Channel, HeaderInterceptor>>>,
+    pub(crate) streaming_clients: Vec<TopicSubscriptionManager>,
     pub(crate) configuration: Configuration,
 }
 
@@ -164,5 +172,85 @@ impl TopicClient {
     /// See [SubscribeRequest] for an example of creating a request with optional fields.
     pub async fn send_request<R: MomentoRequest>(&self, request: R) -> MomentoResult<R::Response> {
         request.send(self).await
+    }
+
+    pub(crate) fn get_next_unary_client(
+        &self,
+    ) -> PubsubClient<InterceptedService<Channel, HeaderInterceptor>> {
+        let index = self
+            .unary_client_index
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let num_clients = self.unary_clients.len();
+        self.unary_clients[index % num_clients].clone()
+    }
+
+    pub(crate) fn get_next_streaming_client(
+        &self,
+    ) -> MomentoResult<PubsubClient<InterceptedService<Channel, HeaderInterceptor>>> {
+        // First check if there is enough capacity to make a new subscription.
+        self.check_number_of_concurrent_streams()?;
+
+        let max_concurrent_streams =
+            self.streaming_clients.len() * MAX_CONCURRENT_STREAMS_PER_CHANNEL;
+
+        // Max number of attempts is set to the max number of concurrent streams in order to preserve
+        // the round-robin system (incrementing nextManagerIndex) but to not cut short the number
+        //  of attempts in case there are many subscriptions starting up at the same time.
+        for _ in 0..max_concurrent_streams {
+            let next_manager_index = self
+                .streaming_client_index
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            let topic_manager =
+                &self.streaming_clients[next_manager_index % self.streaming_clients.len()];
+            let new_count = topic_manager.increment_num_active_subscriptions();
+            if new_count <= max_concurrent_streams {
+                log::debug!(
+                    "Starting new subscription on grpc channel {} which now has {} streams",
+                    next_manager_index % self.streaming_clients.len(),
+                    new_count
+                );
+                return Ok(topic_manager.client().clone());
+            }
+            topic_manager.decrement_num_active_subscriptions();
+        }
+
+        // If no more streams available, return an error
+        Err(MomentoError::max_concurrent_streams_reached(
+            self.count_number_of_active_subscriptions(),
+            self.streaming_clients.len(),
+            max_concurrent_streams,
+        ))
+    }
+
+    fn count_number_of_active_subscriptions(&self) -> usize {
+        self.streaming_clients
+            .iter()
+            .map(|client| client.get_num_active_subscriptions())
+            .sum()
+    }
+
+    fn check_number_of_concurrent_streams(&self) -> MomentoResult<()> {
+        let max_concurrent_streams =
+            self.streaming_clients.len() * MAX_CONCURRENT_STREAMS_PER_CHANNEL;
+        let num_active_subscriptions = self.count_number_of_active_subscriptions();
+        if num_active_subscriptions >= max_concurrent_streams {
+            return Err(MomentoError::max_concurrent_streams_reached(
+                num_active_subscriptions,
+                self.streaming_clients.len(),
+                max_concurrent_streams,
+            ));
+        }
+
+        // If we are approaching the maximum number of concurrent streams, log a warning.
+        let remaining_streams = max_concurrent_streams - num_active_subscriptions;
+        if remaining_streams < 10 {
+            log::warn!(
+                "Only {} streams remaining.  You may hit the limit of {} concurrent streams soon.",
+                remaining_streams,
+                max_concurrent_streams
+            );
+        }
+
+        Ok(())
     }
 }
