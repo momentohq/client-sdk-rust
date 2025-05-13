@@ -6,18 +6,10 @@ use momento_protos::{
 };
 
 use crate::{
-    cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
-    MomentoResult,
+    cache::{MomentoRequest, ScoreBound},
+    utils::prep_request_with_timeout,
+    CacheClient, IntoBytes, MomentoError, MomentoResult,
 };
-
-/// Boundary for a sorted set score range.
-#[derive(Debug, PartialEq, Clone)]
-pub enum ScoreBound {
-    /// Include the score in the range.
-    Inclusive(f64),
-    /// Exclude the score from the range.
-    Exclusive(f64),
-}
 
 /// Get the number of entries in a sorted set that fall between a minimum and maximum score.
 ///

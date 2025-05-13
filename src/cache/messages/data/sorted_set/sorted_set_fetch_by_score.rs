@@ -3,14 +3,12 @@ use momento_protos::cache_client::sorted_set_fetch_request::{by_score, ByScore, 
 use momento_protos::cache_client::SortedSetFetchRequest;
 use momento_protos::common::Unbounded;
 
-use crate::cache::messages::data::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder;
-use crate::cache::messages::data::sorted_set::sorted_set_fetch_by_rank::SortedSetOrder::Ascending;
 use crate::cache::messages::data::sorted_set::sorted_set_fetch_response::SortedSetFetchResponse;
 use crate::cache::messages::MomentoRequest;
 use crate::utils::prep_request_with_timeout;
 use crate::{CacheClient, IntoBytes, MomentoResult};
 
-use super::sorted_set_length_by_score::ScoreBound;
+use super::sorted_set_common::{ScoreBound, SortedSetOrder};
 
 /// Fetch the elements in the given sorted set by their score.
 ///
@@ -83,7 +81,7 @@ impl<S: IntoBytes> SortedSetFetchByScoreRequest<S> {
             sorted_set_name,
             min_score: None,
             max_score: None,
-            order: Ascending,
+            order: SortedSetOrder::Ascending,
             offset: None,
             count: None,
         }
