@@ -1235,6 +1235,9 @@ impl CacheClient {
     ///   infinity.
     /// * `max_score` - The maximum score (inclusive) of the elements to fetch. Defaults to positive
     ///   infinity.
+    /// * `exclusive_min_score` - the minimum score (exclusive) of the elements to fetch. Defaults to negative infinity.
+    /// * `exclusive_max_score` - the maximum score (exclusive) of the elements to fetch. Defaults to positive
+    ///   infinity.
     /// * `offset` - The number of elements to skip before returning the first element. Defaults to
     /// 0. Note: this is not the rank of the first element to return, but the number of elements of
     ///    the result set to skip before returning the first element.
@@ -1563,6 +1566,9 @@ impl CacheClient {
     /// * `min_score` - The minimum score (inclusive) of the elements to fetch. Defaults to negative
     ///   infinity.
     /// * `max_score` - The maximum score (inclusive) of the elements to fetch. Defaults to positive
+    ///   infinity.
+    /// * `exclusive_min_score` - the minimum score (exclusive) of the elements to fetch. Defaults to negative infinity.
+    /// * `exclusive_max_score` - the maximum score (exclusive) of the elements to fetch. Defaults to positive
     ///   infinity.
     ///
     /// # Examples

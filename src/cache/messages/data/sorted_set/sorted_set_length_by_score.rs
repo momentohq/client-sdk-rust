@@ -21,6 +21,9 @@ use crate::{
 ///   infinity.
 /// * `max_score` - the maximum score (inclusive) of the elements to fetch. Defaults to positive
 ///   infinity.
+/// * `exclusive_min_score` - the minimum score (exclusive) of the elements to fetch. Defaults to negative infinity.
+/// * `exclusive_max_score` - the maximum score (exclusive) of the elements to fetch. Defaults to positive
+///   infinity.
 ///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -38,7 +41,7 @@ use crate::{
 ///
 /// let length_request = SortedSetLengthByScoreRequest::new(cache_name, sorted_set_name)
 ///     .min_score(1.0)
-///     .max_score(5.0);
+///     .exclusive_max_score(5.0);
 ///
 /// let length: u32 = cache_client.send_request(length_request).await?.try_into().expect("Expected a sorted set length!");
 /// # Ok(())
@@ -49,7 +52,9 @@ pub struct SortedSetLengthByScoreRequest<L: IntoBytes> {
     cache_name: String,
     sorted_set_name: L,
     min_score: Option<f64>,
+    min_score_exclusive: Option<bool>,
     max_score: Option<f64>,
+    max_score_exclusive: Option<bool>,
 }
 
 impl<L: IntoBytes> SortedSetLengthByScoreRequest<L> {
@@ -59,19 +64,45 @@ impl<L: IntoBytes> SortedSetLengthByScoreRequest<L> {
             cache_name: cache_name.into(),
             sorted_set_name,
             min_score: None,
+            min_score_exclusive: None,
             max_score: None,
+            max_score_exclusive: None,
         }
     }
 
-    /// Set the minimum score of the request.
+    /// Set the inclusive minimum score of the request.
     pub fn min_score(mut self, min_score: impl Into<Option<f64>>) -> Self {
-        self.min_score = min_score.into();
+        if let Some(min) = min_score.into() {
+            self.min_score = Some(min);
+            self.min_score_exclusive = None;
+        }
         self
     }
 
-    /// Set the maximum score of the request.
+    /// Set the exclusive minimum score of the request.
+    pub fn exclusive_min_score(mut self, min_score: impl Into<Option<f64>>) -> Self {
+        if let Some(min) = min_score.into() {
+            self.min_score = Some(min);
+            self.min_score_exclusive = Some(true);
+        }
+        self
+    }
+
+    /// Set the inclusive maximum score of the request.
     pub fn max_score(mut self, max_score: impl Into<Option<f64>>) -> Self {
-        self.max_score = max_score.into();
+        if let Some(max) = max_score.into() {
+            self.max_score = Some(max);
+            self.max_score_exclusive = None;
+        }
+        self
+    }
+
+    /// Set the exclusive maximum score of the request.
+    pub fn exclusive_max_score(mut self, max_score: impl Into<Option<f64>>) -> Self {
+        if let Some(max) = max_score.into() {
+            self.max_score = Some(max);
+            self.max_score_exclusive = Some(true);
+        }
         self
     }
 }
@@ -83,25 +114,37 @@ impl<L: IntoBytes> MomentoRequest for SortedSetLengthByScoreRequest<L> {
         self,
         cache_client: &CacheClient,
     ) -> MomentoResult<SortedSetLengthByScoreResponse> {
+        let min_score = match (self.min_score, self.min_score_exclusive) {
+            (Some(min_score), Some(true)) => Some(
+                sorted_set_length_by_score_request::Min::ExclusiveMin(min_score),
+            ),
+            (Some(min_score), _) => Some(sorted_set_length_by_score_request::Min::InclusiveMin(
+                min_score,
+            )),
+            (None, _) => Some(sorted_set_length_by_score_request::Min::UnboundedMin(
+                Unbounded {},
+            )),
+        };
+
+        let max_score = match (self.max_score, self.max_score_exclusive) {
+            (Some(max_score), Some(true)) => Some(
+                sorted_set_length_by_score_request::Max::ExclusiveMax(max_score),
+            ),
+            (Some(max_score), _) => Some(sorted_set_length_by_score_request::Max::InclusiveMax(
+                max_score,
+            )),
+            (None, _) => Some(sorted_set_length_by_score_request::Max::UnboundedMax(
+                Unbounded {},
+            )),
+        };
+
         let request = prep_request_with_timeout(
             &self.cache_name,
             cache_client.deadline_millis(),
             momento_protos::cache_client::SortedSetLengthByScoreRequest {
                 set_name: self.sorted_set_name.into_bytes(),
-                min: Some(
-                    self.min_score
-                        .map(sorted_set_length_by_score_request::Min::InclusiveMin)
-                        .unwrap_or(sorted_set_length_by_score_request::Min::UnboundedMin(
-                            Unbounded {},
-                        )),
-                ),
-                max: Some(
-                    self.max_score
-                        .map(sorted_set_length_by_score_request::Max::InclusiveMax)
-                        .unwrap_or(sorted_set_length_by_score_request::Max::UnboundedMax(
-                            Unbounded {},
-                        )),
-                ),
+                min: min_score,
+                max: max_score,
             },
         )?;
 
@@ -182,9 +225,8 @@ impl TryFrom<SortedSetLengthByScoreResponse> for u32 {
 mod test {
     use super::SortedSetLengthByScoreRequest;
 
-    // test the sorted set request with options
     #[tokio::test]
-    async fn test_sorted_set_length_by_score_request_with_options() {
+    async fn test_sorted_set_length_by_score_request_with_inclusive_scores() {
         // Define the cache name and sorted set name
         let cache_name = "test_cache";
         let sorted_set_name = "test_sorted_set";
@@ -198,7 +240,9 @@ mod test {
         assert_eq!(fetch_request.cache_name, cache_name);
         assert_eq!(fetch_request.sorted_set_name, sorted_set_name);
         assert_eq!(fetch_request.min_score, Some(2.0));
+        assert_eq!(fetch_request.min_score_exclusive, None);
         assert_eq!(fetch_request.max_score, Some(3.0));
+        assert_eq!(fetch_request.max_score_exclusive, None);
 
         // Now pass in explicit Options to min score and max score
         let fetch_request = SortedSetLengthByScoreRequest::new(cache_name, sorted_set_name)
@@ -209,7 +253,9 @@ mod test {
         assert_eq!(fetch_request.cache_name, cache_name);
         assert_eq!(fetch_request.sorted_set_name, sorted_set_name);
         assert_eq!(fetch_request.min_score, Some(1.0));
+        assert_eq!(fetch_request.min_score_exclusive, None);
         assert_eq!(fetch_request.max_score, Some(5.0));
+        assert_eq!(fetch_request.max_score_exclusive, None);
 
         // Now pass in explicit None to min score and max score
         let fetch_request = SortedSetLengthByScoreRequest::new(cache_name, sorted_set_name)
@@ -220,7 +266,9 @@ mod test {
         assert_eq!(fetch_request.cache_name, cache_name);
         assert_eq!(fetch_request.sorted_set_name, sorted_set_name);
         assert_eq!(fetch_request.min_score, None);
+        assert_eq!(fetch_request.min_score_exclusive, None);
         assert_eq!(fetch_request.max_score, None);
+        assert_eq!(fetch_request.max_score_exclusive, None);
 
         // Now specify no extra options
         let fetch_request = SortedSetLengthByScoreRequest::new(cache_name, sorted_set_name);
@@ -229,6 +277,102 @@ mod test {
         assert_eq!(fetch_request.cache_name, cache_name);
         assert_eq!(fetch_request.sorted_set_name, sorted_set_name);
         assert_eq!(fetch_request.min_score, None);
+        assert_eq!(fetch_request.min_score_exclusive, None);
         assert_eq!(fetch_request.max_score, None);
+        assert_eq!(fetch_request.max_score_exclusive, None);
+    }
+
+    #[tokio::test]
+    async fn test_sorted_set_length_by_score_request_with_exclusive_scores() {
+        // Define the cache name and sorted set name
+        let cache_name = "test_cache";
+        let sorted_set_name = "test_sorted_set";
+
+        // Create the fetch request with options
+        let fetch_request = SortedSetLengthByScoreRequest::new(cache_name, sorted_set_name)
+            .exclusive_min_score(2.0)
+            .exclusive_max_score(3.0);
+
+        // Verify the built request
+        assert_eq!(fetch_request.cache_name, cache_name);
+        assert_eq!(fetch_request.sorted_set_name, sorted_set_name);
+        assert_eq!(fetch_request.min_score, Some(2.0));
+        assert_eq!(fetch_request.min_score_exclusive, Some(true));
+        assert_eq!(fetch_request.max_score, Some(3.0));
+        assert_eq!(fetch_request.max_score_exclusive, Some(true));
+
+        // Now pass in explicit Options to min score and max score
+        let fetch_request = SortedSetLengthByScoreRequest::new(cache_name, sorted_set_name)
+            .exclusive_min_score(Some(1.0))
+            .exclusive_max_score(Some(5.0));
+
+        // Verify the built request
+        assert_eq!(fetch_request.cache_name, cache_name);
+        assert_eq!(fetch_request.sorted_set_name, sorted_set_name);
+        assert_eq!(fetch_request.min_score, Some(1.0));
+        assert_eq!(fetch_request.min_score_exclusive, Some(true));
+        assert_eq!(fetch_request.max_score, Some(5.0));
+        assert_eq!(fetch_request.max_score_exclusive, Some(true));
+
+        // Now pass in explicit None to min score and max score
+        let fetch_request = SortedSetLengthByScoreRequest::new(cache_name, sorted_set_name)
+            .exclusive_min_score(None)
+            .exclusive_max_score(None);
+
+        // Verify the built request
+        assert_eq!(fetch_request.cache_name, cache_name);
+        assert_eq!(fetch_request.sorted_set_name, sorted_set_name);
+        assert_eq!(fetch_request.min_score, None);
+        assert_eq!(fetch_request.min_score_exclusive, None);
+        assert_eq!(fetch_request.max_score, None);
+        assert_eq!(fetch_request.max_score_exclusive, None);
+
+        // Now specify no extra options
+        let fetch_request = SortedSetLengthByScoreRequest::new(cache_name, sorted_set_name);
+
+        // Verify the built request
+        assert_eq!(fetch_request.cache_name, cache_name);
+        assert_eq!(fetch_request.sorted_set_name, sorted_set_name);
+        assert_eq!(fetch_request.min_score, None);
+        assert_eq!(fetch_request.min_score_exclusive, None);
+        assert_eq!(fetch_request.max_score, None);
+        assert_eq!(fetch_request.max_score_exclusive, None);
+    }
+
+    #[tokio::test]
+    async fn test_sorted_set_length_by_score_request_with_conflicting_scores() {
+        // Define the cache name and sorted set name
+        let cache_name = "test_cache";
+        let sorted_set_name = "test_sorted_set";
+
+        // Create the fetch request with all score options, but only the last revisions should be used.
+        let fetch_request = SortedSetLengthByScoreRequest::new(cache_name, sorted_set_name)
+            .exclusive_min_score(4.0)
+            .exclusive_max_score(5.0)
+            .min_score(1.0)
+            .max_score(2.0);
+
+        // Verify the built request
+        assert_eq!(fetch_request.cache_name, cache_name);
+        assert_eq!(fetch_request.sorted_set_name, sorted_set_name);
+        assert_eq!(fetch_request.min_score, Some(1.0));
+        assert_eq!(fetch_request.min_score_exclusive, None);
+        assert_eq!(fetch_request.max_score, Some(2.0));
+        assert_eq!(fetch_request.max_score_exclusive, None);
+
+        // Verify exclusive is used when order is switched.
+        let fetch_request = SortedSetLengthByScoreRequest::new(cache_name, sorted_set_name)
+            .min_score(1.0)
+            .max_score(2.0)
+            .exclusive_min_score(4.0)
+            .exclusive_max_score(5.0);
+
+        // Verify the built request
+        assert_eq!(fetch_request.cache_name, cache_name);
+        assert_eq!(fetch_request.sorted_set_name, sorted_set_name);
+        assert_eq!(fetch_request.min_score, Some(4.0));
+        assert_eq!(fetch_request.min_score_exclusive, Some(true));
+        assert_eq!(fetch_request.max_score, Some(5.0));
+        assert_eq!(fetch_request.max_score_exclusive, Some(true));
     }
 }
