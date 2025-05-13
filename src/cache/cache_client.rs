@@ -1231,13 +1231,12 @@ impl CacheClient {
     /// If you use [send_request](CacheClient::send_request) to fetch elements using a
     /// [SortedSetFetchByScoreRequest], you can also provide the following optional arguments:
     ///
-    /// * `min_score` - The minimum score (inclusive) of the elements to fetch. Defaults to negative
-    ///   infinity.
-    /// * `max_score` - The maximum score (inclusive) of the elements to fetch. Defaults to positive
-    ///   infinity.
-    /// * `exclusive_min_score` - the minimum score (exclusive) of the elements to fetch. Defaults to negative infinity.
-    /// * `exclusive_max_score` - the maximum score (exclusive) of the elements to fetch. Defaults to positive
-    ///   infinity.
+    /// * `min_score` - the minimum score of the elements to fetch. Defaults to negative
+    ///   infinity. Use [ScoreBound::Inclusive](crate::cache::ScoreBound::Inclusive) or [ScoreBound::Exclusive](crate::cache::ScoreBound::Exclusive) to specify whether
+    ///   the minimum score is inclusive or exclusive.
+    /// * `max_score` - the maximum score of the elements to fetch. Defaults to positive
+    ///   infinity. Use [ScoreBound::Inclusive](crate::cache::ScoreBound::Inclusive) or [ScoreBound::Exclusive](crate::cache::ScoreBound::Exclusive) to specify whether
+    ///   the maximum score is inclusive or exclusive.
     /// * `offset` - The number of elements to skip before returning the first element. Defaults to
     /// 0. Note: this is not the rank of the first element to return, but the number of elements of
     ///    the result set to skip before returning the first element.
@@ -1563,13 +1562,12 @@ impl CacheClient {
     /// If you use [send_request](CacheClient::send_request) to fetch elements using a
     /// [SortedSetLengthByScoreRequest], you can also provide the following optional arguments:
     ///
-    /// * `min_score` - The minimum score (inclusive) of the elements to fetch. Defaults to negative
-    ///   infinity.
-    /// * `max_score` - The maximum score (inclusive) of the elements to fetch. Defaults to positive
-    ///   infinity.
-    /// * `exclusive_min_score` - the minimum score (exclusive) of the elements to fetch. Defaults to negative infinity.
-    /// * `exclusive_max_score` - the maximum score (exclusive) of the elements to fetch. Defaults to positive
-    ///   infinity.
+    /// * `min_score` - the minimum score of the elements to fetch. Defaults to negative
+    ///   infinity. Use [ScoreBound::Inclusive](crate::cache::ScoreBound::Inclusive) or [ScoreBound::Exclusive](crate::cache::ScoreBound::Exclusive) to specify whether
+    ///   the minimum score is inclusive or exclusive.
+    /// * `max_score` - the maximum score of the elements to fetch. Defaults to positive
+    ///   infinity. Use [ScoreBound::Inclusive](crate::cache::ScoreBound::Inclusive) or [ScoreBound::Exclusive](crate::cache::ScoreBound::Exclusive) to specify whether
+    ///   the maximum score is inclusive or exclusive.
     ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.

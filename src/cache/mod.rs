@@ -94,7 +94,7 @@ pub use messages::data::sorted_set::sorted_set_length::{
     SortedSetLengthRequest, SortedSetLengthResponse,
 };
 pub use messages::data::sorted_set::sorted_set_length_by_score::{
-    SortedSetLengthByScoreRequest, SortedSetLengthByScoreResponse,
+    ScoreBound, SortedSetLengthByScoreRequest, SortedSetLengthByScoreResponse,
 };
 pub use messages::data::sorted_set::sorted_set_put_element::{
     SortedSetPutElementRequest, SortedSetPutElementResponse,
