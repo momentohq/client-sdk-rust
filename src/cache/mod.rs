@@ -71,9 +71,8 @@ pub use messages::data::set::set_remove_elements::{
     SetRemoveElementsRequest, SetRemoveElementsResponse,
 };
 
-pub use messages::data::sorted_set::sorted_set_fetch_by_rank::{
-    SortedSetFetchByRankRequest, SortedSetOrder,
-};
+pub use messages::data::sorted_set::sorted_set_common::{ScoreBound, SortedSetOrder};
+pub use messages::data::sorted_set::sorted_set_fetch_by_rank::SortedSetFetchByRankRequest;
 pub use messages::data::sorted_set::sorted_set_fetch_by_score::SortedSetFetchByScoreRequest;
 pub use messages::data::sorted_set::sorted_set_fetch_response::{
     SortedSetElements, SortedSetFetchResponse,

@@ -1,3 +1,5 @@
+/// Contains common types for the sorted set module.
+pub mod sorted_set_common;
 /// Contains the request and response types for fetching elements from a sorted set.
 pub mod sorted_set_fetch_by_rank;
 /// Contains the request and response types for fetching elements from a sorted set.

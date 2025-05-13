@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
 use momento::cache::{
-    IntoSortedSetElements, SortedSetAggregateFunction, SortedSetElement, SortedSetElements,
-    SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest, SortedSetFetchResponse,
-    SortedSetGetRankResponse, SortedSetGetScoreResponse, SortedSetLengthByScoreRequest,
-    SortedSetLengthByScoreResponse, SortedSetLengthResponse,
+    IntoSortedSetElements, ScoreBound, SortedSetAggregateFunction, SortedSetElement,
+    SortedSetElements, SortedSetFetchByRankRequest, SortedSetFetchByScoreRequest,
+    SortedSetFetchResponse, SortedSetGetRankResponse, SortedSetGetScoreResponse,
+    SortedSetLengthByScoreRequest, SortedSetLengthByScoreResponse, SortedSetLengthResponse,
     SortedSetOrder::{Ascending, Descending},
     SortedSetPutElementsResponse, SortedSetRemoveElementsResponse, SortedSetUnionStoreRequest,
     SortedSetUnionStoreResponse, SortedSetUnionStoreSource,
@@ -185,8 +185,8 @@ mod sorted_set_fetch_by_score {
         // Full set ascending, end score larger than set
         let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, item.name())
             .order(Ascending)
-            .min_score(0.0)
-            .max_score(9.9);
+            .min_score(ScoreBound::Inclusive(0.0))
+            .max_score(ScoreBound::Inclusive(9.9));
         let result = client.send_request(fetch_request).await?;
         assert_fetched_sorted_set_eq(
             result,
@@ -199,10 +199,10 @@ mod sorted_set_fetch_by_score {
             ],
         )?;
 
-        // Up until score 1.0
+        // Up until score 1.0 (inclusive)
         let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, item.name())
             .order(Ascending)
-            .max_score(1.0);
+            .max_score(ScoreBound::Inclusive(1.0));
         let result = client.send_request(fetch_request).await?;
         assert_fetched_sorted_set_eq(
             result,
@@ -213,10 +213,17 @@ mod sorted_set_fetch_by_score {
             ],
         )?;
 
-        // From score 1.0
+        // Up until score 1.0 (exclusive)
         let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, item.name())
             .order(Ascending)
-            .min_score(1.0);
+            .max_score(ScoreBound::Exclusive(1.0));
+        let result = client.send_request(fetch_request).await?;
+        assert_fetched_sorted_set_eq(result, vec![("1".to_string(), 0.0), ("3".to_string(), 0.5)])?;
+
+        // From score 1.0 (inclusive)
+        let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, item.name())
+            .order(Ascending)
+            .min_score(ScoreBound::Inclusive(1.0));
         let result = client.send_request(fetch_request).await?;
         assert_fetched_sorted_set_eq(
             result,
@@ -226,12 +233,19 @@ mod sorted_set_fetch_by_score {
                 ("4".to_string(), 2.0),
             ],
         )?;
+
+        // From score 1.0 (exclusive)
+        let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, item.name())
+            .order(Ascending)
+            .min_score(ScoreBound::Exclusive(1.0));
+        let result = client.send_request(fetch_request).await?;
+        assert_fetched_sorted_set_eq(result, vec![("5".to_string(), 1.5), ("4".to_string(), 2.0)])?;
 
         // Partial set descending
         let fetch_request = SortedSetFetchByScoreRequest::new(cache_name, item.name())
             .order(Descending)
-            .min_score(0.1)
-            .max_score(1.9);
+            .min_score(ScoreBound::Inclusive(0.1))
+            .max_score(ScoreBound::Inclusive(1.9));
         let result = client.send_request(fetch_request).await?;
         assert_fetched_sorted_set_eq(
             result,
@@ -813,10 +827,17 @@ mod sorted_set_length_by_score {
             .await?;
         assert_eq!(result, SortedSetLengthByScoreResponse::Hit { length: 2 });
 
-        // Nonzero length after specifying min and max score
+        // Nonzero length after specifying inclusive min and max score
         let request = SortedSetLengthByScoreRequest::new(cache_name, item.name())
-            .min_score(0.0)
-            .max_score(1.0);
+            .min_score(ScoreBound::Inclusive(0.0))
+            .max_score(ScoreBound::Inclusive(2.0));
+        let result = client.send_request(request).await?;
+        assert_eq!(result, SortedSetLengthByScoreResponse::Hit { length: 2 });
+
+        // Nonzero length after specifying exclusive min and max score
+        let request = SortedSetLengthByScoreRequest::new(cache_name, item.name())
+            .min_score(ScoreBound::Exclusive(0.0))
+            .max_score(ScoreBound::Exclusive(2.0));
         let result = client.send_request(request).await?;
         assert_eq!(result, SortedSetLengthByScoreResponse::Hit { length: 1 });
 
