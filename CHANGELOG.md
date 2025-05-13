@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.52.0](https://github.com/momentohq/client-sdk-rust/compare/v0.51.0...v0.52.0) (2025-05-13)
+
+
+### Features
+
+* add options for exclusive min/max for sorted set fetch by score and length by score ([#463](https://github.com/momentohq/client-sdk-rust/issues/463)) ([8681632](https://github.com/momentohq/client-sdk-rust/commit/868163291b101b557e46a24c2d6e70cc2836a223))
+
+
+### Bug Fixes
+
+* separate publish and subscribe channels in topic client ([#458](https://github.com/momentohq/client-sdk-rust/issues/458)) ([d083561](https://github.com/momentohq/client-sdk-rust/commit/d0835617c0468a035c0678991a119a8d776be0c2))
+
 ## [0.51.0](https://github.com/momentohq/client-sdk-rust/compare/v0.50.4...v0.51.0) (2025-05-05)
 
 
