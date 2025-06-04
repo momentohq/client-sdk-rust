@@ -20,7 +20,7 @@
 use futures::StreamExt;
 use momento::cache::configurations::Laptop;
 use momento::cache::{
-    CreateCacheResponse, DecreaseTtlResponse, DictionaryFetchResponse, DictionaryGetFieldResponse, DictionaryGetFieldsResponse, GetResponse, IncreaseTtlResponse, ItemType, SetIfAbsentOrEqualResponse, SetIfAbsentResponse, SetIfEqualResponse, SetIfNotEqualResponse, SetIfPresentAndNotEqualResponse, SetIfPresentResponse, SortedSetAggregateFunction, SortedSetFetchResponse, SortedSetLengthByScoreRequest, SortedSetOrder, SortedSetUnionStoreRequest, UpdateTtlResponse
+    CreateCacheResponse, DecreaseTtlResponse, DictionaryFetchResponse, DictionaryGetFieldResponse, DictionaryGetFieldsResponse, GetResponse, IncreaseTtlResponse, ItemType, ScoreBound, SetIfAbsentOrEqualResponse, SetIfAbsentResponse, SetIfEqualResponse, SetIfNotEqualResponse, SetIfPresentAndNotEqualResponse, SetIfPresentResponse, SortedSetAggregateFunction, SortedSetFetchResponse, SortedSetLengthByScoreRequest, SortedSetOrder, SortedSetUnionStoreRequest, UpdateTtlResponse
 };
 use momento::topics::TopicClient;
 use momento::auth::{AuthClient, CacheSelector, DisposableTokenScopes, ExpiresIn, GenerateDisposableTokenRequest};
@@ -566,8 +566,8 @@ pub async fn example_API_SortedSetLength(cache_client: &CacheClient, cache_name:
 #[allow(non_snake_case)]
 pub async fn example_API_SortedSetLengthByScore(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     let request = SortedSetLengthByScoreRequest::new(cache_name, "sorted_set_name")
-        .min_score(Some(0.0))
-        .max_score(Some(100.0));
+        .min_score(Some(ScoreBound::Inclusive(0.0)))
+        .max_score(Some(ScoreBound::Inclusive(100.0)));
     let _length: u32 = cache_client
         .send_request(request)
         .await?
