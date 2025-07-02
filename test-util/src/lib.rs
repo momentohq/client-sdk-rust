@@ -9,6 +9,7 @@ pub use crate::test_data::{
     TestSet, TestSortedSet,
 };
 pub use crate::test_utils::{
-    create_doctest_auth_client, create_doctest_cache_client, create_doctest_topic_client, doctest,
-    get_test_cache_name, get_test_credential_provider, get_test_store_name, DoctestResult,
+    create_doctest_auth_client, create_doctest_cache_client, create_doctest_function_client,
+    create_doctest_topic_client, doctest, get_test_cache_name, get_test_credential_provider,
+    get_test_store_name, DoctestResult,
 };

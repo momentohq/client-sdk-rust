@@ -146,3 +146,6 @@ pub type MomentoResult<T> = Result<T, MomentoError>;
 /// Contains the [AuthClient] for calling Momento Auth APIs.
 pub mod auth;
 pub use auth::AuthClient;
+
+pub mod functions;
+pub use functions::FunctionClient;
