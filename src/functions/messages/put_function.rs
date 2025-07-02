@@ -21,8 +21,10 @@ use crate::{
 /// # tokio_test::block_on(async {
 /// use momento::{CredentialProvider, FunctionClient};
 /// use momento::functions::PutFunctionRequest;
+/// # use momento_test_util::echo_wasm;
 /// # let (function_client, cache_name) = momento_test_util::create_doctest_function_client();
-/// let function_body = b"read this from a .wasm file".to_vec();
+/// // load your wasm from a .wasm file compiled with wasm32-wasip2
+/// let function_body = echo_wasm();
 ///
 /// let request = PutFunctionRequest::new(cache_name, "hello functions", function_body);
 /// let function = function_client.send(request).await?;

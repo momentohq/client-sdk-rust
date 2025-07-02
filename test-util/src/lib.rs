@@ -4,7 +4,7 @@ mod test_utils;
 
 pub use crate::cache_test_state::CACHE_TEST_STATE;
 pub use crate::test_data::{
-    unique_cache_name, unique_key, unique_leaderboard_name, unique_store_name, unique_string,
+    echo_wasm, unique_cache_name, unique_key, unique_leaderboard_name, unique_store_name, unique_string,
     unique_topic_name, unique_value, TestDictionary, TestLeaderboard, TestList, TestScalar,
     TestSet, TestSortedSet,
 };

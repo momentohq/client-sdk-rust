@@ -271,3 +271,7 @@ impl From<&TestLeaderboard> for FetchResponse {
         FetchResponse::new(test_leaderboard.ranked_elements().clone())
     }
 }
+
+pub fn echo_wasm() -> Vec<u8> {
+    include_bytes!("../resources/echo.wasm").to_vec()
+}
