@@ -7,6 +7,7 @@ use crate::{
 use momento_protos::function::function_registry_client::FunctionRegistryClient;
 use tonic::{service::interceptor::InterceptedService, transport::Channel};
 
+/// A builder for creating a [FunctionClient].
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct FunctionClientBuilder<State>(pub(in crate::functions) State);
 
@@ -23,6 +24,7 @@ pub struct ReadyToBuild {
 }
 
 impl FunctionClientBuilder<NeedsCredentialProvider> {
+    /// Set the credential provider for the client.
     pub fn credential_provider(
         self,
         credential_provider: CredentialProvider,
@@ -34,6 +36,7 @@ impl FunctionClientBuilder<NeedsCredentialProvider> {
 }
 
 impl FunctionClientBuilder<ReadyToBuild> {
+    /// Build the configured client.
     pub fn build(self) -> MomentoResult<FunctionClient> {
         let ReadyToBuild {
             credential_provider,

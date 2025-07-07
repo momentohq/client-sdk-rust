@@ -13,6 +13,7 @@ pub struct FunctionClient {
 }
 
 impl FunctionClient {
+    /// Create a new FunctionClient
     pub fn builder() -> crate::functions::FunctionClientBuilder<NeedsCredentialProvider> {
         crate::functions::FunctionClientBuilder(NeedsCredentialProvider)
     }

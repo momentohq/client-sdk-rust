@@ -69,7 +69,7 @@ impl PutFunctionRequest {
     /// ```rust
     /// # use momento::functions::PutFunctionRequest;
     /// # fn example(request: PutFunctionRequest) {
-    /// let request = request.with_environment([("key", "value")]);
+    /// let request = request.environment([("key", "value")]);
     /// # }
     /// ```
     pub fn environment(

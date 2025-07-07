@@ -67,6 +67,7 @@ impl From<momento_protos::function_types::Function> for Function {
     }
 }
 
+/// A value for an environment variable in a Momento Function.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EnvironmentValue {
     /// A literal string environment variable value
@@ -99,6 +100,7 @@ impl From<EnvironmentValue> for momento_protos::function_types::EnvironmentValue
     }
 }
 
+/// The source of the webassembly code for a Momento Function.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum WasmSource {
     /// The wasm source is right here
