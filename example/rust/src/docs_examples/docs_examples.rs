@@ -75,8 +75,8 @@ pub fn example_API_InstantiateCacheClient() -> Result<(), MomentoError> {
 #[allow(non_snake_case)]
 pub async fn example_API_CreateCache(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     match cache_client.create_cache(cache_name).await? {
-        CreateCacheResponse::Created => println!("Cache {} created", cache_name),
-        CreateCacheResponse::AlreadyExists => println!("Cache {} already exists", cache_name),
+        CreateCacheResponse::Created => println!("Cache {cache_name} created"),
+        CreateCacheResponse::AlreadyExists => println!("Cache {cache_name} already exists"),
     }
     Ok(())
 }
@@ -91,14 +91,14 @@ pub async fn example_API_ListCaches(cache_client: &CacheClient) -> Result<(), Mo
 #[allow(non_snake_case)]
 pub async fn example_API_FlushCache(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client.flush_cache(cache_name.to_string()).await?;
-    println!("Cache {} flushed", cache_name);
+    println!("Cache {cache_name} flushed");
     Ok(())
 }
 
 #[allow(non_snake_case)]
 pub async fn example_API_DeleteCache(cache_client: &CacheClient, cache_name: &String) -> Result<(), MomentoError> {
     cache_client.delete_cache(cache_name).await?;
-    println!("Cache {} deleted", cache_name);
+    println!("Cache {cache_name} deleted");
     Ok(())
 }
 
@@ -368,7 +368,7 @@ pub async fn example_API_DictionaryFetch(cache_client: &CacheClient, cache_name:
         DictionaryFetchResponse::Hit { value } => {
             let dictionary: HashMap<String, String> =
                 value.try_into().expect("I stored a dictionary!");
-            println!("Fetched dictionary: {:?}", dictionary);
+            println!("Fetched dictionary: {dictionary:?}");
         }
         DictionaryFetchResponse::Miss => println!("Cache miss"),
     }
@@ -394,7 +394,7 @@ pub async fn example_API_DictionaryGetField(cache_client: &CacheClient, cache_na
     match response {
         DictionaryGetFieldResponse::Hit { value } => {
             let value: String = value.try_into().expect("I stored a string!");
-            println!("Fetched value: {}", value);
+            println!("Fetched value: {value}");
         }
         DictionaryGetFieldResponse::Miss => println!("Cache miss"),
     }
@@ -412,7 +412,7 @@ pub async fn example_API_DictionaryGetFields(cache_client: &CacheClient, cache_n
             let dictionary: HashMap<String, String> = response
                 .try_into()
                 .expect("I stored a dictionary of strings!");
-            println!("Fetched dictionary: {:?}", dictionary);
+            println!("Fetched dictionary: {dictionary:?}");
         }
         DictionaryGetFieldsResponse::Miss => println!("Cache miss"),
     }
@@ -502,10 +502,10 @@ pub async fn example_API_SortedSetFetchByRank(cache_client: &CacheClient, cache_
     match response {
         SortedSetFetchResponse::Hit { value } => match value.into_strings() {
             Ok(vec) => {
-                println!("Fetched elements: {:?}", vec);
+                println!("Fetched elements: {vec:?}");
             }
             Err(error) => {
-                eprintln!("Error converting values into strings: {}", error);
+                eprintln!("Error converting values into strings: {error}");
             }
         },
         SortedSetFetchResponse::Miss => println!("Cache miss"),
@@ -522,10 +522,10 @@ pub async fn example_API_SortedSetFetchByScore(cache_client: &CacheClient, cache
     match response {
         SortedSetFetchResponse::Hit { value } => match value.into_strings() {
             Ok(vec) => {
-                println!("Fetched elements: {:?}", vec);
+                println!("Fetched elements: {vec:?}");
             }
             Err(error) => {
-                eprintln!("Error converting values into strings: {}", error);
+                eprintln!("Error converting values into strings: {error}");
             }
         },
         SortedSetFetchResponse::Miss => println!("Cache miss"),
@@ -618,14 +618,14 @@ pub async fn example_API_KeysExist(cache_client: &CacheClient, cache_name: &Stri
         .keys_exist(cache_name, vec!["key", "key1", "key2"])
         .await?
         .into();
-    println!("Do these keys exist? {:#?}", result_map);
+    println!("Do these keys exist? {result_map:#?}");
 
     // Or receive results as a Vec
     let result_list: Vec<bool> = cache_client
         .keys_exist(cache_name, vec!["key", "key1", "key2"])
         .await?
         .into();
-    println!("Do these keys exist? {:#?}", result_list);
+    println!("Do these keys exist? {result_list:#?}");
     Ok(())
 }
 

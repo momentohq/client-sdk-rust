@@ -32,7 +32,7 @@ async fn main() -> MomentoResult<()> {
 
     for i in 0..10 {
         topic_client
-            .publish("cache", "my-topic", format!("Hello, World! {}", i))
+            .publish("cache", "my-topic", format!("Hello, World! {i}"))
             .await?;
     }
 
@@ -67,13 +67,13 @@ async fn main() -> MomentoResult<()> {
         }
         match sender.send("done") {
             Ok(_) => println!("Subscriber [2] sent done message"),
-            Err(err) => println!("Subscriber [2] failed to send done message: {}", err),
+            Err(err) => println!("Subscriber [2] failed to send done message: {err}"),
         }
     });
 
     for i in 0..10 {
         topic_client
-            .publish("cache", "my-topic", format!("Hello, World! {}", i))
+            .publish("cache", "my-topic", format!("Hello, World! {i}"))
             .await?;
     }
 
@@ -84,7 +84,7 @@ async fn main() -> MomentoResult<()> {
             println!("Received done message, ending subscriber [2] task");
             subscriber_handle2.abort();
         }
-        Err(err) => println!("Failed to receive done message: {}", err),
+        Err(err) => println!("Failed to receive done message: {err}"),
     }
 
     Ok(())
