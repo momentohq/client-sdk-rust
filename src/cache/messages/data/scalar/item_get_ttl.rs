@@ -74,7 +74,7 @@ impl<K: IntoBytes> MomentoRequest for ItemGetTtlRequest<K> {
             }),
             _ => Err(MomentoError::unknown_error(
                 "ItemGetTtl",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }

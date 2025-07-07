@@ -55,10 +55,7 @@ async fn assert_get_success(
     match cache_client.get(cache_name, key).await {
         Ok(_) => Ok(()),
         Err(e) => {
-            eprintln!(
-                "Expected to successfully get key '{}' from cache '{}'",
-                key, cache_name
-            );
+            eprintln!("Expected to successfully get key '{key}' from cache '{cache_name}'");
             Err(e)
         }
     }
@@ -72,12 +69,10 @@ async fn assert_get_failure(
     match cache_client.get(cache_name, key).await {
         Ok(_) => Err(MomentoError {
             message: format!(
-                "Expected getting key '{}' from cache '{}' to fail but it did not",
-                key, cache_name
+                "Expected getting key '{key}' from cache '{cache_name}' to fail but it did not"
             ),
             error_code: MomentoErrorCode::UnknownError,
             inner_error: None,
-            details: None,
         }),
         Err(e) => {
             match e.error_code {
@@ -106,8 +101,7 @@ async fn assert_set_success(
         Ok(_) => Ok(()),
         Err(e) => {
             eprintln!(
-                "Expected to successfully set value '{}' for key '{}' from cache '{}'",
-                value, key, cache_name
+                "Expected to successfully set value '{value}' for key '{key}' from cache '{cache_name}'"
             );
             Err(e)
         }
@@ -123,12 +117,10 @@ async fn assert_set_failure(
     match cache_client.set(cache_name, key, value).await {
         Ok(_) => Err(MomentoError {
             message: format!(
-                "Expected setting value '{}' for key '{}' from cache '{}' to fail but it did not",
-                value, key, cache_name
+                "Expected setting value '{value}' for key '{key}' from cache '{cache_name}' to fail but it did not"
             ),
             error_code: MomentoErrorCode::UnknownError,
             inner_error: None,
-            details: None,
         }),
         Err(e) => {
             match e.error_code {
@@ -157,8 +149,7 @@ async fn assert_publish_success(
         Ok(_) => Ok(()),
         Err(e) => {
             eprintln!(
-                "Expected to successfully publish value '{}' for topic '{}' in cache '{}'",
-                value, topic_name, cache_name
+                "Expected to successfully publish value '{value}' for topic '{topic_name}' in cache '{cache_name}'"
             );
             Err(e)
         }
@@ -174,12 +165,10 @@ async fn assert_publish_failure(
     match topic_client.publish(cache_name, topic_name, value).await {
         Ok(_) => Err(MomentoError {
             message: format!(
-                "Expected publishing value '{}' for topic '{}' in cache '{}' to fail but it did not",
-                value, topic_name, cache_name
+                "Expected publishing value '{value}' for topic '{topic_name}' in cache '{cache_name}' to fail but it did not"
             ),
             error_code: MomentoErrorCode::UnknownError,
             inner_error: None,
-            details: None,
         }),
         Err(e) => {
             match e.error_code {
@@ -207,8 +196,7 @@ async fn assert_subscribe_success(
         Ok(_) => Ok(()),
         Err(e) => {
             eprintln!(
-                "Expected to successfully subscribe to topic '{}' in cache '{}'",
-                topic_name, cache_name
+                "Expected to successfully subscribe to topic '{topic_name}' in cache '{cache_name}'"
             );
             Err(e)
         }
@@ -223,12 +211,10 @@ async fn assert_subscribe_failure(
     match topic_client.subscribe(cache_name, topic_name).await {
         Ok(_) => Err(MomentoError {
             message: format!(
-                "Expected subscribe to topic '{}' in cache '{}' to fail but it did not",
-                topic_name, cache_name
+                "Expected subscribe to topic '{topic_name}' in cache '{cache_name}' to fail but it did not"
             ),
             error_code: MomentoErrorCode::UnknownError,
             inner_error: None,
-            details: None,
         }),
         Err(e) => {
             match e.error_code {
@@ -1437,7 +1423,6 @@ mod disposable_tokens_all_data {
                 message: "Expected creating cache using AllDataReadWrite disposable token to fail but it did not".into(),
                 error_code: MomentoErrorCode::UnknownError,
                 inner_error: None,
-                details: None,
             }),
             Err(e) => {
                 match e.error_code {
@@ -1459,7 +1444,6 @@ mod disposable_tokens_all_data {
                 message: "Expected deleting cache using AllDataReadWrite disposable token to fail but it did not".into(),
                 error_code: MomentoErrorCode::UnknownError,
                 inner_error: None,
-                details: None,
             }),
             Err(e) => {
                 match e.error_code {

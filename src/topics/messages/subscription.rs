@@ -90,6 +90,7 @@ type SubscriptionFuture = BoxFuture<
 >;
 
 /// Indicates whether the subscription is still connected or resubscribing
+#[allow(clippy::large_enum_variant)]
 pub enum SubscriptionState {
     /// The subscription is still connected and receiving items.
     Subscribed(tonic::Streaming<pubsub::SubscriptionItem>),

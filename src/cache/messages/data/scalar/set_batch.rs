@@ -116,7 +116,7 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetBatchRequest<K, V> {
                 _ => {
                     return Err(MomentoError::unknown_error(
                         "Set",
-                        Some(format!("{:#?}", set_response)),
+                        Some(format!("{set_response:#?}")),
                     ))
                 }
             };

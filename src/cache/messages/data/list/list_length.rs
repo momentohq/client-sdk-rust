@@ -72,7 +72,7 @@ impl<L: IntoBytes> MomentoRequest for ListLengthRequest<L> {
             }),
             _ => Err(MomentoError::unknown_error(
                 "ListLength",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }

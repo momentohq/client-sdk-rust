@@ -113,7 +113,7 @@ impl<L: IntoBytes, V: IntoBytesIterable + Clone> MomentoRequest
             }
             _ => Err(MomentoError::unknown_error(
                 "SortedSetGetScores",
-                Some(format!("{:#?}", get_scores_response)),
+                Some(format!("{get_scores_response:#?}")),
             )),
         }
     }
@@ -147,7 +147,6 @@ impl<F: IntoBytesIterable + Clone> TryFrom<SortedSetGetScoresResponse<F>>
                 message: "sorted set get scores response was a miss".into(),
                 error_code: MomentoErrorCode::Miss,
                 inner_error: None,
-                details: None,
             }),
         }
     }
@@ -183,7 +182,6 @@ impl<F: IntoBytesIterable + Clone> TryFrom<SortedSetGetScoresResponse<F>>
                 message: "sorted set get scores response was a miss".into(),
                 error_code: MomentoErrorCode::Miss,
                 inner_error: None,
-                details: None,
             }),
         }
     }

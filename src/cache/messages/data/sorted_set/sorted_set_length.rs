@@ -77,7 +77,7 @@ impl<L: IntoBytes> MomentoRequest for SortedSetLengthRequest<L> {
             }
             _ => Err(MomentoError::unknown_error(
                 "SortedSetLength",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }

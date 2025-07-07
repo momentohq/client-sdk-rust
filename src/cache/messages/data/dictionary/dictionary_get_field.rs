@@ -101,7 +101,7 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryGetFieldRequest<D,
                         ECacheResult::Miss => Ok(DictionaryGetFieldResponse::Miss),
                         _ => Err(MomentoError::unknown_error(
                             "DictionaryGetField",
-                            Some(format!("{:#?}", value)),
+                            Some(format!("{value:#?}")),
                         )),
                     },
                     None => Err(MomentoError::unknown_error(
@@ -112,7 +112,7 @@ impl<D: IntoBytes, F: IntoBytes> MomentoRequest for DictionaryGetFieldRequest<D,
             }
             _ => Err(MomentoError::unknown_error(
                 "DictionaryGetField",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }

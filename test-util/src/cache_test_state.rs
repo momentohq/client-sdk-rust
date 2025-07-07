@@ -28,11 +28,11 @@ pub struct CacheTestState {
 impl CacheTestState {
     fn new() -> Self {
         let cache_name = get_test_cache_name();
-        println!("Using cache name: {}", cache_name);
+        println!("Using cache name: {cache_name}");
         let thread_cache_name = cache_name.clone();
 
         let auth_cache_name = get_test_auth_cache_name();
-        println!("Using auth cache name: {}", auth_cache_name);
+        println!("Using auth cache name: {auth_cache_name}");
         let thread_auth_cache_name = auth_cache_name.clone();
 
         let credential_provider = get_test_credential_provider();
@@ -59,7 +59,7 @@ impl CacheTestState {
                     CreateCacheResponse::Created => println!("Cache created."),
                     CreateCacheResponse::AlreadyExists => println!("Cache already exists."),
                 },
-                Err(e) => panic!("Failed to create cache: {:?}", e),
+                Err(e) => panic!("Failed to create cache: {e:?}"),
             }
 
             let leaderboard_client = momento::LeaderboardClient::builder()
@@ -88,7 +88,7 @@ impl CacheTestState {
                     CreateCacheResponse::Created => println!("Auth cache created."),
                     CreateCacheResponse::AlreadyExists => println!("Auth cache already exists."),
                 },
-                Err(e) => panic!("Failed to create cache: {:?}", e),
+                Err(e) => panic!("Failed to create cache: {e:?}"),
             }
 
             sender

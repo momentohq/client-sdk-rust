@@ -18,7 +18,7 @@ pub async fn main() -> Result<(), MomentoError> {
 
     match cache_client.set(CACHE_NAME, "mykey", "myvalue").await {
         Ok(_) => println!("Successfully stored key 'mykey' with value 'myvalue'"),
-        Err(e) => println!("Error: {}", e),
+        Err(e) => println!("Error: {e}"),
     }
 
     let value: String = match cache_client.get(CACHE_NAME, "mykey").await? {
@@ -28,7 +28,7 @@ pub async fn main() -> Result<(), MomentoError> {
             return Ok(()); // probably you'll do something else here
         }
     };
-    println!("Successfully retrieved value: {}", value);
+    println!("Successfully retrieved value: {value}");
 
     Ok(())
 }

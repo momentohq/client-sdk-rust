@@ -118,7 +118,7 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest
             }
             _ => Err(MomentoError::unknown_error(
                 "SetIfPresentAndNotEqual",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }

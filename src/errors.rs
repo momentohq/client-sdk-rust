@@ -88,9 +88,6 @@ pub struct MomentoError {
     /// The source of the error if an inner source is provided
     #[source]
     pub inner_error: Option<ErrorSource>,
-
-    /// Contains details about the error from GRPC if such details are available
-    pub details: Option<MomentoGrpcErrorDetails>,
 }
 
 impl MomentoError {
@@ -102,7 +99,6 @@ impl MomentoError {
                 + details.as_deref().unwrap_or(""),
             error_code: MomentoErrorCode::UnknownError,
             inner_error: None,
-            details: None,
         }
     }
 
@@ -111,7 +107,6 @@ impl MomentoError {
             message: "Received a MISS for ".to_string() + method_name,
             error_code: MomentoErrorCode::UnknownError,
             inner_error: None,
-            details: None,
         }
     }
 
@@ -121,10 +116,18 @@ impl MomentoError {
         max_concurrent_streams: usize,
     ) -> Self {
         Self {
-            message: format!("Number of active streams: {}; number of grpc channels: {}; max concurrent streams: {}; Already at maximum number of concurrent grpc streams, cannot make new subscribe requests", num_active_subscriptions, num_grpc_channels, max_concurrent_streams),
+            message: format!("Number of active streams: {num_active_subscriptions}; number of grpc channels: {num_grpc_channels}; max concurrent streams: {max_concurrent_streams}; Already at maximum number of concurrent grpc streams, cannot make new subscribe requests"),
             error_code: MomentoErrorCode::ClientResourceExhausted,
             inner_error: None,
-            details: None,
+        }
+    }
+
+    /// Returns details about the internal grpc error if available
+    pub fn details(&self) -> Option<MomentoGrpcErrorDetails> {
+        if let Some(ErrorSource::TonicStatus(status)) = &self.inner_error {
+            Some(status.clone().into())
+        } else {
+            None
         }
     }
 }
@@ -165,56 +168,47 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
         tonic::Code::InvalidArgument => MomentoError {
             message: "Invalid argument passed to Momento client".into(),
             error_code: MomentoErrorCode::InvalidArgumentError,
-            inner_error: Some(status.clone().into()),
-            details: Some(status.into())
+            inner_error: Some(status.into()),
         },
         tonic::Code::Unimplemented => MomentoError {
             message: "The request was invalid; please contact us at support@momentohq.com".into(),
             error_code: MomentoErrorCode::BadRequestError,
             inner_error: Some(status.clone().into()),
-            details: Some(status.into())
         },
         tonic::Code::OutOfRange => MomentoError {
             message: "The request was invalid; please contact us at support@momentohq.com".into(),
             error_code: MomentoErrorCode::BadRequestError,
             inner_error: Some(status.clone().into()),
-            details: Some(status.into())
         },
         tonic::Code::FailedPrecondition => MomentoError {
             message: "System is not in a state required for the operation's execution".into(),
             error_code: MomentoErrorCode::FailedPreconditionError,
             inner_error: Some(status.clone().into()),
-            details: Some(status.into())
         },
         tonic::Code::Cancelled => MomentoError {
             message: "The request was cancelled by the server; please contact us at support@momentohq.com".into(),
             error_code: MomentoErrorCode::CancelledError,
             inner_error: Some(status.clone().into()),
-            details: Some(status.into())
         },
         tonic::Code::DeadlineExceeded => MomentoError {
             message: "The client's configured timeout was exceeded; you may need to use a Configuration with more lenient timeouts".into(),
             error_code: MomentoErrorCode::TimeoutError,
             inner_error: Some(status.clone().into()),
-            details: Some(status.into())
         },
         tonic::Code::PermissionDenied => MomentoError {
             message: "Insufficient permissions to perform an operation on a cache".into(),
             error_code: MomentoErrorCode::PermissionError,
             inner_error: Some(status.clone().into()),
-            details: Some(status.into())
         },
         tonic::Code::Unauthenticated => MomentoError {
             message: "Invalid authentication credentials to connect to cache service".into(),
             error_code: MomentoErrorCode::AuthenticationError,
             inner_error: Some(status.clone().into()),
-            details: Some(status.into())
         },
         tonic::Code::ResourceExhausted => MomentoError {
             message: determine_limit_exceeded_message_wrapper(status.metadata(), status.message()),
             error_code: MomentoErrorCode::LimitExceededError,
             inner_error: Some(status.clone().into()),
-            details: Some(status.into())
         },
         tonic::Code::NotFound => {
             match status.metadata().get("err") {
@@ -222,7 +216,6 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
                     message: "A cache with the specified name does not exist.  To resolve this error, make sure you have created the cache before attempting to use it".into(),
                     error_code: MomentoErrorCode::CacheNotFoundError,
                     inner_error: Some(status.clone().into()),
-                    details: Some(status.into())
                 },
                 Some(err) => match err.to_str() {
                     Ok(err_str) => {
@@ -231,19 +224,16 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
                                 message: "A store with the specified name does not exist.  To resolve this error, make sure you have created the store before attempting to use it".into(),
                                 error_code: MomentoErrorCode::StoreNotFoundError,
                                 inner_error: Some(status.clone().into()),
-                                details: Some(status.into())
                             },
                             "item_not_found" => MomentoError {
                                 message: "An item with the specified key does not exist.  To resolve this error, make sure you have created the item before attempting to use it".into(),
                                 error_code: MomentoErrorCode::ItemNotFoundError,
                                 inner_error: Some(status.clone().into()),
-                                details: Some(status.into())
                             },
                             _ => MomentoError {
                                 message: "A cache with the specified name does not exist.  To resolve this error, make sure you have created the cache before attempting to use it".into(),
                                 error_code: MomentoErrorCode::CacheNotFoundError,
                                 inner_error: Some(status.clone().into()),
-                                details: Some(status.into())
                             }
                         }
                     }
@@ -251,7 +241,6 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
                         message: "Unknown error has occurred, unable to convert the error metadata into a string".into(),
                         error_code: MomentoErrorCode::UnknownError,
                         inner_error: Some(e.into()),
-                        details: Some(status.into())
                     }
                 }
             }
@@ -260,7 +249,6 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
             message: "A cache with the specified name already exists.  To resolve this error, either delete the existing cache and make a new one, or use a different name".into(),
             error_code: MomentoErrorCode::AlreadyExistsError,
             inner_error: Some(status.clone().into()),
-            details: Some(status.into())
         },
         tonic::Code::Unknown => {
             match status
@@ -276,14 +264,12 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
                                 message: "An unexpected error occurred while trying to fulfill the request, the request was interrupted by the server without an error; please contact us at support@momentohq.com".into(),
                                 error_code: MomentoErrorCode::InternalServerError,
                                 inner_error: Some(status.clone().into()),
-                                details: Some(status.into())
                             }
                         } else {
                             MomentoError {
                                 message: "Unknown error has occurred, the request was terminated locally without an error".into(),
                                 error_code: MomentoErrorCode::UnknownError,
                                 inner_error: Some(status.clone().into()),
-                                details: Some(status.into())
                             }
                         }
                     } else {
@@ -291,7 +277,6 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
                             message: "An unexpected error occurred while trying to fulfill the request, an internal http2 error terminated the request; please contact us at support@momentohq.com".into(),
                             error_code: MomentoErrorCode::InternalServerError,
                             inner_error: Some(status.clone().into()),
-                            details: Some(status.into())
                         }
                     }
                 }
@@ -299,7 +284,6 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
                     message: "An unexpected error occurred while trying to fulfill the request, an unknown error terminated the request; please contact us at support@momentohq.com".into(),
                     error_code: MomentoErrorCode::InternalServerError,
                     inner_error: Some(status.clone().into()),
-                    details: Some(status.into())
                 }
             }
         }
@@ -307,31 +291,26 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
             message: "An unexpected error occurred while trying to fulfill the request, request was aborted; please contact us at support@momentohq.com".into(),
             error_code: MomentoErrorCode::InternalServerError,
             inner_error: Some(status.clone().into()),
-            details: Some(status.into())
         },
         tonic::Code::Internal => MomentoError {
             message: "An unexpected internal error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
             error_code: MomentoErrorCode::InternalServerError,
             inner_error: Some(status.clone().into()),
-            details: Some(status.into())
         },
         tonic::Code::Unavailable => MomentoError {
             message: "The server was unavailable to handle the request; consider retrying.  If the error persists, please contact Momento.".into(),
             error_code: MomentoErrorCode::ServerUnavailable,
             inner_error: Some(status.clone().into()),
-            details: Some(status.into())
         },
         tonic::Code::DataLoss => MomentoError {
             message: "An unexpected data loss error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
             error_code: MomentoErrorCode::InternalServerError,
             inner_error: Some(status.clone().into()),
-            details: Some(status.into())
         },
         _ => MomentoError {
             message: "The service returned an unknown response; please contact us at support@momentohq.com".into(),
             error_code: MomentoErrorCode::UnknownServiceError,
             inner_error: Some(status.clone().into()),
-            details: Some(status.into())
         },
     }
 }

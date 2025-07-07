@@ -669,9 +669,9 @@ dependencies = [
 
 [[package]]
 name = "momento-protos"
-version = "0.125.0"
+version = "0.125.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96944394b533d483b4adc7fb79568d49954d434966c02dc9f5ad65ae52ae904a"
+checksum = "9caa946d1bccf7ead6a456301c1e385764d2e5eb30c7cbb8f20456780f4a5861"
 dependencies = [
  "prost",
  "tonic",

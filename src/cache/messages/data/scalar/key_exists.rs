@@ -69,7 +69,7 @@ impl<K: IntoBytes> MomentoRequest for KeyExistsRequest<K> {
             Some(exists) => Ok(KeyExistsResponse { exists: *exists }),
             _ => Err(MomentoError::unknown_error(
                 "KeyExists",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }

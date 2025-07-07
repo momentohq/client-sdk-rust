@@ -81,7 +81,7 @@ impl<K: IntoBytes> MomentoRequest for IncreaseTtlRequest<K> {
             Some(update_ttl_response::Result::NotSet(_)) => Ok(IncreaseTtlResponse::NotSet),
             _ => Err(MomentoError::unknown_error(
                 "IncreaseTtl",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }

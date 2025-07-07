@@ -43,8 +43,7 @@ mod item_get_type {
         assert_eq!(
             item_type,
             ItemType::Scalar,
-            "Expected Scalar, got {:?}",
-            item_type
+            "Expected Scalar, got {item_type:?}"
         );
         Ok(())
     }
@@ -61,12 +60,7 @@ mod item_get_type {
             .await?;
         let result = client.item_get_type(cache_name, item.name()).await?;
         let item_type: ItemType = result.try_into().expect("Expected ItemType, got Miss");
-        assert_eq!(
-            item_type,
-            ItemType::Set,
-            "Expected Set, got {:?}",
-            item_type
-        );
+        assert_eq!(item_type, ItemType::Set, "Expected Set, got {item_type:?}");
         Ok(())
     }
 
@@ -85,8 +79,7 @@ mod item_get_type {
         assert_eq!(
             item_type,
             ItemType::SortedSet,
-            "Expected SortedSet, got {:?}",
-            item_type
+            "Expected SortedSet, got {item_type:?}"
         );
         Ok(())
     }

@@ -108,7 +108,7 @@ impl<K: IntoBytesIterable> MomentoRequest for GetBatchRequest<K> {
                 _ => {
                     return Err(MomentoError::unknown_error(
                         "GetBatch",
-                        Some(format!("{:#?}", get_response)),
+                        Some(format!("{get_response:#?}")),
                     ))
                 }
             };

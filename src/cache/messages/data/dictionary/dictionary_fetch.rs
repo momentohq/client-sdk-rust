@@ -95,7 +95,7 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
             }
             _ => Err(MomentoError::unknown_error(
                 "DictionaryFetch",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }
@@ -188,7 +188,7 @@ impl Debug for Value {
 
 impl std::fmt::Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
 
@@ -253,16 +253,13 @@ mod tests {
                 "TACO".as_bytes().to_vec(),
             )])),
         };
+        assert_eq!(format!("{hit}"), r#"Value { raw_item: {"taco": "TACO"} }"#);
         assert_eq!(
-            format!("{}", hit),
-            r#"Value { raw_item: {"taco": "TACO"} }"#
-        );
-        assert_eq!(
-            format!("{:?}", hit),
+            format!("{hit:?}"),
             r#"Hit { value: Value { raw_item: {"taco": "TACO"} } }"#
         );
         assert_eq!(
-            format!("{:#?}", hit),
+            format!("{hit:#?}"),
             str::trim(
                 r#"
 Hit {
@@ -282,15 +279,15 @@ Hit {
             )])),
         };
         assert_eq!(
-            format!("{}", hit_with_binary_value),
+            format!("{hit_with_binary_value}"),
             r#"Value { raw_item: {"taco": [0, 150, 146, 159]} }"#
         );
         assert_eq!(
-            format!("{:?}", hit_with_binary_value),
+            format!("{hit_with_binary_value:?}"),
             r#"Hit { value: Value { raw_item: {"taco": [0, 150, 146, 159]} } }"#
         );
         assert_eq!(
-            format!("{:#?}", hit_with_binary_value),
+            format!("{hit_with_binary_value:#?}"),
             str::trim(
                 r#"
 Hit {
@@ -315,15 +312,15 @@ Hit {
             )])),
         };
         assert_eq!(
-            format!("{}", hit_with_binary_key_and_value),
+            format!("{hit_with_binary_key_and_value}"),
             r#"Value { raw_item: {[0, 159, 146, 150]: [0, 150, 146, 159]} }"#
         );
         assert_eq!(
-            format!("{:?}", hit_with_binary_key_and_value),
+            format!("{hit_with_binary_key_and_value:?}"),
             r#"Hit { value: Value { raw_item: {[0, 159, 146, 150]: [0, 150, 146, 159]} } }"#
         );
         assert_eq!(
-            format!("{:#?}", hit_with_binary_key_and_value),
+            format!("{hit_with_binary_key_and_value:#?}"),
             str::trim(
                 r#"
 Hit {
@@ -347,8 +344,8 @@ Hit {
         );
 
         let miss = DictionaryFetchResponse::Miss;
-        assert_eq!(format!("{}", miss), "Miss");
-        assert_eq!(format!("{:?}", miss), "Miss");
+        assert_eq!(format!("{miss}"), "Miss");
+        assert_eq!(format!("{miss:?}"), "Miss");
 
         Ok(())
     }

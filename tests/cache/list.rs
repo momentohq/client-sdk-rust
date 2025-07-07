@@ -18,8 +18,7 @@ fn assert_list_eq(
     let expected: ListFetchResponse = expected.into();
     assert_eq!(
         list_fetch_result, expected,
-        "Expected ListFetchResponse::Hit to be equal to {:?}, but got {:?}",
-        expected, list_fetch_result
+        "Expected ListFetchResponse::Hit to be equal to {expected:?}, but got {list_fetch_result:?}"
     );
     Ok(())
 }

@@ -127,8 +127,7 @@ mod get_set_delete {
         assert_eq!(
             result,
             DeleteResponse {},
-            "Expected successful Delete of nonexistent key, got {:?}",
-            result
+            "Expected successful Delete of nonexistent key, got {result:?}"
         );
 
         // Deleting a key that exists should delete it
@@ -137,8 +136,7 @@ mod get_set_delete {
         assert_eq!(
             result,
             DeleteResponse {},
-            "Expected successful Delete of existing key, got {:?}",
-            result
+            "Expected successful Delete of existing key, got {result:?}"
         );
 
         // Key should not exist after deletion

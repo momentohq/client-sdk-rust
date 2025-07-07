@@ -30,7 +30,6 @@ pub(crate) fn request_meta_data<T>(
             message: format!("Could not treat cache name as a header value: {e}"),
             error_code: MomentoErrorCode::InvalidArgumentError,
             inner_error: Some(crate::ErrorSource::Unknown(Box::new(e))),
-            details: None,
         })
 }
 
@@ -71,7 +70,6 @@ pub(crate) fn is_ttl_valid(ttl: Duration) -> MomentoResult<()> {
             ),
             error_code: MomentoErrorCode::InvalidArgumentError,
             inner_error: None,
-            details: None,
         });
     }
     Ok(())
@@ -83,7 +81,6 @@ pub(crate) fn is_cache_name_valid(cache_name: &str) -> Result<(), MomentoError> 
             message: "Cache name cannot be empty".into(),
             error_code: MomentoErrorCode::InvalidArgumentError,
             inner_error: None,
-            details: None,
         });
     }
     Ok(())
@@ -95,7 +92,6 @@ pub(crate) fn is_disposable_token_expiry_valid(expires_in: ExpiresIn) -> Result<
             message: "Disposable tokens must have an expiry".into(),
             error_code: MomentoErrorCode::InvalidArgumentError,
             inner_error: None,
-            details: None,
         });
     }
     if expires_in.to_seconds() < 1 {
@@ -103,7 +99,6 @@ pub(crate) fn is_disposable_token_expiry_valid(expires_in: ExpiresIn) -> Result<
             message: "Disposable tokens expiry must be positive".into(),
             error_code: MomentoErrorCode::InvalidArgumentError,
             inner_error: None,
-            details: None,
         });
     }
     if expires_in.to_seconds() > 60 * 60 {
@@ -111,7 +106,6 @@ pub(crate) fn is_disposable_token_expiry_valid(expires_in: ExpiresIn) -> Result<
             message: "Disposable tokens must expire within 1 hour".into(),
             error_code: MomentoErrorCode::InvalidArgumentError,
             inner_error: None,
-            details: None,
         });
     }
     Ok(())
@@ -123,7 +117,6 @@ pub(crate) fn is_disposable_token_id_valid(token_id: &str) -> Result<(), Momento
             message: "Token ID must be less than or equal to 64 characters".into(),
             error_code: MomentoErrorCode::InvalidArgumentError,
             inner_error: None,
-            details: None,
         });
     }
     Ok(())
@@ -145,13 +138,11 @@ impl From<ChannelConnectError> for MomentoError {
                 message: "bad uri".into(),
                 error_code: MomentoErrorCode::InvalidArgumentError,
                 inner_error: Some(ErrorSource::InvalidUri(err)),
-                details: None,
             },
             ChannelConnectError::Connection(err) => MomentoError {
                 message: "connection failed".into(),
                 error_code: MomentoErrorCode::InternalServerError,
                 inner_error: Some(ErrorSource::Unknown(err.into())),
-                details: None,
             },
         }
     }
@@ -193,7 +184,6 @@ pub(crate) fn parse_string(raw: Vec<u8>) -> MomentoResult<String> {
         message: "item is not a utf-8 string".to_string(),
         error_code: MomentoErrorCode::TypeError,
         inner_error: Some(ErrorSource::Unknown(Box::new(e))),
-        details: None,
     })
 }
 
@@ -279,7 +269,7 @@ pub(crate) mod fmt {
     impl Debug for DebuggableValue {
         fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
             match self {
-                DebuggableValue::String(s) => f.write_fmt(format_args!("{:?}", s)),
+                DebuggableValue::String(s) => f.write_fmt(format_args!("{s:?}")),
                 DebuggableValue::Bytes(b) => f.debug_list().entries(b.iter()).finish(),
             }
         }

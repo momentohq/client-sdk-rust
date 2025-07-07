@@ -105,7 +105,7 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
                         ECacheResult::Miss => Ok(DictionaryGetFieldResponse::Miss),
                         _ => Err(MomentoError::unknown_error(
                             "DictionaryGetFields",
-                            Some(format!("{:#?}", value)),
+                            Some(format!("{value:#?}")),
                         )),
                     })
                     .collect();
@@ -120,7 +120,7 @@ impl<D: IntoBytes, F: IntoBytesIterable + Clone> MomentoRequest
             }
             _ => Err(MomentoError::unknown_error(
                 "DictionaryGetFields",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }
@@ -255,7 +255,6 @@ impl<F: IntoBytesIterable> TryFrom<DictionaryGetFieldsResponse<F>> for HashMap<V
                 message: "dictionary get fields response was a miss".into(),
                 error_code: MomentoErrorCode::Miss,
                 inner_error: None,
-                details: None,
             }),
         }
     }

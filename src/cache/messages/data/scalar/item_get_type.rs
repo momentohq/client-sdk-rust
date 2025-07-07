@@ -91,7 +91,7 @@ impl<K: IntoBytes> MomentoRequest for ItemGetTypeRequest<K> {
             }),
             _ => Err(MomentoError::unknown_error(
                 "ItemGetType",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }

@@ -3,7 +3,9 @@ use std::future::Future;
 use std::time::Duration;
 
 use momento::cache::configurations;
-use momento::{AuthClient, CacheClient, CredentialProvider, LeaderboardClient, TopicClient};
+use momento::{
+    AuthClient, CacheClient, CredentialProvider, FunctionClient, LeaderboardClient, TopicClient,
+};
 
 use crate::unique_cache_name;
 
@@ -59,6 +61,16 @@ pub fn create_doctest_topic_client() -> (TopicClient, String) {
 pub fn create_doctest_auth_client() -> AuthClient {
     let (_, _, _, auth_client, _) = build_clients_and_credential_provider();
     auth_client
+}
+
+pub fn create_doctest_function_client() -> (FunctionClient, String) {
+    let cache_name = get_test_cache_name();
+    let credential_provider = get_test_credential_provider();
+    let client = momento::FunctionClient::builder()
+        .credential_provider(credential_provider.clone())
+        .build()
+        .expect("cache client should be created");
+    (client, cache_name)
 }
 
 pub fn get_test_cache_name() -> String {

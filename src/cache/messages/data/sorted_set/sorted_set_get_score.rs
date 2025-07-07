@@ -104,7 +104,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetScoreRequest<L, 
             }
             _ => Err(MomentoError::unknown_error(
                 "SortedSetGetScore",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }
