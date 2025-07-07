@@ -55,9 +55,7 @@ async fn assert_get_success(
     match cache_client.get(cache_name, key).await {
         Ok(_) => Ok(()),
         Err(e) => {
-            eprintln!(
-                "Expected to successfully get key '{key}' from cache '{cache_name}'"
-            );
+            eprintln!("Expected to successfully get key '{key}' from cache '{cache_name}'");
             Err(e)
         }
     }

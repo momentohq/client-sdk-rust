@@ -253,10 +253,7 @@ mod tests {
                 "TACO".as_bytes().to_vec(),
             )])),
         };
-        assert_eq!(
-            format!("{hit}"),
-            r#"Value { raw_item: {"taco": "TACO"} }"#
-        );
+        assert_eq!(format!("{hit}"), r#"Value { raw_item: {"taco": "TACO"} }"#);
         assert_eq!(
             format!("{hit:?}"),
             r#"Hit { value: Value { raw_item: {"taco": "TACO"} } }"#
