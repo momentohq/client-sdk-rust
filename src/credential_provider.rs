@@ -68,7 +68,6 @@ impl CredentialProvider {
                     message: format!("Env var {env_var_name} must be set"),
                     error_code: MomentoErrorCode::InvalidArgumentError,
                     inner_error: Some(crate::ErrorSource::Unknown(Box::new(e))),
-                    details: None,
                 });
             }
         };
@@ -111,7 +110,6 @@ impl CredentialProvider {
                     message: "Auth token string cannot be empty".into(),
                     error_code: MomentoErrorCode::InvalidArgumentError,
                     inner_error: None,
-                    details: None,
                 });
             };
             auth_token
@@ -169,7 +167,6 @@ fn token_parsing_error(e: Box<dyn std::error::Error + Send + Sync>) -> MomentoEr
         message: "Could not parse token. Please ensure a valid token was entered correctly.".into(),
         error_code: MomentoErrorCode::InvalidArgumentError,
         inner_error: Some(crate::ErrorSource::Unknown(e)),
-        details: None,
     }
 }
 

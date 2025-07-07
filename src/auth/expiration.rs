@@ -74,7 +74,6 @@ impl ExpiresIn {
                 message: "Unable to convert epoch timestamp into valid expiry".into(),
                 error_code: MomentoErrorCode::InvalidArgumentError,
                 inner_error: None,
-                details: None,
             }),
         }
     }

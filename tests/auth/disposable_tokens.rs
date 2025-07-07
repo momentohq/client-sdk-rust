@@ -77,7 +77,6 @@ async fn assert_get_failure(
             ),
             error_code: MomentoErrorCode::UnknownError,
             inner_error: None,
-            details: None,
         }),
         Err(e) => {
             match e.error_code {
@@ -128,7 +127,6 @@ async fn assert_set_failure(
             ),
             error_code: MomentoErrorCode::UnknownError,
             inner_error: None,
-            details: None,
         }),
         Err(e) => {
             match e.error_code {
@@ -179,7 +177,6 @@ async fn assert_publish_failure(
             ),
             error_code: MomentoErrorCode::UnknownError,
             inner_error: None,
-            details: None,
         }),
         Err(e) => {
             match e.error_code {
@@ -228,7 +225,6 @@ async fn assert_subscribe_failure(
             ),
             error_code: MomentoErrorCode::UnknownError,
             inner_error: None,
-            details: None,
         }),
         Err(e) => {
             match e.error_code {
@@ -1437,7 +1433,6 @@ mod disposable_tokens_all_data {
                 message: "Expected creating cache using AllDataReadWrite disposable token to fail but it did not".into(),
                 error_code: MomentoErrorCode::UnknownError,
                 inner_error: None,
-                details: None,
             }),
             Err(e) => {
                 match e.error_code {
@@ -1459,7 +1454,6 @@ mod disposable_tokens_all_data {
                 message: "Expected deleting cache using AllDataReadWrite disposable token to fail but it did not".into(),
                 error_code: MomentoErrorCode::UnknownError,
                 inner_error: None,
-                details: None,
             }),
             Err(e) => {
                 match e.error_code {

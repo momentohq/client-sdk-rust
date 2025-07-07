@@ -255,7 +255,6 @@ impl<F: IntoBytesIterable> TryFrom<DictionaryGetFieldsResponse<F>> for HashMap<V
                 message: "dictionary get fields response was a miss".into(),
                 error_code: MomentoErrorCode::Miss,
                 inner_error: None,
-                details: None,
             }),
         }
     }

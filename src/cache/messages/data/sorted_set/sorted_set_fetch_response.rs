@@ -100,7 +100,6 @@ impl SortedSetFetchResponse {
                             )
                             .into(),
                         )),
-                        details: None,
                     }),
                 },
             },
@@ -197,7 +196,6 @@ impl TryFrom<SortedSetElements> for Vec<(String, f64)> {
                         message: "element value was not a valid utf-8 string".to_string(),
                         error_code: MomentoErrorCode::TypeError,
                         inner_error: Some(ErrorSource::Unknown(Box::new(e))),
-                        details: None,
                     });
                 }
             }

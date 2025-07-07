@@ -36,7 +36,6 @@ impl ScoreRange {
                     message: format!("min score must be finite or negative infinity; got {}", min),
                     error_code: MomentoErrorCode::InvalidArgumentError,
                     inner_error: None,
-                    details: None,
                 });
             }
         }
@@ -46,7 +45,6 @@ impl ScoreRange {
                     message: format!("max score must be finite or positive infinity; got {}", max),
                     error_code: MomentoErrorCode::InvalidArgumentError,
                     inner_error: None,
-                    details: None,
                 });
             }
         }

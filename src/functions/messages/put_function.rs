@@ -58,7 +58,7 @@ impl PutFunctionRequest {
     }
 
     /// Set the Function's description
-    pub fn with_description(mut self, description: impl Into<String>) -> Self {
+    pub fn description(mut self, description: impl Into<String>) -> Self {
         self.description = description.into();
         self
     }
@@ -72,7 +72,7 @@ impl PutFunctionRequest {
     /// let request = request.with_environment([("key", "value")]);
     /// # }
     /// ```
-    pub fn with_environment(
+    pub fn environment(
         mut self,
         environment: impl IntoIterator<Item = (impl Into<String>, impl Into<EnvironmentValue>)>,
     ) -> Self {
@@ -84,12 +84,13 @@ impl PutFunctionRequest {
     /// Set an environment variable for the Function
     ///
     /// This is additive to any previously set environment variables, but it replaces the value for the key if present.
-    pub fn with_environment_variable(
+    pub fn environment_variable<S: Into<String> + Default>(
         mut self,
-        key: impl Into<String>,
+        key: impl Into<Option<S>>,
         value: impl Into<EnvironmentValue>,
     ) -> Self {
-        self.environment.insert(key.into(), value.into());
+        self.environment
+            .insert(key.into().unwrap_or_default().into(), value.into());
         self
     }
 }
