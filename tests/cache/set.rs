@@ -14,8 +14,7 @@ fn assert_fetched_set_eq(
     let expected: SetFetchResponse = expected.into();
     assert_eq!(
         set_fetch_result, expected,
-        "Expected SetFetch::Hit to be equal to {:?}, but got {:?}",
-        expected, set_fetch_result
+        "Expected SetFetch::Hit to be equal to {expected:?}, but got {set_fetch_result:?}"
     );
     Ok(())
 }

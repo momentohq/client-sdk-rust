@@ -226,13 +226,13 @@ mod tests {
         let hit = GetResponse::Hit {
             value: Value::new("hello".as_bytes().to_vec()),
         };
-        assert_eq!(format!("{}", hit), r#"Value { raw_item: "hello" }"#);
+        assert_eq!(format!("{hit}"), r#"Value { raw_item: "hello" }"#);
         assert_eq!(
-            format!("{:?}", hit),
+            format!("{hit:?}"),
             r#"Hit { value: Value { raw_item: "hello" } }"#
         );
         assert_eq!(
-            format!("{:#?}", hit),
+            format!("{hit:#?}"),
             str::trim(
                 r#"
 Hit {
@@ -247,15 +247,15 @@ Hit {
             value: Value::new(vec![0, 150, 146, 159]),
         };
         assert_eq!(
-            format!("{}", hit_with_binary_value),
+            format!("{hit_with_binary_value}"),
             r#"Value { raw_item: [0, 150, 146, 159] }"#
         );
         assert_eq!(
-            format!("{:?}", hit_with_binary_value),
+            format!("{hit_with_binary_value:?}"),
             r#"Hit { value: Value { raw_item: [0, 150, 146, 159] } }"#
         );
         assert_eq!(
-            format!("{:#?}", hit_with_binary_value),
+            format!("{hit_with_binary_value:#?}"),
             str::trim(
                 r#"
 Hit {
@@ -272,7 +272,7 @@ Hit {
         );
 
         let miss = GetResponse::Miss;
-        assert_eq!(format!("{}", miss), "Miss");
+        assert_eq!(format!("{miss}"), "Miss");
 
         Ok(())
     }

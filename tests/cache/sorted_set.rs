@@ -22,8 +22,7 @@ fn assert_fetched_sorted_set_eq(
     let expected: SortedSetFetchResponse = expected.into();
     assert_eq!(
         sorted_set_fetch_result, expected,
-        "Expected SortedSetFetch::Hit to be equal to {:?}, but got {:?}",
-        expected, sorted_set_fetch_result
+        "Expected SortedSetFetch::Hit to be equal to {expected:?}, but got {sorted_set_fetch_result:?}"
     );
     Ok(())
 }
