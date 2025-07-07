@@ -95,7 +95,7 @@ impl<D: IntoBytes> MomentoRequest for DictionaryFetchRequest<D> {
             }
             _ => Err(MomentoError::unknown_error(
                 "DictionaryFetch",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }
@@ -188,7 +188,7 @@ impl Debug for Value {
 
 impl std::fmt::Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
 

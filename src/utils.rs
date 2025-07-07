@@ -269,7 +269,7 @@ pub(crate) mod fmt {
     impl Debug for DebuggableValue {
         fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
             match self {
-                DebuggableValue::String(s) => f.write_fmt(format_args!("{:?}", s)),
+                DebuggableValue::String(s) => f.write_fmt(format_args!("{s:?}")),
                 DebuggableValue::Bytes(b) => f.debug_list().entries(b.iter()).finish(),
             }
         }

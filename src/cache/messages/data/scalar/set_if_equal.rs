@@ -109,7 +109,7 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> MomentoRequest for SetIfEqualRequ
             Some(set_if_response::Result::NotStored(_)) => Ok(SetIfEqualResponse::NotStored),
             _ => Err(MomentoError::unknown_error(
                 "SetIfEqual",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }

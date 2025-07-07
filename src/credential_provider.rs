@@ -159,7 +159,7 @@ fn get_token_endpoint(endpoint: &str) -> String {
 }
 
 fn https_endpoint(hostname: String) -> String {
-    format!("https://{}", hostname)
+    format!("https://{hostname}")
 }
 
 fn token_parsing_error(e: Box<dyn std::error::Error + Send + Sync>) -> MomentoError {

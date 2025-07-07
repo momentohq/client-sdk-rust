@@ -98,7 +98,7 @@ impl<L: IntoBytes, V: IntoBytes> MomentoRequest for SortedSetGetRankRequest<L, V
             Some(Rank::Missing(_)) => Ok(SortedSetGetRankResponse::Miss),
             _ => Err(MomentoError::unknown_error(
                 "SortedSetGetRank",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }

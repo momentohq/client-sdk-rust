@@ -33,7 +33,7 @@ impl ScoreRange {
         if let Some(min) = self.min {
             if !min.is_finite() && min != f64::NEG_INFINITY {
                 return Err(MomentoError {
-                    message: format!("min score must be finite or negative infinity; got {}", min),
+                    message: format!("min score must be finite or negative infinity; got {min}"),
                     error_code: MomentoErrorCode::InvalidArgumentError,
                     inner_error: None,
                 });
@@ -42,7 +42,7 @@ impl ScoreRange {
         if let Some(max) = self.max {
             if !max.is_finite() && max != f64::INFINITY {
                 return Err(MomentoError {
-                    message: format!("max score must be finite or positive infinity; got {}", max),
+                    message: format!("max score must be finite or positive infinity; got {max}"),
                     error_code: MomentoErrorCode::InvalidArgumentError,
                     inner_error: None,
                 });

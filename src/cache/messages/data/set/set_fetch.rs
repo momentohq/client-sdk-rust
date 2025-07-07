@@ -81,7 +81,7 @@ impl<S: IntoBytes> MomentoRequest for SetFetchRequest<S> {
             }),
             _ => Err(MomentoError::unknown_error(
                 "SetFetch",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }

@@ -80,7 +80,7 @@ impl<K: IntoBytes> MomentoRequest for GetRequest<K> {
             ECacheResult::Miss => Ok(GetResponse::Miss),
             _ => Err(MomentoError::unknown_error(
                 "Get",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }
@@ -170,7 +170,7 @@ impl std::fmt::Debug for Value {
 
 impl std::fmt::Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
 

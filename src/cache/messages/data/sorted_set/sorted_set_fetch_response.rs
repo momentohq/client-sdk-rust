@@ -105,7 +105,7 @@ impl SortedSetFetchResponse {
             },
             _ => Err(MomentoError::unknown_error(
                 "SortedSetFetch",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }

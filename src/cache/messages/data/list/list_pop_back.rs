@@ -73,7 +73,7 @@ impl<L: IntoBytes> MomentoRequest for ListPopBackRequest<L> {
             }),
             _ => Err(MomentoError::unknown_error(
                 "ListPopBack",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }

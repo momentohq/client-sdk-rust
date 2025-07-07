@@ -78,7 +78,7 @@ impl<D: IntoBytes> MomentoRequest for DictionaryLengthRequest<D> {
             }
             _ => Err(MomentoError::unknown_error(
                 "DictionaryLength",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }

@@ -113,7 +113,7 @@ impl<L: IntoBytes, V: IntoBytesIterable + Clone> MomentoRequest
             }
             _ => Err(MomentoError::unknown_error(
                 "SortedSetGetScores",
-                Some(format!("{:#?}", get_scores_response)),
+                Some(format!("{get_scores_response:#?}")),
             )),
         }
     }

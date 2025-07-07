@@ -102,7 +102,7 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfAbsentRequest<K, V> {
             Some(set_if_response::Result::NotStored(_)) => Ok(SetIfAbsentResponse::NotStored),
             _ => Err(MomentoError::unknown_error(
                 "SetIfAbsent",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }

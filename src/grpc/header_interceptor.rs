@@ -66,13 +66,13 @@ fn create_header_from_string(
     let header_name = tonic::metadata::AsciiMetadataKey::from_str(name).map_err(|e| {
         tonic::Status::new(
             tonic::Code::InvalidArgument,
-            format!("Couldn't parse header name {}: {}", name, e),
+            format!("Couldn't parse header name {name}: {e}"),
         )
     })?;
     let header_value = tonic::metadata::AsciiMetadataValue::try_from(value).map_err(|e| {
         tonic::Status::new(
             tonic::Code::InvalidArgument,
-            format!("Couldn't parse header value for {}: {}", name, e),
+            format!("Couldn't parse header value for {name}: {e}"),
         )
     })?;
     Ok((header_name, header_value))

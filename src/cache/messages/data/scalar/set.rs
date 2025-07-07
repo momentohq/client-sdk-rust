@@ -96,7 +96,7 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetRequest<K, V> {
             ECacheResult::Ok => Ok(SetResponse {}),
             _ => Err(MomentoError::unknown_error(
                 "Set",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }

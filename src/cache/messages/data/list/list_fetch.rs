@@ -112,7 +112,7 @@ impl<L: IntoBytes> MomentoRequest for ListFetchRequest<L> {
             }),
             _ => Err(MomentoError::unknown_error(
                 "ListFetch",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }

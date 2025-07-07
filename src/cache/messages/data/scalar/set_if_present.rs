@@ -102,7 +102,7 @@ impl<K: IntoBytes, V: IntoBytes> MomentoRequest for SetIfPresentRequest<K, V> {
             Some(set_if_response::Result::NotStored(_)) => Ok(SetIfPresentResponse::NotStored),
             _ => Err(MomentoError::unknown_error(
                 "SetIfPresent",
-                Some(format!("{:#?}", response)),
+                Some(format!("{response:#?}")),
             )),
         }
     }
