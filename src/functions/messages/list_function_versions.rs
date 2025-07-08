@@ -61,7 +61,7 @@ impl MomentoRequest for ListFunctionVersionsRequest {
     }
 }
 
-/// A stream of responses from a ListFunctionsRequest.
+/// A stream of responses from a ListFunctionVersionsRequest.
 /// You can iterate the stream or collect it into a Vec using `futures::StreamExt`.
 #[derive(Debug)]
 pub struct ListFunctionVersionsStream {
