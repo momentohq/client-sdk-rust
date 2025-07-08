@@ -32,7 +32,7 @@ pub struct ListFunctionVersionsRequest {
 }
 
 impl ListFunctionVersionsRequest {
-    /// Create a new ListFunctionsRequest.
+    /// Create a new ListFunctionVersionsRequest.
     pub fn new(cache_name: impl Into<String>) -> Self {
         Self {
             function_id: cache_name.into(),
