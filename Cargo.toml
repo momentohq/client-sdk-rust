@@ -31,11 +31,11 @@ doc = false
 
 
 [dependencies]
-momento-protos = { version = "0.125.4" }
+momento-protos = { version = "0.125.5" }
 log = "0.4"
 hyper = { version = "1.6" }
 h2 = { version = "0.4" }
-tonic = { version = "0.10", features = ["tls", "tls-roots", "tls-webpki-roots"] }
+tonic = { version = "0.13", features = ["tls-ring", "tls-webpki-roots"] }
 rand = "0.9"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
