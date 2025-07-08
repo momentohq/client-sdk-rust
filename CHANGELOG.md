@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.52.1](https://github.com/momentohq/client-sdk-rust/compare/v0.52.0...v0.52.1) (2025-07-08)
+
+
+### Miscellaneous
+
+* add Functions client ([#467](https://github.com/momentohq/client-sdk-rust/issues/467)) ([a9a0955](https://github.com/momentohq/client-sdk-rust/commit/a9a0955acb9935ab2de4c135bd6da30f811e47ed))
+* add functions rpcs ([#468](https://github.com/momentohq/client-sdk-rust/issues/468)) ([1a795b7](https://github.com/momentohq/client-sdk-rust/commit/1a795b744e26a0727aca4af195a800e88abcb47a))
+* **deps:** bump momento from 0.51.0 to 0.52.0 in /example/rust ([#464](https://github.com/momentohq/client-sdk-rust/issues/464)) ([47144e7](https://github.com/momentohq/client-sdk-rust/commit/47144e76e1989d236e941fc7b0350743c417bb64))
+* update dependencies ([#466](https://github.com/momentohq/client-sdk-rust/issues/466)) ([6e14f24](https://github.com/momentohq/client-sdk-rust/commit/6e14f245edb8274460971599dbfe020148388ec4))
+
 ## [0.52.0](https://github.com/momentohq/client-sdk-rust/compare/v0.51.0...v0.52.0) (2025-05-13)
 
 
