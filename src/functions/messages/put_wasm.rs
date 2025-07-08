@@ -35,7 +35,7 @@ pub struct PutWasmRequest {
 }
 
 impl PutWasmRequest {
-    /// Create a new PublishRequest.
+    /// Create a new PutWasmRequest.
     pub fn new(wasm_name: impl Into<String>, wasm_source: impl Into<Vec<u8>>) -> Self {
         Self {
             wasm_name: wasm_name.into(),
