@@ -67,6 +67,104 @@ impl From<momento_protos::function_types::Function> for Function {
     }
 }
 
+/// A configuration set representing a specific version of a Function in Momento.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FunctionVersion {
+    /// The unique identifier for this function version.
+    version_id: FunctionVersionId,
+    /// The wasm ID this function uses.
+    wasm_version_id: WasmVersionId,
+    /// The environment variables available to this function via the WASI environment interface.
+    pub environment: std::collections::HashMap<String, EnvironmentValue>,
+}
+impl From<momento_protos::function_types::FunctionVersion> for FunctionVersion {
+    fn from(proto: momento_protos::function_types::FunctionVersion) -> Self {
+        let momento_protos::function_types::FunctionVersion {
+            id,
+            wasm_id,
+            environment,
+        } = proto;
+        let id = id.unwrap_or_default();
+        let wasm_id = wasm_id.unwrap_or_default();
+        Self {
+            version_id: FunctionVersionId {
+                id: id.id,
+                version: id.version,
+            },
+            wasm_version_id: WasmVersionId {
+                id: wasm_id.id,
+                version: wasm_id.version,
+            },
+            environment: environment
+                .into_iter()
+                .map(|(k, v)| (k, EnvironmentValue::from(v)))
+                .collect(),
+        }
+    }
+}
+
+/// A unique identifier for a Function in Momento.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FunctionVersionId {
+    id: String,
+    version: u32,
+}
+impl FunctionVersionId {
+    /// Get the identifier for the function.
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    /// Get the version of the function.
+    pub fn version(&self) -> u32 {
+        self.version
+    }
+}
+
+/// A unique identifier for a wasm artifact in Momento.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WasmVersionId {
+    id: String,
+    version: u32,
+}
+impl WasmVersionId {
+    /// Get the identifier for the wasm artifact.
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    /// Get the version of the wasm artifact.
+    pub fn version(&self) -> u32 {
+        self.version
+    }
+}
+
+/// Metadata about a wasm artifact in Momento.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Wasm {
+    id: WasmVersionId,
+    name: String,
+    description: String,
+}
+impl From<momento_protos::function_types::Wasm> for Wasm {
+    fn from(proto: momento_protos::function_types::Wasm) -> Self {
+        let momento_protos::function_types::Wasm {
+            id,
+            name,
+            description,
+        } = proto;
+        let id = id.unwrap_or_default();
+        Self {
+            id: WasmVersionId {
+                id: id.id,
+                version: id.version,
+            },
+            name,
+            description,
+        }
+    }
+}
+
 /// A value for an environment variable in a Momento Function.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EnvironmentValue {
@@ -96,6 +194,19 @@ impl From<EnvironmentValue> for momento_protos::function_types::EnvironmentValue
                     ),
                 }
             }
+        }
+    }
+}
+
+impl From<momento_protos::function_types::EnvironmentValue> for EnvironmentValue {
+    fn from(proto: momento_protos::function_types::EnvironmentValue) -> Self {
+        match proto.value {
+            Some(value) => match value {
+                momento_protos::function_types::environment_value::Value::Literal(literal) => {
+                    EnvironmentValue::Literal(literal)
+                }
+            },
+            None => EnvironmentValue::Literal(String::new()),
         }
     }
 }
