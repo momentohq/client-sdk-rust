@@ -21,7 +21,7 @@ use crate::{
 /// # let (function_client, cache_name) = momento_test_util::create_doctest_function_client();
 ///
 /// let request = ListFunctionsRequest::new(cache_name);
-/// let functions = function_client.send(request).await?.collect::<Vec<_>>();
+/// let functions = function_client.send(request).await?.into_vec().await;
 /// println!("Functions: {functions:?}");
 /// # Ok(())
 /// # })
@@ -67,6 +67,19 @@ impl ListFunctionsStream {
     /// Create a new Stream from a tonic Streaming object.
     pub(crate) fn new(stream: tonic::Streaming<momento_protos::function_types::Function>) -> Self {
         Self { stream }
+    }
+
+    /// Collect the response stream into a vector.
+    pub async fn into_vec(self) -> MomentoResult<Vec<Function>> {
+        let mut versions = Vec::new();
+        let mut stream = self.stream;
+        while let Some(item) = stream.next().await {
+            match item {
+                Ok(version) => versions.push(version.into()),
+                Err(e) => return Err(MomentoError::from(e)),
+            }
+        }
+        Ok(versions)
     }
 }
 

@@ -17,11 +17,10 @@ use crate::{
 /// # tokio_test::block_on(async {
 /// use momento::{CredentialProvider, FunctionClient};
 /// use momento::functions::ListWasmsRequest;
-/// use futures::StreamExt;
 /// # let (function_client, cache_name) = momento_test_util::create_doctest_function_client();
 ///
 /// let request = ListWasmsRequest::new();
-/// let wasms = function_client.send(request).await?.collect::<Vec<_>>();
+/// let wasms = function_client.send(request).await?.into_vec().await;
 /// println!("Wasms: {wasms:?}");
 /// # Ok(())
 /// # })
@@ -62,6 +61,19 @@ impl ListWasmsStream {
     /// Create a new Stream from a tonic Streaming object.
     pub(crate) fn new(stream: tonic::Streaming<momento_protos::function_types::Wasm>) -> Self {
         Self { stream }
+    }
+
+    /// Collect the response stream into a vector.
+    pub async fn into_vec(self) -> MomentoResult<Vec<Wasm>> {
+        let mut versions = Vec::new();
+        let mut stream = self.stream;
+        while let Some(item) = stream.next().await {
+            match item {
+                Ok(version) => versions.push(version.into()),
+                Err(e) => return Err(MomentoError::from(e)),
+            }
+        }
+        Ok(versions)
     }
 }
 

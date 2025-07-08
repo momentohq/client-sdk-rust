@@ -8,7 +8,7 @@ use crate::{
     MomentoError, MomentoResult,
 };
 
-/// List the Functions within a cache namespace.
+/// List the versions of a Function.
 ///
 /// # Example
 ///
@@ -21,7 +21,7 @@ use crate::{
 /// # let (function_client, cache_name) = momento_test_util::create_doctest_function_client();
 ///
 /// let request = ListFunctionVersionsRequest::new("function-id");
-/// let versions = function_client.send(request).await?.collect::<Vec<_>>();
+/// let versions = function_client.send(request).await?.into_vec().await;
 /// println!("Function versions: {versions:?}");
 /// # Ok(())
 /// # })
@@ -73,6 +73,19 @@ impl ListFunctionVersionsStream {
         stream: tonic::Streaming<momento_protos::function_types::FunctionVersion>,
     ) -> Self {
         Self { stream }
+    }
+
+    /// Collect the response stream into a vector.
+    pub async fn into_vec(self) -> MomentoResult<Vec<FunctionVersion>> {
+        let mut versions = Vec::new();
+        let mut stream = self.stream;
+        while let Some(item) = stream.next().await {
+            match item {
+                Ok(version) => versions.push(version.into()),
+                Err(e) => return Err(MomentoError::from(e)),
+            }
+        }
+        Ok(versions)
     }
 }
 
