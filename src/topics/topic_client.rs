@@ -245,9 +245,7 @@ impl TopicClient {
         let remaining_streams = max_concurrent_streams - num_active_subscriptions;
         if remaining_streams < 10 {
             log::warn!(
-                "Only {} streams remaining.  You may hit the limit of {} concurrent streams soon.",
-                remaining_streams,
-                max_concurrent_streams
+                "Only {remaining_streams} streams remaining.  You may hit the limit of {max_concurrent_streams} concurrent streams soon."
             );
         }
 
