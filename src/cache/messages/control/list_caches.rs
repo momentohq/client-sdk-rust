@@ -101,8 +101,8 @@ impl ListCachesResponse {
     pub fn from_response(response: control_client::ListCachesResponse) -> ListCachesResponse {
         let mut caches = Vec::new();
         for cache in response.cache {
-            let cache_limits = cache.cache_limits.clone().unwrap_or_default();
-            let topic_limits = cache.topic_limits.clone().unwrap_or_default();
+            let cache_limits = cache.cache_limits.unwrap_or_default();
+            let topic_limits = cache.topic_limits.unwrap_or_default();
             caches.push(CacheInfo {
                 name: cache.cache_name,
                 cache_limits: CacheLimits {

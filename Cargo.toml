@@ -31,27 +31,27 @@ doc = false
 
 
 [dependencies]
-momento-protos = { version = "0.125.4" }
+momento-protos = { version = "0.125.5" }
 log = "0.4"
-hyper = { version = "0.14" }
-h2 = { version = "0.3" }
-tonic = { version = "0.10", features = ["tls", "tls-roots", "tls-webpki-roots"] }
-rand = "0.8.5"
+hyper = { version = "1.6" }
+h2 = { version = "0.4" }
+tonic = { version = "0.13", features = ["tls-ring", "tls-webpki-roots"] }
+rand = "0.9"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-thiserror = "1.0"
-base64 = "0.21"
+thiserror = "2.0"
+base64 = "0.22"
 futures = "0"
-zstd = "0.12.4"
-derive_more = "0.99.17"
+zstd = "0.13.3"
+derive_more = { version = "2.0.1", features = ["full"] }
 
 [dev-dependencies]
-base64-url = "2"
+base64-url = "3"
 env_logger = "0"
 tokio = { version = "1", features = ["full"] }
 tokio-test = "0"
 uuid = { version = "1", features = ["v4"] }
-futures = "0"
+futures = "0.3"
 anyhow = "1"
 momento-test-util = { path = "test-util" }
 
