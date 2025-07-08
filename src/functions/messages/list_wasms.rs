@@ -29,7 +29,7 @@ use crate::{
 pub struct ListWasmsRequest {}
 
 impl ListWasmsRequest {
-    /// Create a new ListFunctionsRequest.
+    /// Create a new ListWasmsRequest.
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {}
