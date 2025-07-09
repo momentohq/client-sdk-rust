@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.52.2](https://github.com/momentohq/client-sdk-rust/compare/v0.52.1...v0.52.2) (2025-07-09)
+
+
+### Miscellaneous
+
+* add field accessors for Wasm and FunctionVersion ([#469](https://github.com/momentohq/client-sdk-rust/issues/469)) ([085c1af](https://github.com/momentohq/client-sdk-rust/commit/085c1afc6b728ed323be50e526b45fd25d43658f))
+
 ## [0.52.1](https://github.com/momentohq/client-sdk-rust/compare/v0.52.0...v0.52.1) (2025-07-08)
 
 
