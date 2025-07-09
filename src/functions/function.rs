@@ -77,6 +77,23 @@ pub struct FunctionVersion {
     /// The environment variables available to this function via the WASI environment interface.
     pub environment: std::collections::HashMap<String, EnvironmentValue>,
 }
+impl FunctionVersion {
+    /// The unique identifier for this function version.
+    pub fn version_id(&self) -> &FunctionVersionId {
+        &self.version_id
+    }
+
+    /// The wasm ID this function uses.
+    pub fn wasm_version_id(&self) -> &WasmVersionId {
+        &self.wasm_version_id
+    }
+
+    /// The environment variables available to this function via the WASI environment interface.
+    pub fn environment(&self) -> &std::collections::HashMap<String, EnvironmentValue> {
+        &self.environment
+    }
+}
+
 impl From<momento_protos::function_types::FunctionVersion> for FunctionVersion {
     fn from(proto: momento_protos::function_types::FunctionVersion) -> Self {
         let momento_protos::function_types::FunctionVersion {
@@ -146,6 +163,23 @@ pub struct Wasm {
     name: String,
     description: String,
 }
+impl Wasm {
+    /// The unique identifier for this wasm artifact.
+    pub fn id(&self) -> &WasmVersionId {
+        &self.id
+    }
+
+    /// The name of this wasm artifact.
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// The description of this wasm artifact.
+    pub fn description(&self) -> &str {
+        &self.description
+    }
+}
+
 impl From<momento_protos::function_types::Wasm> for Wasm {
     fn from(proto: momento_protos::function_types::Wasm) -> Self {
         let momento_protos::function_types::Wasm {
