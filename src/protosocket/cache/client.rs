@@ -12,7 +12,6 @@ use protosocket_prost::ProstSerializer;
 use protosocket_rpc::ProtosocketControlCode;
 use std::future::Future;
 use std::net::AddrParseError;
-use std::pin::pin;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
@@ -47,21 +46,6 @@ pub struct ProtosocketCacheClient {
     client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
 }
 
-pub struct ProtosocketCacheConnection<FutureT: Future<Output = ()>> {
-    future: FutureT,
-}
-
-impl<F: Future<Output = ()> + Unpin> Future for ProtosocketCacheConnection<F> {
-    type Output = ();
-
-    fn poll(
-        mut self: std::pin::Pin<&mut Self>,
-        cx: &mut std::task::Context<'_>,
-    ) -> std::task::Poll<Self::Output> {
-        pin!(&mut self.future).poll(cx)
-    }
-}
-
 impl UnauthenticatedClient {
     pub async fn authenticate(
         self,
@@ -93,13 +77,7 @@ impl UnauthenticatedClient {
 impl ProtosocketCacheClient {
     pub async fn new_unauthenticated(
         address: String,
-    ) -> Result<
-        (
-            UnauthenticatedClient,
-            ProtosocketCacheConnection<impl Future<Output = ()>>,
-        ),
-        ProtosocketCacheError,
-    > {
+    ) -> Result<(UnauthenticatedClient, impl Future<Output = ()>), ProtosocketCacheError> {
         let address = address.parse()?;
         let (client, connection) = protosocket_rpc::client::connect::<Serializer, Serializer>(
             address,
@@ -110,12 +88,7 @@ impl ProtosocketCacheClient {
         // Now it's just a generic unit future.
         let connection_future = async move { connection.await };
 
-        Ok((
-            UnauthenticatedClient { client },
-            ProtosocketCacheConnection {
-                future: connection_future,
-            },
-        ))
+        Ok((UnauthenticatedClient { client }, connection_future))
     }
 
     pub async fn get(
