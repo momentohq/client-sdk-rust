@@ -12,6 +12,7 @@ use protosocket_prost::ProstSerializer;
 use protosocket_rpc::ProtosocketControlCode;
 use std::future::Future;
 use std::net::AddrParseError;
+use std::pin::pin;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
@@ -48,6 +49,17 @@ pub struct ProtosocketCacheClient {
 
 pub struct ProtosocketCacheConnection<FutureT: Future<Output = ()>> {
     future: FutureT,
+}
+
+impl<F: Future<Output = ()> + Unpin> Future for ProtosocketCacheConnection<F> {
+    type Output = ();
+
+    fn poll(
+        mut self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Self::Output> {
+        pin!(&mut self.future).poll(cx)
+    }
 }
 
 impl UnauthenticatedClient {
