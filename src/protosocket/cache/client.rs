@@ -39,7 +39,6 @@ type Serializer = ProstSerializer<CacheResponse, CacheCommand>;
 
 pub struct UnauthenticatedClient {
     client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
-    credential_provider: CredentialProvider,
 }
 
 pub struct ProtosocketCacheClient {
@@ -48,7 +47,10 @@ pub struct ProtosocketCacheClient {
 }
 
 impl UnauthenticatedClient {
-    pub async fn authenticate(self) -> Result<ProtosocketCacheClient, ProtosocketCacheError> {
+    pub async fn authenticate(
+        self,
+        credential_provider: CredentialProvider,
+    ) -> Result<ProtosocketCacheClient, ProtosocketCacheError> {
         let message_id = AtomicU64::new(0);
         let completion = self
             .client
@@ -57,7 +59,7 @@ impl UnauthenticatedClient {
                 control_code: ProtosocketControlCode::Normal as u32,
                 rpc_kind: Some(RpcKind::Unary(Unary {
                     command: Some(Command::Auth(AuthenticateCommand {
-                        token: self.credential_provider.auth_token,
+                        token: credential_provider.auth_token,
                     })),
                 })),
             })
@@ -76,9 +78,9 @@ impl UnauthenticatedClient {
 
 impl ProtosocketCacheClient {
     pub async fn new_unauthenticated(
-        credential_provider: CredentialProvider,
+        address: impl ToString,
     ) -> Result<(UnauthenticatedClient, impl Future<Output = ()>), ProtosocketCacheError> {
-        let address = credential_provider.cache_endpoint.parse()?;
+        let address = address.to_string().parse()?;
         let (client, connection) = protosocket_rpc::client::connect::<Serializer, Serializer>(
             address,
             &protosocket_rpc::client::Configuration::default(),
@@ -88,13 +90,7 @@ impl ProtosocketCacheClient {
         // Now it's just a generic unit future.
         let connection_future = async move { connection.await };
 
-        Ok((
-            UnauthenticatedClient {
-                client,
-                credential_provider,
-            },
-            connection_future,
-        ))
+        Ok((UnauthenticatedClient { client }, connection_future))
     }
 
     pub async fn get(
