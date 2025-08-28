@@ -152,3 +152,4 @@ pub use functions::FunctionClient;
 
 mod protosocket;
 pub use protosocket::cache::client::ProtosocketCacheClient;
+pub use protosocket::cache::client::ProtosocketCacheError;
