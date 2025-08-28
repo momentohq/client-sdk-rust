@@ -1,5 +1,5 @@
 use crate::cache::messages::data::scalar::get::Value;
-use crate::{utils, IntoBytes};
+use crate::{utils, CredentialProvider, IntoBytes};
 use momento_protos::protosocket::cache::cache_command::RpcKind;
 use momento_protos::protosocket::cache::cache_response::Kind;
 use momento_protos::protosocket::cache::unary::Command;
@@ -39,6 +39,7 @@ type Serializer = ProstSerializer<CacheResponse, CacheCommand>;
 
 pub struct UnauthenticatedClient {
     client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
+    credential_provider: CredentialProvider,
 }
 
 pub struct ProtosocketCacheClient {
@@ -47,10 +48,7 @@ pub struct ProtosocketCacheClient {
 }
 
 impl UnauthenticatedClient {
-    pub async fn authenticate(
-        self,
-        auth_token: String,
-    ) -> Result<ProtosocketCacheClient, ProtosocketCacheError> {
+    pub async fn authenticate(self) -> Result<ProtosocketCacheClient, ProtosocketCacheError> {
         let message_id = AtomicU64::new(0);
         let completion = self
             .client
@@ -58,7 +56,9 @@ impl UnauthenticatedClient {
                 message_id: message_id.fetch_add(1, Ordering::Relaxed),
                 control_code: ProtosocketControlCode::Normal as u32,
                 rpc_kind: Some(RpcKind::Unary(Unary {
-                    command: Some(Command::Auth(AuthenticateCommand { token: auth_token })),
+                    command: Some(Command::Auth(AuthenticateCommand {
+                        token: self.credential_provider.auth_token,
+                    })),
                 })),
             })
             .await?;
@@ -76,9 +76,9 @@ impl UnauthenticatedClient {
 
 impl ProtosocketCacheClient {
     pub async fn new_unauthenticated(
-        address: String,
+        credential_provider: CredentialProvider,
     ) -> Result<(UnauthenticatedClient, impl Future<Output = ()>), ProtosocketCacheError> {
-        let address = address.parse()?;
+        let address = credential_provider.cache_endpoint.parse()?;
         let (client, connection) = protosocket_rpc::client::connect::<Serializer, Serializer>(
             address,
             &protosocket_rpc::client::Configuration::default(),
@@ -88,7 +88,13 @@ impl ProtosocketCacheClient {
         // Now it's just a generic unit future.
         let connection_future = async move { connection.await };
 
-        Ok((UnauthenticatedClient { client }, connection_future))
+        Ok((
+            UnauthenticatedClient {
+                client,
+                credential_provider,
+            },
+            connection_future,
+        ))
     }
 
     pub async fn get(
