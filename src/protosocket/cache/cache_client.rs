@@ -1,20 +1,19 @@
 use crate::cache::messages::data::scalar::get::Value;
-use crate::{utils, CredentialProvider, IntoBytes};
+use crate::protosocket::cache::cache_client_builder::NeedsDefaultTtl;
+use crate::{utils, IntoBytes, ProtosocketCacheClientBuilder};
 use momento_protos::protosocket::cache::cache_command::RpcKind;
 use momento_protos::protosocket::cache::cache_response::Kind;
 use momento_protos::protosocket::cache::unary::Command;
 use momento_protos::protosocket::cache::{
-    AuthenticateCommand, AuthenticateResponse, CacheCommand, CacheResponse, GetCommand,
-    GetResponse, SetCommand, SetResponse, Unary,
+    CacheCommand, CacheResponse, GetCommand, GetResponse, SetCommand, SetResponse, Unary,
 };
 use momento_protos::protosocket::common::{CommandError, Status};
-use protosocket_prost::ProstSerializer;
 use protosocket_rpc::ProtosocketControlCode;
-use std::future::Future;
 use std::net::AddrParseError;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
+// TODO: standardize to MomentoError
 #[derive(Debug, thiserror::Error)]
 pub enum ProtosocketCacheError {
     #[error("Failed to parse address: {cause:?}")]
@@ -35,64 +34,29 @@ pub enum ProtosocketCacheError {
     InvalidTTL,
 }
 
-type Serializer = ProstSerializer<CacheResponse, CacheCommand>;
-
-pub struct UnauthenticatedClient {
-    client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
-}
-
+/// A client for interacting with Momento Cache using the Protosocket protocol.
+// TODO: complete docs
 pub struct ProtosocketCacheClient {
     message_id: AtomicU64,
     client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
 }
 
-impl UnauthenticatedClient {
-    pub async fn authenticate(
-        self,
-        credential_provider: CredentialProvider,
-    ) -> Result<ProtosocketCacheClient, ProtosocketCacheError> {
-        let message_id = AtomicU64::new(0);
-        let completion = self
-            .client
-            .send_unary(CacheCommand {
-                message_id: message_id.fetch_add(1, Ordering::Relaxed),
-                control_code: ProtosocketControlCode::Normal as u32,
-                rpc_kind: Some(RpcKind::Unary(Unary {
-                    command: Some(Command::Auth(AuthenticateCommand {
-                        token: credential_provider.auth_token,
-                    })),
-                })),
-            })
-            .await?;
-        let response = completion.await?;
-        match response.kind {
-            Some(Kind::Auth(AuthenticateResponse {})) => Ok(ProtosocketCacheClient {
-                message_id,
-                client: self.client,
-            }),
-            Some(Kind::Error(error)) => Err(ProtosocketCacheError::CommandError { cause: error }),
-            _ => Err(ProtosocketCacheError::UnexpectedKind),
-        }
-    }
-}
-
 impl ProtosocketCacheClient {
-    pub async fn new_unauthenticated(
-        address: impl ToString,
-    ) -> Result<(UnauthenticatedClient, impl Future<Output = ()>), ProtosocketCacheError> {
-        let address = address.to_string().parse()?;
-        let (client, connection) = protosocket_rpc::client::connect::<Serializer, Serializer>(
-            address,
-            &protosocket_rpc::client::Configuration::default(),
-        )
-        .await?;
-        // Obscure the connection types, since they're private and we can't reference them.
-        // Now it's just a generic unit future.
-        let connection_future = async move { connection.await };
-
-        Ok((UnauthenticatedClient { client }, connection_future))
+    pub(crate) fn new(
+        message_id: AtomicU64,
+        client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
+    ) -> Self {
+        Self { message_id, client }
     }
 
+    /// Constructs a new ProtosocketCacheClientBuilder.
+    // TODO: complete docs
+    pub fn builder() -> ProtosocketCacheClientBuilder<NeedsDefaultTtl> {
+        ProtosocketCacheClientBuilder(NeedsDefaultTtl(()))
+    }
+
+    /// Gets an item from a Momento Cache
+    // TODO: request timeout, request building pattern, docs
     pub async fn get(
         &self,
         namespace: impl ToString,
@@ -124,6 +88,8 @@ impl ProtosocketCacheClient {
         }
     }
 
+    /// Sets an item in a Momento Cache
+    // TODO: request timeout, default ttl, request building pattern, docs
     pub async fn set(
         &self,
         namespace: impl ToString,

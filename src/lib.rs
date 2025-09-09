@@ -150,6 +150,8 @@ pub use auth::AuthClient;
 pub mod functions;
 pub use functions::FunctionClient;
 
-mod protosocket;
-pub use protosocket::cache::client::ProtosocketCacheClient;
-pub use protosocket::cache::client::ProtosocketCacheError;
+/// Contains the [ProtosocketCacheClient] for interacting with Momento Cache using the Protosocket protocol.
+pub mod protosocket;
+pub use protosocket::cache::{
+    ProtosocketCacheClient, ProtosocketCacheClientBuilder, ReadyToAuthenticate,
+};

@@ -125,6 +125,14 @@ impl CredentialProvider {
         self.token_endpoint = https_endpoint(get_token_endpoint(endpoint));
         self
     }
+
+    /// Allows the user to override the full endpoint for the control, cache, and token endpoints
+    pub fn full_endpoint_override(mut self, endpoint: &str) -> CredentialProvider {
+        self.control_endpoint = endpoint.to_string();
+        self.cache_endpoint = endpoint.to_string();
+        self.token_endpoint = endpoint.to_string();
+        self
+    }
 }
 
 fn decode_auth_token(auth_token: String) -> MomentoResult<CredentialProvider> {
