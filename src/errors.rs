@@ -1,5 +1,7 @@
+use std::net::AddrParseError;
 use std::{error::Error, fmt::Debug, str::from_utf8};
 
+use momento_protos::protosocket::common::CommandError;
 use tonic::codegen::http;
 use tonic::metadata::errors::ToStrError;
 use tonic::metadata::MetadataMap;
@@ -122,6 +124,22 @@ impl MomentoError {
         }
     }
 
+    pub(crate) fn protosocket_command_error(error: CommandError) -> Self {
+        Self {
+            message: error.message.clone(),
+            error_code: MomentoErrorCode::UnknownError,
+            inner_error: Some(ProtosocketCacheError::CommandError { cause: error }.into()),
+        }
+    }
+
+    pub(crate) fn protosocket_unexpected_kind_error() -> Self {
+        Self {
+            message: "Unexpected return kind!".to_string(),
+            error_code: MomentoErrorCode::UnknownError,
+            inner_error: Some(ProtosocketCacheError::UnexpectedKind.into()),
+        }
+    }
+
     /// Returns details about the internal grpc error if available
     pub fn details(&self) -> Option<MomentoGrpcErrorDetails> {
         if let Some(ErrorSource::TonicStatus(status)) = &self.inner_error {
@@ -154,6 +172,10 @@ pub enum ErrorSource {
     /// Caused by unparseable response metadata
     #[error("unable to parse response metadata value")]
     MetadataValueError(#[from] ToStrError),
+
+    /// Caused by a protosocket error
+    #[error("protosocket error")]
+    Protosocket(#[from] ProtosocketCacheError),
 }
 
 impl From<tonic::Status> for MomentoError {
@@ -390,4 +412,34 @@ fn determine_limit_exceeded_message_wrapper(metadata: &MetadataMap, message: &st
         LimitExceededMessageWrapper::Unknown
     };
     wrapper.value().to_string()
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ProtosocketCacheError {
+    #[error("Failed to parse address: {cause:?}")]
+    UnparsableAddr {
+        #[from]
+        cause: AddrParseError,
+    },
+    #[error("Failed to connect to protosocket: {cause:?}")]
+    Protosocket {
+        #[from]
+        cause: protosocket_rpc::Error,
+    },
+    #[error("Command error: {cause:?}")]
+    CommandError { cause: CommandError },
+    #[error("Unexpected return kind!")]
+    UnexpectedKind, // TODO better info
+}
+
+impl From<protosocket_rpc::Error> for MomentoError {
+    fn from(error: protosocket_rpc::Error) -> Self {
+        MomentoError {
+            message: error.to_string(),
+            error_code: MomentoErrorCode::UnknownError,
+            inner_error: Some(ErrorSource::Protosocket(
+                ProtosocketCacheError::Protosocket { cause: error },
+            )),
+        }
+    }
 }

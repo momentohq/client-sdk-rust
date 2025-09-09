@@ -1,4 +1,3 @@
-use crate::protosocket::cache::cache_client::ProtosocketCacheError;
 use crate::protosocket::cache::Configuration;
 use crate::{CredentialProvider, MomentoError, MomentoResult, ProtosocketCacheClient};
 use momento_protos::protosocket::cache::cache_command::RpcKind;
@@ -28,7 +27,7 @@ impl UnauthenticatedClient {
     pub async fn authenticate(
         self,
         credential_provider: CredentialProvider,
-    ) -> Result<ProtosocketCacheClient, ProtosocketCacheError> {
+    ) -> MomentoResult<ProtosocketCacheClient> {
         // TODO: is it possible to send an "agent" header at this step to indicate
         // that the protosocket cache client is being used?
 
@@ -50,8 +49,8 @@ impl UnauthenticatedClient {
             Some(Kind::Auth(AuthenticateResponse {})) => {
                 Ok(ProtosocketCacheClient::new(message_id, self.client))
             }
-            Some(Kind::Error(error)) => Err(ProtosocketCacheError::CommandError { cause: error }),
-            _ => Err(ProtosocketCacheError::UnexpectedKind),
+            Some(Kind::Error(error)) => Err(MomentoError::protosocket_command_error(error)),
+            _ => Err(MomentoError::protosocket_unexpected_kind_error()),
         }
     }
 }
