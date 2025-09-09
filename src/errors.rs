@@ -1,4 +1,3 @@
-use std::net::AddrParseError;
 use std::{error::Error, fmt::Debug, str::from_utf8};
 
 use momento_protos::protosocket::common::CommandError;
@@ -414,22 +413,27 @@ fn determine_limit_exceeded_message_wrapper(metadata: &MetadataMap, message: &st
     wrapper.value().to_string()
 }
 
+/// Errors that can occur when using the protosocket cache client
 #[derive(Debug, thiserror::Error)]
 pub enum ProtosocketCacheError {
-    #[error("Failed to parse address: {cause:?}")]
-    UnparsableAddr {
-        #[from]
-        cause: AddrParseError,
-    },
+    /// Caused by a protosocket client connection error
     #[error("Failed to connect to protosocket: {cause:?}")]
     Protosocket {
+        /// The error that occurred when connecting to the protosocket
         #[from]
         cause: protosocket_rpc::Error,
     },
+
+    /// Protosocket command returned an error
     #[error("Command error: {cause:?}")]
-    CommandError { cause: CommandError },
+    CommandError {
+        /// The error that occurred when executing the command
+        cause: CommandError,
+    },
+
+    /// Protosocket command returned an unexpected kind of response
     #[error("Unexpected return kind!")]
-    UnexpectedKind, // TODO better info
+    UnexpectedKind,
 }
 
 impl From<protosocket_rpc::Error> for MomentoError {
