@@ -18,16 +18,19 @@ pub type Serializer = ProstSerializer<CacheResponse, CacheCommand>;
 pub struct UnauthenticatedClient {
     client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
     default_ttl: Duration,
+    configuration: Configuration,
 }
 
 impl UnauthenticatedClient {
     pub fn new(
         client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
         default_ttl: Duration,
+        configuration: Configuration,
     ) -> Self {
         Self {
             client,
             default_ttl,
+            configuration,
         }
     }
 
@@ -57,6 +60,7 @@ impl UnauthenticatedClient {
                 message_id,
                 self.client,
                 self.default_ttl,
+                self.configuration,
             )),
             Some(Kind::Error(error)) => Err(MomentoError::protosocket_command_error(error)),
             _ => Err(MomentoError::protosocket_unexpected_kind_error()),
@@ -99,6 +103,7 @@ pub struct ReadyToBuild {
     default_ttl: Duration,
     credential_provider: CredentialProvider,
     runtime: tokio::runtime::Handle,
+    configuration: Configuration,
 }
 
 /// The state of the ProtosocketCacheClientBuilder when it is ready to authenticate with the server.
@@ -155,6 +160,7 @@ impl ProtosocketCacheClientBuilder<NeedsRuntime> {
             default_ttl: self.0.default_ttl,
             runtime,
             credential_provider: self.0.credential_provider,
+            configuration: self.0.configuration,
         })
     }
 }
@@ -185,7 +191,11 @@ impl ProtosocketCacheClientBuilder<ReadyToBuild> {
         self.0.runtime.spawn(connection);
 
         Ok(ProtosocketCacheClientBuilder(ReadyToAuthenticate {
-            unauthenticated_client: UnauthenticatedClient::new(client, self.0.default_ttl),
+            unauthenticated_client: UnauthenticatedClient::new(
+                client,
+                self.0.default_ttl,
+                self.0.configuration,
+            ),
             credential_provider: self.0.credential_provider,
         }))
     }

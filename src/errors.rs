@@ -139,6 +139,14 @@ impl MomentoError {
         }
     }
 
+    pub(crate) fn protosocket_timeout_error() -> Self {
+        Self {
+            message: "Protosocket request timed out".to_string(),
+            error_code: MomentoErrorCode::TimeoutError,
+            inner_error: None,
+        }
+    }
+
     /// Returns details about the internal grpc error if available
     pub fn details(&self) -> Option<MomentoGrpcErrorDetails> {
         if let Some(ErrorSource::TonicStatus(status)) = &self.inner_error {

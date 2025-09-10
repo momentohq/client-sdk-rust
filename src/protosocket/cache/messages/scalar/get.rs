@@ -1,7 +1,9 @@
+use std::time::Duration;
+
 use crate::cache::messages::data::scalar::get::Value;
 use crate::cache::GetRequest;
 use crate::protosocket::cache::MomentoProtosocketRequest;
-use crate::{IntoBytes, MomentoError, MomentoResult, ProtosocketCacheClient};
+use crate::{utils, IntoBytes, MomentoError, MomentoResult, ProtosocketCacheClient};
 use momento_protos::protosocket::cache::cache_command::RpcKind;
 use momento_protos::protosocket::cache::cache_response::Kind;
 use momento_protos::protosocket::cache::unary::Command;
@@ -12,7 +14,20 @@ use protosocket_rpc::ProtosocketControlCode;
 impl<K: IntoBytes> MomentoProtosocketRequest for GetRequest<K> {
     type Response = crate::cache::GetResponse;
 
-    async fn send(self, client: &ProtosocketCacheClient) -> MomentoResult<Self::Response> {
+    async fn send(
+        self,
+        client: &ProtosocketCacheClient,
+        timeout: Duration,
+    ) -> MomentoResult<Self::Response> {
+        utils::execute_protosocket_request_with_timeout(|| self.send_get(client), timeout).await
+    }
+}
+
+impl<K: IntoBytes> GetRequest<K> {
+    async fn send_get(
+        self,
+        client: &ProtosocketCacheClient,
+    ) -> MomentoResult<crate::cache::GetResponse> {
         let completion = client
             .protosocket_client()
             .send_unary(CacheCommand {

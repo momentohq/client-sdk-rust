@@ -59,6 +59,20 @@ pub(crate) fn prep_leaderboard_request_with_timeout<R>(
     Ok(request)
 }
 
+pub(crate) async fn execute_protosocket_request_with_timeout<R, F, Fut>(
+    send_request: F,
+    timeout: Duration,
+) -> MomentoResult<R>
+where
+    F: FnOnce() -> Fut,
+    Fut: std::future::Future<Output = MomentoResult<R>>,
+{
+    match tokio::time::timeout(timeout, send_request()).await {
+        Ok(result) => result,
+        Err(_) => Err(MomentoError::protosocket_timeout_error()),
+    }
+}
+
 pub(crate) fn is_ttl_valid(ttl: Duration) -> MomentoResult<()> {
     let max_ttl = Duration::from_millis(u64::MAX);
     if ttl > max_ttl {

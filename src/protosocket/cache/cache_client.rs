@@ -1,6 +1,6 @@
 use crate::cache::{GetRequest, SetRequest};
 use crate::protosocket::cache::cache_client_builder::NeedsDefaultTtl;
-use crate::protosocket::cache::MomentoProtosocketRequest;
+use crate::protosocket::cache::{Configuration, MomentoProtosocketRequest};
 use crate::{utils, IntoBytes, MomentoResult, ProtosocketCacheClientBuilder};
 use momento_protos::protosocket::cache::{CacheCommand, CacheResponse};
 use std::convert::TryInto;
@@ -13,6 +13,7 @@ pub struct ProtosocketCacheClient {
     message_id: AtomicU64,
     client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
     item_default_ttl: Duration,
+    request_timeout: Duration,
 }
 
 impl ProtosocketCacheClient {
@@ -20,11 +21,13 @@ impl ProtosocketCacheClient {
         message_id: AtomicU64,
         client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
         default_ttl: Duration,
+        configuration: Configuration,
     ) -> Self {
         Self {
             message_id,
             client,
             item_default_ttl: default_ttl,
+            request_timeout: configuration.timeout(),
         }
     }
 
@@ -42,7 +45,7 @@ impl ProtosocketCacheClient {
         key: impl IntoBytes,
     ) -> MomentoResult<crate::cache::GetResponse> {
         let request = GetRequest::new(cache_name, key);
-        request.send(self).await
+        request.send(self, self.request_timeout).await
     }
 
     /// Sets an item in a Momento Cache
@@ -54,7 +57,7 @@ impl ProtosocketCacheClient {
         value: impl IntoBytes,
     ) -> MomentoResult<crate::cache::SetResponse> {
         let request = SetRequest::new(cache_name, key, value);
-        request.send(self).await
+        request.send(self, self.request_timeout).await
     }
 
     /// Lower-level API to send any type of MomentoProtosocketRequest to the server. This is used for cases when
@@ -64,7 +67,7 @@ impl ProtosocketCacheClient {
         &self,
         request: R,
     ) -> MomentoResult<R::Response> {
-        request.send(self).await
+        request.send(self, self.request_timeout).await
     }
 
     pub(crate) fn protosocket_client(

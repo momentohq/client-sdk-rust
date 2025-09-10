@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::MomentoResult;
 use crate::ProtosocketCacheClient;
 
@@ -14,5 +16,6 @@ pub trait MomentoProtosocketRequest {
     fn send(
         self,
         cache_client: &ProtosocketCacheClient,
+        timeout: Duration,
     ) -> impl std::future::Future<Output = MomentoResult<Self::Response>> + Send;
 }
