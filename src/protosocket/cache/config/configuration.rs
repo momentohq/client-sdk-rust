@@ -15,18 +15,10 @@ use std::time::Duration;
 /// If you have specific requirements, configurations can also be constructed manually:
 /// ```
 /// use std::time::Duration;
-/// use momento::cache::Configuration;
-/// use momento::config::grpc_configuration::{GrpcConfiguration, GrpcConfigurationBuilder};
-/// use momento::config::transport_strategy::TransportStrategy;
+/// use momento::protosocket::cache::Configuration;
 ///
-/// let config = Configuration::builder()
-///     .transport_strategy(
-///         TransportStrategy::builder()
-///             .grpc_configuration(
-///                 GrpcConfiguration::builder()
-///                     .deadline(Duration::from_millis(1000))
-///             )
-///     );
+/// let config = Configuration::builder().timeout(Duration::from_millis(1000));
+/// ```
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Configuration {

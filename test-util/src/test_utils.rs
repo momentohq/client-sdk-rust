@@ -4,7 +4,8 @@ use std::time::Duration;
 
 use momento::cache::configurations;
 use momento::{
-    AuthClient, CacheClient, CredentialProvider, FunctionClient, LeaderboardClient, TopicClient,
+    protosocket, AuthClient, CacheClient, CredentialProvider, FunctionClient, LeaderboardClient,
+    ProtosocketCacheClient, TopicClient,
 };
 
 use crate::unique_cache_name;
@@ -70,6 +71,23 @@ pub fn create_doctest_function_client() -> (FunctionClient, String) {
         .credential_provider(credential_provider.clone())
         .build()
         .expect("cache client should be created");
+    (client, cache_name)
+}
+
+pub async fn create_doctest_protosocket_cache_client() -> (ProtosocketCacheClient, String) {
+    let cache_name = get_test_cache_name();
+    let credential_provider = get_test_credential_provider();
+    let client = momento::ProtosocketCacheClient::builder()
+        .default_ttl(Duration::from_secs(5))
+        .configuration(protosocket::cache::configurations::Laptop::latest())
+        .credential_provider(credential_provider.clone())
+        .runtime(tokio::runtime::Handle::current())
+        .build()
+        .await
+        .expect("cache client should be created")
+        .authenticate()
+        .await
+        .expect("cache client should be authenticated");
     (client, cache_name)
 }
 
