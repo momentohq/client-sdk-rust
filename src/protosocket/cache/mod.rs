@@ -7,3 +7,6 @@ pub use cache_client_builder::{ProtosocketCacheClientBuilder, ReadyToAuthenticat
 mod config;
 pub use config::configuration::Configuration;
 pub use config::configurations;
+
+mod messages;
+pub use messages::MomentoProtosocketRequest;

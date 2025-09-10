@@ -48,10 +48,10 @@ use std::time::Duration;
 /// # }
 /// ```
 pub struct SetRequest<K: IntoBytes, V: IntoBytes> {
-    cache_name: String,
-    key: K,
-    value: V,
-    ttl: Option<Duration>,
+    pub(crate) cache_name: String,
+    pub(crate) key: K,
+    pub(crate) value: V,
+    pub(crate) ttl: Option<Duration>,
 }
 
 impl<K: IntoBytes, V: IntoBytes> SetRequest<K, V> {

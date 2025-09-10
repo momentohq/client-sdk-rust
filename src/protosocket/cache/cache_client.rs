@@ -1,14 +1,9 @@
-use crate::cache::messages::data::scalar::get::Value;
+use crate::cache::{GetRequest, SetRequest};
 use crate::protosocket::cache::cache_client_builder::NeedsDefaultTtl;
-use crate::{utils, IntoBytes, MomentoError, MomentoResult, ProtosocketCacheClientBuilder};
-use momento_protos::protosocket::cache::cache_command::RpcKind;
-use momento_protos::protosocket::cache::cache_response::Kind;
-use momento_protos::protosocket::cache::unary::Command;
-use momento_protos::protosocket::cache::{
-    CacheCommand, CacheResponse, GetCommand, GetResponse, SetCommand, SetResponse, Unary,
-};
-use momento_protos::protosocket::common::Status;
-use protosocket_rpc::ProtosocketControlCode;
+use crate::protosocket::cache::MomentoProtosocketRequest;
+use crate::{utils, IntoBytes, MomentoResult, ProtosocketCacheClientBuilder};
+use momento_protos::protosocket::cache::{CacheCommand, CacheResponse};
+use std::convert::TryInto;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
@@ -17,14 +12,20 @@ use std::time::Duration;
 pub struct ProtosocketCacheClient {
     message_id: AtomicU64,
     client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
+    item_default_ttl: Duration,
 }
 
 impl ProtosocketCacheClient {
     pub(crate) fn new(
         message_id: AtomicU64,
         client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
+        default_ttl: Duration,
     ) -> Self {
-        Self { message_id, client }
+        Self {
+            message_id,
+            client,
+            item_default_ttl: default_ttl,
+        }
     }
 
     /// Constructs a new ProtosocketCacheClientBuilder.
@@ -37,65 +38,49 @@ impl ProtosocketCacheClient {
     // TODO: request timeout, request building pattern, docs
     pub async fn get(
         &self,
-        namespace: impl ToString,
+        cache_name: impl Into<String>,
         key: impl IntoBytes,
     ) -> MomentoResult<crate::cache::GetResponse> {
-        let completion = self
-            .client
-            .send_unary(CacheCommand {
-                message_id: self.message_id.fetch_add(1, Ordering::Relaxed),
-                control_code: ProtosocketControlCode::Normal as u32,
-                rpc_kind: Some(RpcKind::Unary(Unary {
-                    command: Some(Command::Get(GetCommand {
-                        namespace: namespace.to_string(),
-                        key: key.into_bytes(),
-                    })),
-                })),
-            })
-            .await?;
-        let response = completion.await?;
-        match response.kind {
-            Some(Kind::Get(GetResponse { value })) => Ok(crate::cache::GetResponse::Hit {
-                value: Value::new(value),
-            }),
-            Some(Kind::Error(error)) => match error.code() {
-                Status::NotFound => Ok(crate::cache::GetResponse::Miss),
-                _ => Err(MomentoError::protosocket_command_error(error)),
-            },
-            _ => Err(MomentoError::protosocket_unexpected_kind_error()),
-        }
+        let request = GetRequest::new(cache_name, key);
+        request.send(self).await
     }
 
     /// Sets an item in a Momento Cache
     // TODO: request timeout, default ttl, request building pattern, docs
     pub async fn set(
         &self,
-        namespace: impl ToString,
+        cache_name: impl Into<String>,
         key: impl IntoBytes,
         value: impl IntoBytes,
-        ttl: Duration,
     ) -> MomentoResult<crate::cache::SetResponse> {
+        let request = SetRequest::new(cache_name, key, value);
+        request.send(self).await
+    }
+
+    /// Lower-level API to send any type of MomentoProtosocketRequest to the server. This is used for cases when
+    /// you want to set optional fields on a request that are not supported by the short-hand API for
+    /// that request type.
+    pub async fn send_request<R: MomentoProtosocketRequest>(
+        &self,
+        request: R,
+    ) -> MomentoResult<R::Response> {
+        request.send(self).await
+    }
+
+    pub(crate) fn protosocket_client(
+        &self,
+    ) -> &protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse> {
+        &self.client
+    }
+
+    pub(crate) fn message_id(&self) -> u64 {
+        self.message_id.fetch_add(1, Ordering::Relaxed)
+    }
+
+    pub(crate) fn expand_ttl_ms(&self, ttl: Option<Duration>) -> MomentoResult<u64> {
+        let ttl = ttl.unwrap_or(self.item_default_ttl);
         utils::is_ttl_valid(ttl)?;
-        let completion = self
-            .client
-            .send_unary(CacheCommand {
-                message_id: self.message_id.fetch_add(1, Ordering::Relaxed),
-                control_code: ProtosocketControlCode::Normal as u32,
-                rpc_kind: Some(RpcKind::Unary(Unary {
-                    command: Some(Command::Set(SetCommand {
-                        namespace: namespace.to_string(),
-                        key: key.into_bytes(),
-                        value: value.into_bytes(),
-                        ttl_milliseconds: ttl.as_millis() as u64,
-                    })),
-                })),
-            })
-            .await?;
-        let response = completion.await?;
-        match response.kind {
-            Some(Kind::Set(SetResponse {})) => Ok(crate::cache::SetResponse {}),
-            Some(Kind::Error(error)) => Err(MomentoError::protosocket_command_error(error)),
-            _ => Err(MomentoError::protosocket_unexpected_kind_error()),
-        }
+
+        Ok(ttl.as_millis().try_into().unwrap_or(i64::MAX as u64))
     }
 }

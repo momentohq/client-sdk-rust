@@ -17,11 +17,18 @@ pub type Serializer = ProstSerializer<CacheResponse, CacheCommand>;
 #[derive(Clone, Debug)]
 pub struct UnauthenticatedClient {
     client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
+    default_ttl: Duration,
 }
 
 impl UnauthenticatedClient {
-    pub fn new(client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>) -> Self {
-        Self { client }
+    pub fn new(
+        client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
+        default_ttl: Duration,
+    ) -> Self {
+        Self {
+            client,
+            default_ttl,
+        }
     }
 
     pub async fn authenticate(
@@ -46,9 +53,11 @@ impl UnauthenticatedClient {
             .await?;
         let response = completion.await?;
         match response.kind {
-            Some(Kind::Auth(AuthenticateResponse {})) => {
-                Ok(ProtosocketCacheClient::new(message_id, self.client))
-            }
+            Some(Kind::Auth(AuthenticateResponse {})) => Ok(ProtosocketCacheClient::new(
+                message_id,
+                self.client,
+                self.default_ttl,
+            )),
             Some(Kind::Error(error)) => Err(MomentoError::protosocket_command_error(error)),
             _ => Err(MomentoError::protosocket_unexpected_kind_error()),
         }
@@ -87,6 +96,7 @@ pub struct NeedsRuntime {
 /// The state of the ProtosocketCacheClientBuilder when it is ready to build a ProtosocketCacheClient.
 #[derive(Clone, Debug)]
 pub struct ReadyToBuild {
+    default_ttl: Duration,
     credential_provider: CredentialProvider,
     runtime: tokio::runtime::Handle,
 }
@@ -142,6 +152,7 @@ impl ProtosocketCacheClientBuilder<NeedsRuntime> {
         runtime: tokio::runtime::Handle,
     ) -> ProtosocketCacheClientBuilder<ReadyToBuild> {
         ProtosocketCacheClientBuilder(ReadyToBuild {
+            default_ttl: self.0.default_ttl,
             runtime,
             credential_provider: self.0.credential_provider,
         })
@@ -174,7 +185,7 @@ impl ProtosocketCacheClientBuilder<ReadyToBuild> {
         self.0.runtime.spawn(connection);
 
         Ok(ProtosocketCacheClientBuilder(ReadyToAuthenticate {
-            unauthenticated_client: UnauthenticatedClient::new(client),
+            unauthenticated_client: UnauthenticatedClient::new(client, self.0.default_ttl),
             credential_provider: self.0.credential_provider,
         }))
     }
