@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.53.1](https://github.com/momentohq/client-sdk-rust/compare/v0.53.0...v0.53.1) (2025-09-11)
+
+
+### Bug Fixes
+
+* be able to clone ProtosocketCacheClient ([#475](https://github.com/momentohq/client-sdk-rust/issues/475)) ([a72ff22](https://github.com/momentohq/client-sdk-rust/commit/a72ff22d3b081ed861304301361bc9e63729cbc4))
+
 ## [0.53.0](https://github.com/momentohq/client-sdk-rust/compare/v0.52.2...v0.53.0) (2025-09-11)
 
 
