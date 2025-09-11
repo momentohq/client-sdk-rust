@@ -5,6 +5,7 @@ use crate::{utils, IntoBytes, MomentoResult, ProtosocketCacheClientBuilder};
 use momento_protos::protosocket::cache::{CacheCommand, CacheResponse};
 use std::convert::TryInto;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
 use std::time::Duration;
 
 // TODO: remove `no_run` on doc examples to allow fully running them as doctests
@@ -44,8 +45,9 @@ use std::time::Duration;
 /// # })
 /// # }
 /// ```
+#[derive(Clone, Debug)]
 pub struct ProtosocketCacheClient {
-    message_id: AtomicU64,
+    message_id: Arc<AtomicU64>,
     client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
     item_default_ttl: Duration,
     request_timeout: Duration,
@@ -59,7 +61,7 @@ impl ProtosocketCacheClient {
         configuration: Configuration,
     ) -> Self {
         Self {
-            message_id,
+            message_id: Arc::new(message_id),
             client,
             item_default_ttl: default_ttl,
             request_timeout: configuration.timeout(),
