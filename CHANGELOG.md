@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.53.0](https://github.com/momentohq/client-sdk-rust/compare/v0.52.2...v0.53.0) (2025-09-11)
+
+
+### Features
+
+* protosocket cache client ([#473](https://github.com/momentohq/client-sdk-rust/issues/473)) ([207accc](https://github.com/momentohq/client-sdk-rust/commit/207accc0270e5d92b9e050864199251238fcc335))
+
 ## [0.52.2](https://github.com/momentohq/client-sdk-rust/compare/v0.52.1...v0.52.2) (2025-07-09)
 
 
