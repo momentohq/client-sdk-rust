@@ -40,8 +40,8 @@ use std::convert::{TryFrom, TryInto};
 /// # }
 /// ```
 pub struct GetRequest<K: IntoBytes> {
-    cache_name: String,
-    key: K,
+    pub(crate) cache_name: String,
+    pub(crate) key: K,
 }
 
 impl<K: IntoBytes> GetRequest<K> {

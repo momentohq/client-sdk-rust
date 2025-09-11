@@ -31,27 +31,31 @@ doc = false
 
 
 [dependencies]
-momento-protos = { version = "0.125.5" }
-log = "0.4"
-hyper = { version = "1.6" }
+momento-protos = "0.127.1"
+
+base64 = "0.22"
+derive_more = { version = "2.0.1", features = ["full"] }
+futures = "0"
 h2 = { version = "0.4" }
-tonic = { version = "0.13", features = ["tls-ring", "tls-webpki-roots"] }
+hyper = { version = "1.6" }
+log = "0.4"
+protosocket = "0"
+protosocket-prost = "0"
+protosocket-rpc = "0"
 rand = "0.9"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "2.0"
-base64 = "0.22"
-futures = "0"
+tokio = { version = "1", features = ["full"] }
+tonic = { version = "0.13", features = ["tls-ring", "tls-webpki-roots"] }
 zstd = "0.13.3"
-derive_more = { version = "2.0.1", features = ["full"] }
 
 [dev-dependencies]
+momento-test-util = { path = "test-util" }
+
+anyhow = "1"
 base64-url = "3"
 env_logger = "0"
-tokio = { version = "1", features = ["full"] }
 tokio-test = "0"
 uuid = { version = "1", features = ["v4"] }
-futures = "0.3"
-anyhow = "1"
-momento-test-util = { path = "test-util" }
 
