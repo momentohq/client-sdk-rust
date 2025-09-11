@@ -31,7 +31,7 @@ doc = false
 
 
 [dependencies]
-momento-protos = { git = "https://github.com/momentohq/client-protos.git", branch = "feat/protosocket-cache" }
+momento-protos = "0.127.1"
 
 base64 = "0.22"
 derive_more = { version = "2.0.1", features = ["full"] }

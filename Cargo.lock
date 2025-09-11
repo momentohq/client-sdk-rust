@@ -756,8 +756,9 @@ dependencies = [
 
 [[package]]
 name = "momento-protos"
-version = "0.1.0"
-source = "git+https://github.com/momentohq/client-protos.git?branch=feat%2Fprotosocket-cache#b29abb5ffaefe6e1b60a673f0b5dd3377884c896"
+version = "0.127.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8c49bdf3b4938d4249bd0010c3ef39ec9cde45aebdd697a32bf7fbe0a0d2f395"
 dependencies = [
  "prost",
  "protosocket-rpc",
