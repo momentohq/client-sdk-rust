@@ -11,6 +11,13 @@ struct V1Token {
     pub endpoint: String,
 }
 
+#[derive(PartialEq, Eq, Clone)]
+pub(crate) enum EndpointSecurity {
+    Insecure,
+    Unverified,
+    Tls,
+}
+
 /// Provides information that the client needs in order to establish a connection to and
 /// authenticate with the Momento service.
 #[derive(PartialEq, Eq, Clone)]
@@ -19,6 +26,7 @@ pub struct CredentialProvider {
     pub(crate) control_endpoint: String,
     pub(crate) cache_endpoint: String,
     pub(crate) token_endpoint: String,
+    pub(crate) endpoint_security: EndpointSecurity,
 }
 
 impl Display for CredentialProvider {
@@ -133,6 +141,24 @@ impl CredentialProvider {
         self.token_endpoint = endpoint.to_string();
         self
     }
+
+    /// Allows the user to set a non-TLS endpoint for the control, cache, and token endpoints
+    pub fn insecure_endpoint_override(mut self, endpoint: &str) -> CredentialProvider {
+        self.control_endpoint = endpoint.to_string();
+        self.cache_endpoint = endpoint.to_string();
+        self.token_endpoint = endpoint.to_string();
+        self.endpoint_security = EndpointSecurity::Insecure;
+        self
+    }
+
+    /// Allows the user to set an unverified TLS endpoint for the control, cache, and token endpoints
+    pub fn unverified_tls_endpoint_override(mut self, endpoint: &str) -> CredentialProvider {
+        self.control_endpoint = endpoint.to_string();
+        self.cache_endpoint = endpoint.to_string();
+        self.token_endpoint = endpoint.to_string();
+        self.endpoint_security = EndpointSecurity::Unverified;
+        self
+    }
 }
 
 fn decode_auth_token(auth_token: String) -> MomentoResult<CredentialProvider> {
@@ -151,6 +177,7 @@ fn process_v1_token(auth_token_bytes: Vec<u8>) -> MomentoResult<CredentialProvid
         cache_endpoint: https_endpoint(get_cache_endpoint(&json.endpoint)),
         control_endpoint: https_endpoint(get_control_endpoint(&json.endpoint)),
         token_endpoint: https_endpoint(get_token_endpoint(&json.endpoint)),
+        endpoint_security: EndpointSecurity::Tls,
     })
 }
 
