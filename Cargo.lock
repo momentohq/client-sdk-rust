@@ -727,7 +727,7 @@ dependencies = [
 
 [[package]]
 name = "momento"
-version = "0.53.0"
+version = "0.53.1"
 dependencies = [
  "anyhow",
  "base64",
@@ -767,7 +767,7 @@ dependencies = [
 
 [[package]]
 name = "momento-test-util"
-version = "0.53.0"
+version = "0.53.1"
 dependencies = [
  "anyhow",
  "momento",
