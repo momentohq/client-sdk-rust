@@ -137,7 +137,7 @@ impl ProtosocketCacheClient {
     ///
     /// For more examples of handling the response, see [GetResponse](crate::cache::GetResponse).
     pub async fn get(
-        &mut self,
+        &self,
         cache_name: impl Into<String>,
         key: impl IntoBytes,
     ) -> MomentoResult<crate::cache::GetResponse> {
@@ -184,7 +184,7 @@ impl ProtosocketCacheClient {
     /// You can also use the [send_request](ProtosocketCacheClient::send_request) method to get an item using a [SetRequest]
     /// which will allow you to set [optional arguments](crate::cache::SetRequest#optional-arguments) as well.
     pub async fn set(
-        &mut self,
+        &self,
         cache_name: impl Into<String>,
         key: impl IntoBytes,
         value: impl IntoBytes,
