@@ -1,10 +1,10 @@
 use crate::cache::{GetRequest, SetRequest};
 use crate::protosocket::cache::cache_client_builder::NeedsDefaultTtl;
+use crate::protosocket::cache::utils::HealthyProtosocket;
 use crate::protosocket::cache::{Configuration, MomentoProtosocketRequest};
 use crate::{utils, IntoBytes, MomentoResult, ProtosocketCacheClientBuilder};
 use momento_protos::protosocket::cache::{CacheCommand, CacheResponse};
 use std::convert::TryInto;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -47,22 +47,19 @@ use std::time::Duration;
 /// ```
 #[derive(Clone, Debug)]
 pub struct ProtosocketCacheClient {
-    message_id: Arc<AtomicU64>,
-    client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
+    client: Arc<HealthyProtosocket>,
     item_default_ttl: Duration,
     request_timeout: Duration,
 }
 
 impl ProtosocketCacheClient {
     pub(crate) fn new(
-        message_id: AtomicU64,
-        client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
+        client: HealthyProtosocket,
         default_ttl: Duration,
         configuration: Configuration,
     ) -> Self {
         Self {
-            message_id: Arc::new(message_id),
-            client,
+            client: Arc::new(client),
             item_default_ttl: default_ttl,
             request_timeout: configuration.timeout(),
         }
@@ -140,7 +137,7 @@ impl ProtosocketCacheClient {
     ///
     /// For more examples of handling the response, see [GetResponse](crate::cache::GetResponse).
     pub async fn get(
-        &self,
+        &mut self,
         cache_name: impl Into<String>,
         key: impl IntoBytes,
     ) -> MomentoResult<crate::cache::GetResponse> {
@@ -187,7 +184,7 @@ impl ProtosocketCacheClient {
     /// You can also use the [send_request](ProtosocketCacheClient::send_request) method to get an item using a [SetRequest]
     /// which will allow you to set [optional arguments](crate::cache::SetRequest#optional-arguments) as well.
     pub async fn set(
-        &self,
+        &mut self,
         cache_name: impl Into<String>,
         key: impl IntoBytes,
         value: impl IntoBytes,
@@ -206,14 +203,14 @@ impl ProtosocketCacheClient {
         request.send(self, self.request_timeout).await
     }
 
-    pub(crate) fn protosocket_client(
+    pub(crate) async fn protosocket_client(
         &self,
-    ) -> &protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse> {
-        &self.client
+    ) -> MomentoResult<protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>> {
+        self.client.get_client().await
     }
 
     pub(crate) fn message_id(&self) -> u64 {
-        self.message_id.fetch_add(1, Ordering::Relaxed)
+        self.client.message_id()
     }
 
     pub(crate) fn expand_ttl_ms(&self, ttl: Option<Duration>) -> MomentoResult<u64> {

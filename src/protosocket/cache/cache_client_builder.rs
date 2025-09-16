@@ -1,21 +1,11 @@
-use crate::credential_provider::EndpointSecurity;
+use crate::protosocket::cache::utils::{
+    authenticate_protosocket_client, create_protosocket_connection, HealthyProtosocket,
+};
 use crate::protosocket::cache::Configuration;
 use crate::{CredentialProvider, MomentoError, MomentoResult, ProtosocketCacheClient};
-use momento_protos::protosocket::cache::cache_command::RpcKind;
-use momento_protos::protosocket::cache::cache_response::Kind;
-use momento_protos::protosocket::cache::unary::Command;
-use momento_protos::protosocket::cache::Unary;
-use momento_protos::protosocket::cache::{
-    AuthenticateCommand, AuthenticateResponse, CacheCommand, CacheResponse,
-};
+use momento_protos::protosocket::cache::CacheCommand;
+use momento_protos::protosocket::cache::CacheResponse;
 use protosocket_prost::ProstSerializer;
-use protosocket_rpc::client::{
-    TcpStreamConnector, UnverifiedTlsStreamConnector, WebpkiTlsStreamConnector,
-};
-use protosocket_rpc::ProtosocketControlCode;
-use rustls_pki_types::ServerName;
-use std::convert::TryFrom;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 pub type Serializer = ProstSerializer<CacheResponse, CacheCommand>;
@@ -25,6 +15,7 @@ pub struct UnauthenticatedClient {
     client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
     default_ttl: Duration,
     configuration: Configuration,
+    runtime: tokio::runtime::Handle,
 }
 
 impl UnauthenticatedClient {
@@ -32,11 +23,13 @@ impl UnauthenticatedClient {
         client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
         default_ttl: Duration,
         configuration: Configuration,
+        runtime: tokio::runtime::Handle,
     ) -> Self {
         Self {
             client,
             default_ttl,
             configuration,
+            runtime,
         }
     }
 
@@ -44,33 +37,13 @@ impl UnauthenticatedClient {
         self,
         credential_provider: CredentialProvider,
     ) -> MomentoResult<ProtosocketCacheClient> {
-        // TODO: is it possible to send an "agent" header at this step to indicate
-        // that the protosocket cache client is being used?
-
-        let message_id = AtomicU64::new(0);
-        let completion = self
-            .client
-            .send_unary(CacheCommand {
-                message_id: message_id.fetch_add(1, Ordering::Relaxed),
-                control_code: ProtosocketControlCode::Normal as u32,
-                rpc_kind: Some(RpcKind::Unary(Unary {
-                    command: Some(Command::Auth(AuthenticateCommand {
-                        token: credential_provider.auth_token,
-                    })),
-                })),
-            })
-            .await?;
-        let response = completion.await?;
-        match response.kind {
-            Some(Kind::Auth(AuthenticateResponse {})) => Ok(ProtosocketCacheClient::new(
-                message_id,
-                self.client,
-                self.default_ttl,
-                self.configuration,
-            )),
-            Some(Kind::Error(error)) => Err(MomentoError::protosocket_command_error(error)),
-            _ => Err(MomentoError::protosocket_unexpected_kind_error()),
-        }
+        let (client, message_id) =
+            authenticate_protosocket_client(self.client, credential_provider.clone()).await?;
+        Ok(ProtosocketCacheClient::new(
+            HealthyProtosocket::new(client, message_id, credential_provider, self.runtime),
+            self.default_ttl,
+            self.configuration,
+        ))
     }
 }
 
@@ -174,117 +147,21 @@ impl ProtosocketCacheClientBuilder<NeedsRuntime> {
 impl ProtosocketCacheClientBuilder<ReadyToBuild> {
     /// Constructs a new CacheClientBuilder in the ReadyToBuild state.
     pub async fn build(self) -> MomentoResult<ProtosocketCacheClientBuilder<ReadyToAuthenticate>> {
-        // Note: expects socket address, not DNS name
-        let endpoint = self.0.credential_provider.clone().cache_endpoint;
-        let address = endpoint
-            .to_string()
-            .parse()
-            .map_err(|e: std::net::AddrParseError| {
-                MomentoError::unknown_error("build", Some(e.to_string()))
-            })?;
+        let client = create_protosocket_connection(
+            self.0.credential_provider.clone(),
+            self.0.runtime.clone(),
+        )
+        .await?;
 
-        match self.0.credential_provider.endpoint_security {
-            EndpointSecurity::Tls => {
-                // TODO: use a default value or panic here?
-                let hostname = endpoint
-                    .split(":")
-                    .next()
-                    .unwrap_or("localhost")
-                    .to_string();
-                let server_name = ServerName::try_from(hostname.clone()).map_err(|_| {
-                    MomentoError::unknown_error(
-                        "build",
-                        Some(format!(
-                            "Error creating server name from hostname: {}",
-                            hostname
-                        )),
-                    )
-                })?;
-                let with_tls = WebpkiTlsStreamConnector::new(server_name);
-                let (client, connection) = protosocket_rpc::client::connect::<
-                    Serializer,
-                    Serializer,
-                    WebpkiTlsStreamConnector,
-                >(
-                    address,
-                    &protosocket_rpc::client::Configuration::new(with_tls),
-                )
-                .await?;
-                // SDK expects to be run on a Tokio runtime, so we can go ahead and spawn a driver
-                // task into the provided Tokio runtime to continually process protosocket requests.
-                self.0.runtime.spawn(connection);
-
-                Ok(ProtosocketCacheClientBuilder(ReadyToAuthenticate {
-                    unauthenticated_client: UnauthenticatedClient::new(
-                        client,
-                        self.0.default_ttl,
-                        self.0.configuration,
-                    ),
-                    credential_provider: self.0.credential_provider,
-                }))
-            }
-            EndpointSecurity::Unverified => {
-                let hostname = endpoint
-                    .split(":")
-                    .next()
-                    .unwrap_or("localhost")
-                    .to_string();
-                let server_name = ServerName::try_from(hostname.clone()).map_err(|_| {
-                    MomentoError::unknown_error(
-                        "build",
-                        Some(format!(
-                            "Error creating server name from hostname: {}",
-                            hostname
-                        )),
-                    )
-                })?;
-                let with_tls = UnverifiedTlsStreamConnector::new(server_name);
-                let (client, connection) = protosocket_rpc::client::connect::<
-                    Serializer,
-                    Serializer,
-                    UnverifiedTlsStreamConnector,
-                >(
-                    address,
-                    &protosocket_rpc::client::Configuration::new(with_tls),
-                )
-                .await?;
-                // SDK expects to be run on a Tokio runtime, so we can go ahead and spawn a driver
-                // task into the provided Tokio runtime to continually process protosocket requests.
-                self.0.runtime.spawn(connection);
-
-                Ok(ProtosocketCacheClientBuilder(ReadyToAuthenticate {
-                    unauthenticated_client: UnauthenticatedClient::new(
-                        client,
-                        self.0.default_ttl,
-                        self.0.configuration,
-                    ),
-                    credential_provider: self.0.credential_provider,
-                }))
-            }
-            EndpointSecurity::Insecure => {
-                // TODO: seems to hang when credential provider uses insecure endpoint with server expecting one of the other options,
-                // probably dropping an error or need to set a timeout somewhere
-                let without_tls = TcpStreamConnector {};
-                let (client, connection) =
-                    protosocket_rpc::client::connect::<Serializer, Serializer, TcpStreamConnector>(
-                        address,
-                        &protosocket_rpc::client::Configuration::new(without_tls),
-                    )
-                    .await?;
-                // SDK expects to be run on a Tokio runtime, so we can go ahead and spawn a driver
-                // task into the provided Tokio runtime to continually process protosocket requests.
-                self.0.runtime.spawn(connection);
-
-                Ok(ProtosocketCacheClientBuilder(ReadyToAuthenticate {
-                    unauthenticated_client: UnauthenticatedClient::new(
-                        client,
-                        self.0.default_ttl,
-                        self.0.configuration,
-                    ),
-                    credential_provider: self.0.credential_provider,
-                }))
-            }
-        }
+        Ok(ProtosocketCacheClientBuilder(ReadyToAuthenticate {
+            unauthenticated_client: UnauthenticatedClient::new(
+                client,
+                self.0.default_ttl,
+                self.0.configuration,
+                self.0.runtime,
+            ),
+            credential_provider: self.0.credential_provider,
+        }))
     }
 }
 
