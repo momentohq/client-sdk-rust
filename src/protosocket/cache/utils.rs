@@ -29,6 +29,9 @@ pub(crate) struct HealthyProtosocket {
     message_id: Arc<AtomicU64>,
     credential_provider: CredentialProvider,
     runtime: tokio::runtime::Handle,
+    // Cached parsed endpoint components
+    endpoint_address: std::net::SocketAddr,
+    hostname: String,
 }
 
 #[allow(clippy::expect_used)]
@@ -39,11 +42,24 @@ impl HealthyProtosocket {
         credential_provider: CredentialProvider,
         runtime: tokio::runtime::Handle,
     ) -> Self {
+        let endpoint = &credential_provider.cache_endpoint;
+        let endpoint_address = endpoint
+            .to_string()
+            .parse()
+            .expect("Failed to parse endpoint address");
+        let hostname = endpoint
+            .split(":")
+            .next()
+            .unwrap_or("localhost")
+            .to_string();
+
         Self {
             client: Arc::new(Mutex::new(Some(client))),
             message_id: Arc::new(message_id),
             credential_provider,
             runtime,
+            endpoint_address,
+            hostname,
         }
     }
 
@@ -55,49 +71,39 @@ impl HealthyProtosocket {
         &self,
     ) -> MomentoResult<protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>> {
         let mut client_guard = self.client.lock().await;
-        match &*client_guard {
-            Some(client) => {
-                if client.is_alive() {
-                    Ok(client.clone())
-                } else {
-                    *client_guard = None;
-                    let endpoint = self.credential_provider.clone().cache_endpoint;
-                    log::info!("getting protosocket client for endpoint {endpoint}");
-                    let client_result = create_protosocket_connection(
-                        self.credential_provider.clone(),
-                        self.runtime.clone(),
-                    )
-                    .await?;
-                    let (client, message_id) = authenticate_protosocket_client(
-                        client_result,
-                        self.credential_provider.clone(),
-                    )
-                    .await?;
-                    *client_guard = Some(client.clone());
-                    self.message_id
-                        .store(message_id.load(Ordering::Relaxed), Ordering::Relaxed);
-                    Ok(client)
-                }
-            }
-            None => {
-                let endpoint = self.credential_provider.clone().cache_endpoint;
-                log::info!("getting protosocket client for endpoint {endpoint}");
-                let client_result = create_protosocket_connection(
-                    self.credential_provider.clone(),
-                    self.runtime.clone(),
-                )
-                .await?;
-                let (client, message_id) = authenticate_protosocket_client(
-                    client_result,
-                    self.credential_provider.clone(),
-                )
-                .await?;
-                *client_guard = Some(client.clone());
-                self.message_id
-                    .store(message_id.load(Ordering::Relaxed), Ordering::Relaxed);
-                Ok(client)
+
+        // Check if we have a healthy client
+        if let Some(client) = &*client_guard {
+            if client.is_alive() {
+                return Ok(client.clone());
             }
         }
+
+        // Need to create a new connection - clear the old one first
+        *client_guard = None;
+
+        // Create and authenticate new connection
+        let endpoint = &self.credential_provider.cache_endpoint;
+        log::info!("getting protosocket client for endpoint {endpoint}");
+
+        let credential_provider = self.credential_provider.clone();
+        let client_result = create_protosocket_connection_with_cached_endpoint(
+            credential_provider.clone(),
+            self.runtime.clone(),
+            self.endpoint_address,
+            &self.hostname,
+        )
+        .await?;
+
+        let (client, message_id) =
+            authenticate_protosocket_client(client_result, credential_provider).await?;
+
+        // Update the stored client and message ID
+        *client_guard = Some(client.clone());
+        self.message_id
+            .store(message_id.load(Ordering::Relaxed), Ordering::Relaxed);
+
+        Ok(client)
     }
 }
 
@@ -105,7 +111,7 @@ pub(crate) async fn create_protosocket_connection(
     credential_provider: CredentialProvider,
     runtime: tokio::runtime::Handle,
 ) -> MomentoResult<protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>> {
-    let endpoint = credential_provider.clone().cache_endpoint;
+    let endpoint = &credential_provider.cache_endpoint;
     let address = endpoint
         .to_string()
         .parse()
@@ -113,15 +119,30 @@ pub(crate) async fn create_protosocket_connection(
             MomentoError::unknown_error("build", Some(e.to_string()))
         })?;
 
+    let hostname = endpoint
+        .split(":")
+        .next()
+        .unwrap_or("localhost")
+        .to_string();
+
+    create_protosocket_connection_with_cached_endpoint(
+        credential_provider,
+        runtime,
+        address,
+        &hostname,
+    )
+    .await
+}
+
+async fn create_protosocket_connection_with_cached_endpoint(
+    credential_provider: CredentialProvider,
+    runtime: tokio::runtime::Handle,
+    address: std::net::SocketAddr,
+    hostname: &str,
+) -> MomentoResult<protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>> {
     match credential_provider.endpoint_security {
         EndpointSecurity::Tls => {
-            // TODO: use a default value or panic here?
-            let hostname = endpoint
-                .split(":")
-                .next()
-                .unwrap_or("localhost")
-                .to_string();
-            let server_name = ServerName::try_from(hostname.clone()).map_err(|_| {
+            let server_name = ServerName::try_from(hostname.to_string()).map_err(|_| {
                 MomentoError::unknown_error(
                     "build",
                     Some(format!(
@@ -130,29 +151,11 @@ pub(crate) async fn create_protosocket_connection(
                     )),
                 )
             })?;
-            let with_tls = WebpkiTlsStreamConnector::new(server_name);
-            let (client, connection) = protosocket_rpc::client::connect::<
-                Serializer,
-                Serializer,
-                WebpkiTlsStreamConnector,
-            >(
-                address,
-                &protosocket_rpc::client::Configuration::new(with_tls),
-            )
-            .await?;
-            // SDK expects to be run on a Tokio runtime, so we can go ahead and spawn a driver
-            // task into the provided Tokio runtime to continually process protosocket requests.
-            runtime.spawn(connection);
-
-            Ok(client)
+            let connector = WebpkiTlsStreamConnector::new(server_name);
+            create_connection_with_connector(address, connector, runtime).await
         }
         EndpointSecurity::Unverified => {
-            let hostname = endpoint
-                .split(":")
-                .next()
-                .unwrap_or("localhost")
-                .to_string();
-            let server_name = ServerName::try_from(hostname.clone()).map_err(|_| {
+            let server_name = ServerName::try_from(hostname.to_string()).map_err(|_| {
                 MomentoError::unknown_error(
                     "build",
                     Some(format!(
@@ -161,39 +164,37 @@ pub(crate) async fn create_protosocket_connection(
                     )),
                 )
             })?;
-            let with_tls = UnverifiedTlsStreamConnector::new(server_name);
-            let (client, connection) = protosocket_rpc::client::connect::<
-                Serializer,
-                Serializer,
-                UnverifiedTlsStreamConnector,
-            >(
-                address,
-                &protosocket_rpc::client::Configuration::new(with_tls),
-            )
-            .await?;
-            // SDK expects to be run on a Tokio runtime, so we can go ahead and spawn a driver
-            // task into the provided Tokio runtime to continually process protosocket requests.
-            runtime.spawn(connection);
-
-            Ok(client)
+            let connector = UnverifiedTlsStreamConnector::new(server_name);
+            create_connection_with_connector(address, connector, runtime).await
         }
         EndpointSecurity::Insecure => {
             // TODO: seems to hang when credential provider uses insecure endpoint with server expecting one of the other options,
             // probably dropping an error or need to set a timeout somewhere
-            let without_tls = TcpStreamConnector {};
-            let (client, connection) =
-                protosocket_rpc::client::connect::<Serializer, Serializer, TcpStreamConnector>(
-                    address,
-                    &protosocket_rpc::client::Configuration::new(without_tls),
-                )
-                .await?;
-            // SDK expects to be run on a Tokio runtime, so we can go ahead and spawn a driver
-            // task into the provided Tokio runtime to continually process protosocket requests.
-            runtime.spawn(connection);
-
-            Ok(client)
+            let connector = TcpStreamConnector {};
+            create_connection_with_connector(address, connector, runtime).await
         }
     }
+}
+
+async fn create_connection_with_connector<C>(
+    address: std::net::SocketAddr,
+    connector: C,
+    runtime: tokio::runtime::Handle,
+) -> MomentoResult<protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>>
+where
+    C: protosocket_rpc::client::StreamConnector + Send + 'static,
+{
+    let (client, connection) = protosocket_rpc::client::connect::<Serializer, Serializer, C>(
+        address,
+        &protosocket_rpc::client::Configuration::new(connector),
+    )
+    .await?;
+
+    // SDK expects to be run on a Tokio runtime, so we can go ahead and spawn a driver
+    // task into the provided Tokio runtime to continually process protosocket requests.
+    runtime.spawn(connection);
+
+    Ok(client)
 }
 
 pub(crate) async fn authenticate_protosocket_client(
