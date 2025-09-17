@@ -4,6 +4,7 @@ use std::{
         atomic::{AtomicU64, Ordering},
         Arc,
     },
+    time::Duration,
 };
 
 use crate::{
@@ -81,6 +82,9 @@ impl HealthyProtosocket {
 
         // Need to create a new connection - clear the old one first
         *client_guard = None;
+
+        // Sleep for a bit
+        tokio::time::sleep(Duration::from_millis(100)).await;
 
         // Create and authenticate new connection
         let endpoint = &self.credential_provider.cache_endpoint;
