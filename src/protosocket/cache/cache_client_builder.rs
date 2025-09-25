@@ -1,5 +1,6 @@
 use crate::protosocket::cache::utils::{
-    authenticate_protosocket_client, create_protosocket_connection, HealthyProtosocket,
+    // authenticate_protosocket_client, create_protosocket_connection, ProtosocketConnection,
+    ProtosocketConnectionManager,
 };
 use crate::protosocket::cache::Configuration;
 use crate::{CredentialProvider, MomentoError, MomentoResult, ProtosocketCacheClient};
@@ -9,43 +10,6 @@ use protosocket_prost::ProstSerializer;
 use std::time::Duration;
 
 pub type Serializer = ProstSerializer<CacheResponse, CacheCommand>;
-
-#[derive(Clone, Debug)]
-pub struct UnauthenticatedClient {
-    client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
-    default_ttl: Duration,
-    configuration: Configuration,
-    runtime: tokio::runtime::Handle,
-}
-
-impl UnauthenticatedClient {
-    pub fn new(
-        client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
-        default_ttl: Duration,
-        configuration: Configuration,
-        runtime: tokio::runtime::Handle,
-    ) -> Self {
-        Self {
-            client,
-            default_ttl,
-            configuration,
-            runtime,
-        }
-    }
-
-    pub async fn authenticate(
-        self,
-        credential_provider: CredentialProvider,
-    ) -> MomentoResult<ProtosocketCacheClient> {
-        let (client, message_id) =
-            authenticate_protosocket_client(self.client, credential_provider.clone()).await?;
-        Ok(ProtosocketCacheClient::new(
-            HealthyProtosocket::new(client, message_id, credential_provider, self.runtime),
-            self.default_ttl,
-            self.configuration,
-        ))
-    }
-}
 
 /// The initial state of the ProtosocketCacheClientBuilder.
 #[derive(PartialEq, Eq, Clone, Debug)]
@@ -83,13 +47,6 @@ pub struct ReadyToBuild {
     credential_provider: CredentialProvider,
     runtime: tokio::runtime::Handle,
     configuration: Configuration,
-}
-
-/// The state of the ProtosocketCacheClientBuilder when it is ready to authenticate with the server.
-#[derive(Clone, Debug)]
-pub struct ReadyToAuthenticate {
-    credential_provider: CredentialProvider,
-    unauthenticated_client: UnauthenticatedClient,
 }
 
 impl ProtosocketCacheClientBuilder<NeedsDefaultTtl> {
@@ -146,32 +103,43 @@ impl ProtosocketCacheClientBuilder<NeedsRuntime> {
 
 impl ProtosocketCacheClientBuilder<ReadyToBuild> {
     /// Constructs a new CacheClientBuilder in the ReadyToBuild state.
-    pub async fn build(self) -> MomentoResult<ProtosocketCacheClientBuilder<ReadyToAuthenticate>> {
-        let client = create_protosocket_connection(
-            self.0.credential_provider.clone(),
-            self.0.runtime.clone(),
-        )
-        .await?;
+    pub async fn build(self) -> MomentoResult<ProtosocketCacheClient> {
+        // let unauthenticated_client = create_protosocket_connection(
+        //     self.0.credential_provider.clone(),
+        //     self.0.runtime.clone(),
+        // )
+        // .await?;
 
-        Ok(ProtosocketCacheClientBuilder(ReadyToAuthenticate {
-            unauthenticated_client: UnauthenticatedClient::new(
-                client,
-                self.0.default_ttl,
-                self.0.configuration,
-                self.0.runtime,
-            ),
-            credential_provider: self.0.credential_provider,
-        }))
-    }
-}
+        // let (client, message_id) = authenticate_protosocket_client(
+        //     unauthenticated_client,
+        //     self.0.credential_provider.clone(),
+        // )
+        // .await?;
 
-impl ProtosocketCacheClientBuilder<ReadyToAuthenticate> {
-    /// Authenticates the protosocket client with the server.
-    pub async fn authenticate(self) -> MomentoResult<ProtosocketCacheClient> {
-        self.0
-            .unauthenticated_client
-            .authenticate(self.0.credential_provider)
+        let manager = ProtosocketConnectionManager::new(
+            // ProtosocketConnection::new(client, message_id),
+            self.0.credential_provider,
+            self.0.runtime,
+        )?;
+
+        // log::info!("manually made a connection and manager");
+
+        let client_pool = bb8::Pool::builder()
+            .max_size(self.0.configuration.max_connections())
+            .min_idle(self.0.configuration.min_connections())
+            .build(manager)
             .await
-            .map_err(|e| MomentoError::unknown_error("authenticate", Some(e.to_string())))
+            .map_err(|e| MomentoError::unknown_error("build", Some(e.to_string())))?;
+        log::info!(
+            "created client pool with {} connections and {} idle connections",
+            client_pool.state().connections,
+            client_pool.state().idle_connections
+        );
+
+        Ok(ProtosocketCacheClient::new(
+            client_pool,
+            self.0.default_ttl,
+            self.0.configuration,
+        ))
     }
 }

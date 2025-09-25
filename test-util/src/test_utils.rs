@@ -84,10 +84,7 @@ pub async fn create_doctest_protosocket_cache_client() -> (ProtosocketCacheClien
         .runtime(tokio::runtime::Handle::current())
         .build()
         .await
-        .expect("cache client should be created")
-        .authenticate()
-        .await
-        .expect("cache client should be authenticated");
+        .expect("cache client should be created");
     (client, cache_name)
 }
 

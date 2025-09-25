@@ -1,11 +1,10 @@
 use crate::cache::{GetRequest, SetRequest};
 use crate::protosocket::cache::cache_client_builder::NeedsDefaultTtl;
-use crate::protosocket::cache::utils::HealthyProtosocket;
+use crate::protosocket::cache::utils::{ProtosocketConnection, ProtosocketConnectionManager};
 use crate::protosocket::cache::{Configuration, MomentoProtosocketRequest};
-use crate::{utils, IntoBytes, MomentoResult, ProtosocketCacheClientBuilder};
-use momento_protos::protosocket::cache::{CacheCommand, CacheResponse};
+use crate::{utils, IntoBytes, MomentoError, MomentoResult, ProtosocketCacheClientBuilder};
+// use momento_protos::protosocket::cache::{CacheCommand, CacheResponse};
 use std::convert::TryInto;
-use std::sync::Arc;
 use std::time::Duration;
 
 // TODO: remove `no_run` on doc examples to allow fully running them as doctests
@@ -47,19 +46,19 @@ use std::time::Duration;
 /// ```
 #[derive(Clone, Debug)]
 pub struct ProtosocketCacheClient {
-    client: Arc<HealthyProtosocket>,
+    client_pool: bb8::Pool<ProtosocketConnectionManager>,
     item_default_ttl: Duration,
     request_timeout: Duration,
 }
 
 impl ProtosocketCacheClient {
     pub(crate) fn new(
-        client: HealthyProtosocket,
+        client_pool: bb8::Pool<ProtosocketConnectionManager>,
         default_ttl: Duration,
         configuration: Configuration,
     ) -> Self {
         Self {
-            client: Arc::new(client),
+            client_pool,
             item_default_ttl: default_ttl,
             request_timeout: configuration.timeout(),
         }
@@ -203,14 +202,25 @@ impl ProtosocketCacheClient {
         request.send(self, self.request_timeout).await
     }
 
-    pub(crate) async fn protosocket_client(
-        &self,
-    ) -> MomentoResult<protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>> {
-        self.client.get_client().await
-    }
+    pub(crate) async fn protosocket_connection(&self) -> MomentoResult<ProtosocketConnection> {
+        // how long does it take to get the client?
+        // let start_time = std::time::Instant::now();
 
-    pub(crate) fn message_id(&self) -> u64 {
-        self.client.message_id()
+        let pooled_client = self
+            .client_pool
+            .get()
+            .await
+            .map_err(|e| MomentoError::unknown_error("get_client", Some(e.to_string())))?;
+        let client = pooled_client.clone();
+
+        // let end_time = std::time::Instant::now();
+        // log::info!(
+        //     "Time taken to get client with ID {}: {:?}",
+        //     client.id(),
+        //     end_time.duration_since(start_time)
+        // );
+
+        Ok(client)
     }
 
     pub(crate) fn expand_ttl_ms(&self, ttl: Option<Duration>) -> MomentoResult<u64> {

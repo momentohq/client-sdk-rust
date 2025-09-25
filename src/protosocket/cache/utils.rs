@@ -1,16 +1,13 @@
 use std::{
     convert::TryFrom,
-    sync::{
-        atomic::{AtomicU64, Ordering},
-        Arc,
-    },
-    time::Duration,
+    sync::atomic::{AtomicU64, Ordering},
 };
 
 use crate::{
     credential_provider::EndpointSecurity, protosocket::cache::cache_client_builder::Serializer,
     CredentialProvider,
 };
+use bb8::ManageConnection;
 use momento_protos::protosocket::cache::{
     cache_command::RpcKind, cache_response::Kind, unary::Command, AuthenticateCommand,
     AuthenticateResponse, CacheCommand, CacheResponse, Unary,
@@ -20,125 +17,111 @@ use protosocket_rpc::{
     ProtosocketControlCode,
 };
 use rustls_pki_types::ServerName;
-use tokio::sync::Mutex;
 
 use crate::{MomentoError, MomentoResult};
 
 #[derive(Clone, Debug)]
-pub(crate) struct HealthyProtosocket {
-    client: Arc<Mutex<Option<protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>>>>,
-    message_id: Arc<AtomicU64>,
-    credential_provider: CredentialProvider,
-    runtime: tokio::runtime::Handle,
-    // Cached parsed endpoint components
-    endpoint_address: std::net::SocketAddr,
-    hostname: String,
+pub(crate) struct ProtosocketConnection {
+    client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
+    message_id: std::sync::Arc<AtomicU64>,
 }
 
-#[allow(clippy::expect_used)]
-impl HealthyProtosocket {
+impl ProtosocketConnection {
     pub fn new(
         client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
         message_id: AtomicU64,
-        credential_provider: CredentialProvider,
-        runtime: tokio::runtime::Handle,
     ) -> Self {
-        let endpoint = &credential_provider.cache_endpoint;
-        let endpoint_address = endpoint
-            .to_string()
-            .parse()
-            .expect("Failed to parse endpoint address");
-        let hostname = endpoint
-            .split(":")
-            .next()
-            .unwrap_or("localhost")
-            .to_string();
-
         Self {
-            client: Arc::new(Mutex::new(Some(client))),
-            message_id: Arc::new(message_id),
-            credential_provider,
-            runtime,
-            endpoint_address,
-            hostname,
+            client,
+            message_id: std::sync::Arc::new(message_id),
         }
+    }
+
+    pub fn client(&self) -> &protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse> {
+        &self.client
     }
 
     pub fn message_id(&self) -> u64 {
         self.message_id.fetch_add(1, Ordering::Relaxed)
     }
 
-    pub async fn get_client(
-        &self,
-    ) -> MomentoResult<protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>> {
-        let mut client_guard = self.client.lock().await;
+    pub fn is_alive(&self) -> bool {
+        self.client.is_alive()
+    }
+}
 
-        // Check if we have a healthy client
-        if let Some(client) = &*client_guard {
-            if client.is_alive() {
-                return Ok(client.clone());
-            }
-        }
+#[derive(Clone, Debug)]
+pub(crate) struct ProtosocketConnectionManager {
+    credential_provider: CredentialProvider,
+    runtime: tokio::runtime::Handle,
+    endpoint_address: std::net::SocketAddr,
+    hostname: String,
+}
 
-        // Need to create a new connection - clear the old one first
-        *client_guard = None;
+impl ProtosocketConnectionManager {
+    pub fn new(
+        credential_provider: CredentialProvider,
+        runtime: tokio::runtime::Handle,
+    ) -> MomentoResult<Self> {
+        let endpoint = &credential_provider.cache_endpoint;
+        let endpoint_address =
+            endpoint
+                .to_string()
+                .parse()
+                .map_err(|e: std::net::AddrParseError| {
+                    MomentoError::unknown_error("build", Some(e.to_string()))
+                })?;
 
-        // Sleep for a bit
-        tokio::time::sleep(Duration::from_millis(100)).await;
+        let hostname = endpoint
+            .split(":")
+            .next()
+            .unwrap_or("localhost")
+            .to_string();
+        Ok(Self {
+            credential_provider,
+            runtime,
+            endpoint_address,
+            hostname,
+        })
+    }
+}
 
-        // Create and authenticate new connection
-        let endpoint = &self.credential_provider.cache_endpoint;
-        log::info!("getting protosocket client for endpoint {endpoint}");
+impl ManageConnection for ProtosocketConnectionManager {
+    type Connection = ProtosocketConnection;
+    type Error = MomentoError;
 
-        let credential_provider = self.credential_provider.clone();
-        let client_result = create_protosocket_connection_with_cached_endpoint(
-            credential_provider.clone(),
+    async fn connect(&self) -> Result<Self::Connection, Self::Error> {
+        let unauthenticated_client = create_protosocket_connection(
+            self.credential_provider.clone(),
             self.runtime.clone(),
             self.endpoint_address,
             &self.hostname,
         )
         .await?;
+        let (client, message_id) = authenticate_protosocket_client(
+            unauthenticated_client,
+            self.credential_provider.clone(),
+        )
+        .await?;
+        Ok(ProtosocketConnection::new(client, message_id))
+    }
 
-        let (client, message_id) =
-            authenticate_protosocket_client(client_result, credential_provider).await?;
+    async fn is_valid(&self, conn: &mut Self::Connection) -> Result<(), Self::Error> {
+        match conn.is_alive() {
+            true => Ok(()),
+            false => Err(MomentoError::unknown_error(
+                "is_valid",
+                Some("protosocket connection is not healthy".to_string()),
+            )),
+        }
+    }
 
-        // Update the stored client and message ID
-        *client_guard = Some(client.clone());
-        self.message_id
-            .store(message_id.load(Ordering::Relaxed), Ordering::Relaxed);
-
-        Ok(client)
+    fn has_broken(&self, conn: &mut Self::Connection) -> bool {
+        !conn.is_alive()
     }
 }
 
-pub(crate) async fn create_protosocket_connection(
-    credential_provider: CredentialProvider,
-    runtime: tokio::runtime::Handle,
-) -> MomentoResult<protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>> {
-    let endpoint = &credential_provider.cache_endpoint;
-    let address = endpoint
-        .to_string()
-        .parse()
-        .map_err(|e: std::net::AddrParseError| {
-            MomentoError::unknown_error("build", Some(e.to_string()))
-        })?;
-
-    let hostname = endpoint
-        .split(":")
-        .next()
-        .unwrap_or("localhost")
-        .to_string();
-
-    create_protosocket_connection_with_cached_endpoint(
-        credential_provider,
-        runtime,
-        address,
-        &hostname,
-    )
-    .await
-}
-
-async fn create_protosocket_connection_with_cached_endpoint(
+async fn create_protosocket_connection(
     credential_provider: CredentialProvider,
     runtime: tokio::runtime::Handle,
     address: std::net::SocketAddr,
@@ -198,6 +181,8 @@ where
     // task into the provided Tokio runtime to continually process protosocket requests.
     runtime.spawn(connection);
 
+    log::info!("created connection and spawned driver task");
+
     Ok(client)
 }
 
@@ -222,7 +207,10 @@ pub(crate) async fn authenticate_protosocket_client(
         .await?;
     let response = completion.await?;
     match response.kind {
-        Some(Kind::Auth(AuthenticateResponse {})) => Ok((client, message_id)),
+        Some(Kind::Auth(AuthenticateResponse {})) => {
+            log::info!("authenticated protosocket client!");
+            Ok((client, message_id))
+        }
         Some(Kind::Error(error)) => Err(MomentoError::protosocket_command_error(error)),
         _ => Err(MomentoError::protosocket_unexpected_kind_error()),
     }

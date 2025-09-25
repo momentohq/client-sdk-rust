@@ -24,6 +24,10 @@ use std::time::Duration;
 pub struct Configuration {
     /// The duration the client will wait before terminating an RPC with a DeadlineExceeded error.
     pub(crate) timeout: Duration,
+    /// The maximum number of connections to keep in the pool.
+    pub(crate) max_connections: u32,
+    /// The minimum number of idle connections to keep in the pool.
+    pub(crate) min_connections: u32,
 }
 
 impl Configuration {
@@ -35,6 +39,16 @@ impl Configuration {
     /// Returns the duration the client will wait before terminating an RPC with a DeadlineExceeded error.
     pub fn timeout(&self) -> Duration {
         self.timeout
+    }
+
+    /// Returns the maximum number of connections to keep in the pool.
+    pub fn max_connections(&self) -> u32 {
+        self.max_connections
+    }
+
+    /// Returns the minimum number of idle connections to keep in the pool.
+    pub fn min_connections(&self) -> u32 {
+        self.min_connections
     }
 }
 
@@ -64,6 +78,9 @@ impl ConfigurationBuilder<ReadyToBuild> {
     pub fn build(self) -> Configuration {
         Configuration {
             timeout: self.0.timeout,
+            // TODO: make these configurable
+            max_connections: 1,
+            min_connections: 1,
         }
     }
 }
