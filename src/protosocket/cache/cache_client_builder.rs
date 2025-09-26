@@ -104,25 +104,8 @@ impl ProtosocketCacheClientBuilder<NeedsRuntime> {
 impl ProtosocketCacheClientBuilder<ReadyToBuild> {
     /// Constructs a new CacheClientBuilder in the ReadyToBuild state.
     pub async fn build(self) -> MomentoResult<ProtosocketCacheClient> {
-        // let unauthenticated_client = create_protosocket_connection(
-        //     self.0.credential_provider.clone(),
-        //     self.0.runtime.clone(),
-        // )
-        // .await?;
-
-        // let (client, message_id) = authenticate_protosocket_client(
-        //     unauthenticated_client,
-        //     self.0.credential_provider.clone(),
-        // )
-        // .await?;
-
-        let manager = ProtosocketConnectionManager::new(
-            // ProtosocketConnection::new(client, message_id),
-            self.0.credential_provider,
-            self.0.runtime,
-        )?;
-
-        // log::info!("manually made a connection and manager");
+        let manager =
+            ProtosocketConnectionManager::new(self.0.credential_provider, self.0.runtime)?;
 
         let client_pool = bb8::Pool::builder()
             .max_size(self.0.configuration.max_connections())
@@ -130,11 +113,6 @@ impl ProtosocketCacheClientBuilder<ReadyToBuild> {
             .build(manager)
             .await
             .map_err(|e| MomentoError::unknown_error("build", Some(e.to_string())))?;
-        log::info!(
-            "created client pool with {} connections and {} idle connections",
-            client_pool.state().connections,
-            client_pool.state().idle_connections
-        );
 
         Ok(ProtosocketCacheClient::new(
             client_pool,

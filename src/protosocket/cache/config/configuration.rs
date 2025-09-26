@@ -50,6 +50,24 @@ impl Configuration {
     pub fn min_connections(&self) -> u32 {
         self.min_connections
     }
+
+    /// Set the maximum number of connections to keep in the pool.
+    pub fn set_max_connections(&self, max_connections: u32) -> Self {
+        Self {
+            max_connections,
+            min_connections: self.min_connections,
+            timeout: self.timeout,
+        }
+    }
+
+    /// Set the minimum number of idle connections to keep in the pool.
+    pub fn set_min_connections(&self, min_connections: u32) -> Self {
+        Self {
+            max_connections: self.max_connections,
+            min_connections,
+            timeout: self.timeout,
+        }
+    }
 }
 
 /// The initial state of the ConfigurationBuilder.

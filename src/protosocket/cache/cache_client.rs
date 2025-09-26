@@ -203,24 +203,12 @@ impl ProtosocketCacheClient {
     }
 
     pub(crate) async fn protosocket_connection(&self) -> MomentoResult<ProtosocketConnection> {
-        // how long does it take to get the client?
-        // let start_time = std::time::Instant::now();
-
         let pooled_client = self
             .client_pool
             .get()
             .await
             .map_err(|e| MomentoError::unknown_error("get_client", Some(e.to_string())))?;
-        let client = pooled_client.clone();
-
-        // let end_time = std::time::Instant::now();
-        // log::info!(
-        //     "Time taken to get client with ID {}: {:?}",
-        //     client.id(),
-        //     end_time.duration_since(start_time)
-        // );
-
-        Ok(client)
+        Ok(pooled_client.clone())
     }
 
     pub(crate) fn expand_ttl_ms(&self, ttl: Option<Duration>) -> MomentoResult<u64> {
