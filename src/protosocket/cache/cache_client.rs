@@ -36,8 +36,6 @@ use std::time::Duration;
 ///     )
 ///     .runtime(tokio::runtime::Handle::current())
 ///     .build()
-///     .await?
-///     .authenticate()
 ///     .await
 /// {
 ///     Ok(client) => client,
@@ -95,8 +93,6 @@ impl ProtosocketCacheClient {
     ///     )
     ///     .runtime(tokio::runtime::Handle::current())
     ///     .build()
-    ///     .await?
-    ///     .authenticate()
     ///     .await
     /// {
     ///     Ok(client) => client,
