@@ -1,4 +1,4 @@
-use std::{convert::TryFrom, sync::Arc};
+use std::convert::TryFrom;
 
 use crate::{
     credential_provider::EndpointSecurity, protosocket::cache::cache_client_builder::Serializer,
@@ -70,10 +70,7 @@ impl ClientConnector for ProtosocketConnectionManager {
         )
         .await
         .map_err(|e| {
-            protosocket_rpc::Error::IoFailure(Arc::new(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                e.to_string(),
-            )))
+            protosocket_rpc::Error::IoFailure(std::io::Error::other(e.to_string()).into())
         })?;
         let client = authenticate_protosocket_client(
             unauthenticated_client,
@@ -82,10 +79,7 @@ impl ClientConnector for ProtosocketConnectionManager {
         )
         .await
         .map_err(|e| {
-            protosocket_rpc::Error::IoFailure(Arc::new(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                e.to_string(),
-            )))
+            protosocket_rpc::Error::IoFailure(std::io::Error::other(e.to_string()).into())
         })?;
         Ok(client)
     }
