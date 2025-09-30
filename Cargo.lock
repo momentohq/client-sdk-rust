@@ -236,17 +236,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bb8"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "212d8b8e1a22743d9241575c6ba822cf9c8fef34771c86ab7e477a4fbfd254e5"
-dependencies = [
- "futures-util",
- "parking_lot",
- "tokio",
-]
-
-[[package]]
 name = "bindgen"
 version = "0.72.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -777,9 +766,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.174"
+version = "0.2.176"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1171693293099992e19cddea4e8b849964e9846f4acee11b3948bcc337be8776"
+checksum = "58f929b4d672ea937a23a1ab494143d968337a5f47e56d0815df1e0890ddf174"
 
 [[package]]
 name = "libloading"
@@ -858,7 +847,6 @@ dependencies = [
  "anyhow",
  "base64",
  "base64-url",
- "bb8",
  "derive_more",
  "env_logger",
  "futures",
@@ -867,7 +855,7 @@ dependencies = [
  "log",
  "momento-protos",
  "momento-test-util",
- "protosocket 0.9.0",
+ "protosocket",
  "protosocket-prost",
  "protosocket-rpc",
  "rand",
@@ -884,9 +872,9 @@ dependencies = [
 
 [[package]]
 name = "momento-protos"
-version = "0.127.2"
+version = "0.127.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e6fc8ff84d20ee53b20b71986fa98ec1a7c55f2622bc8bd0d10f50ab470eef8"
+checksum = "be2b09b8df95deb923a28d60506e3a8b37c7507046cdf9a367b470c75a5ddbff"
 dependencies = [
  "prost",
  "protosocket-rpc",
@@ -1071,23 +1059,9 @@ dependencies = [
 
 [[package]]
 name = "protosocket"
-version = "0.9.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81ba254fa72615bfeaf1ef7515735726764657775fc340623fe1388468f62239"
-dependencies = [
- "bytes",
- "futures",
- "log",
- "thiserror 1.0.69",
- "tokio",
- "tokio-util",
-]
-
-[[package]]
-name = "protosocket"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75769d64f845347af49a595b19838ab3bdea21ee629216adde5219962dd2e13a"
+checksum = "5fbf8b19016c53102de17972e1d069913029c684155c07fa62ad6c4928219081"
 dependencies = [
  "bytes",
  "futures",
@@ -1099,28 +1073,29 @@ dependencies = [
 
 [[package]]
 name = "protosocket-prost"
-version = "0.9.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "530a1f6a35d3686ef7e58675ef768af94efb4aa119765a04fbeb32d4fd132fda"
+checksum = "ccde7a2d275d23e3450f5ff09da0b9faa5b33c31f00fa13a3cb93a85d7730d63"
 dependencies = [
  "bytes",
  "log",
  "prost",
- "protosocket 0.10.0",
+ "protosocket",
  "thiserror 1.0.69",
  "tokio",
 ]
 
 [[package]]
 name = "protosocket-rpc"
-version = "0.9.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f2c8022612cf26d9e1f1d483b470e4beaf46bce366f8bdfb44abf7c363b95fb"
+checksum = "f74c2a60d26c35244a8802659c130e8989aca23a5f2c65127a8d68448a8ca088"
 dependencies = [
  "futures",
  "k-lock",
  "log",
- "protosocket 0.10.0",
+ "protosocket",
+ "rand",
  "rustls-pki-types",
  "socket2 0.6.0",
  "thiserror 1.0.69",

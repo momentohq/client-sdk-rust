@@ -1,54 +1,22 @@
-use std::{
-    convert::TryFrom,
-    sync::atomic::{AtomicU64, Ordering},
-};
+use std::{convert::TryFrom, sync::Arc};
 
 use crate::{
     credential_provider::EndpointSecurity, protosocket::cache::cache_client_builder::Serializer,
     CredentialProvider,
 };
-use bb8::ManageConnection;
 use momento_protos::protosocket::cache::{
     cache_command::RpcKind, cache_response::Kind, unary::Command, AuthenticateCommand,
     AuthenticateResponse, CacheCommand, CacheResponse, Unary,
 };
 use protosocket_rpc::{
-    client::{TcpStreamConnector, UnverifiedTlsStreamConnector, WebpkiTlsStreamConnector},
+    client::{
+        ClientConnector, TcpStreamConnector, UnverifiedTlsStreamConnector, WebpkiTlsStreamConnector,
+    },
     ProtosocketControlCode,
 };
 use rustls_pki_types::ServerName;
 
 use crate::{MomentoError, MomentoResult};
-
-#[derive(Clone, Debug)]
-pub(crate) struct ProtosocketConnection {
-    client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
-    message_id: std::sync::Arc<AtomicU64>,
-}
-
-impl ProtosocketConnection {
-    pub fn new(
-        client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
-        message_id: AtomicU64,
-    ) -> Self {
-        Self {
-            client,
-            message_id: std::sync::Arc::new(message_id),
-        }
-    }
-
-    pub fn client(&self) -> &protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse> {
-        &self.client
-    }
-
-    pub fn message_id(&self) -> u64 {
-        self.message_id.fetch_add(1, Ordering::Relaxed)
-    }
-
-    pub fn is_alive(&self) -> bool {
-        self.client.is_alive()
-    }
-}
 
 #[derive(Clone, Debug)]
 pub(crate) struct ProtosocketConnectionManager {
@@ -86,38 +54,40 @@ impl ProtosocketConnectionManager {
     }
 }
 
-impl ManageConnection for ProtosocketConnectionManager {
-    type Connection = ProtosocketConnection;
-    type Error = MomentoError;
+impl ClientConnector for ProtosocketConnectionManager {
+    type Request = CacheCommand;
+    type Response = CacheResponse;
 
-    async fn connect(&self) -> Result<Self::Connection, Self::Error> {
+    async fn connect(
+        self,
+    ) -> protosocket_rpc::Result<protosocket_rpc::client::RpcClient<Self::Request, Self::Response>>
+    {
         let unauthenticated_client = create_protosocket_connection(
             self.credential_provider.clone(),
             self.runtime.clone(),
             self.endpoint_address,
             &self.hostname,
         )
-        .await?;
-        let (client, message_id) = authenticate_protosocket_client(
+        .await
+        .map_err(|e| {
+            protosocket_rpc::Error::IoFailure(Arc::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                e.to_string(),
+            )))
+        })?;
+        let client = authenticate_protosocket_client(
             unauthenticated_client,
             self.credential_provider.clone(),
+            rand::random::<u64>(), // TODO: use something other than random u64?
         )
-        .await?;
-        Ok(ProtosocketConnection::new(client, message_id))
-    }
-
-    async fn is_valid(&self, conn: &mut Self::Connection) -> Result<(), Self::Error> {
-        match conn.is_alive() {
-            true => Ok(()),
-            false => Err(MomentoError::unknown_error(
-                "is_valid",
-                Some("protosocket connection is not healthy".to_string()),
-            )),
-        }
-    }
-
-    fn has_broken(&self, conn: &mut Self::Connection) -> bool {
-        !conn.is_alive()
+        .await
+        .map_err(|e| {
+            protosocket_rpc::Error::IoFailure(Arc::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                e.to_string(),
+            )))
+        })?;
+        Ok(client)
     }
 }
 
@@ -189,14 +159,11 @@ where
 pub(crate) async fn authenticate_protosocket_client(
     client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
     credential_provider: CredentialProvider,
-) -> MomentoResult<(
-    protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
-    AtomicU64,
-)> {
-    let message_id = AtomicU64::new(0);
+    message_id: u64,
+) -> MomentoResult<protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>> {
     let completion = client
         .send_unary(CacheCommand {
-            message_id: message_id.fetch_add(1, Ordering::Relaxed),
+            message_id,
             control_code: ProtosocketControlCode::Normal as u32,
             rpc_kind: Some(RpcKind::Unary(Unary {
                 command: Some(Command::Auth(AuthenticateCommand {
@@ -209,7 +176,7 @@ pub(crate) async fn authenticate_protosocket_client(
     match response.kind {
         Some(Kind::Auth(AuthenticateResponse {})) => {
             log::info!("authenticated protosocket client!");
-            Ok((client, message_id))
+            Ok(client)
         }
         Some(Kind::Error(error)) => Err(MomentoError::protosocket_command_error(error)),
         _ => Err(MomentoError::protosocket_unexpected_kind_error()),

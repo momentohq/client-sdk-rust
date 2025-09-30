@@ -3,10 +3,11 @@ use crate::protosocket::cache::utils::{
     ProtosocketConnectionManager,
 };
 use crate::protosocket::cache::Configuration;
-use crate::{CredentialProvider, MomentoError, MomentoResult, ProtosocketCacheClient};
+use crate::{CredentialProvider, MomentoResult, ProtosocketCacheClient};
 use momento_protos::protosocket::cache::CacheCommand;
 use momento_protos::protosocket::cache::CacheResponse;
 use protosocket_prost::ProstSerializer;
+use protosocket_rpc::client::ConnectionPool;
 use std::time::Duration;
 
 pub type Serializer = ProstSerializer<CacheResponse, CacheCommand>;
@@ -104,15 +105,11 @@ impl ProtosocketCacheClientBuilder<NeedsRuntime> {
 impl ProtosocketCacheClientBuilder<ReadyToBuild> {
     /// Constructs a new CacheClientBuilder in the ReadyToBuild state.
     pub async fn build(self) -> MomentoResult<ProtosocketCacheClient> {
-        let manager =
+        let client_connector =
             ProtosocketConnectionManager::new(self.0.credential_provider, self.0.runtime)?;
 
-        let client_pool = bb8::Pool::builder()
-            .max_size(self.0.configuration.max_connections())
-            .min_idle(self.0.configuration.min_connections())
-            .build(manager)
-            .await
-            .map_err(|e| MomentoError::unknown_error("build", Some(e.to_string())))?;
+        let client_pool =
+            ConnectionPool::new(client_connector, self.0.configuration.connection_count());
 
         Ok(ProtosocketCacheClient::new(
             client_pool,

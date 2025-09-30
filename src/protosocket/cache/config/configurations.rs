@@ -23,7 +23,9 @@ impl Laptop {
     /// configurations. This is useful for users who want to ensure that their application's
     /// behavior does not change unexpectedly.
     pub fn v1() -> impl Into<Configuration> {
-        Configuration::builder().timeout(Duration::from_millis(15000))
+        Configuration::builder()
+            .timeout(Duration::from_millis(15000))
+            .connection_count(1)
     }
 }
 
@@ -49,7 +51,9 @@ impl InRegion {
     /// behavior does not change unexpectedly.
     #[allow(dead_code)]
     pub fn v1() -> impl Into<Configuration> {
-        Configuration::builder().timeout(Duration::from_millis(1100))
+        Configuration::builder()
+            .timeout(Duration::from_millis(1100))
+            .connection_count(1)
     }
 }
 
@@ -75,7 +79,9 @@ impl LowLatency {
     /// configurations. This is useful for users who want to ensure that their application's
     /// behavior does not change unexpectedly.
     pub fn v1() -> impl Into<Configuration> {
-        Configuration::builder().timeout(Duration::from_millis(500))
+        Configuration::builder()
+            .timeout(Duration::from_millis(500))
+            .connection_count(1)
     }
 }
 
@@ -109,6 +115,8 @@ impl Lambda {
     /// configurations. This is useful for users who want to ensure that their application's
     /// behavior does not change unexpectedly.
     pub fn v1() -> impl Into<Configuration> {
-        Configuration::builder().timeout(Duration::from_millis(1100))
+        Configuration::builder()
+            .timeout(Duration::from_millis(1100))
+            .connection_count(1)
     }
 }

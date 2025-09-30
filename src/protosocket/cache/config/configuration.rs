@@ -24,10 +24,8 @@ use std::time::Duration;
 pub struct Configuration {
     /// The duration the client will wait before terminating an RPC with a DeadlineExceeded error.
     pub(crate) timeout: Duration,
-    /// The maximum number of connections to keep in the pool.
-    pub(crate) max_connections: u32,
-    /// The minimum number of idle connections to keep in the pool.
-    pub(crate) min_connections: u32,
+    /// The number of connections to keep in the connection pool.
+    pub(crate) connection_count: usize,
 }
 
 impl Configuration {
@@ -41,30 +39,15 @@ impl Configuration {
         self.timeout
     }
 
-    /// Returns the maximum number of connections to keep in the pool.
-    pub fn max_connections(&self) -> u32 {
-        self.max_connections
+    /// Returns the number of connections to keep in the connection pool.
+    pub fn connection_count(&self) -> usize {
+        self.connection_count
     }
 
-    /// Returns the minimum number of idle connections to keep in the pool.
-    pub fn min_connections(&self) -> u32 {
-        self.min_connections
-    }
-
-    /// Set the maximum number of connections to keep in the pool.
-    pub fn set_max_connections(&self, max_connections: u32) -> Self {
+    /// Set the number of connections to keep in the connection pool.
+    pub fn set_connection_count(&self, connection_count: usize) -> Self {
         Self {
-            max_connections,
-            min_connections: self.min_connections,
-            timeout: self.timeout,
-        }
-    }
-
-    /// Set the minimum number of idle connections to keep in the pool.
-    pub fn set_min_connections(&self, min_connections: u32) -> Self {
-        Self {
-            max_connections: self.max_connections,
-            min_connections,
+            connection_count,
             timeout: self.timeout,
         }
     }
@@ -76,17 +59,37 @@ pub struct ConfigurationBuilder<State>(State);
 /// The state of the ConfigurationBuilder when it is waiting for a timeout.
 pub struct NeedsTimeout(());
 
+/// The state of the ConfigurationBuilder when it is waiting for a connection count.
+pub struct NeedsConnectionCount {
+    timeout: Duration,
+}
+
 /// The state of the ConfigurationBuilder when it is ready to build a Configuration.
 pub struct ReadyToBuild {
     timeout: Duration,
+    connection_count: usize,
 }
 
 impl ConfigurationBuilder<NeedsTimeout> {
     /// Sets the transport strategy for the Configuration and returns
     /// the ConfigurationBuilder in the ReadyToBuild state.
-    pub fn timeout(self, timeout: impl Into<Duration>) -> ConfigurationBuilder<ReadyToBuild> {
-        ConfigurationBuilder(ReadyToBuild {
+    pub fn timeout(
+        self,
+        timeout: impl Into<Duration>,
+    ) -> ConfigurationBuilder<NeedsConnectionCount> {
+        ConfigurationBuilder(NeedsConnectionCount {
             timeout: timeout.into(),
+        })
+    }
+}
+
+impl ConfigurationBuilder<NeedsConnectionCount> {
+    /// Sets the transport strategy for the Configuration and returns
+    /// the ConfigurationBuilder in the ReadyToBuild state.
+    pub fn connection_count(self, connection_count: u32) -> ConfigurationBuilder<ReadyToBuild> {
+        ConfigurationBuilder(ReadyToBuild {
+            timeout: self.0.timeout,
+            connection_count: connection_count as usize,
         })
     }
 }
@@ -96,9 +99,7 @@ impl ConfigurationBuilder<ReadyToBuild> {
     pub fn build(self) -> Configuration {
         Configuration {
             timeout: self.0.timeout,
-            // TODO: make these configurable
-            max_connections: 1,
-            min_connections: 1,
+            connection_count: self.0.connection_count,
         }
     }
 }
