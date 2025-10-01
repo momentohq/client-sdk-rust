@@ -75,7 +75,7 @@ impl ClientConnector for ProtosocketConnectionManager {
         let client = authenticate_protosocket_client(
             unauthenticated_client,
             self.credential_provider.clone(),
-            rand::random::<u64>(), // TODO: use something other than random u64?
+            0xDEADBEEF,
         )
         .await
         .map_err(|e| {
