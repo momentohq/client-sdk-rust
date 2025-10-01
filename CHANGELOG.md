@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.54.0](https://github.com/momentohq/client-sdk-rust/compare/v0.53.1...v0.54.0) (2025-10-01)
+
+
+### Features
+
+* protosocket with tls and connection pool ([#480](https://github.com/momentohq/client-sdk-rust/issues/480)) ([14fdc9a](https://github.com/momentohq/client-sdk-rust/commit/14fdc9a2de29d71915d5ec51f79f42082424c6f9))
+
 ## [0.53.1](https://github.com/momentohq/client-sdk-rust/compare/v0.53.0...v0.53.1) (2025-09-11)
 
 
