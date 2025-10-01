@@ -1,7 +1,4 @@
-use crate::protosocket::cache::utils::{
-    // authenticate_protosocket_client, create_protosocket_connection, ProtosocketConnection,
-    ProtosocketConnectionManager,
-};
+use crate::protosocket::cache::utils::ProtosocketConnectionManager;
 use crate::protosocket::cache::Configuration;
 use crate::{CredentialProvider, MomentoResult, ProtosocketCacheClient};
 use momento_protos::protosocket::cache::CacheCommand;
