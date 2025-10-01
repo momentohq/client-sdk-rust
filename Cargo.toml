@@ -31,17 +31,16 @@ doc = false
 
 
 [dependencies]
-momento-protos = "0.127.1"
-
+momento-protos = "0.127.3"
 base64 = "0.22"
 derive_more = { version = "2.0.1", features = ["full"] }
 futures = "0"
 h2 = { version = "0.4" }
 hyper = { version = "1.6" }
 log = "0.4"
-protosocket = "0"
-protosocket-prost = "0"
-protosocket-rpc = "0"
+protosocket = "0.11.0"
+protosocket-prost = "0.11.0"
+protosocket-rpc = "0.11.0"
 rand = "0.9"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -49,6 +48,7 @@ thiserror = "2.0"
 tokio = { version = "1", features = ["full"] }
 tonic = { version = "0.13", features = ["tls-ring", "tls-webpki-roots"] }
 zstd = "0.13.3"
+rustls-pki-types = "1"
 
 [dev-dependencies]
 momento-test-util = { path = "test-util" }

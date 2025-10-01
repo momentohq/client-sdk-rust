@@ -27,7 +27,8 @@ impl<K: IntoBytes, V: IntoBytes> SetRequest<K, V> {
         client: &ProtosocketCacheClient,
     ) -> MomentoResult<crate::cache::SetResponse> {
         let completion = client
-            .protosocket_client()
+            .protosocket_connection()
+            .await?
             .send_unary(CacheCommand {
                 message_id: client.message_id(),
                 control_code: ProtosocketControlCode::Normal as u32,

@@ -1,11 +1,13 @@
+use momento_protos::protosocket::cache::{CacheCommand, CacheResponse};
+use protosocket_rpc::client::{ConnectionPool, RpcClient};
+
 use crate::cache::{GetRequest, SetRequest};
 use crate::protosocket::cache::cache_client_builder::NeedsDefaultTtl;
+use crate::protosocket::cache::utils::ProtosocketConnectionManager;
 use crate::protosocket::cache::{Configuration, MomentoProtosocketRequest};
-use crate::{utils, IntoBytes, MomentoResult, ProtosocketCacheClientBuilder};
-use momento_protos::protosocket::cache::{CacheCommand, CacheResponse};
+use crate::{utils, IntoBytes, MomentoError, MomentoResult, ProtosocketCacheClientBuilder};
 use std::convert::TryInto;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
 use std::time::Duration;
 
 // TODO: remove `no_run` on doc examples to allow fully running them as doctests
@@ -34,8 +36,6 @@ use std::time::Duration;
 ///     )
 ///     .runtime(tokio::runtime::Handle::current())
 ///     .build()
-///     .await?
-///     .authenticate()
 ///     .await
 /// {
 ///     Ok(client) => client,
@@ -47,22 +47,21 @@ use std::time::Duration;
 /// ```
 #[derive(Clone, Debug)]
 pub struct ProtosocketCacheClient {
-    message_id: Arc<AtomicU64>,
-    client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
+    client_pool: std::sync::Arc<ConnectionPool<ProtosocketConnectionManager>>,
+    message_id: std::sync::Arc<AtomicU64>,
     item_default_ttl: Duration,
     request_timeout: Duration,
 }
 
 impl ProtosocketCacheClient {
     pub(crate) fn new(
-        message_id: AtomicU64,
-        client: protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>,
+        client_pool: ConnectionPool<ProtosocketConnectionManager>,
         default_ttl: Duration,
         configuration: Configuration,
     ) -> Self {
         Self {
-            message_id: Arc::new(message_id),
-            client,
+            client_pool: std::sync::Arc::new(client_pool),
+            message_id: std::sync::Arc::new(AtomicU64::new(0)),
             item_default_ttl: default_ttl,
             request_timeout: configuration.timeout(),
         }
@@ -94,8 +93,6 @@ impl ProtosocketCacheClient {
     ///     )
     ///     .runtime(tokio::runtime::Handle::current())
     ///     .build()
-    ///     .await?
-    ///     .authenticate()
     ///     .await
     /// {
     ///     Ok(client) => client,
@@ -206,14 +203,17 @@ impl ProtosocketCacheClient {
         request.send(self, self.request_timeout).await
     }
 
-    pub(crate) fn protosocket_client(
-        &self,
-    ) -> &protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse> {
-        &self.client
-    }
-
     pub(crate) fn message_id(&self) -> u64 {
         self.message_id.fetch_add(1, Ordering::Relaxed)
+    }
+
+    pub(crate) async fn protosocket_connection(
+        &self,
+    ) -> MomentoResult<RpcClient<CacheCommand, CacheResponse>> {
+        let pooled_client = self.client_pool.get_connection().await.map_err(|e| {
+            MomentoError::unknown_error("protosocket_connection", Some(e.to_string()))
+        })?;
+        Ok(pooled_client.clone())
     }
 
     pub(crate) fn expand_ttl_ms(&self, ttl: Option<Duration>) -> MomentoResult<u64> {
