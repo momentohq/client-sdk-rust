@@ -52,7 +52,7 @@ impl InRegion {
     /// behavior does not change unexpectedly.
     ///
     /// You can set your availability zone ID by setting the `MOMENTO_AWS_AZ_ID` environment variable.
-    /// See https://docs.aws.amazon.com/ram/latest/userguide/working-with-az-ids.html for more information
+    /// See <https://docs.aws.amazon.com/ram/latest/userguide/working-with-az-ids.html> for more information
     /// about availability zone IDs.
     #[allow(dead_code)]
     pub fn v1() -> impl Into<Configuration> {
@@ -86,7 +86,7 @@ impl LowLatency {
     /// behavior does not change unexpectedly.
     ///
     /// You can set your availability zone ID by setting the `MOMENTO_AWS_AZ_ID` environment variable.
-    /// See https://docs.aws.amazon.com/ram/latest/userguide/working-with-az-ids.html for more information
+    /// See <https://docs.aws.amazon.com/ram/latest/userguide/working-with-az-ids.html> for more information
     /// about availability zone IDs.
     pub fn v1() -> impl Into<Configuration> {
         Configuration::builder()
@@ -127,7 +127,7 @@ impl Lambda {
     /// behavior does not change unexpectedly.
     ///
     /// You can set your availability zone ID by setting the `MOMENTO_AWS_AZ_ID` environment variable.
-    /// See https://docs.aws.amazon.com/ram/latest/userguide/working-with-az-ids.html for more information
+    /// See <https://docs.aws.amazon.com/ram/latest/userguide/working-with-az-ids.html> for more information
     /// about availability zone IDs.
     pub fn v1() -> impl Into<Configuration> {
         Configuration::builder()
