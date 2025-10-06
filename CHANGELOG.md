@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.54.1](https://github.com/momentohq/client-sdk-rust/compare/v0.54.0...v0.54.1) (2025-10-06)
+
+
+### Miscellaneous
+
+* add direct connect handshake ([#483](https://github.com/momentohq/client-sdk-rust/issues/483)) ([e095bf9](https://github.com/momentohq/client-sdk-rust/commit/e095bf910487b96715219e892e259d96743afe50))
+
 ## [0.54.0](https://github.com/momentohq/client-sdk-rust/compare/v0.53.1...v0.54.0) (2025-10-01)
 
 
