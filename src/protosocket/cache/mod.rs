@@ -8,7 +8,9 @@ mod config;
 pub use config::configuration::Configuration;
 pub use config::configurations;
 
+mod connection_manager;
+
+mod address_provider;
+
 mod messages;
 pub use messages::MomentoProtosocketRequest;
-
-mod utils;
