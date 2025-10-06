@@ -11,7 +11,7 @@ struct V1Token {
     pub endpoint: String,
 }
 
-#[derive(PartialEq, Eq, Clone)]
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub(crate) enum EndpointSecurity {
     Insecure,
     Unverified,
@@ -25,6 +25,7 @@ pub struct CredentialProvider {
     pub(crate) auth_token: String,
     pub(crate) control_endpoint: String,
     pub(crate) cache_endpoint: String,
+    pub(crate) cache_http_endpoint: String,
     pub(crate) token_endpoint: String,
     pub(crate) endpoint_security: EndpointSecurity,
 }
@@ -46,6 +47,7 @@ impl Debug for CredentialProvider {
             .field("cache_endpoint", &self.cache_endpoint)
             .field("control_endpoint", &self.control_endpoint)
             .field("token_endpoint", &self.token_endpoint)
+            .field("endpoint_security", &self.endpoint_security)
             .finish()
     }
 }
@@ -81,6 +83,11 @@ impl CredentialProvider {
         };
 
         decode_auth_token(token_to_process)
+    }
+
+    /// Returns the hostname that can be used with momento HTTP apis
+    pub fn cache_http_endpoint(&self) -> &str {
+        &self.cache_http_endpoint
     }
 
     /// Returns a Credential Provider from the provided API key
@@ -175,6 +182,7 @@ fn process_v1_token(auth_token_bytes: Vec<u8>) -> MomentoResult<CredentialProvid
     Ok(CredentialProvider {
         auth_token: json.api_key,
         cache_endpoint: https_endpoint(get_cache_endpoint(&json.endpoint)),
+        cache_http_endpoint: https_endpoint(get_cache_http_endpoint(&json.endpoint)),
         control_endpoint: https_endpoint(get_control_endpoint(&json.endpoint)),
         token_endpoint: https_endpoint(get_token_endpoint(&json.endpoint)),
         endpoint_security: EndpointSecurity::Tls,
@@ -183,6 +191,10 @@ fn process_v1_token(auth_token_bytes: Vec<u8>) -> MomentoResult<CredentialProvid
 
 fn get_cache_endpoint(endpoint: &str) -> String {
     format!("cache.{endpoint}")
+}
+
+fn get_cache_http_endpoint(endpoint: &str) -> String {
+    format!("api.cache.{endpoint}")
 }
 
 fn get_control_endpoint(endpoint: &str) -> String {

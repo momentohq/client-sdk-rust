@@ -25,7 +25,8 @@ impl Laptop {
     pub fn v1() -> impl Into<Configuration> {
         Configuration::builder()
             .timeout(Duration::from_millis(15000))
-            .connection_count(1)
+            .connection_count(default_connections())
+            .az_id(None)
     }
 }
 
@@ -49,11 +50,16 @@ impl InRegion {
     /// Versioning the prebuilt configurations allows users to opt-in to changes in the default
     /// configurations. This is useful for users who want to ensure that their application's
     /// behavior does not change unexpectedly.
+    ///
+    /// You can set your availability zone ID by setting the `MOMENTO_AWS_AZ_ID` environment variable.
+    /// See <https://docs.aws.amazon.com/ram/latest/userguide/working-with-az-ids.html> for more information
+    /// about availability zone IDs.
     #[allow(dead_code)]
     pub fn v1() -> impl Into<Configuration> {
         Configuration::builder()
             .timeout(Duration::from_millis(1100))
-            .connection_count(1)
+            .connection_count(default_connections())
+            .az_id(az_id_from_env())
     }
 }
 
@@ -78,10 +84,15 @@ impl LowLatency {
     /// Versioning the prebuilt configurations allows users to opt-in to changes in the default
     /// configurations. This is useful for users who want to ensure that their application's
     /// behavior does not change unexpectedly.
+    ///
+    /// You can set your availability zone ID by setting the `MOMENTO_AWS_AZ_ID` environment variable.
+    /// See <https://docs.aws.amazon.com/ram/latest/userguide/working-with-az-ids.html> for more information
+    /// about availability zone IDs.
     pub fn v1() -> impl Into<Configuration> {
         Configuration::builder()
             .timeout(Duration::from_millis(500))
-            .connection_count(1)
+            .connection_count(default_connections())
+            .az_id(az_id_from_env())
     }
 }
 
@@ -114,9 +125,24 @@ impl Lambda {
     /// Versioning the prebuilt configurations allows users to opt-in to changes in the default
     /// configurations. This is useful for users who want to ensure that their application's
     /// behavior does not change unexpectedly.
+    ///
+    /// You can set your availability zone ID by setting the `MOMENTO_AWS_AZ_ID` environment variable.
+    /// See <https://docs.aws.amazon.com/ram/latest/userguide/working-with-az-ids.html> for more information
+    /// about availability zone IDs.
     pub fn v1() -> impl Into<Configuration> {
         Configuration::builder()
             .timeout(Duration::from_millis(1100))
             .connection_count(1)
+            .az_id(az_id_from_env())
     }
+}
+
+fn az_id_from_env() -> Option<String> {
+    std::env::var("MOMENTO_AWS_AZ_ID")
+        .ok()
+        .filter(|s| !s.is_empty())
+}
+
+fn default_connections() -> u32 {
+    (std::thread::available_parallelism().map_or(1, |n| n.get()) / 2).clamp(1, 16) as u32
 }

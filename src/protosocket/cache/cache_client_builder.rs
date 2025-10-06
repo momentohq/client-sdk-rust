@@ -1,4 +1,4 @@
-use crate::protosocket::cache::utils::ProtosocketConnectionManager;
+use crate::protosocket::cache::connection_manager::ProtosocketConnectionManager;
 use crate::protosocket::cache::Configuration;
 use crate::{CredentialProvider, MomentoResult, ProtosocketCacheClient};
 use momento_protos::protosocket::cache::CacheCommand;
@@ -11,11 +11,19 @@ pub type Serializer = ProstSerializer<CacheResponse, CacheCommand>;
 
 /// The initial state of the ProtosocketCacheClientBuilder.
 #[derive(PartialEq, Eq, Clone, Debug)]
-pub struct ProtosocketCacheClientBuilder<State>(pub State);
+pub struct ProtosocketCacheClientBuilder<State> {
+    state: State,
+}
+
+pub(crate) fn initial() -> ProtosocketCacheClientBuilder<NeedsDefaultTtl> {
+    ProtosocketCacheClientBuilder {
+        state: NeedsDefaultTtl,
+    }
+}
 
 /// The state of the ProtosocketCacheClientBuilder when it is waiting for a default TTL.
 #[derive(PartialEq, Eq, Clone, Debug)]
-pub struct NeedsDefaultTtl(pub ());
+pub struct NeedsDefaultTtl;
 
 /// The state of the ProtosocketCacheClientBuilder when it is waiting for a configuration.
 #[derive(PartialEq, Eq, Clone, Debug)]
@@ -53,7 +61,9 @@ impl ProtosocketCacheClientBuilder<NeedsDefaultTtl> {
         self,
         default_ttl: Duration,
     ) -> ProtosocketCacheClientBuilder<NeedsConfiguration> {
-        ProtosocketCacheClientBuilder(NeedsConfiguration { default_ttl })
+        ProtosocketCacheClientBuilder {
+            state: NeedsConfiguration { default_ttl },
+        }
     }
 }
 
@@ -63,10 +73,12 @@ impl ProtosocketCacheClientBuilder<NeedsConfiguration> {
         self,
         configuration: impl Into<Configuration>,
     ) -> ProtosocketCacheClientBuilder<NeedsCredentialProvider> {
-        ProtosocketCacheClientBuilder(NeedsCredentialProvider {
-            default_ttl: self.0.default_ttl,
-            configuration: configuration.into(),
-        })
+        ProtosocketCacheClientBuilder {
+            state: NeedsCredentialProvider {
+                default_ttl: self.state.default_ttl,
+                configuration: configuration.into(),
+            },
+        }
     }
 }
 
@@ -76,11 +88,13 @@ impl ProtosocketCacheClientBuilder<NeedsCredentialProvider> {
         self,
         credential_provider: CredentialProvider,
     ) -> ProtosocketCacheClientBuilder<NeedsRuntime> {
-        ProtosocketCacheClientBuilder(NeedsRuntime {
-            default_ttl: self.0.default_ttl,
-            configuration: self.0.configuration,
-            credential_provider,
-        })
+        ProtosocketCacheClientBuilder {
+            state: NeedsRuntime {
+                default_ttl: self.state.default_ttl,
+                configuration: self.state.configuration,
+                credential_provider,
+            },
+        }
     }
 }
 
@@ -90,28 +104,38 @@ impl ProtosocketCacheClientBuilder<NeedsRuntime> {
         self,
         runtime: tokio::runtime::Handle,
     ) -> ProtosocketCacheClientBuilder<ReadyToBuild> {
-        ProtosocketCacheClientBuilder(ReadyToBuild {
-            default_ttl: self.0.default_ttl,
-            runtime,
-            credential_provider: self.0.credential_provider,
-            configuration: self.0.configuration,
-        })
+        ProtosocketCacheClientBuilder {
+            state: ReadyToBuild {
+                default_ttl: self.state.default_ttl,
+                runtime,
+                credential_provider: self.state.credential_provider,
+                configuration: self.state.configuration,
+            },
+        }
     }
 }
 
 impl ProtosocketCacheClientBuilder<ReadyToBuild> {
     /// Constructs a new CacheClientBuilder in the ReadyToBuild state.
     pub async fn build(self) -> MomentoResult<ProtosocketCacheClient> {
-        let client_connector =
-            ProtosocketConnectionManager::new(self.0.credential_provider, self.0.runtime)?;
+        let ReadyToBuild {
+            default_ttl,
+            credential_provider,
+            runtime,
+            configuration,
+        } = self.state;
+        let client_connector = ProtosocketConnectionManager::new(
+            credential_provider,
+            runtime,
+            configuration.az_id.clone(),
+        )?;
 
-        let client_pool =
-            ConnectionPool::new(client_connector, self.0.configuration.connection_count());
+        let client_pool = ConnectionPool::new(client_connector, configuration.connection_count());
 
         Ok(ProtosocketCacheClient::new(
             client_pool,
-            self.0.default_ttl,
-            self.0.configuration,
+            default_ttl,
+            configuration,
         ))
     }
 }

@@ -3,7 +3,7 @@ use protosocket_rpc::client::{ConnectionPool, RpcClient};
 
 use crate::cache::{GetRequest, SetRequest};
 use crate::protosocket::cache::cache_client_builder::NeedsDefaultTtl;
-use crate::protosocket::cache::utils::ProtosocketConnectionManager;
+use crate::protosocket::cache::connection_manager::ProtosocketConnectionManager;
 use crate::protosocket::cache::{Configuration, MomentoProtosocketRequest};
 use crate::{utils, IntoBytes, MomentoError, MomentoResult, ProtosocketCacheClientBuilder};
 use std::convert::TryInto;
@@ -103,7 +103,7 @@ impl ProtosocketCacheClient {
     /// # }
     /// ```
     pub fn builder() -> ProtosocketCacheClientBuilder<NeedsDefaultTtl> {
-        ProtosocketCacheClientBuilder(NeedsDefaultTtl(()))
+        super::cache_client_builder::initial()
     }
 
     /// Gets an item from a Momento Cache
@@ -211,7 +211,7 @@ impl ProtosocketCacheClient {
         &self,
     ) -> MomentoResult<RpcClient<CacheCommand, CacheResponse>> {
         let pooled_client = self.client_pool.get_connection().await.map_err(|e| {
-            MomentoError::unknown_error("protosocket_connection", Some(e.to_string()))
+            MomentoError::unknown_error("protosocket_connection", Some(format!("{e:?}")))
         })?;
         Ok(pooled_client.clone())
     }
