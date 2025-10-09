@@ -27,13 +27,27 @@ use rustls_pki_types::ServerName;
 
 use crate::{MomentoError, MomentoResult};
 
+#[derive(Debug)]
+struct BackgroundAddressLoader {
+    alive: Arc<AtomicBool>,
+    _join_handle: tokio::task::JoinHandle<()>,
+}
+
+impl Drop for BackgroundAddressLoader {
+    fn drop(&mut self) {
+        if self.alive.swap(false, std::sync::atomic::Ordering::Relaxed) {
+            log::info!("shutting down address refresher task");
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub(crate) struct ProtosocketConnectionManager {
     credential_provider: CredentialProvider,
     runtime: tokio::runtime::Handle,
     hostname: String,
     address_provider: Arc<AddressProvider>,
-    alive: Arc<AtomicBool>,
+    _background_address_loader: Arc<BackgroundAddressLoader>,
     az_id: Option<String>,
     connection_sequence: Arc<AtomicUsize>,
 }
@@ -79,7 +93,7 @@ impl ProtosocketConnectionManager {
         let address_provider = Arc::new(AddressProvider::new(credential_provider.clone()));
         let alive = Arc::new(AtomicBool::new(true));
 
-        runtime.spawn(refresh_addresses_forever(
+        let background_address_task = runtime.spawn(refresh_addresses_forever(
             alive.clone(),
             address_provider.clone(),
             Duration::from_secs(30),
@@ -90,18 +104,13 @@ impl ProtosocketConnectionManager {
             runtime,
             hostname,
             address_provider,
-            alive,
+            _background_address_loader: Arc::new(BackgroundAddressLoader {
+                alive,
+                _join_handle: background_address_task,
+            }),
             az_id,
             connection_sequence: Default::default(),
         })
-    }
-}
-
-impl Drop for ProtosocketConnectionManager {
-    fn drop(&mut self) {
-        if self.alive.swap(false, std::sync::atomic::Ordering::Relaxed) {
-            log::info!("shutting down address refresher task");
-        }
     }
 }
 
