@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.54.2](https://github.com/momentohq/client-sdk-rust/compare/v0.54.1...v0.54.2) (2025-10-09)
+
+
+### Bug Fixes
+
+* prevent early drop of address loader ([#486](https://github.com/momentohq/client-sdk-rust/issues/486)) ([405c861](https://github.com/momentohq/client-sdk-rust/commit/405c861a4e1aa1098db6ecee652171886f580680))
+
 ## [0.54.1](https://github.com/momentohq/client-sdk-rust/compare/v0.54.0...v0.54.1) (2025-10-06)
 
 
