@@ -47,7 +47,7 @@ pub(crate) struct ProtosocketConnectionManager {
     runtime: tokio::runtime::Handle,
     hostname: String,
     address_provider: Arc<AddressProvider>,
-    background_address_loader: Arc<BackgroundAddressLoader>,
+    _background_address_loader: Arc<BackgroundAddressLoader>,
     az_id: Option<String>,
     connection_sequence: Arc<AtomicUsize>,
 }
@@ -104,7 +104,7 @@ impl ProtosocketConnectionManager {
             runtime,
             hostname,
             address_provider,
-            background_address_loader: Arc::new(BackgroundAddressLoader {
+            _background_address_loader: Arc::new(BackgroundAddressLoader {
                 alive,
                 _join_handle: background_address_task,
             }),
