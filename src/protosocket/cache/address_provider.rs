@@ -90,38 +90,45 @@ impl AddressProvider {
 
     #[allow(clippy::expect_used)]
     pub async fn try_refresh_addresses(&self) -> Result<(), RefreshError> {
-        let request = self
-            .client
-            .get(format!(
-                "{}/endpoints",
-                self.credential_provider
-                    .cache_http_endpoint()
-                    .trim_end_matches('/')
-            ))
-            .header("authorization", &self.credential_provider.auth_token)
-            .build()?;
-        let response = self.client.execute(request).await?;
+        match self.credential_provider.endpoint_security {
+            crate::credential_provider::EndpointSecurity::Tls => {
+                let request = self
+                    .client
+                    .get(format!(
+                        "{}/endpoints",
+                        self.credential_provider
+                            .cache_http_endpoint()
+                            .trim_end_matches('/')
+                    ))
+                    .header("authorization", &self.credential_provider.auth_token)
+                    .build()?;
+                let response = self.client.execute(request).await?;
 
-        if !response.status().is_success() {
-            let status = response.status();
-            let text = response.text().await?;
-            return Err(RefreshError::BadStatus((status, text)));
-        }
+                if !response.status().is_success() {
+                    let status = response.status();
+                    let text = response.text().await?;
+                    return Err(RefreshError::BadStatus((status, text)));
+                }
 
-        let response = response.text().await?;
-        let addresses = match serde_json::from_str(&response) {
-            Ok(addresses) => addresses,
-            Err(e) => {
-                log::warn!("error parsing address list JSON: {response}");
-                return Err(RefreshError::Json(e));
+                let response = response.text().await?;
+                let addresses = match serde_json::from_str(&response) {
+                    Ok(addresses) => addresses,
+                    Err(e) => {
+                        log::warn!("error parsing address list JSON: {response}");
+                        return Err(RefreshError::Json(e));
+                    }
+                };
+                log::debug!("refreshed address list: {addresses:?}");
+                let addresses = Arc::new(addresses);
+                *self
+                    .addresses
+                    .lock()
+                    .expect("local mutex must not be poisoned") = addresses;
             }
-        };
-        log::debug!("refreshed address list: {addresses:?}");
-        let addresses = Arc::new(addresses);
-        *self
-            .addresses
-            .lock()
-            .expect("local mutex must not be poisoned") = addresses;
+            _ => {
+                log::debug!("skipping address refresh for non-TLS endpoint");
+            }
+        }
         Ok(())
     }
 }
