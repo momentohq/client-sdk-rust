@@ -48,7 +48,10 @@ impl<K: IntoBytes> GetRequest<K> {
                 value: Value::new(value),
             }),
             Some(Kind::Error(error)) => match error.code() {
-                Status::NotFound => Ok(crate::cache::GetResponse::Miss),
+                Status::NotFound => match error.message.as_str() {
+                    "Key not found" => Ok(crate::cache::GetResponse::Miss),
+                    _ => Err(MomentoError::protosocket_command_error(error)),
+                },
                 _ => Err(MomentoError::protosocket_command_error(error)),
             },
             _ => Err(MomentoError::protosocket_unexpected_kind_error()),

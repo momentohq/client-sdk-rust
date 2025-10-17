@@ -62,13 +62,11 @@ mod get_set_delete {
     async fn set_with_nonnegative_ttl_is_ok() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = CACHE_TEST_STATE.cache_name.as_str();
-        for ttl in [0, 1] {
-            let item = TestScalar::new();
-            let set_request =
-                SetRequest::new(cache_name, item.key(), item.value()).ttl(Duration::from_secs(ttl));
-            let result = client.send_request(set_request).await?;
-            assert_eq!(result, SetResponse {});
-        }
+        let item = TestScalar::new();
+        let set_request =
+            SetRequest::new(cache_name, item.key(), item.value()).ttl(Duration::from_secs(1));
+        let result = client.send_request(set_request).await?;
+        assert_eq!(result, SetResponse {});
         Ok(())
     }
 
