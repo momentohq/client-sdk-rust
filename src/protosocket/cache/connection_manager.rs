@@ -122,33 +122,50 @@ impl ClientConnector for ProtosocketConnectionManager {
         self,
     ) -> protosocket_rpc::Result<protosocket_rpc::client::RpcClient<Self::Request, Self::Response>>
     {
-        if self
-            .address_provider
-            .get_addresses()
-            .for_az(self.az_id.as_deref())
-            .is_empty()
-        {
-            if let Err(e) = self.address_provider.try_refresh_addresses().await {
-                log::warn!("error refreshing address list: {e:?}");
+        let address = match self.credential_provider.endpoint_security {
+            EndpointSecurity::Tls => {
+                if self
+                    .address_provider
+                    .get_addresses()
+                    .for_az(self.az_id.as_deref())
+                    .is_empty()
+                {
+                    if let Err(e) = self.address_provider.try_refresh_addresses().await {
+                        log::warn!("error refreshing address list: {e:?}");
+                    }
+                }
+                let addresses = self
+                    .address_provider
+                    .get_addresses()
+                    .for_az(self.az_id.as_deref());
+                if addresses.is_empty() {
+                    return Err(protosocket_rpc::Error::IoFailure(
+                        std::io::Error::new(
+                            std::io::ErrorKind::AddrNotAvailable,
+                            "No addresses available from address provider",
+                        )
+                        .into(),
+                    ));
+                }
+                addresses[self
+                    .connection_sequence
+                    .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+                    % addresses.len()]
             }
-        }
-        let addresses = self
-            .address_provider
-            .get_addresses()
-            .for_az(self.az_id.as_deref());
-        if addresses.is_empty() {
-            return Err(protosocket_rpc::Error::IoFailure(
-                std::io::Error::new(
-                    std::io::ErrorKind::AddrNotAvailable,
-                    "No addresses available from address provider",
-                )
-                .into(),
-            ));
-        }
-        let address = addresses[self
-            .connection_sequence
-            .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
-            % addresses.len()];
+            _ => self
+                .credential_provider
+                .cache_endpoint
+                .parse()
+                .map_err(|e| {
+                    protosocket_rpc::Error::IoFailure(
+                        std::io::Error::other(format!(
+                            "could not parse address from endpoint: {}: {:?}",
+                            &self.credential_provider.cache_endpoint, e
+                        ))
+                        .into(),
+                    )
+                })?,
+        };
         log::debug!("connecting over protosocket to {address}");
 
         let unauthenticated_client = create_protosocket_connection(
