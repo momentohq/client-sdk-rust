@@ -147,11 +147,10 @@ impl ClientConnector for ProtosocketConnectionManager {
                         .into(),
                     ));
                 }
-                let address = addresses[self
+                addresses[self
                     .connection_sequence
                     .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
-                    % addresses.len()];
-                address
+                    % addresses.len()]
             }
             _ => self
                 .credential_provider
