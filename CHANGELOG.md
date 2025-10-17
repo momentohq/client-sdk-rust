@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.54.3](https://github.com/momentohq/client-sdk-rust/compare/v0.54.2...v0.54.3) (2025-10-17)
+
+
+### Bug Fixes
+
+* protosocket connection manager should be able to connect to local endpoint too ([#490](https://github.com/momentohq/client-sdk-rust/issues/490)) ([d9963a5](https://github.com/momentohq/client-sdk-rust/commit/d9963a57ece1555643402f243f4cbf5bb724acd7))
+* protosocket get should distinguish between cache vs key not found errors ([#489](https://github.com/momentohq/client-sdk-rust/issues/489)) ([ab54e24](https://github.com/momentohq/client-sdk-rust/commit/ab54e248c029dbe8fa18f3669931740642151a5b))
+
 ## [0.54.2](https://github.com/momentohq/client-sdk-rust/compare/v0.54.1...v0.54.2) (2025-10-09)
 
 
