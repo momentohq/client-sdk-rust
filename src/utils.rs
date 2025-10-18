@@ -366,6 +366,8 @@ mod tests {
             keep_alive_timeout: Some(Duration::from_secs(60)),
             deadline: Duration::from_secs(30),
             num_channels: 1,
+            max_send_message_size: None,
+            max_receive_message_size: None,
         };
         let result = connect_channel_lazily_configurable(uri_string, grpc_config);
         assert!(result.is_ok(), "Expected Ok, but got {:?}", result);
