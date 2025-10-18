@@ -24,6 +24,12 @@ pub struct GrpcConfiguration {
     /// The duration the client is willing to wait for a keep-alive ping to be acknowledged before
     /// closing the connection.
     pub(crate) keep_alive_timeout: Option<Duration>,
+    /// The maximum size of messages that can be sent to the server. If the client attempts to send a message larger than
+    /// this size, it will result in a LimitExceededError.
+    pub(crate) max_send_message_size: Option<usize>,
+    /// The maximum size of messages that can be received from the server. If the server sends a message larger than
+    /// this size, it will result in a LimitExceededError.
+    pub(crate) max_receive_message_size: Option<usize>,
 }
 
 impl GrpcConfiguration {
@@ -46,6 +52,8 @@ pub struct ReadyToBuild {
     keep_alive_while_idle: Option<bool>,
     keep_alive_interval: Option<Duration>,
     keep_alive_timeout: Option<Duration>,
+    max_send_message_size: Option<usize>,
+    max_receive_message_size: Option<usize>,
 }
 
 impl GrpcConfigurationBuilder<NeedsDeadline> {
@@ -58,6 +66,8 @@ impl GrpcConfigurationBuilder<NeedsDeadline> {
             keep_alive_while_idle: None,
             keep_alive_interval: None,
             keep_alive_timeout: None,
+            max_send_message_size: None,
+            max_receive_message_size: None,
         })
     }
 }
@@ -114,6 +124,20 @@ impl GrpcConfigurationBuilder<ReadyToBuild> {
         self
     }
 
+    /// Sets the maximum size of messages that can be sent to the server. If the client attempts to send a message larger than
+    /// this size, it will result in a LimitExceededError.
+    pub fn max_send_message_size(mut self, size: usize) -> Self {
+        self.0.max_send_message_size = Some(size);
+        self
+    }
+
+    /// Sets the maximum size of messages that can be received from the server. If the server sends a message larger than
+    /// this size, it will result in a LimitExceededError.
+    pub fn max_receive_message_size(mut self, size: usize) -> Self {
+        self.0.max_receive_message_size = Some(size);
+        self
+    }
+
     /// Constructs the GrpcConfiguration with the given settings.
     pub fn build(self) -> GrpcConfiguration {
         let num_channels = self.0.num_channels;
@@ -129,6 +153,8 @@ impl GrpcConfigurationBuilder<ReadyToBuild> {
             keep_alive_while_idle: self.0.keep_alive_while_idle,
             keep_alive_interval: self.0.keep_alive_interval,
             keep_alive_timeout: self.0.keep_alive_timeout,
+            max_send_message_size: self.0.max_send_message_size,
+            max_receive_message_size: self.0.max_receive_message_size,
         }
     }
 }

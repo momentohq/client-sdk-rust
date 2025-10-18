@@ -11,6 +11,8 @@ use momento_protos::cache_client::scs_client::ScsClient;
 use momento_protos::control_client::scs_control_client::ScsControlClient;
 use tonic::transport::Channel;
 
+const DEFAULT_MAX_REQUEST_SIZE: usize = 10_486_000;
+
 /// The initial state of the CacheClientBuilder.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct CacheClientBuilder<State>(pub State);
@@ -138,6 +140,22 @@ impl CacheClientBuilder<ReadyToBuild> {
                         HeaderInterceptor::new(&self.0.credential_provider.auth_token, agent_value),
                     );
                     ScsClient::new(data_interceptor)
+                        .max_decoding_message_size(
+                            self.0
+                                .configuration
+                                .transport_strategy
+                                .grpc_configuration
+                                .max_receive_message_size
+                                .unwrap_or(DEFAULT_MAX_REQUEST_SIZE),
+                        )
+                        .max_encoding_message_size(
+                            self.0
+                                .configuration
+                                .transport_strategy
+                                .grpc_configuration
+                                .max_send_message_size
+                                .unwrap_or(DEFAULT_MAX_REQUEST_SIZE),
+                        )
                 })
                 .collect();
         let control_client = ScsControlClient::new(control_interceptor);

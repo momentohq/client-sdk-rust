@@ -321,10 +321,20 @@ pub(crate) fn status_to_error(status: tonic::Status) -> MomentoError {
             error_code: MomentoErrorCode::InternalServerError,
             inner_error: Some(status.clone().into()),
         },
-        tonic::Code::Internal => MomentoError {
-            message: "An unexpected internal error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
-            error_code: MomentoErrorCode::InternalServerError,
-            inner_error: Some(status.clone().into()),
+        tonic::Code::Internal => {
+            if status.message().to_lowercase().contains("h2 protocol error") {
+                MomentoError {
+                    message: "Message size limit was exceeded; consider increasing the max send and receive message sizes in your GrpcConfiguration".into(),
+                    error_code: MomentoErrorCode::LimitExceededError,
+                    inner_error: Some(status.clone().into()),
+                }
+            } else {
+                MomentoError {
+                message: "An unexpected internal error occurred while trying to fulfill the request; please contact us at support@momentohq.com".into(),
+                error_code: MomentoErrorCode::InternalServerError,
+                inner_error: Some(status.clone().into()),
+            }
+        }
         },
         tonic::Code::Unavailable => MomentoError {
             message: "The server was unavailable to handle the request; consider retrying.  If the error persists, please contact Momento.".into(),
