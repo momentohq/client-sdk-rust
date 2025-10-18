@@ -139,21 +139,6 @@ impl CacheClientBuilder<ReadyToBuild> {
                         c,
                         HeaderInterceptor::new(&self.0.credential_provider.auth_token, agent_value),
                     );
-                    println!(
-                        "Creating data client with max send size: {:?} and max receive size: {:?}",
-                        self.0
-                            .configuration
-                            .transport_strategy
-                            .grpc_configuration
-                            .max_send_message_size
-                            .unwrap_or(DEFAULT_MAX_REQUEST_SIZE),
-                        self.0
-                            .configuration
-                            .transport_strategy
-                            .grpc_configuration
-                            .max_receive_message_size
-                            .unwrap_or(DEFAULT_MAX_REQUEST_SIZE)
-                    );
                     ScsClient::new(data_interceptor)
                         .max_decoding_message_size(
                             self.0
