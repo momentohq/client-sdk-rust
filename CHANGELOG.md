@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.55.0](https://github.com/momentohq/client-sdk-rust/compare/v0.54.3...v0.55.0) (2025-10-20)
+
+
+### Features
+
+* configurable grpc message size limits ([#492](https://github.com/momentohq/client-sdk-rust/issues/492)) ([bdf3938](https://github.com/momentohq/client-sdk-rust/commit/bdf3938123dd27eee4fc4a51afc4259b70f3a50b))
+
 ## [0.54.3](https://github.com/momentohq/client-sdk-rust/compare/v0.54.2...v0.54.3) (2025-10-17)
 
 
