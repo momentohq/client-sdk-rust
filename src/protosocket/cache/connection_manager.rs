@@ -93,11 +93,20 @@ impl ProtosocketConnectionManager {
         let address_provider = Arc::new(AddressProvider::new(credential_provider.clone()));
         let alive = Arc::new(AtomicBool::new(true));
 
-        let background_address_task = runtime.spawn(refresh_addresses_forever(
-            alive.clone(),
-            address_provider.clone(),
-            Duration::from_secs(30),
-        ));
+        let background_address_task =
+            if EndpointSecurity::Tls == credential_provider.endpoint_security {
+                println!("spawning address refresh task for TLS endpoint");
+                runtime.spawn(refresh_addresses_forever(
+                    alive.clone(),
+                    address_provider.clone(),
+                    Duration::from_secs(30),
+                ))
+            } else {
+                println!("not spawning address refresh task for endpoint override");
+                runtime.spawn(async move {
+                    log::debug!("skipping address refresh for endpoint override");
+                })
+            };
 
         Ok(Self {
             credential_provider,
@@ -124,6 +133,7 @@ impl ClientConnector for ProtosocketConnectionManager {
     {
         let address = match self.credential_provider.endpoint_security {
             EndpointSecurity::Tls => {
+                println!("selecting address from address provider for TLS endpoint");
                 if self
                     .address_provider
                     .get_addresses()
@@ -152,19 +162,21 @@ impl ClientConnector for ProtosocketConnectionManager {
                     .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
                     % addresses.len()]
             }
-            _ => self
-                .credential_provider
-                .cache_endpoint
-                .parse()
-                .map_err(|e| {
-                    protosocket_rpc::Error::IoFailure(
-                        std::io::Error::other(format!(
-                            "could not parse address from endpoint: {}: {:?}",
-                            &self.credential_provider.cache_endpoint, e
-                        ))
-                        .into(),
-                    )
-                })?,
+            _ => {
+                println!("using endpoint address directly for endpoint override");
+                self.credential_provider
+                    .cache_endpoint
+                    .parse()
+                    .map_err(|e| {
+                        protosocket_rpc::Error::IoFailure(
+                            std::io::Error::other(format!(
+                                "could not parse address from endpoint: {}: {:?}",
+                                &self.credential_provider.cache_endpoint, e
+                            ))
+                            .into(),
+                        )
+                    })?
+            }
         };
         log::debug!("connecting over protosocket to {address}");
 
@@ -191,6 +203,7 @@ impl ClientConnector for ProtosocketConnectionManager {
                 std::io::Error::other(format!("could not authenticate {e:?}")).into(),
             )
         })?;
+        println!("successfully created and authenticated protosocket client");
         Ok(client)
     }
 }
