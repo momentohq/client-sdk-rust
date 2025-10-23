@@ -285,11 +285,13 @@ async fn create_connection_with_connector<C>(
 where
     C: protosocket_rpc::client::StreamConnector + Send + 'static,
 {
+    log::debug!("connector: {:?}", connector);
     let (client, connection) = protosocket_rpc::client::connect::<Serializer, Serializer, C>(
         address,
         &protosocket_rpc::client::Configuration::new(connector),
     )
     .await?;
+    log::debug!("created protosocket client connection");
 
     // SDK expects to be run on a Tokio runtime, so we can go ahead and spawn a driver
     // task into the provided Tokio runtime to continually process protosocket requests.
