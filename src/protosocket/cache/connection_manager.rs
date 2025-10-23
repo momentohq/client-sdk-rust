@@ -93,11 +93,20 @@ impl ProtosocketConnectionManager {
         let address_provider = Arc::new(AddressProvider::new(credential_provider.clone()));
         let alive = Arc::new(AtomicBool::new(true));
 
-        let background_address_task = runtime.spawn(refresh_addresses_forever(
-            alive.clone(),
-            address_provider.clone(),
-            Duration::from_secs(30),
-        ));
+        let background_address_task =
+            if EndpointSecurity::Tls == credential_provider.endpoint_security {
+                println!("spawning address refresh task for TLS endpoint");
+                runtime.spawn(refresh_addresses_forever(
+                    alive.clone(),
+                    address_provider.clone(),
+                    Duration::from_secs(30),
+                ))
+            } else {
+                println!("not spawning address refresh task for endpoint override");
+                runtime.spawn(async move {
+                    log::debug!("skipping address refresh for endpoint override");
+                })
+            };
 
         Ok(Self {
             credential_provider,
@@ -124,6 +133,7 @@ impl ClientConnector for ProtosocketConnectionManager {
     {
         let address = match self.credential_provider.endpoint_security {
             EndpointSecurity::Tls => {
+                println!("selecting address from address provider for TLS endpoint");
                 if self
                     .address_provider
                     .get_addresses()
@@ -152,19 +162,21 @@ impl ClientConnector for ProtosocketConnectionManager {
                     .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
                     % addresses.len()]
             }
-            _ => self
-                .credential_provider
-                .cache_endpoint
-                .parse()
-                .map_err(|e| {
-                    protosocket_rpc::Error::IoFailure(
-                        std::io::Error::other(format!(
-                            "could not parse address from endpoint: {}: {:?}",
-                            &self.credential_provider.cache_endpoint, e
-                        ))
-                        .into(),
-                    )
-                })?,
+            _ => {
+                log::debug!("using endpoint address directly for endpoint override");
+                self.credential_provider
+                    .cache_endpoint
+                    .parse()
+                    .map_err(|e| {
+                        protosocket_rpc::Error::IoFailure(
+                            std::io::Error::other(format!(
+                                "could not parse address from endpoint: {}: {:?}",
+                                &self.credential_provider.cache_endpoint, e
+                            ))
+                            .into(),
+                        )
+                    })?
+            }
         };
         log::debug!("connecting over protosocket to {address}");
 
@@ -191,6 +203,7 @@ impl ClientConnector for ProtosocketConnectionManager {
                 std::io::Error::other(format!("could not authenticate {e:?}")).into(),
             )
         })?;
+        log::debug!("successfully created and authenticated protosocket client");
         Ok(client)
     }
 }
@@ -225,7 +238,7 @@ async fn create_protosocket_connection(
     hostname: &str,
 ) -> MomentoResult<protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>> {
     match credential_provider.endpoint_security {
-        EndpointSecurity::Tls => {
+        EndpointSecurity::Tls | EndpointSecurity::TlsOverride => {
             log::debug!("creating TLS connection to {address}");
             let server_name = ServerName::try_from(hostname.to_string()).map_err(|_| {
                 MomentoError::unknown_error(
@@ -237,6 +250,7 @@ async fn create_protosocket_connection(
                 )
             })?;
             let connector = WebpkiTlsStreamConnector::new(server_name);
+            log::debug!("created TLS connector for server name: {}", hostname);
             create_connection_with_connector(address, connector, runtime).await
         }
         EndpointSecurity::Unverified => {
@@ -271,11 +285,13 @@ async fn create_connection_with_connector<C>(
 where
     C: protosocket_rpc::client::StreamConnector + Send + 'static,
 {
+    log::debug!("connector: {:?}", connector);
     let (client, connection) = protosocket_rpc::client::connect::<Serializer, Serializer, C>(
         address,
         &protosocket_rpc::client::Configuration::new(connector),
     )
     .await?;
+    log::debug!("created protosocket client connection");
 
     // SDK expects to be run on a Tokio runtime, so we can go ahead and spawn a driver
     // task into the provided Tokio runtime to continually process protosocket requests.
