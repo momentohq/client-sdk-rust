@@ -163,7 +163,7 @@ impl ClientConnector for ProtosocketConnectionManager {
                     % addresses.len()]
             }
             _ => {
-                println!("using endpoint address directly for endpoint override");
+                log::debug!("using endpoint address directly for endpoint override");
                 self.credential_provider
                     .cache_endpoint
                     .parse()
@@ -203,7 +203,7 @@ impl ClientConnector for ProtosocketConnectionManager {
                 std::io::Error::other(format!("could not authenticate {e:?}")).into(),
             )
         })?;
-        println!("successfully created and authenticated protosocket client");
+        log::debug!("successfully created and authenticated protosocket client");
         Ok(client)
     }
 }
@@ -250,6 +250,7 @@ async fn create_protosocket_connection(
                 )
             })?;
             let connector = WebpkiTlsStreamConnector::new(server_name);
+            log::debug!("created TLS connector for server name: {}", hostname);
             create_connection_with_connector(address, connector, runtime).await
         }
         EndpointSecurity::Unverified => {
