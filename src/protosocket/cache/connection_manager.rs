@@ -225,7 +225,7 @@ async fn create_protosocket_connection(
     hostname: &str,
 ) -> MomentoResult<protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>> {
     match credential_provider.endpoint_security {
-        EndpointSecurity::Tls => {
+        EndpointSecurity::Tls | EndpointSecurity::TlsOverride => {
             log::debug!("creating TLS connection to {address}");
             let server_name = ServerName::try_from(hostname.to_string()).map_err(|_| {
                 MomentoError::unknown_error(

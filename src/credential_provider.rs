@@ -16,6 +16,7 @@ pub(crate) enum EndpointSecurity {
     Insecure,
     Unverified,
     Tls,
+    TlsOverride,
 }
 
 /// Provides information that the client needs in order to establish a connection to and
@@ -146,6 +147,15 @@ impl CredentialProvider {
         self.control_endpoint = endpoint.to_string();
         self.cache_endpoint = endpoint.to_string();
         self.token_endpoint = endpoint.to_string();
+        self
+    }
+
+    /// Allows the user to override the full endpoint for the control, cache, and token endpoints
+    pub fn secure_endpoint_override(mut self, endpoint: &str) -> CredentialProvider {
+        self.control_endpoint = endpoint.to_string();
+        self.cache_endpoint = endpoint.to_string();
+        self.token_endpoint = endpoint.to_string();
+        self.endpoint_security = EndpointSecurity::TlsOverride;
         self
     }
 
