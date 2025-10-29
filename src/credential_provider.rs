@@ -24,6 +24,7 @@ pub(crate) enum EndpointSecurity {
 #[derive(PartialEq, Eq, Clone)]
 pub struct CredentialProvider {
     pub(crate) auth_token: String,
+    pub(crate) tls_cache_endpoint: String,
     pub(crate) control_endpoint: String,
     pub(crate) cache_endpoint: String,
     pub(crate) cache_http_endpoint: String,
@@ -35,8 +36,8 @@ impl Display for CredentialProvider {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "CredentialProvider {{ auth_token: <redacted>, cache_endpoint: {}, control_endpoint: {}, token_endpoint: {} }}",
-            self.cache_endpoint, self.control_endpoint, self.token_endpoint
+            "CredentialProvider {{ auth_token: <redacted>, tls_cache_endpoint: {}, cache_endpoint: {}, control_endpoint: {}, token_endpoint: {} }}",
+            self.tls_cache_endpoint, self.cache_endpoint, self.control_endpoint, self.token_endpoint
         )
     }
 }
@@ -45,6 +46,7 @@ impl Debug for CredentialProvider {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("CredentialProvider")
             .field("auth_token", &"<redacted>")
+            .field("tls_cache_endpoint", &self.tls_cache_endpoint)
             .field("cache_endpoint", &self.cache_endpoint)
             .field("control_endpoint", &self.control_endpoint)
             .field("token_endpoint", &self.token_endpoint)
@@ -143,37 +145,37 @@ impl CredentialProvider {
     }
 
     /// Allows the user to override the full endpoint for the control, cache, and token endpoints
-    pub fn full_endpoint_override(mut self, endpoint: &str) -> CredentialProvider {
-        self.control_endpoint = endpoint.to_string();
-        self.cache_endpoint = endpoint.to_string();
-        self.token_endpoint = endpoint.to_string();
-        self
+    pub fn full_endpoint_override(self, endpoint: &str) -> CredentialProvider {
+        self.endpoint_override(endpoint, None)
     }
 
     /// Allows the user to override the full endpoint for the control, cache, and token endpoints
-    pub fn secure_endpoint_override(mut self, endpoint: &str) -> CredentialProvider {
-        self.control_endpoint = endpoint.to_string();
-        self.cache_endpoint = endpoint.to_string();
-        self.token_endpoint = endpoint.to_string();
-        self.endpoint_security = EndpointSecurity::TlsOverride;
-        self
+    pub fn secure_endpoint_override(self, endpoint: &str) -> CredentialProvider {
+        self.endpoint_override(endpoint, Some(EndpointSecurity::TlsOverride))
     }
 
     /// Allows the user to set a non-TLS endpoint for the control, cache, and token endpoints
-    pub fn insecure_endpoint_override(mut self, endpoint: &str) -> CredentialProvider {
-        self.control_endpoint = endpoint.to_string();
-        self.cache_endpoint = endpoint.to_string();
-        self.token_endpoint = endpoint.to_string();
-        self.endpoint_security = EndpointSecurity::Insecure;
-        self
+    pub fn insecure_endpoint_override(self, endpoint: &str) -> CredentialProvider {
+        self.endpoint_override(endpoint, Some(EndpointSecurity::Insecure))
     }
 
     /// Allows the user to set an unverified TLS endpoint for the control, cache, and token endpoints
-    pub fn unverified_tls_endpoint_override(mut self, endpoint: &str) -> CredentialProvider {
+    pub fn unverified_tls_endpoint_override(self, endpoint: &str) -> CredentialProvider {
+        self.endpoint_override(endpoint, Some(EndpointSecurity::Unverified))
+    }
+
+    fn endpoint_override(
+        mut self,
+        endpoint: &str,
+        endpoint_security: Option<EndpointSecurity>,
+    ) -> CredentialProvider {
         self.control_endpoint = endpoint.to_string();
         self.cache_endpoint = endpoint.to_string();
         self.token_endpoint = endpoint.to_string();
-        self.endpoint_security = EndpointSecurity::Unverified;
+        if let Some(es) = endpoint_security {
+            self.endpoint_security = es
+        };
+
         self
     }
 }
@@ -191,6 +193,7 @@ fn process_v1_token(auth_token_bytes: Vec<u8>) -> MomentoResult<CredentialProvid
 
     Ok(CredentialProvider {
         auth_token: json.api_key,
+        tls_cache_endpoint: https_endpoint(get_cache_endpoint(&json.endpoint)),
         cache_endpoint: https_endpoint(get_cache_endpoint(&json.endpoint)),
         cache_http_endpoint: https_endpoint(get_cache_http_endpoint(&json.endpoint)),
         control_endpoint: https_endpoint(get_control_endpoint(&json.endpoint)),
