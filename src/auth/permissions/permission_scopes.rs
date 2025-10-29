@@ -110,8 +110,18 @@ mod tests {
                 match &perms.permissions[0] {
                     Permission::FunctionPermission(fp) => {
                         assert_eq!(fp.role, FunctionRole::FunctionInvoke);
-                        assert_eq!(fp.cache, CacheSelector::CacheName { name: "my-cache".into() });
-                        assert_eq!(fp.func, FunctionSelector::FunctionName { name: "my-function".into() });
+                        assert_eq!(
+                            fp.cache,
+                            CacheSelector::CacheName {
+                                name: "my-cache".into()
+                            }
+                        );
+                        assert_eq!(
+                            fp.func,
+                            FunctionSelector::FunctionName {
+                                name: "my-function".into()
+                            }
+                        );
                     }
                     _ => panic!("Expected FunctionPermission"),
                 }
@@ -124,14 +134,12 @@ mod tests {
         let scope = PermissionScopes::function_invoke("my-cache", FunctionSelector::AllFunctions);
 
         match scope {
-            PermissionScope::Permissions(perms) => {
-                match &perms.permissions[0] {
-                    Permission::FunctionPermission(fp) => {
-                        assert_eq!(fp.func, FunctionSelector::AllFunctions);
-                    }
-                    _ => panic!("Expected FunctionPermission"),
+            PermissionScope::Permissions(perms) => match &perms.permissions[0] {
+                Permission::FunctionPermission(fp) => {
+                    assert_eq!(fp.func, FunctionSelector::AllFunctions);
                 }
-            }
+                _ => panic!("Expected FunctionPermission"),
+            },
         }
     }
 }

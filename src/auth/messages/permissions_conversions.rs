@@ -173,9 +173,7 @@ fn assign_function_role(role: FunctionRole) -> permission_messages::FunctionRole
     }
 }
 
-fn assign_function_cache_selector(
-    cache_selector: CacheSelector,
-) -> function_permissions::Cache {
+fn assign_function_cache_selector(cache_selector: CacheSelector) -> function_permissions::Cache {
     match cache_selector {
         CacheSelector::AllCaches => function_permissions::Cache::AllCaches(All {}),
         CacheSelector::CacheName { name } => {
@@ -186,23 +184,19 @@ fn assign_function_cache_selector(
     }
 }
 
-fn assign_function_selector(
-    function_selector: FunctionSelector,
-) -> function_permissions::Function {
+fn assign_function_selector(function_selector: FunctionSelector) -> function_permissions::Function {
     match function_selector {
-        FunctionSelector::AllFunctions => {
-            function_permissions::Function::AllFunctions(All {})
-        }
+        FunctionSelector::AllFunctions => function_permissions::Function::AllFunctions(All {}),
         FunctionSelector::FunctionName { name } => {
             function_permissions::Function::FunctionSelector(permissions_type::FunctionSelector {
-                kind: Some(permissions_type::function_selector::Kind::FunctionName(name)),
+                kind: Some(permissions_type::function_selector::Kind::FunctionName(
+                    name,
+                )),
             })
         }
         FunctionSelector::FunctionNamePrefix { prefix } => {
             function_permissions::Function::FunctionSelector(permissions_type::FunctionSelector {
-                kind: Some(permissions_type::function_selector::Kind::FunctionNamePrefix(
-                    prefix,
-                )),
+                kind: Some(permissions_type::function_selector::Kind::FunctionNamePrefix(prefix)),
             })
         }
     }
