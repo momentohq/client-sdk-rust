@@ -1,7 +1,7 @@
 use momento_protos::permission_messages::{
     self, permissions,
     permissions_type::{
-        self, cache_item_selector, cache_permissions, cache_selector,
+        self, cache_item_selector, cache_permissions, cache_selector, function_permissions,
         topic_permissions::{self},
         topic_selector, All,
     },
@@ -15,8 +15,8 @@ use crate::{
             DisposableTokenScope,
         },
         permission_scope::{
-            CachePermission, CacheRole, CacheSelector, Permission, TopicPermission, TopicRole,
-            TopicSelector,
+            CachePermission, CacheRole, CacheSelector, FunctionPermission, FunctionRole,
+            FunctionSelector, Permission, TopicPermission, TopicRole, TopicSelector,
         },
     },
     IntoBytes,
@@ -54,6 +54,9 @@ fn token_permission_to_grpc_permission(permission: Permission) -> PermissionsTyp
     match permission {
         Permission::CachePermission(cache_perm) => cache_permission_to_grpc_permission(cache_perm),
         Permission::TopicPermission(topic_perm) => topic_permission_to_grpc_permission(topic_perm),
+        Permission::FunctionPermission(function_perm) => {
+            function_permission_to_grpc_permission(&function_perm)
+        }
     }
 }
 
@@ -160,6 +163,59 @@ fn disposable_token_permission_to_grpc_permission(
     };
     permission_messages::PermissionsType {
         kind: Some(permissions_type::Kind::CachePermissions(grpc_perm)),
+    }
+}
+
+fn assign_function_role(role: FunctionRole) -> permission_messages::FunctionRole {
+    match role {
+        FunctionRole::FunctionInvoke => permission_messages::FunctionRole::FunctionInvoke,
+        FunctionRole::FunctionPermitNone => permission_messages::FunctionRole::FunctionPermitNone,
+    }
+}
+
+fn assign_function_cache_selector(
+    cache_selector: CacheSelector,
+) -> function_permissions::Cache {
+    match cache_selector {
+        CacheSelector::AllCaches => function_permissions::Cache::AllCaches(All {}),
+        CacheSelector::CacheName { name } => {
+            function_permissions::Cache::CacheSelector(permissions_type::CacheSelector {
+                kind: Some(cache_selector::Kind::CacheName(name)),
+            })
+        }
+    }
+}
+
+fn assign_function_selector(
+    function_selector: FunctionSelector,
+) -> function_permissions::Function {
+    match function_selector {
+        FunctionSelector::AllFunctions => {
+            function_permissions::Function::AllFunctions(All {})
+        }
+        FunctionSelector::FunctionName { name } => {
+            function_permissions::Function::FunctionSelector(permissions_type::FunctionSelector {
+                kind: Some(permissions_type::function_selector::Kind::FunctionName(name)),
+            })
+        }
+        FunctionSelector::FunctionNamePrefix { prefix } => {
+            function_permissions::Function::FunctionSelector(permissions_type::FunctionSelector {
+                kind: Some(permissions_type::function_selector::Kind::FunctionNamePrefix(
+                    prefix,
+                )),
+            })
+        }
+    }
+}
+
+fn function_permission_to_grpc_permission(permission: &FunctionPermission) -> PermissionsType {
+    let grpc_perm = permissions_type::FunctionPermissions {
+        role: assign_function_role(permission.role.clone()).into(),
+        cache: Some(assign_function_cache_selector(permission.cache.clone())),
+        function: Some(assign_function_selector(permission.func.clone())),
+    };
+    permission_messages::PermissionsType {
+        kind: Some(permissions_type::Kind::FunctionPermissions(grpc_perm)),
     }
 }
 
@@ -447,5 +503,101 @@ mod tests {
 
         let converted_permissions = permissions_from_disposable_token_scope(sdk_permissions);
         assert_eq!(converted_permissions, grpc_permissions);
+    }
+
+    mod function_permission_tests {
+        use super::*;
+        use crate::auth::permissions::permission_scope::{
+            FunctionPermission, FunctionRole, FunctionSelector,
+        };
+
+        #[test]
+        fn test_function_permission_to_grpc() {
+            let perm = FunctionPermission {
+                role: FunctionRole::FunctionInvoke,
+                cache: CacheSelector::CacheName {
+                    name: "test-cache".to_string(),
+                },
+                func: FunctionSelector::FunctionName {
+                    name: "test-function".to_string(),
+                },
+            };
+
+            let grpc_perm = function_permission_to_grpc_permission(&perm);
+
+            // Verify it's the right variant
+            match grpc_perm.kind {
+                Some(permission_messages::permissions_type::Kind::FunctionPermissions(fp)) => {
+                    assert_eq!(
+                        fp.role,
+                        permission_messages::FunctionRole::FunctionInvoke as i32
+                    );
+                    // Verify cache is set to CacheSelector variant
+                    assert!(matches!(
+                        fp.cache,
+                        Some(function_permissions::Cache::CacheSelector(_))
+                    ));
+                    // Verify function is set to FunctionSelector variant
+                    assert!(matches!(
+                        fp.function,
+                        Some(function_permissions::Function::FunctionSelector(_))
+                    ));
+                }
+                _ => panic!("Expected FunctionPermissions variant"),
+            }
+        }
+
+        #[test]
+        fn test_function_permission_all_caches_all_functions() {
+            let perm = FunctionPermission {
+                role: FunctionRole::FunctionInvoke,
+                cache: CacheSelector::AllCaches,
+                func: FunctionSelector::AllFunctions,
+            };
+
+            let grpc_perm = function_permission_to_grpc_permission(&perm);
+
+            match grpc_perm.kind {
+                Some(permission_messages::permissions_type::Kind::FunctionPermissions(fp)) => {
+                    // Verify cache is set to AllCaches variant
+                    assert!(matches!(
+                        fp.cache,
+                        Some(function_permissions::Cache::AllCaches(_))
+                    ));
+                    // Verify function is set to AllFunctions variant
+                    assert!(matches!(
+                        fp.function,
+                        Some(function_permissions::Function::AllFunctions(_))
+                    ));
+                }
+                _ => panic!("Expected FunctionPermissions variant"),
+            }
+        }
+
+        #[test]
+        fn test_function_permission_prefix_selector() {
+            let perm = FunctionPermission {
+                role: FunctionRole::FunctionInvoke,
+                cache: CacheSelector::CacheName {
+                    name: "cache".to_string(),
+                },
+                func: FunctionSelector::FunctionNamePrefix {
+                    prefix: "prefix-".to_string(),
+                },
+            };
+
+            let grpc_perm = function_permission_to_grpc_permission(&perm);
+
+            match grpc_perm.kind {
+                Some(permission_messages::permissions_type::Kind::FunctionPermissions(fp)) => {
+                    // Verify function selector is present
+                    assert!(matches!(
+                        fp.function,
+                        Some(function_permissions::Function::FunctionSelector(_))
+                    ));
+                }
+                _ => panic!("Expected FunctionPermissions variant"),
+            }
+        }
     }
 }
