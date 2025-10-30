@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.56.0](https://github.com/momentohq/client-sdk-rust/compare/v0.55.0...v0.56.0) (2025-10-30)
+
+
+### Features
+
+* support tls endpoint override without address refresh ([#496](https://github.com/momentohq/client-sdk-rust/issues/496)) ([9984a57](https://github.com/momentohq/client-sdk-rust/commit/9984a5778a433f7be30b6d222eb9521a5ec412ad))
+
 ## [0.55.0](https://github.com/momentohq/client-sdk-rust/compare/v0.54.3...v0.55.0) (2025-10-20)
 
 
