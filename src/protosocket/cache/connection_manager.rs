@@ -1,18 +1,9 @@
-use std::{
-    convert::TryFrom,
-    str::FromStr,
-    sync::{
-        atomic::{AtomicBool, AtomicUsize},
-        Arc,
-    },
-    time::Duration,
-};
-
 use crate::{
     credential_provider::EndpointSecurity,
     protosocket::cache::{address_provider::AddressProvider, cache_client_builder::Serializer},
     CredentialProvider,
 };
+use http::Uri;
 use momento_protos::protosocket::cache::{
     cache_command::RpcKind, cache_response::Kind, unary::Command, AuthenticateCommand,
     AuthenticateResponse, CacheCommand, CacheResponse, Unary,
@@ -24,6 +15,15 @@ use protosocket_rpc::{
     ProtosocketControlCode,
 };
 use rustls_pki_types::ServerName;
+use std::{
+    convert::TryFrom,
+    str::FromStr,
+    sync::{
+        atomic::{AtomicBool, AtomicUsize},
+        Arc,
+    },
+    time::Duration,
+};
 
 use crate::{MomentoError, MomentoResult};
 
@@ -47,7 +47,7 @@ pub(crate) struct ProtosocketConnectionManager {
     runtime: tokio::runtime::Handle,
     hostname: String,
     address_provider: Arc<AddressProvider>,
-    _background_address_loader: Arc<BackgroundAddressLoader>,
+    _background_address_loader: Option<Arc<BackgroundAddressLoader>>,
     az_id: Option<String>,
     connection_sequence: Arc<AtomicUsize>,
 }
@@ -64,50 +64,47 @@ impl ProtosocketConnectionManager {
         runtime: tokio::runtime::Handle,
         az_id: Option<String>,
     ) -> MomentoResult<Self> {
-        let endpoint = match http::Uri::from_str(&credential_provider.cache_endpoint) {
-            Ok(endpoint) => endpoint,
-            Err(e) => {
-                return Err(MomentoError::unknown_error(
+        let hostname = Uri::from_str(&credential_provider.tls_cache_endpoint)
+            .ok()
+            .and_then(|uri| uri.host().map(|h| h.to_string()))
+            .ok_or_else(|| {
+                MomentoError::unknown_error(
                     "protosocket_connection_manager::new",
                     Some(format!(
-                        "Error parsing endpoint URI from credential provider: {}: {:?}",
-                        &credential_provider.cache_endpoint, e
+                        "Could not parse TLS endpoint: {}",
+                        &credential_provider.tls_cache_endpoint
                     )),
-                ));
-            }
-        };
-
-        let hostname = match endpoint.host() {
-            Some(hostname) => hostname.to_string(),
-            None => {
-                return Err(MomentoError::unknown_error(
-                    "protosocket_connection_manager::new",
-                    Some(format!(
-                        "Could not extract hostname from endpoint URI: {}",
-                        &credential_provider.cache_endpoint
-                    )),
-                ));
-            }
-        };
+                )
+            })?;
 
         let address_provider = Arc::new(AddressProvider::new(credential_provider.clone()));
-        let alive = Arc::new(AtomicBool::new(true));
 
-        let background_address_task = runtime.spawn(refresh_addresses_forever(
-            alive.clone(),
-            address_provider.clone(),
-            Duration::from_secs(30),
-        ));
+        let background_address_loader = match credential_provider.endpoint_security {
+            EndpointSecurity::Tls => {
+                log::debug!("spawning address refresh task for TLS endpoint");
+                let alive = Arc::new(AtomicBool::new(true));
+                let background_address_task = runtime.spawn(refresh_addresses_forever(
+                    alive.clone(),
+                    address_provider.clone(),
+                    Duration::from_secs(30),
+                ));
+                Some(Arc::new(BackgroundAddressLoader {
+                    alive,
+                    _join_handle: background_address_task,
+                }))
+            }
+            _ => {
+                log::debug!("Skipping address refresh task because the endpoint is overridden");
+                None
+            }
+        };
 
         Ok(Self {
             credential_provider,
             runtime,
             hostname,
             address_provider,
-            _background_address_loader: Arc::new(BackgroundAddressLoader {
-                alive,
-                _join_handle: background_address_task,
-            }),
+            _background_address_loader: background_address_loader,
             az_id,
             connection_sequence: Default::default(),
         })
@@ -124,6 +121,7 @@ impl ClientConnector for ProtosocketConnectionManager {
     {
         let address = match self.credential_provider.endpoint_security {
             EndpointSecurity::Tls => {
+                log::debug!("selecting address from address provider for TLS endpoint");
                 if self
                     .address_provider
                     .get_addresses()
@@ -152,19 +150,21 @@ impl ClientConnector for ProtosocketConnectionManager {
                     .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
                     % addresses.len()]
             }
-            _ => self
-                .credential_provider
-                .cache_endpoint
-                .parse()
-                .map_err(|e| {
-                    protosocket_rpc::Error::IoFailure(
-                        std::io::Error::other(format!(
-                            "could not parse address from endpoint: {}: {:?}",
-                            &self.credential_provider.cache_endpoint, e
-                        ))
-                        .into(),
-                    )
-                })?,
+            _ => {
+                log::debug!("using endpoint address directly for endpoint override");
+                self.credential_provider
+                    .cache_endpoint
+                    .parse()
+                    .map_err(|e| {
+                        protosocket_rpc::Error::IoFailure(
+                            std::io::Error::other(format!(
+                                "could not parse address from endpoint: {}: {:?}",
+                                &self.credential_provider.cache_endpoint, e
+                            ))
+                            .into(),
+                        )
+                    })?
+            }
         };
         log::debug!("connecting over protosocket to {address}");
 
@@ -191,6 +191,7 @@ impl ClientConnector for ProtosocketConnectionManager {
                 std::io::Error::other(format!("could not authenticate {e:?}")).into(),
             )
         })?;
+        log::debug!("successfully created and authenticated protosocket client");
         Ok(client)
     }
 }
@@ -198,7 +199,7 @@ impl ClientConnector for ProtosocketConnectionManager {
 async fn refresh_addresses_forever(
     alive: Arc<AtomicBool>,
     address_provider: Arc<AddressProvider>,
-    interval: std::time::Duration,
+    interval: Duration,
 ) {
     let mut interval = tokio::time::interval(interval);
     interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
@@ -225,7 +226,7 @@ async fn create_protosocket_connection(
     hostname: &str,
 ) -> MomentoResult<protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>> {
     match credential_provider.endpoint_security {
-        EndpointSecurity::Tls => {
+        EndpointSecurity::Tls | EndpointSecurity::TlsOverride => {
             log::debug!("creating TLS connection to {address}");
             let server_name = ServerName::try_from(hostname.to_string()).map_err(|_| {
                 MomentoError::unknown_error(
@@ -237,6 +238,7 @@ async fn create_protosocket_connection(
                 )
             })?;
             let connector = WebpkiTlsStreamConnector::new(server_name);
+            log::debug!("created TLS connector for server name: {}", hostname);
             create_connection_with_connector(address, connector, runtime).await
         }
         EndpointSecurity::Unverified => {
@@ -271,11 +273,13 @@ async fn create_connection_with_connector<C>(
 where
     C: protosocket_rpc::client::StreamConnector + Send + 'static,
 {
+    log::debug!("connector: {:?}", connector);
     let (client, connection) = protosocket_rpc::client::connect::<Serializer, Serializer, C>(
         address,
         &protosocket_rpc::client::Configuration::new(connector),
     )
     .await?;
+    log::debug!("created protosocket client connection");
 
     // SDK expects to be run on a Tokio runtime, so we can go ahead and spawn a driver
     // task into the provided Tokio runtime to continually process protosocket requests.
