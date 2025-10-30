@@ -137,7 +137,7 @@ impl CredentialProvider {
     }
 
     /// Overrides the base endpoint. The control, cache, and token endpoints will be set to
-    /// control.<supplied endpoint>, cache.<supplied endpoint>, token.<supplied endpoint>, etc.
+    /// control.{supplied endpoint}, cache.{supplied endpoint}, token.{supplied endpoint}, etc.
     ///
     /// Does not change the endpoint security type, so connections will still be established
     /// using TLS by default. gRPC connections will use the new endpoints and protosocket
