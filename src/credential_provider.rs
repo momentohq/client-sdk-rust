@@ -136,30 +136,56 @@ impl CredentialProvider {
         decode_auth_token(token_to_process)
     }
 
-    /// Allows the user to override the base endpoint for the control, cache, and token endpoints
+    /// Overrides the base endpoint. The control, cache, and token endpoints will be set to
+    /// control.<supplied endpoint>, cache.<supplied endpoint>, token.<supplied endpoint>, etc.
+    ///
+    /// Does not change the endpoint security type, so connections will still be established
+    /// using TLS by default. gRPC connections will use the new endpoints and protosocket
+    /// connections will use the new cache http endpoint to look up addresses to connect to.
     pub fn base_endpoint(mut self, endpoint: &str) -> CredentialProvider {
         self.control_endpoint = https_endpoint(get_control_endpoint(endpoint));
         self.cache_endpoint = https_endpoint(get_cache_endpoint(endpoint));
+        self.cache_http_endpoint = https_endpoint(get_cache_http_endpoint(endpoint));
         self.token_endpoint = https_endpoint(get_token_endpoint(endpoint));
         self
     }
 
-    /// Allows the user to override the full endpoint for the control, cache, and token endpoints
+    /// Overrides the control, cache, and token endpoints with the supplied endpoint. They will all
+    /// be equal to each other once this is done.
+    ///
+    /// Does not change the endpoint security type, so connections will still be established
+    /// using TLS by default. gRPC connections will use the new endpoints and protosocket
+    /// connections will use the new cache http endpoint to look up addresses to connect to.
     pub fn full_endpoint_override(self, endpoint: &str) -> CredentialProvider {
         self.endpoint_override(endpoint, None)
     }
 
-    /// Allows the user to override the full endpoint for the control, cache, and token endpoints
+    /// Overrides the control, cache, and token endpoints with the supplied endpoint. They will all
+    /// be equal to each other once this is done.
+    ///
+    /// Changes the endpoint security type to TlsOverride. TLS will still use the endpoint from the
+    /// API key. gRPC connections will use the new endpoints and protosocket connections will
+    /// use the new endpoints directly instead of looking up addresses.
     pub fn secure_endpoint_override(self, endpoint: &str) -> CredentialProvider {
         self.endpoint_override(endpoint, Some(EndpointSecurity::TlsOverride))
     }
 
-    /// Allows the user to set a non-TLS endpoint for the control, cache, and token endpoints
+    /// Overrides the control, cache, and token endpoints with the supplied endpoint. They will all
+    /// be equal to each other once this is done.
+    ///
+    /// Changes the endpoint security type to Insecure. TLS will not be used when establishing
+    /// connections to Momento. gRPC connections will use the new endpoints and protosocket
+    /// connections will use the new endpoints directly instead of looking up addresses.
     pub fn insecure_endpoint_override(self, endpoint: &str) -> CredentialProvider {
         self.endpoint_override(endpoint, Some(EndpointSecurity::Insecure))
     }
 
-    /// Allows the user to set an unverified TLS endpoint for the control, cache, and token endpoints
+    /// Overrides the control, cache, and token endpoints with the supplied endpoint. They will all
+    /// be equal to each other once this is done.
+    ///
+    /// Changes the endpoint security type to Unverified. Connections will be established using a
+    /// self-signed TLS certificate. gRPC connections will use the new endpoints and protosocket
+    /// connections will use the new endpoints directly instead of looking up addresses.
     pub fn unverified_tls_endpoint_override(self, endpoint: &str) -> CredentialProvider {
         self.endpoint_override(endpoint, Some(EndpointSecurity::Unverified))
     }
@@ -171,6 +197,7 @@ impl CredentialProvider {
     ) -> CredentialProvider {
         self.control_endpoint = endpoint.to_string();
         self.cache_endpoint = endpoint.to_string();
+        self.cache_http_endpoint = endpoint.to_string();
         self.token_endpoint = endpoint.to_string();
         if let Some(es) = endpoint_security {
             self.endpoint_security = es
@@ -322,6 +349,10 @@ mod tests {
         let credential_provider =
             CredentialProvider::from_string(v1_token)?.base_endpoint("foo.com");
         assert_eq!("https://cache.foo.com", credential_provider.cache_endpoint);
+        assert_eq!(
+            "https://api.cache.foo.com",
+            credential_provider.cache_http_endpoint
+        );
         assert_eq!(
             "https://control.foo.com",
             credential_provider.control_endpoint
