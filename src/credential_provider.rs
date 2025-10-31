@@ -196,6 +196,7 @@ impl CredentialProvider {
     /// addresses to connect to.
     pub fn with_private_endpoints(mut self) -> CredentialProvider {
         self.use_private_endpoints = true;
+        self.endpoint_security = EndpointSecurity::TlsOverride;
         self
     }
 
