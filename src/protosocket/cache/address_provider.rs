@@ -92,14 +92,28 @@ impl AddressProvider {
     pub async fn try_refresh_addresses(&self) -> Result<(), RefreshError> {
         match self.credential_provider.endpoint_security {
             crate::credential_provider::EndpointSecurity::Tls => {
-                let request = self
-                    .client
-                    .get(format!(
+                log::debug!(
+                    "refreshing address list with private endpoints? {}",
+                    self.credential_provider.use_private_endpoints
+                );
+                let url = if self.credential_provider.use_private_endpoints {
+                    format!(
+                        "{}/endpoints?private=true",
+                        self.credential_provider
+                            .cache_http_endpoint
+                            .trim_end_matches('/')
+                    )
+                } else {
+                    format!(
                         "{}/endpoints",
                         self.credential_provider
-                            .cache_http_endpoint()
+                            .cache_http_endpoint
                             .trim_end_matches('/')
-                    ))
+                    )
+                };
+                let request = self
+                    .client
+                    .get(url)
                     .header("authorization", &self.credential_provider.auth_token)
                     .build()?;
                 let response = self.client.execute(request).await?;

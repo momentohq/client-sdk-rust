@@ -30,6 +30,7 @@ pub struct CredentialProvider {
     pub(crate) cache_http_endpoint: String,
     pub(crate) token_endpoint: String,
     pub(crate) endpoint_security: EndpointSecurity,
+    pub(crate) use_private_endpoints: bool,
 }
 
 impl Display for CredentialProvider {
@@ -51,6 +52,7 @@ impl Debug for CredentialProvider {
             .field("control_endpoint", &self.control_endpoint)
             .field("token_endpoint", &self.token_endpoint)
             .field("endpoint_security", &self.endpoint_security)
+            .field("use_private_endpoints", &self.use_private_endpoints)
             .finish()
     }
 }
@@ -190,6 +192,13 @@ impl CredentialProvider {
         self.endpoint_override(endpoint, Some(EndpointSecurity::Unverified))
     }
 
+    /// Directs the ProtosocketCacheClient to look up private endpoints when discovering
+    /// addresses to connect to.
+    pub fn with_private_endpoints(mut self) -> CredentialProvider {
+        self.use_private_endpoints = true;
+        self
+    }
+
     fn endpoint_override(
         mut self,
         endpoint: &str,
@@ -226,6 +235,7 @@ fn process_v1_token(auth_token_bytes: Vec<u8>) -> MomentoResult<CredentialProvid
         control_endpoint: https_endpoint(get_control_endpoint(&json.endpoint)),
         token_endpoint: https_endpoint(get_token_endpoint(&json.endpoint)),
         endpoint_security: EndpointSecurity::Tls,
+        use_private_endpoints: false,
     })
 }
 
