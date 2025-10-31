@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.57.0](https://github.com/momentohq/client-sdk-rust/compare/v0.56.0...v0.57.0) (2025-10-31)
+
+
+### Features
+
+* add with_private_endpoints config option ([#500](https://github.com/momentohq/client-sdk-rust/issues/500)) ([d1efe2a](https://github.com/momentohq/client-sdk-rust/commit/d1efe2a29a8995ee5932ced71dff31eb1024419c))
+
 ## [0.56.0](https://github.com/momentohq/client-sdk-rust/compare/v0.55.0...v0.56.0) (2025-10-30)
 
 
