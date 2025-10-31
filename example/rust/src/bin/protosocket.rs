@@ -39,7 +39,7 @@ async fn main() -> Result<(), MomentoError> {
     };
 
     // Assumes this cache exists already -- you can make one in the Momento Console
-    let cache_name = "protosocket-loadgen";
+    let cache_name = "cache";
 
     // First get should result in a miss
     match cache_client.get(cache_name, "key").await {
