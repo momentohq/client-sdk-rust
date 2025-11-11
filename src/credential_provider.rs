@@ -194,16 +194,15 @@ impl CredentialProvider {
         self.endpoint_override(endpoint, Some(EndpointSecurity::Unverified))
     }
 
-    // This method ensures the endpoint is used with port 9004 when no port is specified
+    /// Overrides the control, cache, and token endpoints with the default endpoint that points to port 9004. They will all
+    /// be equal to each other once this is done.
     pub fn direct_endpoint_override(self) -> CredentialProvider {
         let mut endpoint = self.cache_endpoint.clone();
-        let cleaned_endpoint = if endpoint.starts_with("https://") {
-            endpoint[8..].to_string() // Remove 'https://'
-        } else {
-            endpoint.clone()
-        };
+        let cleaned_endpoint = endpoint
+            .strip_prefix("https://")
+            .unwrap_or(&endpoint)
+            .to_string();
         endpoint = cleaned_endpoint;
-        // Append :9004 if no port is specified in the cache_http_endpoint
         endpoint.push_str(":9004"); // Default behavior: append :9004 if no port is specified
         self.secure_endpoint_override(&endpoint)
     }
