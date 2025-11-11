@@ -31,6 +31,7 @@ pub struct CredentialProvider {
     pub(crate) token_endpoint: String,
     pub(crate) endpoint_security: EndpointSecurity,
     pub(crate) use_private_endpoints: bool,
+    pub(crate) use_endpoints: bool,
 }
 
 impl Display for CredentialProvider {
@@ -53,6 +54,7 @@ impl Debug for CredentialProvider {
             .field("token_endpoint", &self.token_endpoint)
             .field("endpoint_security", &self.endpoint_security)
             .field("use_private_endpoints", &self.use_private_endpoints)
+            .field("use_endpoints", &self.use_endpoints)
             .finish()
     }
 }
@@ -93,6 +95,9 @@ impl CredentialProvider {
     /// Returns the hostname that can be used with momento HTTP apis
     pub fn cache_http_endpoint(&self) -> &str {
         &self.cache_http_endpoint
+    }
+    pub fn cache_endpoint(&self) -> &str {
+        &self.cache_endpoint
     }
 
     /// Returns a Credential Provider from the provided API key
@@ -199,6 +204,12 @@ impl CredentialProvider {
         self
     }
 
+    pub fn with_endpoints(mut self) -> CredentialProvider {
+        self.use_private_endpoints = false;
+        self.use_endpoints = true;
+        self
+    }
+
     fn endpoint_override(
         mut self,
         endpoint: &str,
@@ -236,6 +247,7 @@ fn process_v1_token(auth_token_bytes: Vec<u8>) -> MomentoResult<CredentialProvid
         token_endpoint: https_endpoint(get_token_endpoint(&json.endpoint)),
         endpoint_security: EndpointSecurity::Tls,
         use_private_endpoints: false,
+        use_endpoints: false,
     })
 }
 
