@@ -103,23 +103,14 @@ impl AddressProvider {
                             .cache_http_endpoint
                             .trim_end_matches('/')
                     )
-                } else if self.credential_provider.use_endpoints {
+                } else {
                     format!(
                         "{}/endpoints",
                         self.credential_provider
                             .cache_http_endpoint
                             .trim_end_matches('/')
                     )
-                } else {
-                    let mut url = self
-                        .credential_provider
-                        .cache_endpoint
-                        .trim_end_matches('/')
-                        .to_string();
-                    url.push_str(":9004");
-                    url
                 };
-                println!("Using API URL: {}", url);
                 let request = self
                     .client
                     .get(url)
