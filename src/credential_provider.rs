@@ -96,9 +96,6 @@ impl CredentialProvider {
     pub fn cache_http_endpoint(&self) -> &str {
         &self.cache_http_endpoint
     }
-    pub fn cache_endpoint(&self) -> &str {
-        &self.cache_endpoint
-    }
 
     /// Returns a Credential Provider from the provided API key
     ///
@@ -203,7 +200,8 @@ impl CredentialProvider {
         self.use_private_endpoints = true;
         self
     }
-
+    /// Directs the ProtosocketCacheClient to look up public endpoints when discovering
+    /// addresses to connect to.
     pub fn with_endpoints(mut self) -> CredentialProvider {
         self.use_private_endpoints = false;
         self.use_endpoints = true;
