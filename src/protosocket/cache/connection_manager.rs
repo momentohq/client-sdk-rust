@@ -5,7 +5,7 @@ use crate::{
 };
 use http::Uri;
 use momento_protos::protosocket::cache::{
-    cache_command::RpcKind, cache_response::Kind, unary::Command, AuthenticateCommand,
+    self, cache_command::RpcKind, cache_response::Kind, unary::Command, AuthenticateCommand,
     AuthenticateResponse, CacheCommand, CacheResponse, Unary,
 };
 use protosocket_rpc::{
@@ -117,46 +117,15 @@ impl ClientConnector for ProtosocketConnectionManager {
     type Response = CacheResponse;
 
     async fn connect(
-        mut self,
+        self,
     ) -> protosocket_rpc::Result<protosocket_rpc::client::RpcClient<Self::Request, Self::Response>>
     {
         let address = match self.credential_provider.endpoint_security {
             EndpointSecurity::Tls => {
                 log::debug!("selecting address from address provider for TLS endpoint");
                 //for default behavior
-                if self.credential_provider.is_default {
+                if self.credential_provider.is_override {
                     // Use the modified cache_endpoint with :9004 appended and https:// prefix removed
-                    self.credential_provider.cache_endpoint = self
-                        .credential_provider
-                        .cache_endpoint
-                        .strip_prefix("https://")
-                        .unwrap_or(&self.credential_provider.cache_endpoint)
-                        .to_string();
-                    self.credential_provider.cache_endpoint.push_str(":9004");
-
-                    self.credential_provider
-                        .cache_endpoint
-                        .to_socket_addrs()
-                        .map_err(|e| {
-                            protosocket_rpc::Error::IoFailure(
-                                std::io::Error::other(format!(
-                                    "could not parse address from endpoint: {}: {:?}",
-                                    &self.credential_provider.cache_endpoint, e
-                                ))
-                                .into(),
-                            )
-                        })?
-                        .next()
-                        .ok_or_else(|| {
-                            protosocket_rpc::Error::IoFailure(
-                                std::io::Error::new(
-                                    std::io::ErrorKind::AddrNotAvailable,
-                                    "No addresses available from address provider",
-                                )
-                                .into(),
-                            )
-                        })?
-                } else {
                     if self
                         .address_provider
                         .get_addresses()
@@ -184,6 +153,36 @@ impl ClientConnector for ProtosocketConnectionManager {
                         .connection_sequence
                         .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
                         % addresses.len()]
+                } else {
+                    let mut cache_endpoint = self
+                        .credential_provider
+                        .cache_endpoint
+                        .strip_prefix("https://")
+                        .unwrap_or(&self.credential_provider.cache_endpoint)
+                        .to_string();
+                    cache_endpoint.push_str(":9004");
+
+                    cache_endpoint
+                        .to_socket_addrs()
+                        .map_err(|e| {
+                            protosocket_rpc::Error::IoFailure(
+                                std::io::Error::other(format!(
+                                    "could not parse address from endpoint: {}: {:?}",
+                                    &self.credential_provider.cache_endpoint, e
+                                ))
+                                .into(),
+                            )
+                        })?
+                        .next()
+                        .ok_or_else(|| {
+                            protosocket_rpc::Error::IoFailure(
+                                std::io::Error::new(
+                                    std::io::ErrorKind::AddrNotAvailable,
+                                    "No addresses available from address provider",
+                                )
+                                .into(),
+                            )
+                        })?
                 }
             }
             _ => {

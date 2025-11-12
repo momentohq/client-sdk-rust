@@ -31,7 +31,7 @@ pub struct CredentialProvider {
     pub(crate) token_endpoint: String,
     pub(crate) endpoint_security: EndpointSecurity,
     pub(crate) use_private_endpoints: bool,
-    pub(crate) is_default: bool,
+    pub(crate) is_override: bool,
 }
 
 impl Display for CredentialProvider {
@@ -54,7 +54,7 @@ impl Debug for CredentialProvider {
             .field("token_endpoint", &self.token_endpoint)
             .field("endpoint_security", &self.endpoint_security)
             .field("use_private_endpoints", &self.use_private_endpoints)
-            .field("is_default", &self.is_default)
+            .field("is_override", &self.is_override)
             .finish()
     }
 }
@@ -198,14 +198,14 @@ impl CredentialProvider {
     /// addresses to connect to.
     pub fn with_private_endpoints(mut self) -> CredentialProvider {
         self.use_private_endpoints = true;
-        self.is_default = false;
+        self.is_override = true;
         self
     }
     /// Directs the ProtosocketCacheClient to look up public endpoints when discovering
     /// addresses to connect to.
     pub fn with_endpoints(mut self) -> CredentialProvider {
         self.use_private_endpoints = false;
-        self.is_default = false;
+        self.is_override = true;
         self
     }
 
@@ -246,7 +246,7 @@ fn process_v1_token(auth_token_bytes: Vec<u8>) -> MomentoResult<CredentialProvid
         token_endpoint: https_endpoint(get_token_endpoint(&json.endpoint)),
         endpoint_security: EndpointSecurity::Tls,
         use_private_endpoints: false,
-        is_default: true,
+        is_override: false,
     })
 }
 
