@@ -31,7 +31,7 @@ pub struct CredentialProvider {
     pub(crate) token_endpoint: String,
     pub(crate) endpoint_security: EndpointSecurity,
     pub(crate) use_private_endpoints: bool,
-    pub(crate) is_endpoint: bool,
+    pub(crate) is_default: bool,
 }
 
 impl Display for CredentialProvider {
@@ -54,7 +54,7 @@ impl Debug for CredentialProvider {
             .field("token_endpoint", &self.token_endpoint)
             .field("endpoint_security", &self.endpoint_security)
             .field("use_private_endpoints", &self.use_private_endpoints)
-            .field("is_endpoint", &self.is_endpoint)
+            .field("is_default", &self.is_default)
             .finish()
     }
 }
@@ -194,31 +194,18 @@ impl CredentialProvider {
         self.endpoint_override(endpoint, Some(EndpointSecurity::Unverified))
     }
 
-    /// Overrides the control, cache, and token endpoints with the default endpoint that points to port 9004. They will all
-    /// be equal to each other once this is done.
-    pub fn direct_endpoint_override(self) -> CredentialProvider {
-        let mut endpoint = self.cache_endpoint.clone();
-        let cleaned_endpoint = endpoint
-            .strip_prefix("https://")
-            .unwrap_or(&endpoint)
-            .to_string();
-        endpoint = cleaned_endpoint;
-        endpoint.push_str(":9004"); // Default behavior: append :9004 if no port is specified
-        self.secure_endpoint_override(&endpoint)
-    }
-
     /// Directs the ProtosocketCacheClient to look up private endpoints when discovering
     /// addresses to connect to.
     pub fn with_private_endpoints(mut self) -> CredentialProvider {
         self.use_private_endpoints = true;
-        self.is_endpoint = false;
+        self.is_default = false;
         self
     }
     /// Directs the ProtosocketCacheClient to look up public endpoints when discovering
     /// addresses to connect to.
     pub fn with_endpoints(mut self) -> CredentialProvider {
         self.use_private_endpoints = false;
-        self.is_endpoint = false;
+        self.is_default = false;
         self
     }
 
@@ -259,7 +246,7 @@ fn process_v1_token(auth_token_bytes: Vec<u8>) -> MomentoResult<CredentialProvid
         token_endpoint: https_endpoint(get_token_endpoint(&json.endpoint)),
         endpoint_security: EndpointSecurity::Tls,
         use_private_endpoints: false,
-        is_endpoint: true,
+        is_default: true,
     })
 }
 

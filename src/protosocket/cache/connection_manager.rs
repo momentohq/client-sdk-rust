@@ -117,17 +117,24 @@ impl ClientConnector for ProtosocketConnectionManager {
     type Response = CacheResponse;
 
     async fn connect(
-        self,
+        mut self,
     ) -> protosocket_rpc::Result<protosocket_rpc::client::RpcClient<Self::Request, Self::Response>>
     {
         let address = match self.credential_provider.endpoint_security {
             EndpointSecurity::Tls => {
                 log::debug!("selecting address from address provider for TLS endpoint");
-                if self.credential_provider.is_endpoint {
-                    // Use the modified cache_http_endpoint with :9004 appended (via direct_endpoint_override)
-                    let credential_provider =
-                        self.credential_provider.clone().direct_endpoint_override();
-                    credential_provider
+                //for default behavior
+                if self.credential_provider.is_default {
+                    // Use the modified cache_endpoint with :9004 appended and https:// prefix removed
+                    self.credential_provider.cache_endpoint = self
+                        .credential_provider
+                        .cache_endpoint
+                        .strip_prefix("https://")
+                        .unwrap_or(&self.credential_provider.cache_endpoint)
+                        .to_string();
+                    self.credential_provider.cache_endpoint.push_str(":9004");
+
+                    self.credential_provider
                         .cache_endpoint
                         .to_socket_addrs()
                         .map_err(|e| {
@@ -206,7 +213,6 @@ impl ClientConnector for ProtosocketConnectionManager {
             }
         };
         log::debug!("connecting over protosocket to {address}");
-        println!("Using endpoint: {}", address);
         let unauthenticated_client = create_protosocket_connection(
             self.credential_provider.clone(),
             self.runtime.clone(),
