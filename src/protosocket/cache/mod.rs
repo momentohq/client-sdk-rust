@@ -7,6 +7,7 @@ pub use cache_client_builder::{ProtosocketCacheClientBuilder, ReadyToBuild};
 mod config;
 pub use config::configuration::Configuration;
 pub use config::configurations;
+pub use config::connection_strategy::ConnectionStrategy;
 
 mod connection_manager;
 
