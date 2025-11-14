@@ -5,7 +5,7 @@ use crate::{
 };
 use http::Uri;
 use momento_protos::protosocket::cache::{
-    self, cache_command::RpcKind, cache_response::Kind, unary::Command, AuthenticateCommand,
+    cache_command::RpcKind, cache_response::Kind, unary::Command, AuthenticateCommand,
     AuthenticateResponse, CacheCommand, CacheResponse, Unary,
 };
 use protosocket_rpc::{
@@ -123,9 +123,7 @@ impl ClientConnector for ProtosocketConnectionManager {
         let address = match self.credential_provider.endpoint_security {
             EndpointSecurity::Tls => {
                 log::debug!("selecting address from address provider for TLS endpoint");
-                //for default behavior
-                if self.credential_provider.is_override {
-                    // Use the modified cache_endpoint with :9004 appended and https:// prefix removed
+                if self.credential_provider.is_tls_override {
                     if self
                         .address_provider
                         .get_addresses()
@@ -154,6 +152,7 @@ impl ClientConnector for ProtosocketConnectionManager {
                         .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
                         % addresses.len()]
                 } else {
+                    // Use the modified cache_endpoint with :9004 appended and https:// prefix removed
                     let mut cache_endpoint = self
                         .credential_provider
                         .cache_endpoint
