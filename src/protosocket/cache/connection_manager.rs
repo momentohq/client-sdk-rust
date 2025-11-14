@@ -123,7 +123,7 @@ impl ClientConnector for ProtosocketConnectionManager {
         let address = match self.credential_provider.endpoint_security {
             EndpointSecurity::Tls => {
                 log::debug!("selecting address from address provider for TLS endpoint");
-                if self.credential_provider.is_tls_override {
+                if self.credential_provider.use_endpoints_http_api {
                     if self
                         .address_provider
                         .get_addresses()
@@ -177,7 +177,10 @@ impl ClientConnector for ProtosocketConnectionManager {
                             protosocket_rpc::Error::IoFailure(
                                 std::io::Error::new(
                                     std::io::ErrorKind::AddrNotAvailable,
-                                    "No addresses available from address provider",
+                                    format!(
+                                        "Unable to connect: endpoint '{}' did not resolve.",
+                                        cache_endpoint
+                                    ),
                                 )
                                 .into(),
                             )
@@ -203,7 +206,7 @@ impl ClientConnector for ProtosocketConnectionManager {
                         protosocket_rpc::Error::IoFailure(
                             std::io::Error::new(
                                 std::io::ErrorKind::AddrNotAvailable,
-                                "No addresses available from address provider",
+                                "Failed to resolve endpoint hostname into a valid address",
                             )
                             .into(),
                         )
