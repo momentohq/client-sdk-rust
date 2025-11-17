@@ -14,7 +14,6 @@ async fn main() -> Result<(), MomentoError> {
 
     let credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
         .expect("auth token should be valid");
-    // .with_private_endpoints(); // use this if you want to connect to private endpoints instead of public ones
 
     let config = momento::protosocket::cache::Configuration::builder()
         .timeout(Duration::from_secs(60))
