@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.58.1](https://github.com/momentohq/client-sdk-rust/compare/v0.58.0...v0.58.1) (2025-11-18)
+
+
+### Bug Fixes
+
+* use latest protosocket libraries ([#509](https://github.com/momentohq/client-sdk-rust/issues/509)) ([f6df4d8](https://github.com/momentohq/client-sdk-rust/commit/f6df4d896fdc86898db736c6b1dabd63b081aa11))
+
 ## [0.58.0](https://github.com/momentohq/client-sdk-rust/compare/v0.57.0...v0.58.0) (2025-11-17)
 
 
