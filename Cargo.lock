@@ -1075,9 +1075,9 @@ dependencies = [
 
 [[package]]
 name = "momento-protos"
-version = "0.127.3"
+version = "0.127.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be2b09b8df95deb923a28d60506e3a8b37c7507046cdf9a367b470c75a5ddbff"
+checksum = "30ee93d06065842efd655784f5fa78f75e0865038f78a6d385236ae6c6838b2c"
 dependencies = [
  "prost",
  "protosocket-rpc",
@@ -1277,9 +1277,9 @@ dependencies = [
 
 [[package]]
 name = "protosocket"
-version = "0.11.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5fbf8b19016c53102de17972e1d069913029c684155c07fa62ad6c4928219081"
+checksum = "62d1f11b21e33dea20b9fd42f0832cdb13ab98f6fbf83bb38260027747f55dc5"
 dependencies = [
  "bytes",
  "futures",
@@ -1291,9 +1291,9 @@ dependencies = [
 
 [[package]]
 name = "protosocket-prost"
-version = "0.11.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ccde7a2d275d23e3450f5ff09da0b9faa5b33c31f00fa13a3cb93a85d7730d63"
+checksum = "3061ed45eea92f668ff46639a2b7b71c948a368c49f92a965b4b1e12b95a527b"
 dependencies = [
  "bytes",
  "log",
@@ -1305,9 +1305,9 @@ dependencies = [
 
 [[package]]
 name = "protosocket-rpc"
-version = "0.11.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f74c2a60d26c35244a8802659c130e8989aca23a5f2c65127a8d68448a8ca088"
+checksum = "44c39ac0bf30b8488a4d72a8d19d9c91214b2648883357f460b5ecd373e2e6f4"
 dependencies = [
  "futures",
  "k-lock",
@@ -1336,7 +1336,7 @@ dependencies = [
  "quinn-udp",
  "rustc-hash",
  "rustls",
- "socket2 0.5.10",
+ "socket2 0.6.0",
  "thiserror 2.0.12",
  "tokio",
  "tracing",
@@ -1373,9 +1373,9 @@ dependencies = [
  "cfg_aliases",
  "libc",
  "once_cell",
- "socket2 0.5.10",
+ "socket2 0.6.0",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
