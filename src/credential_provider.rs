@@ -140,6 +140,119 @@ impl CredentialProvider {
         decode_auth_token(token_to_process)
     }
 
+    /// Returns a Credential Provider from the provided global API key and endpoint.
+    ///
+    /// # Arguments
+    /// * `auth_token` - Momento global API key
+    /// * `endpoint` - Momento service endpoint
+    ///
+    /// # Examples
+    /// ```
+    /// # use momento::MomentoResult;
+    /// # fn main() -> () {
+    /// # tokio_test::block_on(async {
+    /// use momento::CredentialProvider;
+    ///
+    /// let api_key = "YOUR GLOBAL API KEY GOES HERE";
+    /// let endpoint = "YOUR MOMENTO ENDPOINT GOES HERE";
+    /// let credential_provider = CredentialProvider::global_key_from_string(api_key, endpoint);
+    /// # ()
+    /// # })
+    /// # }
+    /// ```
+    pub fn global_key_from_string(
+        auth_token: impl Into<String>,
+        endpoint: impl Into<String>,
+    ) -> MomentoResult<CredentialProvider> {
+        let auth_token = auth_token.into();
+        let endpoint = endpoint.into();
+
+        if auth_token.is_empty() {
+            return Err(MomentoError {
+                message: "Auth token string cannot be empty".into(),
+                error_code: MomentoErrorCode::InvalidArgumentError,
+                inner_error: None,
+            });
+        };
+
+        if endpoint.is_empty() {
+            return Err(MomentoError {
+                message: "Endpoint string cannot be empty".into(),
+                error_code: MomentoErrorCode::InvalidArgumentError,
+                inner_error: None,
+            });
+        };
+
+        Ok(CredentialProvider {
+            auth_token,
+            tls_cache_endpoint: https_endpoint(get_cache_endpoint(&endpoint)),
+            cache_endpoint: https_endpoint(get_cache_endpoint(&endpoint)),
+            cache_http_endpoint: https_endpoint(get_cache_http_endpoint(&endpoint)),
+            control_endpoint: https_endpoint(get_control_endpoint(&endpoint)),
+            token_endpoint: https_endpoint(get_token_endpoint(&endpoint)),
+            endpoint_security: EndpointSecurity::Tls,
+            use_private_endpoints: false,
+            use_endpoints_http_api: false,
+        })
+    }
+
+    /// Returns a Credential Provider using an API key stored in the specified
+    /// environment variable
+    ///
+    /// # Arguments
+    /// * `env_var_name` - Name of the environment variable to read token from
+    /// * `endpoint` - Momento service endpoint
+    ///
+    /// # Examples
+    /// ```
+    /// # use momento::MomentoResult;
+    /// # fn main() -> () {
+    /// # tokio_test::block_on(async {
+    /// use momento::CredentialProvider;
+    ///
+    /// let env_var_name = "YOUR ENV VAR NAME GOES HERE";
+    /// let endpoint = "YOUR MOMENTO ENDPOINT GOES HERE";
+    /// let credential_provider = CredentialProvider::global_key_from_env_var(env_var_name, endpoint);
+    /// # ()
+    /// # })
+    /// # }
+    /// ```
+    pub fn global_key_from_env_var(
+        env_var_name: impl Into<String>,
+        endpoint: impl Into<String>,
+    ) -> MomentoResult<CredentialProvider> {
+        let env_var_name = env_var_name.into();
+        if env_var_name.is_empty() {
+            return Err(MomentoError {
+                message: "Env var name cannot be empty".into(),
+                error_code: MomentoErrorCode::InvalidArgumentError,
+                inner_error: None,
+            });
+        };
+
+        let auth_token = match env::var(&env_var_name) {
+            Ok(auth_token) => {
+                if auth_token.is_empty() {
+                    return Err(MomentoError {
+                        message: format!("Env var {env_var_name} must be set"),
+                        error_code: MomentoErrorCode::InvalidArgumentError,
+                        inner_error: None,
+                    });
+                };
+                auth_token
+            }
+            Err(e) => {
+                return Err(MomentoError {
+                    message: format!("Env var {env_var_name} must be set"),
+                    error_code: MomentoErrorCode::InvalidArgumentError,
+                    inner_error: Some(crate::ErrorSource::Unknown(Box::new(e))),
+                });
+            }
+        };
+
+        CredentialProvider::global_key_from_string(auth_token, endpoint.into())
+    }
+
     /// Overrides the base endpoint. The control, cache, and token endpoints will be set to
     /// control.{supplied endpoint}, cache.{supplied endpoint}, token.{supplied endpoint}, etc.
     ///
@@ -391,5 +504,73 @@ mod tests {
         let _err_msg =
             "Could not parse token. Please ensure a valid token was entered correctly.".to_string();
         assert_eq!(e.to_string(), _err_msg);
+    }
+
+    #[test]
+    fn global_key_from_env_var() -> MomentoResult<()> {
+        let env_var_name = "MOMENTO_TEST_GLOBAL_API_KEY";
+        let api_key = "test_global_api_key";
+        let endpoint = "test_endpoint";
+        env::set_var(env_var_name, api_key);
+        let credential_provider =
+            CredentialProvider::global_key_from_env_var(env_var_name, endpoint)?;
+        assert!(credential_provider.auth_token == api_key);
+        assert!(credential_provider.cache_endpoint == "https://cache.test_endpoint");
+        assert!(credential_provider.control_endpoint == "https://control.test_endpoint");
+        assert!(credential_provider.token_endpoint == "https://token.test_endpoint");
+        assert!(credential_provider.cache_http_endpoint == "https://api.cache.test_endpoint");
+        Ok(())
+    }
+
+    #[test]
+    fn global_key_from_string() -> MomentoResult<()> {
+        let api_key = "test_global_api_key";
+        let endpoint = "test_endpoint";
+        let credential_provider = CredentialProvider::global_key_from_string(api_key, endpoint)?;
+        assert!(credential_provider.auth_token == api_key);
+        assert!(credential_provider.cache_endpoint == "https://cache.test_endpoint");
+        assert!(credential_provider.control_endpoint == "https://control.test_endpoint");
+        assert!(credential_provider.token_endpoint == "https://token.test_endpoint");
+        assert!(credential_provider.cache_http_endpoint == "https://api.cache.test_endpoint");
+        Ok(())
+    }
+
+    #[test]
+    fn global_from_string_empty_arguments() {
+        let api_key = "test_global_api_key";
+        let endpoint = "test_endpoint";
+
+        let empty_endpoint_err =
+            CredentialProvider::global_key_from_string(api_key, "").unwrap_err();
+        let _err_msg = "Endpoint string cannot be empty".to_owned();
+        assert_eq!(empty_endpoint_err.to_string(), _err_msg);
+
+        let empty_key_err = CredentialProvider::global_key_from_string("", endpoint).unwrap_err();
+        let _err_msg = "Auth token string cannot be empty".to_owned();
+        assert_eq!(empty_key_err.to_string(), _err_msg);
+    }
+
+    #[test]
+    fn global_from_env_var_empty_arguments() {
+        let env_var_name = "MOMENTO_TEST_GLOBAL_API_KEY";
+        let api_key = "test_global_api_key";
+        let endpoint = "test_endpoint";
+        env::set_var(env_var_name, api_key);
+
+        let empty_endpoint_err =
+            CredentialProvider::global_key_from_env_var(env_var_name, "").unwrap_err();
+        let _err_msg = "Endpoint string cannot be empty".to_owned();
+        assert_eq!(empty_endpoint_err.to_string(), _err_msg);
+
+        let empty_env_var_name_err =
+            CredentialProvider::global_key_from_env_var("", endpoint).unwrap_err();
+        let _err_msg = "Env var name cannot be empty".to_owned();
+        assert_eq!(empty_env_var_name_err.to_string(), _err_msg);
+
+        env::set_var(env_var_name, "");
+        let empty_env_var_err =
+            CredentialProvider::global_key_from_env_var(env_var_name, endpoint).unwrap_err();
+        let _err_msg = "Env var MOMENTO_TEST_GLOBAL_API_KEY must be set".to_owned();
+        assert_eq!(empty_env_var_err.to_string(), _err_msg);
     }
 }
