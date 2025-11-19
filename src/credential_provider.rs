@@ -173,9 +173,9 @@ impl CredentialProvider {
     /// use momento::GlobalKeyFromStringProps;
     ///
     /// let props = GlobalKeyFromStringProps {
-    ///    api_key: "YOUR GLOBAL API KEY",
-    ///   endpoint: "YOUR MOMENTO ENDPOINT",
-    /// }
+    ///    api_key: "YOUR GLOBAL API KEY".to_string(),
+    ///   endpoint: "YOUR MOMENTO ENDPOINT".to_string(),
+    /// };
     /// let credential_provider = CredentialProvider::global_key_from_string(props);
     /// # ()
     /// # })
@@ -232,8 +232,8 @@ impl CredentialProvider {
     /// use momento::GlobalKeyFromEnvVarProps;
     ///
     /// let props = GlobalKeyFromEnvVarProps {
-    ///    env_var_name: "YOUR ENV VAR NAME GOES HERE",
-    ///    endpoint: "YOUR MOMENTO ENDPOINT GOES HERE",
+    ///    env_var_name: "YOUR ENV VAR NAME GOES HERE".to_string(),
+    ///    endpoint: "YOUR MOMENTO ENDPOINT GOES HERE".to_string(),
     /// };
     /// let credential_provider = CredentialProvider::global_key_from_env_var(props);
     /// # ()
