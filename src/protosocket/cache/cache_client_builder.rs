@@ -1,10 +1,12 @@
+use crate::protosocket::cache::address_provider::AddressProvider;
 use crate::protosocket::cache::connection_manager::ProtosocketConnectionManager;
+use crate::protosocket::cache::connection_pool::ConnectionPool;
 use crate::protosocket::cache::Configuration;
 use crate::{CredentialProvider, MomentoResult, ProtosocketCacheClient};
 use momento_protos::protosocket::cache::CacheCommand;
 use momento_protos::protosocket::cache::CacheResponse;
 use protosocket_prost::ProstSerializer;
-use protosocket_rpc::client::ConnectionPool;
+use std::sync::Arc;
 use std::time::Duration;
 
 pub type Serializer = ProstSerializer<CacheResponse, CacheCommand>;
@@ -124,13 +126,18 @@ impl ProtosocketCacheClientBuilder<ReadyToBuild> {
             runtime,
             configuration,
         } = self.state;
-        let client_connector = ProtosocketConnectionManager::new(
-            credential_provider,
-            runtime,
-            configuration.az_id.clone(),
-        )?;
+        let client_connector =
+            ProtosocketConnectionManager::new(credential_provider.clone(), runtime.clone())?;
 
-        let client_pool = ConnectionPool::new(client_connector, configuration.connection_count());
+        let address_provider = AddressProvider::new(credential_provider, runtime).await?;
+
+        let client_pool = ConnectionPool::new(
+            client_connector,
+            configuration.connection_count,
+            Arc::new(address_provider),
+            configuration.az_id.clone(),
+        )
+        .await?;
 
         Ok(ProtosocketCacheClient::new(
             client_pool,
