@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.58.0](https://github.com/momentohq/client-sdk-rust/compare/v0.57.0...v0.58.0) (2025-11-17)
+
+
+### Features
+
+* change default behavior for endpoints ([#505](https://github.com/momentohq/client-sdk-rust/issues/505)) ([2e10d68](https://github.com/momentohq/client-sdk-rust/commit/2e10d68ea726fc5fcee671829633a8e5dae0c9bd))
+
+
+### Miscellaneous
+
+* add protosocket cache client example ([#504](https://github.com/momentohq/client-sdk-rust/issues/504)) ([419df26](https://github.com/momentohq/client-sdk-rust/commit/419df261f4f6c755f2443af2c62866ab88073be0))
+* **deps:** bump momento from 0.52.0 to 0.56.0 in /example/rust ([#499](https://github.com/momentohq/client-sdk-rust/issues/499)) ([3ed656e](https://github.com/momentohq/client-sdk-rust/commit/3ed656ea254a3933c6f42c11f201328c53da2d1b))
+* updated protosocket example ([#507](https://github.com/momentohq/client-sdk-rust/issues/507)) ([b9f439b](https://github.com/momentohq/client-sdk-rust/commit/b9f439be340217e6d82f75ddd29f66fc3c63db69))
+
 ## [0.57.0](https://github.com/momentohq/client-sdk-rust/compare/v0.56.0...v0.57.0) (2025-10-31)
 
 

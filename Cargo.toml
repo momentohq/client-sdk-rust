@@ -1,6 +1,6 @@
 [package]
 name = "momento"
-version = "0.57.0"
+version = "0.58.0"
 authors = ["momento"]
 edition = "2018"
 description = "Client SDK for Momento services"
@@ -10,10 +10,7 @@ repository = "https://github.com/momentohq/client-sdk-rust"
 homepage = "https://gomomento.com/"
 
 [workspace]
-members = [
-    ".",
-    "test-util"
-]
+members = [".", "test-util"]
 
 # This is marked as an example so it can access dev-dependencies
 [[example]]
@@ -43,7 +40,11 @@ protosocket = "0.12.1"
 protosocket-prost = "0.12.1"
 protosocket-rpc = "0.12.1"
 rand = "0.9"
-reqwest = { version = "0.12", default-features = false, features = ["http2", "json", "rustls-tls-native-roots"] }
+reqwest = { version = "0.12", default-features = false, features = [
+    "http2",
+    "json",
+    "rustls-tls-native-roots",
+] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "2.0"
@@ -62,4 +63,3 @@ base64-url = "3"
 env_logger = "0"
 tokio-test = "0"
 uuid = { version = "1", features = ["v4"] }
-

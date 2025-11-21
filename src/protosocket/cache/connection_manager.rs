@@ -54,7 +54,6 @@ impl ProtosocketConnectionManager {
     ) -> protosocket_rpc::Result<protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>>
     {
         log::debug!("connecting over protosocket to {address}");
-
         let unauthenticated_client = create_protosocket_connection(
             self.credential_provider.clone(),
             self.runtime.clone(),
