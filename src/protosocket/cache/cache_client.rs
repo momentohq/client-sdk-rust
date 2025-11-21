@@ -1,19 +1,16 @@
 use momento_protos::protosocket::cache::{CacheCommand, CacheResponse};
-use protosocket_rpc::client::{ConnectionPool, RpcClient};
+use protosocket_rpc::client::RpcClient;
 
 use crate::cache::{GetRequest, SetRequest};
 use crate::protosocket::cache::cache_client_builder::NeedsDefaultTtl;
 use crate::protosocket::cache::config::connection_strategy::ConnectionStrategy;
-use crate::protosocket::cache::connection_manager::ProtosocketConnectionManager;
+use crate::protosocket::cache::connection_pool::ConnectionPool;
 use crate::protosocket::cache::{Configuration, MomentoProtosocketRequest};
 use crate::{utils, IntoBytes, MomentoError, MomentoResult, ProtosocketCacheClientBuilder};
-use crc::{Crc, CRC_16_IBM_SDLC};
 use std::convert::TryInto;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 // TODO: remove `no_run` on doc examples to allow fully running them as doctests
-
-const CRC16: Crc<u16> = Crc::<u16>::new(&CRC_16_IBM_SDLC);
 
 /// A client for interacting with Momento Cache using the Protosocket protocol.
 /// Client to work with Momento Cache, the serverless caching service, but using the protosocket protocol instead of gRPC.
@@ -50,7 +47,7 @@ const CRC16: Crc<u16> = Crc::<u16>::new(&CRC_16_IBM_SDLC);
 /// ```
 #[derive(Clone, Debug)]
 pub struct ProtosocketCacheClient {
-    client_pool: std::sync::Arc<ConnectionPool<ProtosocketConnectionManager>>,
+    client_pool: std::sync::Arc<ConnectionPool>,
     message_id: std::sync::Arc<AtomicU64>,
     item_default_ttl: Duration,
     request_timeout: Duration,
@@ -59,7 +56,7 @@ pub struct ProtosocketCacheClient {
 
 impl ProtosocketCacheClient {
     pub(crate) fn new(
-        client_pool: ConnectionPool<ProtosocketConnectionManager>,
+        client_pool: ConnectionPool,
         default_ttl: Duration,
         configuration: Configuration,
     ) -> Self {
@@ -218,12 +215,7 @@ impl ProtosocketCacheClient {
     ) -> MomentoResult<RpcClient<CacheCommand, CacheResponse>> {
         let client_result = match self.connection_strategy {
             ConnectionStrategy::Random => self.client_pool.get_connection().await,
-            ConnectionStrategy::KeyHash => {
-                let key_hash = CRC16.checksum(key);
-                self.client_pool
-                    .get_connection_for_key(key_hash.into())
-                    .await
-            }
+            ConnectionStrategy::KeyHash => self.client_pool.get_connection_for_key(key).await,
         };
 
         let pooled_client = client_result.map_err(|e| {

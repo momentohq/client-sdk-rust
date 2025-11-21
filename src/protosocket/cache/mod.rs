@@ -13,5 +13,8 @@ mod connection_manager;
 
 mod address_provider;
 
+mod connection_pool;
 mod messages;
+mod utils;
+
 pub use messages::MomentoProtosocketRequest;

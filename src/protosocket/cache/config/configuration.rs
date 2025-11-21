@@ -31,6 +31,7 @@ pub struct Configuration {
     pub(crate) az_id: Option<String>,
     /// The strategy for selecting which connection to use for a request.
     pub(crate) connection_strategy: ConnectionStrategy,
+    //connections per server
 }
 
 impl Configuration {
