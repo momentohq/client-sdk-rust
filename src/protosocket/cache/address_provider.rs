@@ -87,8 +87,6 @@ pub(crate) enum AddressProvider {
 }
 
 impl AddressProvider {
-    /// Looks for an address list from the provided endpoint.
-    #[allow(clippy::expect_used)]
     pub async fn new(
         credential_provider: CredentialProvider,
         runtime: tokio::runtime::Handle,
@@ -151,7 +149,15 @@ impl AddressProvider {
             .tls_built_in_native_certs(true)
             .tls_built_in_root_certs(true)
             .build()
-            .expect("must be able to build client");
+            .map_err(|err| {
+                MomentoError::unknown_error(
+                    "address_provider::new",
+                    Some(format!(
+                        "Could not create a client to retrieve addresses: {}",
+                        err
+                    )),
+                )
+            })?;
 
         let addresses = Arc::new(Mutex::new(Arc::new(Addresses::default())));
 
@@ -226,6 +232,7 @@ async fn refresh_addresses_forever(
     }
 }
 
+#[allow(clippy::expect_used)]
 async fn try_refresh_addresses(
     client: &reqwest::Client,
     credential_provider: &CredentialProvider,

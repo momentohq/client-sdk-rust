@@ -63,6 +63,7 @@ impl ConnectionPool {
     }
 
     /// Get a consistent connection for the given key using HRW hashing.
+    #[allow(clippy::expect_used)]
     pub async fn get_connection_for_key(
         &self,
         key: &[u8],
@@ -95,6 +96,7 @@ impl ConnectionPool {
         self.get_or_create_connection(connection_state, addr).await
     }
 
+    #[allow(clippy::expect_used)]
     pub async fn get_connection(&self) -> MomentoResult<RpcClient<CacheCommand, CacheResponse>> {
         self.ensure_addresses_current();
 
@@ -126,6 +128,7 @@ impl ConnectionPool {
         self.get_or_create_connection(connection_state, addr).await
     }
 
+    #[allow(clippy::expect_used)]
     async fn get_or_create_connection(
         &self,
         connection_state: &Mutex<ConnectionState<CacheCommand, CacheResponse>>,
@@ -168,6 +171,7 @@ impl ConnectionPool {
         }
     }
 
+    #[allow(clippy::expect_used)]
     fn ensure_addresses_current(&self) {
         let current_addresses = self.address_provider.get_addresses(self.az_id.as_deref());
 
@@ -210,6 +214,7 @@ impl ConnectionPool {
     }
 }
 
+#[allow(clippy::expect_used)]
 fn reconcile_client_slot<Request, Response>(
     connection_state: &Mutex<ConnectionState<Request, Response>>,
     client: RpcClient<Request, Response>,
