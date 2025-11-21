@@ -15,6 +15,8 @@ use std::pin::{pin, Pin};
 use std::sync::{Arc, Mutex, RwLock};
 use std::task::{Context, Poll};
 
+use super::utils::hrw::hrw_hash;
+
 type PoolConnection = Mutex<ConnectionState<CacheCommand, CacheResponse>>;
 type ServerConnections = Arc<Vec<PoolConnection>>;
 type AddressConnectionMap = HashMap<SocketAddr, ServerConnections>;
@@ -289,28 +291,16 @@ impl PlacementTarget for SocketAddr {
     fn placement_seed(&self) -> i32 {
         match self {
             SocketAddr::V4(addr) => {
-                let ip_bytes = addr.ip().octets();
-                let port = addr.port();
-
-                // Combine IP bytes and port into an i32
-                i32::from_ne_bytes([
-                    ip_bytes[0],
-                    ip_bytes[1],
-                    ip_bytes[2] ^ (port >> 8) as u8,
-                    ip_bytes[3] ^ (port & 0xff) as u8,
-                ])
+                let mut b = [0u8; 6];
+                b[0..4].copy_from_slice(&addr.ip().octets());
+                b[4..6].copy_from_slice(&addr.port().to_be_bytes());
+                hrw_hash(&b)
             }
             SocketAddr::V6(addr) => {
-                let ip_bytes = addr.ip().octets();
-                let port = addr.port();
-
-                // XOR segments of the IPv6 address together with port
-                i32::from_ne_bytes([
-                    ip_bytes[0] ^ ip_bytes[4] ^ ip_bytes[8] ^ ip_bytes[12],
-                    ip_bytes[1] ^ ip_bytes[5] ^ ip_bytes[9] ^ ip_bytes[13],
-                    ip_bytes[2] ^ ip_bytes[6] ^ ip_bytes[10] ^ ip_bytes[14] ^ (port >> 8) as u8,
-                    ip_bytes[3] ^ ip_bytes[7] ^ ip_bytes[11] ^ ip_bytes[15] ^ (port & 0xff) as u8,
-                ])
+                let mut b = [0u8; 18];
+                b[0..16].copy_from_slice(&addr.ip().octets());
+                b[16..18].copy_from_slice(&addr.port().to_be_bytes());
+                hrw_hash(&b)
             }
         }
     }

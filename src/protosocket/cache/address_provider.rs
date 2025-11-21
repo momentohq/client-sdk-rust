@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    net::SocketAddr,
+    net::{SocketAddr, ToSocketAddrs},
     sync::{atomic::AtomicBool, Arc, Mutex},
     time::Duration,
 };
@@ -93,22 +93,49 @@ impl AddressProvider {
         credential_provider: CredentialProvider,
         runtime: tokio::runtime::Handle,
     ) -> MomentoResult<Self> {
-        match credential_provider.endpoint_security {
-            EndpointSecurity::Tls => Self::new_with_refresh(credential_provider, runtime).await,
-            _ => Self::new_with_static_address(credential_provider),
+        if credential_provider.use_endpoints_http_api {
+            Self::new_with_refresh(credential_provider, runtime).await
+        } else {
+            Self::new_with_static_address(credential_provider)
         }
     }
 
     fn new_with_static_address(credential_provider: CredentialProvider) -> MomentoResult<Self> {
-        let address: SocketAddr = credential_provider.cache_endpoint.parse().map_err(|e| {
-            protosocket_rpc::Error::IoFailure(
-                std::io::Error::other(format!(
-                    "could not parse address from endpoint: {}: {:?}",
-                    &credential_provider.cache_endpoint, e
-                ))
-                .into(),
-            )
-        })?;
+        let address_string =
+            if matches!(credential_provider.endpoint_security, EndpointSecurity::Tls) {
+                // TLS: make sure https:// is stripped and force port 9004
+                let endpoint = credential_provider
+                    .cache_endpoint
+                    .strip_prefix("https://")
+                    .unwrap_or(&credential_provider.cache_endpoint);
+                let hostname = endpoint.split(':').next().unwrap_or(endpoint);
+                format!("{}:9004", hostname)
+            } else {
+                // Non-TLS: use as-is, expect proper socket address format
+                credential_provider.cache_endpoint.clone()
+            };
+
+        let address: SocketAddr = address_string
+            .to_socket_addrs()
+            .map_err(|e| {
+                protosocket_rpc::Error::IoFailure(
+                    std::io::Error::other(format!(
+                        "could not parse socket address from endpoint: {}: {:?}",
+                        &credential_provider.cache_endpoint, e
+                    ))
+                    .into(),
+                )
+            })?
+            .next()
+            .ok_or_else(|| {
+                protosocket_rpc::Error::IoFailure(
+                    std::io::Error::other(format!(
+                        "no addresses resolved for endpoint: {}",
+                        &credential_provider.cache_endpoint
+                    ))
+                    .into(),
+                )
+            })?;
 
         Ok(Self::Static { address })
     }

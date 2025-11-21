@@ -3,7 +3,7 @@ use std::vec::IntoIter;
 
 use xxhash_rust::xxh3::xxh3_64;
 
-fn hrw_hash(to_hash: &[u8]) -> i32 {
+pub fn hrw_hash(to_hash: &[u8]) -> i32 {
     xxh3_64(to_hash) as i32
 }
 
