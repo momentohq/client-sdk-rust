@@ -107,6 +107,14 @@ impl CredentialProvider {
             }
         };
 
+        if !is_base64_encoded(&token_to_process) {
+            return Err(MomentoError {
+                message: "Received a global API key. Are you using the correct key? Or did you mean to use `global_key_from_env_var()` instead?".into(),
+                error_code: MomentoErrorCode::InvalidArgumentError,
+                inner_error: None,
+            });
+        }
+
         decode_auth_token(token_to_process)
     }
 
@@ -143,6 +151,14 @@ impl CredentialProvider {
     /// ```
     pub fn from_string(auth_token: impl Into<String>) -> MomentoResult<CredentialProvider> {
         let auth_token = auth_token.into();
+
+        if !is_base64_encoded(&auth_token) {
+            return Err(MomentoError {
+                message: "Received a global API key. Are you using the correct key? Or did you mean to use `global_key_from_string()` instead?".into(),
+                error_code: MomentoErrorCode::InvalidArgumentError,
+                inner_error: None,
+            });
+        }
 
         let token_to_process = {
             if auth_token.is_empty() {
@@ -202,6 +218,14 @@ impl CredentialProvider {
                 inner_error: None,
             });
         };
+
+        if is_base64_encoded(&auth_token) {
+            return Err(MomentoError {
+                message: "Did not expect global API key to be base64 encoded. Are you using the correct key? Or did you mean to use `from_string()` instead?".into(),
+                error_code: MomentoErrorCode::InvalidArgumentError,
+                inner_error: None,
+            });
+        }
 
         Ok(CredentialProvider {
             auth_token,
@@ -271,6 +295,14 @@ impl CredentialProvider {
                 });
             }
         };
+
+        if is_base64_encoded(&auth_token) {
+            return Err(MomentoError {
+                message: "Did not expect global API key to be base64 encoded. Are you using the correct key? Or did you mean to use `from_env_var()` instead?".into(),
+                error_code: MomentoErrorCode::InvalidArgumentError,
+                inner_error: None,
+            });
+        }
 
         CredentialProvider::global_key_from_string(GlobalKeyFromStringProps {
             api_key: auth_token,
@@ -416,17 +448,26 @@ fn token_parsing_error(e: Box<dyn std::error::Error + Send + Sync>) -> MomentoEr
     }
 }
 
+fn is_base64_encoded(s: &str) -> bool {
+    base64::engine::general_purpose::URL_SAFE.decode(s).is_ok()
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{
         CredentialProvider, GlobalKeyFromEnvVarProps, GlobalKeyFromStringProps, MomentoResult,
     };
 
+    const V1_TOKEN: &str = "eyJlbmRwb2ludCI6Im1vbWVudG9fZW5kcG9pbnQiLCJhcGlfa2V5IjoiZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKemRXSWlPaUowWlhOMElITjFZbXBsWTNRaUxDSjJaWElpT2pFc0luQWlPaUlpZlEuaGcyd01iV2Utd2VzUVZ0QTd3dUpjUlVMalJwaFhMUXdRVFZZZlFMM0w3YyJ9Cg==";
+
+    const TEST_GLOBAL_ENDPOINT: &str = "test_endpoint";
+    const TEST_GLOBAL_API_KEY: &str = "test_global_api_key";
+    const TEST_GLOBAL_ENV_VAR_NAME: &str = "MOMENTO_TEST_GLOBAL_API_KEY";
+
     #[test]
     fn env_var() {
         let env_var_name = "TEST_ENV_VAR_CREDENTIAL_PROVIDER";
-        let v1_token = "eyJlbmRwb2ludCI6Im1vbWVudG9fZW5kcG9pbnQiLCJhcGlfa2V5IjoiZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKemRXSWlPaUowWlhOMElITjFZbXBsWTNRaUxDSjJaWElpT2pFc0luQWlPaUlpZlEuaGcyd01iV2Utd2VzUVZ0QTd3dUpjUlVMalJwaFhMUXdRVFZZZlFMM0w3YyJ9Cg==".to_string();
-        temp_env::with_var(env_var_name, Some(v1_token), || {
+        temp_env::with_var(env_var_name, Some(V1_TOKEN), || {
             let credential_provider = CredentialProvider::from_env_var(env_var_name)
                 .expect("should be able to build credential provider");
 
@@ -476,7 +517,11 @@ mod tests {
 
     #[test]
     fn invalid_token() {
-        let e = CredentialProvider::from_string("wfheofhriugheifweif").unwrap_err();
+        let b64_encoded_invalid_token = base64::Engine::encode(
+            &base64::engine::general_purpose::URL_SAFE,
+            "wfheofhriugheifweif",
+        );
+        let e = CredentialProvider::from_string(b64_encoded_invalid_token).unwrap_err();
         let _err_msg =
             "Could not parse token. Please ensure a valid token was entered correctly.".to_owned();
         assert_eq!(e.to_string(), _err_msg);
@@ -484,10 +529,8 @@ mod tests {
 
     #[test]
     fn valid_v1_token() {
-        let v1_token = "eyJlbmRwb2ludCI6Im1vbWVudG9fZW5kcG9pbnQiLCJhcGlfa2V5IjoiZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKemRXSWlPaUowWlhOMElITjFZbXBsWTNRaUxDSjJaWElpT2pFc0luQWlPaUlpZlEuaGcyd01iV2Utd2VzUVZ0QTd3dUpjUlVMalJwaFhMUXdRVFZZZlFMM0w3YyJ9Cg==".to_string();
-
         let credential_provider =
-            CredentialProvider::from_string(v1_token).expect("failed to parse token");
+            CredentialProvider::from_string(V1_TOKEN).expect("failed to parse token");
         assert_eq!(
             "https://control.momento_endpoint",
             credential_provider.control_endpoint
@@ -505,10 +548,8 @@ mod tests {
 
     #[test]
     fn v1_token_with_base_endpoint_override() -> MomentoResult<()> {
-        let v1_token = "eyJlbmRwb2ludCI6Im1vbWVudG9fZW5kcG9pbnQiLCJhcGlfa2V5IjoiZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKemRXSWlPaUowWlhOMElITjFZbXBsWTNRaUxDSjJaWElpT2pFc0luQWlPaUlpZlEuaGcyd01iV2Utd2VzUVZ0QTd3dUpjUlVMalJwaFhMUXdRVFZZZlFMM0w3YyJ9Cg==".to_string();
-
         let credential_provider =
-            CredentialProvider::from_string(v1_token)?.base_endpoint("foo.com");
+            CredentialProvider::from_string(V1_TOKEN)?.base_endpoint("foo.com");
         assert_eq!("https://cache.foo.com", credential_provider.cache_endpoint);
         assert_eq!(
             "https://api.cache.foo.com",
@@ -535,17 +576,14 @@ mod tests {
 
     #[test]
     fn global_key_from_env_var() -> MomentoResult<()> {
-        let env_var_name = "MOMENTO_TEST_GLOBAL_API_KEY";
-        let api_key = "test_global_api_key";
-        let endpoint = "test_endpoint";
-        temp_env::with_var(env_var_name, Some(api_key), || {
+        temp_env::with_var(TEST_GLOBAL_ENV_VAR_NAME, Some(TEST_GLOBAL_API_KEY), || {
             let credential_provider =
                 CredentialProvider::global_key_from_env_var(GlobalKeyFromEnvVarProps {
-                    env_var_name: env_var_name.into(),
-                    endpoint: endpoint.into(),
+                    env_var_name: TEST_GLOBAL_ENV_VAR_NAME.into(),
+                    endpoint: TEST_GLOBAL_ENDPOINT.into(),
                 })
                 .expect("should be able to build credential provider");
-            assert!(credential_provider.auth_token == api_key);
+            assert!(credential_provider.auth_token == TEST_GLOBAL_API_KEY);
             assert!(credential_provider.cache_endpoint == "https://cache.test_endpoint");
             assert!(credential_provider.control_endpoint == "https://control.test_endpoint");
             assert!(credential_provider.token_endpoint == "https://token.test_endpoint");
@@ -556,14 +594,12 @@ mod tests {
 
     #[test]
     fn global_key_from_string() -> MomentoResult<()> {
-        let api_key = "test_global_api_key";
-        let endpoint = "test_endpoint";
         let credential_provider =
             CredentialProvider::global_key_from_string(GlobalKeyFromStringProps {
-                api_key: api_key.into(),
-                endpoint: endpoint.into(),
+                api_key: TEST_GLOBAL_API_KEY.into(),
+                endpoint: TEST_GLOBAL_ENDPOINT.into(),
             })?;
-        assert!(credential_provider.auth_token == api_key);
+        assert!(credential_provider.auth_token == TEST_GLOBAL_API_KEY);
         assert!(credential_provider.cache_endpoint == "https://cache.test_endpoint");
         assert!(credential_provider.control_endpoint == "https://control.test_endpoint");
         assert!(credential_provider.token_endpoint == "https://token.test_endpoint");
@@ -573,12 +609,9 @@ mod tests {
 
     #[test]
     fn global_from_string_empty_arguments() {
-        let api_key = "test_global_api_key";
-        let endpoint = "test_endpoint";
-
         let empty_endpoint_err =
             CredentialProvider::global_key_from_string(GlobalKeyFromStringProps {
-                api_key: api_key.into(),
+                api_key: TEST_GLOBAL_API_KEY.into(),
                 endpoint: "".into(),
             })
             .unwrap_err();
@@ -587,7 +620,7 @@ mod tests {
 
         let empty_key_err = CredentialProvider::global_key_from_string(GlobalKeyFromStringProps {
             api_key: "".into(),
-            endpoint: endpoint.into(),
+            endpoint: TEST_GLOBAL_ENDPOINT.into(),
         })
         .unwrap_err();
         let _err_msg = "Auth token string cannot be empty".to_owned();
@@ -596,13 +629,10 @@ mod tests {
 
     #[test]
     fn global_from_env_var_empty_endpoint() {
-        let env_var_name = "MOMENTO_TEST_GLOBAL_API_KEY";
-        let api_key = "test_global_api_key";
-
-        temp_env::with_var(env_var_name, Some(api_key), || {
+        temp_env::with_var(TEST_GLOBAL_ENV_VAR_NAME, Some(TEST_GLOBAL_API_KEY), || {
             let empty_endpoint_err =
                 CredentialProvider::global_key_from_env_var(GlobalKeyFromEnvVarProps {
-                    env_var_name: env_var_name.into(),
+                    env_var_name: TEST_GLOBAL_ENV_VAR_NAME.into(),
                     endpoint: "".into(),
                 })
                 .unwrap_err();
@@ -613,11 +643,10 @@ mod tests {
 
     #[test]
     fn global_from_env_var_empty_env_var_name() {
-        let endpoint = "test_endpoint";
         let empty_env_var_name_err =
             CredentialProvider::global_key_from_env_var(GlobalKeyFromEnvVarProps {
                 env_var_name: "".into(),
-                endpoint: endpoint.into(),
+                endpoint: TEST_GLOBAL_ENDPOINT.into(),
             })
             .unwrap_err();
         let _err_msg = "Env var name cannot be empty".to_owned();
@@ -626,18 +655,55 @@ mod tests {
 
     #[test]
     fn global_from_env_var_empty_env_var() {
-        let env_var_name = "MOMENTO_TEST_GLOBAL_API_KEY";
-        let endpoint = "test_endpoint";
-
-        temp_env::with_var(env_var_name, Some(""), || {
+        temp_env::with_var(TEST_GLOBAL_ENV_VAR_NAME, Some(""), || {
             let empty_env_var_err =
                 CredentialProvider::global_key_from_env_var(GlobalKeyFromEnvVarProps {
-                    env_var_name: env_var_name.into(),
-                    endpoint: endpoint.into(),
+                    env_var_name: TEST_GLOBAL_ENV_VAR_NAME.into(),
+                    endpoint: TEST_GLOBAL_ENDPOINT.into(),
                 })
                 .unwrap_err();
             let _err_msg = "Env var MOMENTO_TEST_GLOBAL_API_KEY must be set".to_owned();
             assert_eq!(empty_env_var_err.to_string(), _err_msg);
+        });
+    }
+
+    #[test]
+    fn v1_token_given_to_global_key_from_string() {
+        let err = CredentialProvider::global_key_from_string(GlobalKeyFromStringProps {
+            api_key: V1_TOKEN.into(),
+            endpoint: TEST_GLOBAL_ENDPOINT.into(),
+        })
+        .unwrap_err();
+        let _err_msg = "Did not expect global API key to be base64 encoded. Are you using the correct key? Or did you mean to use `from_string()` instead?".to_owned();
+        assert_eq!(err.to_string(), _err_msg);
+    }
+
+    #[test]
+    fn v1_token_given_to_global_key_from_env_var() {
+        temp_env::with_var(TEST_GLOBAL_ENV_VAR_NAME, Some(V1_TOKEN), || {
+            let err = CredentialProvider::global_key_from_env_var(GlobalKeyFromEnvVarProps {
+                env_var_name: TEST_GLOBAL_ENV_VAR_NAME.into(),
+                endpoint: TEST_GLOBAL_ENDPOINT.into(),
+            })
+            .unwrap_err();
+            let _err_msg = "Did not expect global API key to be base64 encoded. Are you using the correct key? Or did you mean to use `from_env_var()` instead?".to_owned();
+            assert_eq!(err.to_string(), _err_msg);
+        });
+    }
+
+    #[test]
+    fn global_key_given_to_from_string() {
+        let err = CredentialProvider::from_string("test_global_api_key").unwrap_err();
+        let _err_msg = "Received a global API key. Are you using the correct key? Or did you mean to use `global_key_from_string()` instead?".to_owned();
+        assert_eq!(err.to_string(), _err_msg);
+    }
+
+    #[test]
+    fn global_key_given_to_from_env_var() {
+        temp_env::with_var(TEST_GLOBAL_ENV_VAR_NAME, Some(TEST_GLOBAL_API_KEY), || {
+            let err = CredentialProvider::from_env_var(TEST_GLOBAL_ENV_VAR_NAME).unwrap_err();
+            let _err_msg = "Received a global API key. Are you using the correct key? Or did you mean to use `global_key_from_env_var()` instead?".to_owned();
+            assert_eq!(err.to_string(), _err_msg);
         });
     }
 }
