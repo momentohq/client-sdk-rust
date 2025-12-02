@@ -17,10 +17,6 @@ use std::task::{Context, Poll};
 
 use super::utils::hrw::hrw_hash;
 
-type PoolConnection = Mutex<ConnectionState<CacheCommand, CacheResponse>>;
-type ServerConnections = Arc<Vec<PoolConnection>>;
-type AddressConnectionMap = HashMap<SocketAddr, ServerConnections>;
-
 thread_local! {
     static RNG: RefCell<rand::rngs::SmallRng> =
         RefCell::new(rand::rngs::SmallRng::from_os_rng());
@@ -29,8 +25,7 @@ thread_local! {
 #[derive(Debug)]
 pub(crate) struct ConnectionPool {
     connector: ProtosocketConnectionManager,
-    address_connections: RwLock<AddressConnectionMap>,
-    connections_per_server: usize,
+    address_connections: RwLock<BoundedAddressConnectionMap>,
     address_provider: Arc<AddressProvider>,
     az_id: Option<String>,
 }
@@ -38,28 +33,53 @@ pub(crate) struct ConnectionPool {
 impl ConnectionPool {
     pub async fn new(
         connector: ProtosocketConnectionManager,
-        connections_per_server: usize,
+        max_total_connections: usize,
         address_provider: Arc<AddressProvider>,
         az_id: Option<String>,
     ) -> MomentoResult<Self> {
-        let addresses = address_provider.get_addresses(az_id.as_deref());
-
-        let mut address_connections = HashMap::new();
-        for &addr in addresses.iter() {
-            let connections: Vec<Mutex<ConnectionState<CacheCommand, CacheResponse>>> = (0
-                ..connections_per_server)
-                .map(|_| Mutex::new(ConnectionState::Disconnected))
-                .collect();
-            address_connections.insert(addr, Arc::new(connections));
-        }
+        let address_connections = BoundedAddressConnectionMap::new(max_total_connections);
 
         Ok(Self {
             connector,
             address_connections: RwLock::new(address_connections),
-            connections_per_server,
             address_provider,
             az_id,
         })
+    }
+
+    #[allow(clippy::expect_used)]
+    fn ensure_addresses_current(&self) {
+        let current_addresses = self.address_provider.get_addresses(self.az_id.as_deref());
+
+        let needs_update = {
+            let address_connections = self
+                .address_connections
+                .read()
+                .expect("address lock must not be poisoned");
+
+            if address_connections.len() != current_addresses.len() {
+                true
+            } else {
+                current_addresses
+                    .iter()
+                    .any(|addr| address_connections.get_connections(addr).is_none())
+            }
+        };
+
+        if !needs_update {
+            return;
+        }
+
+        // Order the addresses in a consistent way in case we're only able to add a subset of them
+        let ordered_addresses: Vec<_> =
+            place_targets(&[], 0, current_addresses.iter().copied()).collect();
+
+        let mut address_connections = self
+            .address_connections
+            .write()
+            .expect("address lock must not be poisoned");
+
+        address_connections.sync_addresses(&ordered_addresses);
     }
 
     /// Get a consistent connection for the given key using HRW hashing.
@@ -170,48 +190,6 @@ impl ConnectionPool {
             }
         }
     }
-
-    #[allow(clippy::expect_used)]
-    fn ensure_addresses_current(&self) {
-        let current_addresses = self.address_provider.get_addresses(self.az_id.as_deref());
-
-        let needs_update = {
-            let address_connections = self
-                .address_connections
-                .read()
-                .expect("address lock must not be poisoned");
-
-            if address_connections.len() != current_addresses.len() {
-                true
-            } else {
-                current_addresses
-                    .iter()
-                    .any(|addr| !address_connections.contains_key(addr))
-            }
-        };
-
-        if !needs_update {
-            return;
-        }
-
-        let mut address_connections = self
-            .address_connections
-            .write()
-            .expect("address lock must not be poisoned");
-
-        for &addr in current_addresses.iter() {
-            address_connections.entry(addr).or_insert_with(|| {
-                Arc::new(
-                    (0..self.connections_per_server)
-                        .map(|_| Mutex::new(ConnectionState::Disconnected))
-                        .collect(),
-                )
-            });
-        }
-
-        let current_set: std::collections::HashSet<_> = current_addresses.iter().copied().collect();
-        address_connections.retain(|addr, _| current_set.contains(addr));
-    }
 }
 
 #[allow(clippy::expect_used)]
@@ -250,7 +228,7 @@ where
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 enum ConnectionState<Request, Response>
 where
     Request: Message,
@@ -258,6 +236,7 @@ where
 {
     Connecting(futures::future::Shared<SpawnedConnect<Request, Response>>),
     Connected(RpcClient<Request, Response>),
+    #[default]
     Disconnected,
 }
 
@@ -306,6 +285,95 @@ impl PlacementTarget for SocketAddr {
                 b[0..16].copy_from_slice(&addr.ip().octets());
                 b[16..18].copy_from_slice(&addr.port().to_be_bytes());
                 hrw_hash(&b)
+            }
+        }
+    }
+}
+
+type PoolConnection = Mutex<ConnectionState<CacheCommand, CacheResponse>>;
+type ServerConnections = Arc<Vec<PoolConnection>>;
+
+#[derive(Debug)]
+struct BoundedAddressConnectionMap {
+    map: HashMap<SocketAddr, ServerConnections>,
+    max_total_connections: usize,
+}
+
+impl BoundedAddressConnectionMap {
+    fn new(max_total_connections: usize) -> Self {
+        Self {
+            map: HashMap::new(),
+            max_total_connections,
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.map.is_empty()
+    }
+
+    fn len(&self) -> usize {
+        self.map.len()
+    }
+
+    fn get_connections(&self, addr: &SocketAddr) -> Option<&ServerConnections> {
+        self.map.get(addr)
+    }
+
+    fn iter(&self) -> impl Iterator<Item = (&SocketAddr, &ServerConnections)> {
+        self.map.iter()
+    }
+
+    fn sync_addresses(&mut self, ordered_addresses: &[SocketAddr]) {
+        if ordered_addresses.is_empty() {
+            self.map.clear();
+            return;
+        }
+
+        // Determine how many connections per address we want
+        let target_per_server = (self.max_total_connections / ordered_addresses.len()).max(1);
+
+        // Build a list of addresses that will be in the map and retain based on that.
+        let max_addresses = self.max_total_connections / target_per_server;
+        let addresses_to_use: &[SocketAddr] = ordered_addresses
+            .get(..max_addresses)
+            .unwrap_or(ordered_addresses);
+
+        // Remove stale addresses
+        self.map.retain(|addr, _| addresses_to_use.contains(addr));
+
+        for address in addresses_to_use {
+            if let Some(connections) = self.map.get_mut(address) {
+                // Ensure we have the correct number of connections for this address
+                if connections.len() != target_per_server {
+                    let new_connections: Vec<PoolConnection> =
+                        std::iter::repeat_with(Mutex::default)
+                            .take(target_per_server)
+                            .collect();
+
+                    let copy_count = connections.len().min(target_per_server);
+                    for i in 0..copy_count {
+                        let old_state = std::mem::take(
+                            &mut *connections[i]
+                                .lock()
+                                .expect("connections mutex must not be poisoned"),
+                        );
+                        *new_connections[i]
+                            .lock()
+                            .expect("connections mutex must not be poisoned") = old_state;
+                    }
+
+                    *connections = Arc::new(new_connections);
+                }
+            } else {
+                // Add the new address if we have space
+                self.map.insert(
+                    *address,
+                    Arc::new(
+                        std::iter::repeat_with(Mutex::default)
+                            .take(target_per_server)
+                            .collect(),
+                    ),
+                );
             }
         }
     }
