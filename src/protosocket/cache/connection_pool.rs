@@ -26,7 +26,8 @@ thread_local! {
 #[derive(Debug)]
 pub(crate) struct ConnectionPool {
     connector: ProtosocketConnectionManager,
-    address_connections: RwLock<BoundedAddressConnectionMap>,
+    address_connections:
+        RwLock<BoundedAddressConnectionMap<ConnectionState<CacheCommand, CacheResponse>>>,
     address_provider: Arc<AddressProvider>,
     last_synced_generation: AtomicU64,
     az_id: Option<String>,
@@ -293,16 +294,16 @@ impl PlacementTarget for SocketAddr {
     }
 }
 
-type PoolConnection = Mutex<ConnectionState<CacheCommand, CacheResponse>>;
-type ServerConnections = Arc<Vec<PoolConnection>>;
+type PoolConnection<S> = Mutex<S>;
+type ServerConnections<S> = Arc<Vec<PoolConnection<S>>>;
 
 #[derive(Debug)]
-struct BoundedAddressConnectionMap {
-    map: HashMap<SocketAddr, ServerConnections>,
+struct BoundedAddressConnectionMap<S: Default> {
+    map: HashMap<SocketAddr, ServerConnections<S>>,
     max_total_connections: usize,
 }
 
-impl BoundedAddressConnectionMap {
+impl<S: Default> BoundedAddressConnectionMap<S> {
     fn new(max_total_connections: usize) -> Self {
         Self {
             map: HashMap::new(),
@@ -318,7 +319,12 @@ impl BoundedAddressConnectionMap {
         self.map.len()
     }
 
-    fn iter(&self) -> impl Iterator<Item = (&SocketAddr, &ServerConnections)> {
+    #[cfg(test)]
+    fn get_connections(&self, addr: &SocketAddr) -> Option<&ServerConnections<S>> {
+        self.map.get(addr)
+    }
+
+    fn iter(&self) -> impl Iterator<Item = (&SocketAddr, &ServerConnections<S>)> {
         self.map.iter()
     }
 
@@ -344,7 +350,7 @@ impl BoundedAddressConnectionMap {
             if let Some(connections) = self.map.get_mut(address) {
                 // Ensure we have the correct number of connections for this address
                 if connections.len() != target_per_server {
-                    let new_connections: Vec<PoolConnection> =
+                    let new_connections: Vec<PoolConnection<S>> =
                         std::iter::repeat_with(Mutex::default)
                             .take(target_per_server)
                             .collect();
@@ -374,6 +380,202 @@ impl BoundedAddressConnectionMap {
                     ),
                 );
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::net::{Ipv4Addr, SocketAddrV4};
+
+    mod bounded_address_connection_map {
+        use super::*;
+
+        fn make_addr(port: u16) -> SocketAddr {
+            SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), port))
+        }
+
+        #[derive(Debug, Default, PartialEq)]
+        enum TestState {
+            #[default]
+            Empty,
+            HasValue(u32),
+        }
+
+        type TestMap = BoundedAddressConnectionMap<TestState>;
+
+        #[test]
+        fn new_creates_empty_map() {
+            let map: TestMap = BoundedAddressConnectionMap::new(10);
+            assert!(map.is_empty());
+            assert_eq!(map.len(), 0);
+        }
+
+        #[test]
+        fn sync_addresses_adds_new_addresses() {
+            let mut map: TestMap = BoundedAddressConnectionMap::new(10);
+            let addresses = vec![make_addr(8080), make_addr(8081)];
+
+            map.sync_addresses(&addresses);
+
+            assert_eq!(map.len(), 2);
+        }
+
+        #[test]
+        fn sync_addresses_removes_stale_addresses() {
+            let mut map: TestMap = BoundedAddressConnectionMap::new(10);
+            let initial = vec![make_addr(8080), make_addr(8081), make_addr(8082)];
+            map.sync_addresses(&initial);
+
+            let updated = vec![make_addr(8080), make_addr(8082)];
+            map.sync_addresses(&updated);
+
+            assert_eq!(map.len(), 2);
+            assert!(map.get_connections(&make_addr(8080)).is_some());
+            assert!(map.get_connections(&make_addr(8081)).is_none());
+            assert!(map.get_connections(&make_addr(8082)).is_some());
+        }
+
+        #[test]
+        fn sync_addresses_clears_on_empty_input() {
+            let mut map: TestMap = BoundedAddressConnectionMap::new(10);
+            map.sync_addresses(&[make_addr(8080), make_addr(8081)]);
+
+            map.sync_addresses(&[]);
+
+            assert!(map.is_empty());
+        }
+
+        #[test]
+        fn sync_addresses_creates_correct_connections_per_server() {
+            let mut map: TestMap = BoundedAddressConnectionMap::new(7);
+            let addresses = vec![make_addr(8080), make_addr(8081)];
+
+            map.sync_addresses(&addresses);
+
+            // 7 total / 2 addresses = 3 connections per server
+            let connections = map.get_connections(&addresses[0]).unwrap();
+            assert_eq!(connections.len(), 3);
+        }
+
+        #[test]
+        fn sync_addresses_ensures_minimum_of_one_connection_per_server() {
+            let mut map: TestMap = BoundedAddressConnectionMap::new(4);
+            let addresses = vec![make_addr(8080), make_addr(8081), make_addr(8082)];
+
+            map.sync_addresses(&addresses);
+
+            for addr in map.iter() {
+                assert!(addr.1.len() == 1);
+            }
+        }
+
+        #[test]
+        fn sync_addresses_removes_addresses_if_order_changes() {
+            let mut map: TestMap = BoundedAddressConnectionMap::new(3);
+            let addresses = vec![
+                make_addr(8080),
+                make_addr(8081),
+                make_addr(8082),
+                make_addr(8083),
+            ];
+            map.sync_addresses(&addresses);
+
+            assert!(map.get_connections(&make_addr(8080)).is_some());
+            assert!(map.get_connections(&make_addr(8081)).is_some());
+            assert!(map.get_connections(&make_addr(8082)).is_some());
+            assert!(map.get_connections(&make_addr(8083)).is_none());
+
+            // Same addresses, different order
+            let addresses = vec![
+                make_addr(8083),
+                make_addr(8081),
+                make_addr(8082),
+                make_addr(8080),
+            ];
+            map.sync_addresses(&addresses);
+
+            assert!(map.get_connections(&make_addr(8080)).is_none());
+            assert!(map.get_connections(&make_addr(8081)).is_some());
+            assert!(map.get_connections(&make_addr(8082)).is_some());
+            assert!(map.get_connections(&make_addr(8083)).is_some());
+        }
+
+        #[test]
+        fn sync_addresses_preserves_existing_connections_when_resizing() {
+            let mut map: TestMap = BoundedAddressConnectionMap::new(10);
+            let address = make_addr(8080);
+            map.sync_addresses(&[address]);
+
+            // Change the state of a connection
+            {
+                let connections = map.get_connections(&address).unwrap();
+                let mut state = connections[0].lock().unwrap();
+                assert!(matches!(*state, TestState::Empty));
+
+                *state = TestState::HasValue(1);
+            }
+
+            // Existing connections should be preserved during a sync
+            map.sync_addresses(&[address]);
+
+            let connections = map.get_connections(&address).unwrap();
+            let state = connections[0].lock().unwrap();
+            assert!(matches!(*state, TestState::HasValue(1)));
+        }
+
+        #[test]
+        fn sync_preserves_state_when_shrinking_connections_per_server() {
+            let mut map: TestMap = BoundedAddressConnectionMap::new(20);
+            let address = make_addr(8080);
+            map.sync_addresses(&[address]); // 20 connections per server
+
+            // Set states in first 6 slots
+            {
+                let connections = map.get_connections(&address).unwrap();
+                for i in 0..6 {
+                    *connections[i].lock().unwrap() = TestState::HasValue(i as u32);
+                }
+            }
+
+            // 5 connections per server
+            map.sync_addresses(&[address, make_addr(8081), make_addr(8082), make_addr(8083)]);
+
+            // First 5 states should be preserved, 6th was dropped
+            let connections = map.get_connections(&address).unwrap();
+            assert_eq!(connections.len(), 5);
+            for i in 0..5 {
+                assert_eq!(
+                    *connections[i].lock().unwrap(),
+                    TestState::HasValue(i as u32)
+                );
+            }
+        }
+
+        #[test]
+        fn sync_preserves_state_when_growing_connections_per_server() {
+            let mut map: TestMap = BoundedAddressConnectionMap::new(20);
+            let addresses = vec![
+                make_addr(8080),
+                make_addr(8081),
+                make_addr(8082),
+                make_addr(8083),
+            ];
+            map.sync_addresses(&addresses); // 5 connections per server
+
+            // Set state on first server
+            {
+                let connections = map.get_connections(&addresses[0]).unwrap();
+                *connections[0].lock().unwrap() = TestState::HasValue(1);
+            }
+
+            map.sync_addresses(&[addresses[0]]); // 20 connections per server
+
+            // State should be preserved
+            let connections = map.get_connections(&addresses[0]).unwrap();
+            assert_eq!(connections.len(), 20);
+            assert_eq!(*connections[0].lock().unwrap(), TestState::HasValue(1));
         }
     }
 }
