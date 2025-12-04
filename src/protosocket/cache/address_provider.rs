@@ -1,7 +1,7 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     net::{SocketAddr, ToSocketAddrs},
-    sync::{atomic::AtomicBool, Arc, Mutex},
+    sync::{atomic::AtomicBool, Arc, RwLock},
     time::Duration,
 };
 
@@ -25,6 +25,12 @@ impl Drop for BackgroundAddressLoader {
     }
 }
 
+#[derive(Debug, Default)]
+pub(crate) struct AddressState {
+    addresses: Arc<Addresses>,
+    generation: u64,
+}
+
 #[derive(serde::Deserialize, serde::Serialize, Debug, Default)]
 pub(crate) struct Addresses {
     #[serde(flatten)]
@@ -45,6 +51,13 @@ impl Addresses {
         self.azs
             .values()
             .flat_map(|addresses| addresses.iter().map(|a| a.socket_address))
+            .collect()
+    }
+
+    fn all_socket_addresses(&self) -> HashSet<SocketAddr> {
+        self.azs
+            .values()
+            .flat_map(|addrs| addrs.iter().map(|a| a.socket_address))
             .collect()
     }
 }
@@ -78,7 +91,7 @@ impl std::fmt::Display for RefreshError {
 #[derive(Debug)]
 pub(crate) enum AddressProvider {
     Refreshing {
-        addresses: Arc<Mutex<Arc<Addresses>>>,
+        addresses: Arc<RwLock<AddressState>>,
         _background_loader: BackgroundAddressLoader,
     },
     Static {
@@ -159,7 +172,7 @@ impl AddressProvider {
                 )
             })?;
 
-        let addresses = Arc::new(Mutex::new(Arc::new(Addresses::default())));
+        let addresses = Arc::new(RwLock::new(AddressState::default()));
 
         try_refresh_addresses(&client, &credential_provider, &addresses)
             .await
@@ -175,7 +188,7 @@ impl AddressProvider {
 
         let task_client = client.clone();
         let task_credential_provider = credential_provider.clone();
-        let task_addresses = Arc::clone(&addresses); // Share the same mutex
+        let task_addresses = Arc::clone(&addresses); // Share the same lock
 
         let join_handle = runtime.spawn(refresh_addresses_forever(
             alive.clone(),
@@ -200,11 +213,24 @@ impl AddressProvider {
     pub fn get_addresses(&self, az_id: Option<&str>) -> Vec<SocketAddr> {
         match &self {
             Self::Refreshing { addresses, .. } => addresses
-                .lock()
-                .expect("local mutex must not be poisoned")
+                .read()
+                .expect("address state lock must not be poisoned")
+                .addresses
                 .clone()
                 .for_az(az_id),
             Self::Static { address } => vec![*address],
+        }
+    }
+
+    pub fn get_generation(&self) -> u64 {
+        match &self {
+            Self::Refreshing { addresses, .. } => {
+                addresses
+                    .read()
+                    .expect("address state lock must not be poisoned")
+                    .generation
+            }
+            Self::Static { address: _address } => 0,
         }
     }
 }
@@ -213,7 +239,7 @@ async fn refresh_addresses_forever(
     alive: Arc<AtomicBool>,
     client: reqwest::Client,
     credential_provider: CredentialProvider,
-    addresses: Arc<Mutex<Arc<Addresses>>>,
+    addresses: Arc<RwLock<AddressState>>,
     interval: Duration,
 ) {
     let mut interval = tokio::time::interval(interval);
@@ -236,7 +262,7 @@ async fn refresh_addresses_forever(
 async fn try_refresh_addresses(
     client: &reqwest::Client,
     credential_provider: &CredentialProvider,
-    addresses: &Arc<Mutex<Arc<Addresses>>>,
+    addresses: &Arc<RwLock<AddressState>>,
 ) -> Result<(), RefreshError> {
     log::debug!(
         "refreshing address list with private endpoints? {}",
@@ -270,7 +296,7 @@ async fn try_refresh_addresses(
     }
 
     let response = response.text().await?;
-    let new_addresses = match serde_json::from_str(&response) {
+    let new_addresses: Addresses = match serde_json::from_str(&response) {
         Ok(addresses) => addresses,
         Err(e) => {
             log::warn!("error parsing address list JSON: {response}");
@@ -278,7 +304,25 @@ async fn try_refresh_addresses(
         }
     };
     log::debug!("refreshed address list: {new_addresses:?}");
-    let new_addresses = Arc::new(new_addresses);
-    *addresses.lock().expect("local mutex must not be poisoned") = new_addresses;
+
+    let needs_update = {
+        let current_state = addresses
+            .read()
+            .expect("address state lock must not be poisoned");
+        current_state.addresses.all_socket_addresses() != new_addresses.all_socket_addresses()
+    };
+
+    if needs_update {
+        let mut current_state = addresses
+            .write()
+            .expect("address state lock must not be poisoned");
+        let new_generation = current_state.generation + 1;
+        *current_state = AddressState {
+            addresses: Arc::new(new_addresses),
+            generation: new_generation,
+        };
+        log::debug!("address list changed, new generation: {new_generation}");
+    }
+
     Ok(())
 }

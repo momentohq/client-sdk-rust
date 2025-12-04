@@ -12,6 +12,7 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::net::SocketAddr;
 use std::pin::{pin, Pin};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
 use std::task::{Context, Poll};
 
@@ -27,6 +28,7 @@ pub(crate) struct ConnectionPool {
     connector: ProtosocketConnectionManager,
     address_connections: RwLock<BoundedAddressConnectionMap>,
     address_provider: Arc<AddressProvider>,
+    last_synced_generation: AtomicU64,
     az_id: Option<String>,
 }
 
@@ -39,36 +41,28 @@ impl ConnectionPool {
     ) -> MomentoResult<Self> {
         let address_connections = BoundedAddressConnectionMap::new(max_total_connections);
 
+        // Force a sync by presetting the synced generation to MAX
+        let last_synced_generation = AtomicU64::new(u64::MAX);
+
         Ok(Self {
             connector,
             address_connections: RwLock::new(address_connections),
             address_provider,
+            last_synced_generation,
             az_id,
         })
     }
 
     #[allow(clippy::expect_used)]
     fn ensure_addresses_current(&self) {
-        let current_addresses = self.address_provider.get_addresses(self.az_id.as_deref());
+        let current_generation = self.address_provider.get_generation();
+        let last_synced = self.last_synced_generation.load(Ordering::Acquire);
 
-        let needs_update = {
-            let address_connections = self
-                .address_connections
-                .read()
-                .expect("address lock must not be poisoned");
-
-            if address_connections.len() != current_addresses.len() {
-                true
-            } else {
-                current_addresses
-                    .iter()
-                    .any(|addr| address_connections.get_connections(addr).is_none())
-            }
-        };
-
-        if !needs_update {
+        if current_generation == last_synced {
             return;
         }
+
+        let current_addresses = self.address_provider.get_addresses(self.az_id.as_deref());
 
         // Order the addresses in a consistent way in case we're only able to add a subset of them
         let ordered_addresses: Vec<_> =
@@ -79,7 +73,16 @@ impl ConnectionPool {
             .write()
             .expect("address lock must not be poisoned");
 
+        // Re-check after acquiring the lock in case another thread synced already
+        if current_generation <= self.last_synced_generation.load(Ordering::Acquire) {
+            return;
+        }
+
         address_connections.sync_addresses(&ordered_addresses);
+
+        // Update after successfully syncing
+        self.last_synced_generation
+            .store(current_generation, Ordering::Release);
     }
 
     /// Get a consistent connection for the given key using HRW hashing.
@@ -313,10 +316,6 @@ impl BoundedAddressConnectionMap {
 
     fn len(&self) -> usize {
         self.map.len()
-    }
-
-    fn get_connections(&self, addr: &SocketAddr) -> Option<&ServerConnections> {
-        self.map.get(addr)
     }
 
     fn iter(&self) -> impl Iterator<Item = (&SocketAddr, &ServerConnections)> {
