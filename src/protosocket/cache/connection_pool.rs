@@ -355,6 +355,7 @@ impl<S: Default> BoundedAddressConnectionMap<S> {
     /// The sum of the lengths of the Vecs in the map will always be less than max_total_connections,
     /// even if only a subset of addreses can be used. If the map contains addresses in common with
     /// those in the given list, it will preserve those connections.
+    #[allow(clippy::expect_used)]
     fn sync_addresses(&mut self, ordered_addresses: &[SocketAddr]) {
         if ordered_addresses.is_empty() {
             self.map.clear();

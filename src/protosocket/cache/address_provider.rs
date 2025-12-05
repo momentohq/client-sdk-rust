@@ -222,6 +222,7 @@ impl AddressProvider {
         }
     }
 
+    #[allow(clippy::expect_used)]
     pub fn get_generation(&self) -> u64 {
         match &self {
             Self::Refreshing { addresses, .. } => {
