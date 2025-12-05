@@ -23,6 +23,21 @@ thread_local! {
         RefCell::new(rand::rngs::SmallRng::from_os_rng());
 }
 
+/// A connection pool that supports consistent connections per key using HRW hashing
+///
+/// The pool gets a list of addresses it connects to at attempts to maintain max_connections / num_addresses
+/// connections per address, with a minimum of one. It uses addresses as keys so that it can use HRW hashing
+/// to select a consistent address for a given key. If max_connections is smaller than num_addresses, it will
+/// only connect to enough addresses to allow for one connection per address up to max_connections.
+///
+/// The address provider is checked when attempting to get a connection by comparing the last synced generation
+/// number with the generation counter the address provider maintains. If those are different, the pool gets the
+/// latest addresses from the provider and sorts them using HRW to make sure a consistent subset of them will be
+/// used. It then gets a write lock on the address_connections map and updates it with the new addresses,
+/// preserving any connections it has to addresses that haven't changed with the new generation.
+///
+/// Connections that have been dispensed by the pool remain valid even if their address has been removed from
+/// the pool to allow for in-flight requests during an address update.
 #[derive(Debug)]
 pub(crate) struct ConnectionPool {
     connector: ProtosocketConnectionManager,
@@ -36,11 +51,11 @@ pub(crate) struct ConnectionPool {
 impl ConnectionPool {
     pub async fn new(
         connector: ProtosocketConnectionManager,
-        max_total_connections: usize,
+        max_connections: usize,
         address_provider: Arc<AddressProvider>,
         az_id: Option<String>,
     ) -> MomentoResult<Self> {
-        let address_connections = BoundedAddressConnectionMap::new(max_total_connections);
+        let address_connections = BoundedAddressConnectionMap::new(max_connections);
 
         // Force a sync by presetting the synced generation to MAX
         let last_synced_generation = AtomicU64::new(u64::MAX);
@@ -54,6 +69,7 @@ impl ConnectionPool {
         })
     }
 
+    /// Check if the list of addresses used by the pool is current and update it if not.
     #[allow(clippy::expect_used)]
     fn ensure_addresses_current(&self) {
         let current_generation = self.address_provider.get_generation();
@@ -75,7 +91,7 @@ impl ConnectionPool {
             .expect("address lock must not be poisoned");
 
         // Re-check after acquiring the lock in case another thread synced already
-        if current_generation <= self.last_synced_generation.load(Ordering::Acquire) {
+        if current_generation == self.last_synced_generation.load(Ordering::Acquire) {
             return;
         }
 
@@ -120,6 +136,7 @@ impl ConnectionPool {
         self.get_or_create_connection(connection_state, addr).await
     }
 
+    /// Get a random connection from the pool.
     #[allow(clippy::expect_used)]
     pub async fn get_connection(&self) -> MomentoResult<RpcClient<CacheCommand, CacheResponse>> {
         self.ensure_addresses_current();
@@ -297,6 +314,11 @@ impl PlacementTarget for SocketAddr {
 type PoolConnection<S> = Mutex<S>;
 type ServerConnections<S> = Arc<Vec<PoolConnection<S>>>;
 
+/// Map of SocketAddrs to Vecs of connections.
+///
+/// The length of the Vecs for each key is max_connections / keys().len(), with a minimum of 1.
+/// If the map is updated with more keys than max_connections, only the first max_connections keys
+// will be used in the map to let each key have a connection and avoid going over max_connections.
 #[derive(Debug)]
 struct BoundedAddressConnectionMap<S: Default> {
     map: HashMap<SocketAddr, ServerConnections<S>>,
@@ -328,6 +350,11 @@ impl<S: Default> BoundedAddressConnectionMap<S> {
         self.map.iter()
     }
 
+    /// Replace the addresses in the map with the given ordered list of addresses.
+    ///
+    /// The sum of the lengths of the Vecs in the map will always be less than max_total_connections,
+    /// even if only a subset of addreses can be used. If the map contains addresses in common with
+    /// those in the given list, it will preserve those connections.
     fn sync_addresses(&mut self, ordered_addresses: &[SocketAddr]) {
         if ordered_addresses.is_empty() {
             self.map.clear();
