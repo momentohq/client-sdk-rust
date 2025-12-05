@@ -26,8 +26,9 @@ impl<K: IntoBytes, V: IntoBytes> SetRequest<K, V> {
         self,
         client: &ProtosocketCacheClient,
     ) -> MomentoResult<crate::cache::SetResponse> {
+        let key = self.key.into_bytes();
         let completion = client
-            .protosocket_connection()
+            .protosocket_connection(&key)
             .await?
             .send_unary(CacheCommand {
                 message_id: client.message_id(),
@@ -35,7 +36,7 @@ impl<K: IntoBytes, V: IntoBytes> SetRequest<K, V> {
                 rpc_kind: Some(RpcKind::Unary(Unary {
                     command: Some(Command::Set(SetCommand {
                         namespace: self.cache_name.to_string(),
-                        key: self.key.into_bytes(),
+                        key,
                         value: self.value.into_bytes(),
                         ttl_milliseconds: client.expand_ttl_ms(self.ttl)?,
                     })),
