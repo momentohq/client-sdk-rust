@@ -183,7 +183,7 @@ impl CredentialProvider {
     /// Returns a Credential Provider from the provided v2 API key and Momento service endpoint.
     ///
     /// # Arguments
-    /// * `args` - Momento global API key and service endpoint provided as a [FromApiKeyV2Args] struct
+    /// * `args` - Momento v2 API key and service endpoint provided as a [FromApiKeyV2Args] struct
     ///
     /// # Examples
     /// ```
