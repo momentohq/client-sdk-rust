@@ -120,9 +120,7 @@ pub use cache::{CacheClient, CacheClientBuilder, ReadyToBuild};
 /// Contains configuration settings for the Momento SDK that are shared between the Cache and Topics clients.
 pub mod config;
 mod credential_provider;
-pub use credential_provider::{
-    CredentialProvider, GlobalKeyFromEnvVarProps, GlobalKeyFromStringProps,
-};
+pub use credential_provider::{CredentialProvider, FromApiKeyV2Args, FromEnvVarV2Args};
 
 /// Contains the [MomentoError] type for representing errors in the Momento SDK.
 pub mod errors;
