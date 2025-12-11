@@ -1,15 +1,15 @@
 use momento_protos::protosocket::cache::{CacheCommand, CacheResponse};
-use protosocket_rpc::client::{ConnectionPool, RpcClient};
+use protosocket_rpc::client::RpcClient;
 
 use crate::cache::{GetRequest, SetRequest};
 use crate::protosocket::cache::cache_client_builder::NeedsDefaultTtl;
-use crate::protosocket::cache::connection_manager::ProtosocketConnectionManager;
+use crate::protosocket::cache::config::connection_strategy::ConnectionStrategy;
+use crate::protosocket::cache::connection_pool::ConnectionPool;
 use crate::protosocket::cache::{Configuration, MomentoProtosocketRequest};
 use crate::{utils, IntoBytes, MomentoError, MomentoResult, ProtosocketCacheClientBuilder};
 use std::convert::TryInto;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
-
 // TODO: remove `no_run` on doc examples to allow fully running them as doctests
 
 /// A client for interacting with Momento Cache using the Protosocket protocol.
@@ -47,15 +47,16 @@ use std::time::Duration;
 /// ```
 #[derive(Clone, Debug)]
 pub struct ProtosocketCacheClient {
-    client_pool: std::sync::Arc<ConnectionPool<ProtosocketConnectionManager>>,
+    client_pool: std::sync::Arc<ConnectionPool>,
     message_id: std::sync::Arc<AtomicU64>,
     item_default_ttl: Duration,
     request_timeout: Duration,
+    connection_strategy: ConnectionStrategy,
 }
 
 impl ProtosocketCacheClient {
     pub(crate) fn new(
-        client_pool: ConnectionPool<ProtosocketConnectionManager>,
+        client_pool: ConnectionPool,
         default_ttl: Duration,
         configuration: Configuration,
     ) -> Self {
@@ -64,6 +65,7 @@ impl ProtosocketCacheClient {
             message_id: std::sync::Arc::new(AtomicU64::new(0)),
             item_default_ttl: default_ttl,
             request_timeout: configuration.timeout(),
+            connection_strategy: configuration.connection_strategy,
         }
     }
 
@@ -209,8 +211,14 @@ impl ProtosocketCacheClient {
 
     pub(crate) async fn protosocket_connection(
         &self,
+        key: &[u8],
     ) -> MomentoResult<RpcClient<CacheCommand, CacheResponse>> {
-        let pooled_client = self.client_pool.get_connection().await.map_err(|e| {
+        let client_result = match self.connection_strategy {
+            ConnectionStrategy::Random => self.client_pool.get_connection().await,
+            ConnectionStrategy::KeyHash => self.client_pool.get_connection_for_key(key).await,
+        };
+
+        let pooled_client = client_result.map_err(|e| {
             MomentoError::unknown_error("protosocket_connection", Some(format!("{e:?}")))
         })?;
         Ok(pooled_client.clone())
