@@ -1,9 +1,21 @@
 use crate::MomentoResult;
 use crate::{MomentoError, MomentoErrorCode};
 use base64::Engine;
+use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
+use log::warn;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fmt::{Debug, Display, Formatter};
+
+#[derive(Debug, Serialize, Deserialize)]
+struct V2Claims {
+    #[serde(rename = "id")]
+    id: String,
+    #[serde(rename = "t")]
+    t: String,
+    #[serde(rename = "exp")]
+    exp: Option<usize>,
+}
 
 #[derive(Serialize, Deserialize)]
 struct V1Token {
@@ -537,27 +549,24 @@ fn is_v2_api_key(api_key: &str) -> bool {
         return false;
     }
 
-    // parse the jwt and expect "t" claim to equal "g", else not a v2 api key
-    let segments: Vec<&str> = api_key.split('.').collect();
-    if segments.len() != 3 {
-        return false;
-    }
-    let payload_segment = segments[1];
-    let payload_bytes = match base64::engine::general_purpose::URL_SAFE.decode(payload_segment) {
-        Ok(bytes) => bytes,
-        Err(_) => return false,
-    };
-    let payload_json: serde_json::Value = match serde_json::from_slice(&payload_bytes) {
-        Ok(json) => json,
-        Err(_) => return false,
-    };
-    match payload_json.get("t") {
-        Some(t_value) => match t_value.as_str() {
-            Some(t_str) => t_str == "g",
-            None => false,
-        },
-        None => false,
-    }
+    let key = DecodingKey::from_secret(b"");
+    let mut validation = Validation::new(Algorithm::RS256);
+    validation.required_spec_claims.clear();
+    validation.required_spec_claims.insert("t".to_string());
+
+    validation.validate_exp = false;
+    validation.insecure_disable_signature_validation();
+
+    let token =
+        match decode(api_key, &key, &validation).map_err(|e| token_parsing_error(Box::new(e))) {
+            Ok(data) => data,
+            Err(_) => {
+                warn!("could not decode jwt");
+                return false;
+            }
+        };
+    let token_claims: V2Claims = token.claims;
+    token_claims.t == "g"
 }
 
 #[cfg(test)]
