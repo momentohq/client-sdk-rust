@@ -245,10 +245,12 @@ impl CredentialProvider {
     }
 
     /// Returns a Credential Provider using an API key and Momento service endpoint
-    /// stored in the specified environment variables
+    /// stored in the environment variables MOMENTO_API_KEY and MOMENTO_ENDPOINT.
+    /// You can provide alternate names for these environment variables by passing in
+    /// a [FromEnvVarV2Args] struct.
     ///
     /// # Arguments
-    /// * `args` - Names of the environment variables from which to read the v2 api key and service endpoint, provided as a [FromEnvVarV2Args] struct
+    /// * `args` - Optionally provide a [FromEnvVarV2Args] struct with alternate names of the environment variables from which to read the v2 api key and service endpoint.
     ///
     /// # Examples
     /// ```
@@ -258,23 +260,42 @@ impl CredentialProvider {
     /// use momento::CredentialProvider;
     /// use momento::FromEnvVarV2Args;
     ///
+    /// // Default environment variable names are MOMENTO_API_KEY and MOMENTO_ENDPOINT.
+    /// // Provide alternate names by passing in a FromEnvVarV2Args struct.
     /// let args = FromEnvVarV2Args {
     ///    api_key_env_var: "YOUR ENV VAR NAME GOES HERE".to_string(),
     ///    endpoint_env_var: "YOUR MOMENTO ENDPOINT GOES HERE".to_string(),
     /// };
-    /// let credential_provider = CredentialProvider::from_env_var_v2(args);
+    /// let credential_provider = CredentialProvider::from_env_var_v2(Some(args));
     /// # ()
     /// # })
     /// # }
     /// ```
-    pub fn from_env_var_v2(args: FromEnvVarV2Args) -> MomentoResult<CredentialProvider> {
-        let api_key_env_var_name = args.api_key_env_var;
-        if api_key_env_var_name.is_empty() {
-            return Err(MomentoError {
-                message: "API key env var name cannot be empty".into(),
-                error_code: MomentoErrorCode::InvalidArgumentError,
-                inner_error: None,
-            });
+    pub fn from_env_var_v2(args: Option<FromEnvVarV2Args>) -> MomentoResult<CredentialProvider> {
+        let (api_key_env_var_name, endpoint_env_var_name) = if let Some(alternate_names) = args {
+            if alternate_names.api_key_env_var.is_empty() {
+                return Err(MomentoError {
+                    message: "API key env var name cannot be empty".into(),
+                    error_code: MomentoErrorCode::InvalidArgumentError,
+                    inner_error: None,
+                });
+            };
+            if alternate_names.endpoint_env_var.is_empty() {
+                return Err(MomentoError {
+                    message: "Endpoint env var name cannot be empty".into(),
+                    error_code: MomentoErrorCode::InvalidArgumentError,
+                    inner_error: None,
+                });
+            };
+            (
+                alternate_names.api_key_env_var,
+                alternate_names.endpoint_env_var,
+            )
+        } else {
+            (
+                "MOMENTO_API_KEY".to_string(),
+                "MOMENTO_ENDPOINT".to_string(),
+            )
         };
 
         let api_key = match env::var(&api_key_env_var_name) {
@@ -304,15 +325,6 @@ impl CredentialProvider {
                 inner_error: None,
             });
         }
-
-        let endpoint_env_var_name = args.endpoint_env_var;
-        if endpoint_env_var_name.is_empty() {
-            return Err(MomentoError {
-                message: "Endpoint env var name cannot be empty".into(),
-                error_code: MomentoErrorCode::InvalidArgumentError,
-                inner_error: None,
-            });
-        };
 
         let endpoint = match env::var(&endpoint_env_var_name) {
             Ok(endpoint) => {
@@ -582,8 +594,8 @@ mod tests {
     const TEST_V2_API_KEY: &str = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0IjoiZyIsImp0aSI6InNvbWUtaWQifQ.GMr9nA6HE0ttB6llXct_2Sg5-fOKGFbJCdACZFgNbN1fhT6OPg_hVc8ThGzBrWC_RlsBpLA1nzqK3SOJDXYxAw";
 
     const TEST_ENDPOINT: &str = "test_endpoint";
-    const KEY_ENV_VAR_NAME: &str = "MOMENTO_TEST_V2_API_KEY";
-    const ENDPOINT_ENV_VAR_NAME: &str = "MOMENTO_TEST_ENDPOINT";
+    const KEY_ENV_VAR_NAME: &str = "MOMENTO_API_KEY";
+    const ENDPOINT_ENV_VAR_NAME: &str = "MOMENTO_ENDPOINT";
 
     #[test]
     fn env_var() {
@@ -703,11 +715,36 @@ mod tests {
                 (ENDPOINT_ENV_VAR_NAME, Some(TEST_ENDPOINT)),
             ],
             || {
-                let credential_provider = CredentialProvider::from_env_var_v2(FromEnvVarV2Args {
-                    api_key_env_var: KEY_ENV_VAR_NAME.into(),
-                    endpoint_env_var: ENDPOINT_ENV_VAR_NAME.into(),
-                })
-                .expect("should be able to build credential provider");
+                let credential_provider = CredentialProvider::from_env_var_v2(None)
+                    .expect("should be able to build credential provider");
+                assert!(credential_provider.auth_token == TEST_V2_API_KEY);
+                assert!(credential_provider.cache_endpoint == "https://cache.test_endpoint");
+                assert!(credential_provider.control_endpoint == "https://control.test_endpoint");
+                assert!(credential_provider.token_endpoint == "https://token.test_endpoint");
+                assert!(
+                    credential_provider.cache_http_endpoint == "https://api.cache.test_endpoint"
+                );
+            },
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn from_env_var_v2_alternate_env_var_names() -> MomentoResult<()> {
+        const ALTERNATE_KEY_NAME: &str = "ALTERNATE_MOMENTO_API_KEY";
+        const ALTERNATE_ENDPOINT_NAME: &str = "ALTERNATE_MOMENTO_ENDPOINT";
+        temp_env::with_vars(
+            [
+                (ALTERNATE_KEY_NAME, Some(TEST_V2_API_KEY)),
+                (ALTERNATE_ENDPOINT_NAME, Some(TEST_ENDPOINT)),
+            ],
+            || {
+                let credential_provider =
+                    CredentialProvider::from_env_var_v2(Some(FromEnvVarV2Args {
+                        api_key_env_var: ALTERNATE_KEY_NAME.into(),
+                        endpoint_env_var: ALTERNATE_ENDPOINT_NAME.into(),
+                    }))
+                    .expect("should be able to build credential provider");
                 assert!(credential_provider.auth_token == TEST_V2_API_KEY);
                 assert!(credential_provider.cache_endpoint == "https://cache.test_endpoint");
                 assert!(credential_provider.control_endpoint == "https://control.test_endpoint");
@@ -759,10 +796,10 @@ mod tests {
     #[test]
     fn from_env_var_v2_empty_endpoint_env_var_name() {
         temp_env::with_vars([(KEY_ENV_VAR_NAME, Some(TEST_V2_API_KEY))], || {
-            let empty_endpoint_err = CredentialProvider::from_env_var_v2(FromEnvVarV2Args {
+            let empty_endpoint_err = CredentialProvider::from_env_var_v2(Some(FromEnvVarV2Args {
                 api_key_env_var: KEY_ENV_VAR_NAME.into(),
                 endpoint_env_var: "".into(),
-            })
+            }))
             .unwrap_err();
             let _err_msg = "Endpoint env var name cannot be empty".to_owned();
             assert_eq!(empty_endpoint_err.to_string(), _err_msg);
@@ -772,11 +809,12 @@ mod tests {
     #[test]
     fn from_env_var_v2_empty_key_env_var_name() {
         temp_env::with_var(ENDPOINT_ENV_VAR_NAME, Some(TEST_ENDPOINT), || {
-            let empty_env_var_name_err = CredentialProvider::from_env_var_v2(FromEnvVarV2Args {
-                api_key_env_var: "".into(),
-                endpoint_env_var: ENDPOINT_ENV_VAR_NAME.into(),
-            })
-            .unwrap_err();
+            let empty_env_var_name_err =
+                CredentialProvider::from_env_var_v2(Some(FromEnvVarV2Args {
+                    api_key_env_var: "".into(),
+                    endpoint_env_var: ENDPOINT_ENV_VAR_NAME.into(),
+                }))
+                .unwrap_err();
             let _err_msg = "API key env var name cannot be empty".to_owned();
             assert_eq!(empty_env_var_name_err.to_string(), _err_msg);
         });
@@ -790,11 +828,7 @@ mod tests {
                 (ENDPOINT_ENV_VAR_NAME, Some(TEST_ENDPOINT)),
             ],
             || {
-                let empty_env_var_err = CredentialProvider::from_env_var_v2(FromEnvVarV2Args {
-                    api_key_env_var: KEY_ENV_VAR_NAME.into(),
-                    endpoint_env_var: ENDPOINT_ENV_VAR_NAME.into(),
-                })
-                .unwrap_err();
+                let empty_env_var_err = CredentialProvider::from_env_var_v2(None).unwrap_err();
                 let _err_msg = format!("Env var {KEY_ENV_VAR_NAME} must be set").to_owned();
                 assert_eq!(empty_env_var_err.to_string(), _err_msg);
             },
@@ -809,11 +843,7 @@ mod tests {
                 (ENDPOINT_ENV_VAR_NAME, Some("")),
             ],
             || {
-                let empty_env_var_err = CredentialProvider::from_env_var_v2(FromEnvVarV2Args {
-                    api_key_env_var: KEY_ENV_VAR_NAME.into(),
-                    endpoint_env_var: ENDPOINT_ENV_VAR_NAME.into(),
-                })
-                .unwrap_err();
+                let empty_env_var_err = CredentialProvider::from_env_var_v2(None).unwrap_err();
                 let _err_msg = format!("Env var {ENDPOINT_ENV_VAR_NAME} must be set").to_owned();
                 assert_eq!(empty_env_var_err.to_string(), _err_msg);
             },
@@ -839,11 +869,7 @@ mod tests {
                 (ENDPOINT_ENV_VAR_NAME, Some(TEST_ENDPOINT)),
             ],
             || {
-                let err = CredentialProvider::from_env_var_v2(FromEnvVarV2Args {
-                    api_key_env_var: KEY_ENV_VAR_NAME.into(),
-                    endpoint_env_var: ENDPOINT_ENV_VAR_NAME.into(),
-                })
-                .unwrap_err();
+                let err = CredentialProvider::from_env_var_v2(None).unwrap_err();
                 let _err_msg = "Received an invalid v2 API key. Are you using the correct key? Or did you mean to use `from_env_var()` with a legacy key instead?".to_owned();
                 assert_eq!(err.to_string(), _err_msg);
             },
