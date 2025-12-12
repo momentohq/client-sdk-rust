@@ -1,21 +1,10 @@
 use crate::MomentoResult;
 use crate::{MomentoError, MomentoErrorCode};
 use base64::Engine;
-use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use log::warn;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fmt::{Debug, Display, Formatter};
-
-#[derive(Debug, Serialize, Deserialize)]
-struct V2Claims {
-    #[serde(rename = "id")]
-    id: String,
-    #[serde(rename = "t")]
-    t: String,
-    #[serde(rename = "exp")]
-    exp: Option<usize>,
-}
 
 #[derive(Serialize, Deserialize)]
 struct V1Token {
@@ -546,27 +535,42 @@ fn is_v2_api_key(api_key: &str) -> bool {
     // only v1 api keys are entirely b64 encoded
     // v2 keys are JWTs with b64 encoded segments
     if is_base64_encoded(api_key) {
+        warn!("did not expect v2 api key to be entirely base64 encoded");
         return false;
     }
 
-    let key = DecodingKey::from_secret(b"");
-    let mut validation = Validation::new(Algorithm::RS256);
-    validation.required_spec_claims.clear();
-    validation.required_spec_claims.insert("t".to_string());
+    // do not use jwt parsing library, just b64 decode middle segment to check "t" claim
+    let segments: Vec<&str> = api_key.split('.').collect();
+    if segments.len() != 3 {
+        warn!("token does not have three segments");
+        return false;
+    }
 
-    validation.validate_exp = false;
-    validation.insecure_disable_signature_validation();
-
-    let token =
-        match decode(api_key, &key, &validation).map_err(|e| token_parsing_error(Box::new(e))) {
-            Ok(data) => data,
+    let b64_encoded_claims = segments[1];
+    let b64_decoded_claims_bytes =
+        match base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(b64_encoded_claims) {
+            Ok(bytes) => bytes,
             Err(_) => {
-                warn!("could not decode jwt");
+                warn!("could not decode jwt claims segment");
                 return false;
             }
         };
-    let token_claims: V2Claims = token.claims;
-    token_claims.t == "g"
+    let json_claims: serde_json::Map<String, serde_json::Value> =
+        match serde_json::from_slice(&b64_decoded_claims_bytes) {
+            Ok(json) => json,
+            Err(_) => {
+                warn!("could not parse jwt claims segment as utf8 string");
+                return false;
+            }
+        };
+    let t_claim = match json_claims.get("t") {
+        Some(serde_json::Value::String(t)) => t,
+        _ => {
+            warn!("could not find 't' claim in jwt claims");
+            return false;
+        }
+    };
+    t_claim == "g"
 }
 
 #[cfg(test)]
@@ -575,7 +579,7 @@ mod tests {
     use crate::{CredentialProvider, FromApiKeyV2Args, FromEnvVarV2Args, MomentoResult};
 
     const TEST_V1_API_KEY: &str = "eyJlbmRwb2ludCI6Im1vbWVudG9fZW5kcG9pbnQiLCJhcGlfa2V5IjoiZXlKaGJHY2lPaUpJVXpJMU5pSjkuZXlKemRXSWlPaUowWlhOMElITjFZbXBsWTNRaUxDSjJaWElpT2pFc0luQWlPaUlpZlEuaGcyd01iV2Utd2VzUVZ0QTd3dUpjUlVMalJwaFhMUXdRVFZZZlFMM0w3YyJ9Cg==";
-    const TEST_V2_API_KEY: &str = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0IjoiZyIsImlkIjoic29tZS1pZCJ9.WRhKpdh7cFCXO7lAaVojtQAxK6mxMdBrvXTJL1xu94S0d6V1YSstOObRlAIMA7i_yIxO1mWEF3rlF5UNc77VXQ";
+    const TEST_V2_API_KEY: &str = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0IjoiZyIsImp0aSI6InNvbWUtaWQifQ.GMr9nA6HE0ttB6llXct_2Sg5-fOKGFbJCdACZFgNbN1fhT6OPg_hVc8ThGzBrWC_RlsBpLA1nzqK3SOJDXYxAw";
 
     const TEST_ENDPOINT: &str = "test_endpoint";
     const KEY_ENV_VAR_NAME: &str = "MOMENTO_TEST_V2_API_KEY";
