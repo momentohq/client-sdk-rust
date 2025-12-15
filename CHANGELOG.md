@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.59.0](https://github.com/momentohq/client-sdk-rust/compare/v0.58.1...v0.59.0) (2025-12-15)
+
+
+### Features
+
+* new credential provider methods for accepting v2 api keys ([#511](https://github.com/momentohq/client-sdk-rust/issues/511)) ([dc8b7e2](https://github.com/momentohq/client-sdk-rust/commit/dc8b7e212f9d0a71d1f631dfa93d2141ed4d6275))
+
 ## [0.58.1](https://github.com/momentohq/client-sdk-rust/compare/v0.58.0...v0.58.1) (2025-11-18)
 
 
