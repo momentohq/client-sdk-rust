@@ -165,7 +165,8 @@ impl CredentialProvider {
     /// Returns a Credential Provider from the provided v2 API key and Momento service endpoint.
     ///
     /// # Arguments
-    /// * `args` - Momento v2 API key and service endpoint provided as a [FromApiKeyV2Args] struct
+    /// * `api_key` - Momento v2 API key
+    /// * `endpoint` - Momento service endpoint
     ///
     /// # Examples
     /// ```
@@ -225,11 +226,10 @@ impl CredentialProvider {
 
     /// Returns a Credential Provider using an API key and Momento service endpoint
     /// stored in the environment variables MOMENTO_API_KEY and MOMENTO_ENDPOINT.
-    /// You can provide alternate names for these environment variables by passing in
-    /// a [FromEnvVarV2Args] struct.
     ///
     /// # Arguments
-    /// * `args` - Optionally provide a [FromEnvVarV2Args] struct with alternate names of the environment variables from which to read the v2 api key and service endpoint.
+    /// * `api_key_env_var` - Optionally provide the name of the environment variable from which to read the v2 API key.
+    /// * `endpoint_env_var` - Optionally provide the name of the environment variable from which to read the v2 service endpoint.
     ///
     /// # Examples
     /// ```
