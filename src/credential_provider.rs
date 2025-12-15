@@ -242,7 +242,7 @@ impl CredentialProvider {
     /// let default_credential_provider = CredentialProvider::from_env_var_v2(None, None);
     ///
     /// // Or provide alternate environment variable names.
-    /// let credential_provider = CredentialProvider::from_env_var_v2(Some("API KEY ENV VAR"), Some("ENDPOINT ENV VAR"));
+    /// let credential_provider = CredentialProvider::from_env_var_v2(Some("API KEY ENV VAR".into()), Some("ENDPOINT ENV VAR".into()));
     /// # ()
     /// # })
     /// # }
