@@ -97,6 +97,7 @@ pub fn get_test_auth_cache_name() -> String {
 }
 
 #[allow(clippy::expect_used)] // we want to panic if the env var is not set
+#[allow(deprecated)] // still supporting legacy API keys in tests
 pub fn get_test_credential_provider() -> CredentialProvider {
     CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
         .expect("auth token should be valid")

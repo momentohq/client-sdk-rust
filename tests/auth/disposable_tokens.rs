@@ -27,7 +27,7 @@ async fn generate_disposable_token_success(
 }
 
 fn new_credential_provider_from_token(token: String) -> CredentialProvider {
-    CredentialProvider::from_string(token).expect("auth token should be valid")
+    CredentialProvider::from_disposable_token(token).expect("auth token should be valid")
 }
 
 fn new_cache_client(credential_provider: CredentialProvider) -> CacheClient {

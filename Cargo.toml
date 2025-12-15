@@ -52,6 +52,7 @@ tokio = { version = "1", features = ["full"] }
 tonic = { version = "0.13", features = ["tls-ring", "tls-webpki-roots"] }
 zstd = "0.13.3"
 rustls-pki-types = "1"
+temp-env = "0.3.6"
 
 [dev-dependencies]
 momento-test-util = { path = "test-util" }
