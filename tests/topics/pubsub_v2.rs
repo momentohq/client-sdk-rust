@@ -5,9 +5,9 @@ use momento_test_util::CACHE_TEST_STATE;
 use momento_test_util::{unique_cache_name, unique_topic_name};
 
 mod publish_and_subscribe {
-    use std::convert::TryInto;
-
     use super::*;
+    use serial_test::serial;
+    use std::convert::TryInto;
 
     #[tokio::test]
     async fn nonexistent_cache_returns_not_found() -> MomentoResult<()> {
@@ -59,6 +59,7 @@ mod publish_and_subscribe {
     // Previously, the topic client used only 1 grpc channel for both unary and streaming requests and starting
     // 100 subscribers and attempting to would have caused the publish request would be silently queued up.
     #[tokio::test]
+    #[serial]
     async fn publish_and_subscribe_with_multiple_subscribers() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.topic_client_v2;
         let cache_name = &CACHE_TEST_STATE.cache_name;
