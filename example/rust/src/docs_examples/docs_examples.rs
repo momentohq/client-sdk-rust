@@ -30,14 +30,34 @@ use std::convert::TryInto;
 use std::time::Duration;
 use uuid::Uuid;
 
+#[allow(deprecated)]
 #[allow(non_snake_case)]
 pub fn example_API_CredentialProviderFromString() {
     let _credential_provider = CredentialProvider::from_string("my-api-key".to_string());
 }
 
+#[allow(deprecated)]
 #[allow(non_snake_case)]
 pub fn example_API_CredentialProviderFromEnvVar() {
     let _credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string());
+}
+
+#[allow(non_snake_case)]
+pub fn example_API_CredentialProviderFromStringV2() {
+    let api_key = "my-api-key".to_string();
+    let endpoint = "cell-4-us-west-2-1.prod.a.momentohq.com".to_string();
+    let _credential_provider = CredentialProvider::from_api_key_v2(api_key, endpoint);
+}
+
+#[allow(non_snake_case)]
+pub fn example_API_CredentialProviderFromEnvVarV2() {
+    let _credential_provider = CredentialProvider::from_default_env_var_v2();
+}
+
+#[allow(non_snake_case)]
+pub fn example_API_CredentialProviderFromDisposableToken() {
+    let auth_token = "my-disposable-token".to_string();
+    let _credential_provider = CredentialProvider::from_disposable_token(auth_token);
 }
 
 #[allow(non_snake_case)]
@@ -65,9 +85,7 @@ pub fn example_API_InstantiateCacheClient() -> Result<(), MomentoError> {
     let _cache_client = CacheClient::builder()
         .default_ttl(Duration::from_secs(60))
         .configuration(Laptop::latest())
-        .credential_provider(CredentialProvider::from_env_var(
-            "MOMENTO_API_KEY".to_string(),
-        )?)
+        .credential_provider(CredentialProvider::from_default_env_var_v2()?)
         .build()?;
     Ok(())
 }
@@ -633,7 +651,7 @@ pub async fn example_API_KeysExist(cache_client: &CacheClient, cache_name: &Stri
 pub fn example_API_InstantiateTopicClient() -> Result<(), MomentoError> {
     let _topic_client = TopicClient::builder()
         .configuration(momento::topics::configurations::Laptop::latest())
-        .credential_provider(CredentialProvider::from_env_var("MOMENTO_API_KEY")?)
+        .credential_provider(CredentialProvider::from_default_env_var_v2()?)
         .build()?;
     Ok(())
 }
@@ -683,6 +701,7 @@ pub async fn example_responsetypes_dictionary_with_try_into(cache_client: &Cache
     Ok(())
 }
 
+#[allow(deprecated)]
 #[allow(non_snake_case)]
 pub fn example_API_InstantiateAuthClient() -> Result<(), MomentoError> {
     let _auth_client = AuthClient::builder()
@@ -701,7 +720,7 @@ pub async fn example_API_GenerateDisposableToken(auth_client: &AuthClient) -> Re
         .await?;
     let token = response.clone().auth_token();
     println!(
-        "Generated disposable token ending with '{}' that expires at epoch {}", 
+        "Generated disposable token ending with '{}' that expires at epoch {}",
         &token[token.len() - 10 .. token.len() - 1], response.expires_at()
     );
 
@@ -712,7 +731,7 @@ pub async fn example_API_GenerateDisposableToken(auth_client: &AuthClient) -> Re
     let response = auth_client.send_request(request).await?;
     let token = response.clone().auth_token();
     println!(
-        "Generated disposable token ending with '{}' that expires at epoch {}", 
+        "Generated disposable token ending with '{}' that expires at epoch {}",
         &token[token.len() - 10 .. token.len() - 1], response.expires_at()
     );
     Ok(())
@@ -722,6 +741,9 @@ pub async fn example_API_GenerateDisposableToken(auth_client: &AuthClient) -> Re
 pub async fn main() -> Result<(), MomentoError> {
     example_API_CredentialProviderFromString();
     example_API_CredentialProviderFromEnvVar();
+    example_API_CredentialProviderFromStringV2();
+    example_API_CredentialProviderFromEnvVarV2();
+    example_API_CredentialProviderFromDisposableToken();
     example_API_ConfigurationLaptop();
     example_API_ConfigurationInRegionDefaultLatest();
     example_API_ConfigurationInRegionLowLatency();
@@ -732,9 +754,7 @@ pub async fn main() -> Result<(), MomentoError> {
     let cache_client = CacheClient::builder()
         .default_ttl(Duration::from_secs(60))
         .configuration(Laptop::latest())
-        .credential_provider(CredentialProvider::from_env_var(
-            "MOMENTO_API_KEY".to_string(),
-        )?)
+        .credential_provider(CredentialProvider::from_default_env_var_v2()?)
         .build()?;
     let cache_name = format!("{}-{}", "docs-examples", Uuid::new_v4());
 
@@ -798,7 +818,7 @@ pub async fn main() -> Result<(), MomentoError> {
 
     let topic_client = TopicClient::builder()
         .configuration(momento::topics::configurations::Laptop::latest())
-        .credential_provider(CredentialProvider::from_env_var("MOMENTO_API_KEY")?)
+        .credential_provider(CredentialProvider::from_default_env_var_v2()?)
         .build()?;
     let topic_name = format!("{}-{}", "docs-examples-topic", Uuid::new_v4());
 
@@ -815,6 +835,7 @@ pub async fn main() -> Result<(), MomentoError> {
 
     example_API_InstantiateAuthClient()?;
 
+    #[allow(deprecated)]
     let auth_client = AuthClient::builder()
         .credential_provider(CredentialProvider::from_env_var(
             "MOMENTO_API_KEY".to_string())?)

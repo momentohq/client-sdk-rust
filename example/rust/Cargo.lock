@@ -930,9 +930,9 @@ dependencies = [
 
 [[package]]
 name = "momento"
-version = "0.57.0"
+version = "0.59.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e5a731eb5c0224bcccdc8a4fa0cd14965f41f2f16880a1fb656b9bf102d1d0b"
+checksum = "ff79d00d89d9eb69aeaa14967649dd9814bc4d83a4e12c44b6a725df901b4117"
 dependencies = [
  "base64",
  "derive_more",
@@ -942,7 +942,7 @@ dependencies = [
  "hyper",
  "log",
  "momento-protos",
- "protosocket",
+ "protosocket 0.12.1",
  "protosocket-prost",
  "protosocket-rpc",
  "rand",
@@ -950,6 +950,7 @@ dependencies = [
  "rustls-pki-types",
  "serde",
  "serde_json",
+ "temp-env",
  "thiserror 2.0.17",
  "tokio",
  "tonic",
@@ -958,9 +959,9 @@ dependencies = [
 
 [[package]]
 name = "momento-protos"
-version = "0.127.3"
+version = "0.127.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be2b09b8df95deb923a28d60506e3a8b37c7507046cdf9a367b470c75a5ddbff"
+checksum = "30ee93d06065842efd655784f5fa78f75e0865038f78a6d385236ae6c6838b2c"
 dependencies = [
  "prost",
  "protosocket-rpc",
@@ -1134,29 +1135,43 @@ dependencies = [
 ]
 
 [[package]]
-name = "protosocket-prost"
-version = "0.11.2"
+name = "protosocket"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e05b23958866ccf631af931706d0ff20890293af06b582d328286d41c32b93df"
+checksum = "62d1f11b21e33dea20b9fd42f0832cdb13ab98f6fbf83bb38260027747f55dc5"
+dependencies = [
+ "bytes",
+ "futures",
+ "log",
+ "thiserror 1.0.61",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
+name = "protosocket-prost"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3061ed45eea92f668ff46639a2b7b71c948a368c49f92a965b4b1e12b95a527b"
 dependencies = [
  "bytes",
  "log",
  "prost",
- "protosocket",
+ "protosocket 0.11.2",
  "thiserror 1.0.61",
  "tokio",
 ]
 
 [[package]]
 name = "protosocket-rpc"
-version = "0.11.2"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b0dc62f7dd9d4ff00c74d0476042e1b9e5628e281fe8101a23aeb9114913a43"
+checksum = "44c39ac0bf30b8488a4d72a8d19d9c91214b2648883357f460b5ecd373e2e6f4"
 dependencies = [
  "futures",
  "k-lock",
  "log",
- "protosocket",
+ "protosocket 0.11.2",
  "rand",
  "rustls-pki-types",
  "socket2 0.6.1",
@@ -1634,6 +1649,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "temp-env"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96374855068f47402c3121c6eed88d29cb1de8f3ab27090e273e420bdabcf050"
+dependencies = [
+ "parking_lot",
 ]
 
 [[package]]

@@ -19,7 +19,7 @@ This example demonstrates a basic set and get from a cache.
 
 ```bash
 # Run example code
-MOMENTO_API_KEY=<YOUR API KEY> cargo run --bin=cache
+MOMENTO_API_KEY=<YOUR API KEY> MOMENTO_ENDPOINT=<endpoint> cargo run --bin=cache
 ```
 
 Example Code: [cache.rs](src/bin/cache.rs)
@@ -30,7 +30,7 @@ This example demonstrates subscribing to and publishing to a Topic.
 
 ```bash
 # Run example code
-MOMENTO_API_KEY=<YOUR API KEY> cargo run --bin=topics
+V1_API_KEY=<YOUR V1 API KEY> cargo run --bin=topics
 ```
 
 Example Code: [topics.rs](src/bin/topics.rs)

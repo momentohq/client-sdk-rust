@@ -9,7 +9,7 @@ async fn main() -> MomentoResult<()> {
     let auth_token = get_topic_client_auth_token().await?;
     let topic_client = TopicClient::builder()
         .configuration(configurations::Laptop::latest())
-        .credential_provider(CredentialProvider::from_string(auth_token)?)
+        .credential_provider(CredentialProvider::from_disposable_token(auth_token)?)
         .build()?;
 
     /*******************************************************************************/
@@ -21,7 +21,7 @@ async fn main() -> MomentoResult<()> {
         println!("\n Subscriber [1] should keep receiving until task is aborted");
         while let Some(message) = subscription1.next().await {
             println!(
-                "[1] Received message: \n\tKind: {:?} \n\tSequence number: {:?} \n\tSequence page: {:?} \n\tPublisher ID: {:?}", 
+                "[1] Received message: \n\tKind: {:?} \n\tSequence number: {:?} \n\tSequence page: {:?} \n\tPublisher ID: {:?}",
                 message.kind,
                 message.topic_sequence_number,
                 message.topic_sequence_page,
@@ -53,7 +53,7 @@ async fn main() -> MomentoResult<()> {
             match message {
                 Some(message) => {
                     println!(
-                        "[2] Received message: \n\tKind: {:?} \n\tSequence number: {:?} \n\tSequence page: {:?} \n\tPublisher ID: {:?}", 
+                        "[2] Received message: \n\tKind: {:?} \n\tSequence number: {:?} \n\tSequence page: {:?} \n\tPublisher ID: {:?}",
                         message.kind,
                         message.topic_sequence_number,
                         message.topic_sequence_page,
@@ -90,11 +90,12 @@ async fn main() -> MomentoResult<()> {
     Ok(())
 }
 
+#[allow(deprecated)]
 // This function generates a disposable token with a token ID for the topic client.
 // The token ID shows up as the publisher ID on the messages received by the subscriber.
 async fn get_topic_client_auth_token() -> MomentoResult<String> {
     let auth_client = AuthClient::builder()
-        .credential_provider(CredentialProvider::from_env_var("MOMENTO_API_KEY")?)
+        .credential_provider(CredentialProvider::from_env_var("V1_API_KEY")?)
         .build()?;
     let expiry = ExpiresIn::minutes(1);
     let scope = PermissionScopes::topic_publish_subscribe("cache", "my-topic").into();

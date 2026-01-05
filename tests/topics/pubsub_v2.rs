@@ -11,7 +11,7 @@ mod publish_and_subscribe {
 
     #[tokio::test]
     async fn nonexistent_cache_returns_not_found() -> MomentoResult<()> {
-        let client = &CACHE_TEST_STATE.topic_client;
+        let client = &CACHE_TEST_STATE.topic_client_v2;
         let cache_name = unique_cache_name();
 
         let result = client
@@ -36,7 +36,7 @@ mod publish_and_subscribe {
 
     #[tokio::test]
     async fn publish_and_subscribe() -> MomentoResult<()> {
-        let client = &CACHE_TEST_STATE.topic_client;
+        let client = &CACHE_TEST_STATE.topic_client_v2;
         let cache_name = &CACHE_TEST_STATE.cache_name;
         let topic_name = unique_topic_name();
 
@@ -60,7 +60,7 @@ mod publish_and_subscribe {
     // 100 subscribers and attempting to would have caused the publish request would be silently queued up.
     #[tokio::test]
     async fn publish_and_subscribe_with_multiple_subscribers() -> MomentoResult<()> {
-        let client = &CACHE_TEST_STATE.topic_client;
+        let client = &CACHE_TEST_STATE.topic_client_v2;
         let cache_name = &CACHE_TEST_STATE.cache_name;
         let topic_name = unique_topic_name();
 
