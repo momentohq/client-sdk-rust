@@ -72,8 +72,8 @@ impl CredentialProvider {
     /// ```
     /// # tokio_test::block_on(async {
     /// use momento::CredentialProvider;
-    /// let credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY")
-    ///     .expect("MOMENTO_API_KEY must be set");
+    /// let credential_provider = CredentialProvider::from_env_var("V1_API_KEY")
+    ///     .expect("V1_API_KEY must be set");
     /// # })
     /// ```
     ///

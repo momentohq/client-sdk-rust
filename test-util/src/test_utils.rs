@@ -66,7 +66,7 @@ pub fn create_doctest_auth_client() -> AuthClient {
 
 pub fn create_doctest_function_client() -> (FunctionClient, String) {
     let cache_name = get_test_cache_name();
-    let credential_provider = get_test_credential_provider();
+    let credential_provider = get_v1_test_credential_provider();
     let client = momento::FunctionClient::builder()
         .credential_provider(credential_provider.clone())
         .build()
@@ -76,7 +76,7 @@ pub fn create_doctest_function_client() -> (FunctionClient, String) {
 
 pub async fn create_doctest_protosocket_cache_client() -> (ProtosocketCacheClient, String) {
     let cache_name = get_test_cache_name();
-    let credential_provider = get_test_credential_provider();
+    let credential_provider = get_v1_test_credential_provider();
     let client = momento::ProtosocketCacheClient::builder()
         .default_ttl(Duration::from_secs(5))
         .configuration(protosocket::cache::configurations::Laptop::latest())
@@ -98,9 +98,13 @@ pub fn get_test_auth_cache_name() -> String {
 
 #[allow(clippy::expect_used)] // we want to panic if the env var is not set
 #[allow(deprecated)] // still supporting legacy API keys in tests
-pub fn get_test_credential_provider() -> CredentialProvider {
-    CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
-        .expect("auth token should be valid")
+pub fn get_v1_test_credential_provider() -> CredentialProvider {
+    CredentialProvider::from_env_var("V1_API_KEY".to_string()).expect("auth token should be valid")
+}
+
+#[allow(clippy::expect_used)] // we want to panic if the env var is not set
+pub fn get_v2_test_credential_provider() -> CredentialProvider {
+    CredentialProvider::from_default_env_var_v2().expect("auth token should be valid")
 }
 
 pub fn build_clients_and_credential_provider() -> (
@@ -110,7 +114,7 @@ pub fn build_clients_and_credential_provider() -> (
     AuthClient,
     CredentialProvider,
 ) {
-    let credential_provider = get_test_credential_provider();
+    let credential_provider = get_v1_test_credential_provider();
     let cache_client = momento::CacheClient::builder()
         .default_ttl(Duration::from_secs(5))
         .configuration(configurations::Laptop::latest())

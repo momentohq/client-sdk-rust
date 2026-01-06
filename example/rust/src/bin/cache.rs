@@ -10,8 +10,7 @@ async fn main() -> Result<(), MomentoError> {
         .default_ttl(Duration::from_secs(60))
         .configuration(configurations::Laptop::latest())
         .credential_provider(
-            CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
-                .expect("auth token should be valid"),
+            CredentialProvider::from_default_env_var_v2().expect("auth token should be valid"),
         )
         .build()
     {

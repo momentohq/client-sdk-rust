@@ -11,6 +11,7 @@ Happy coding :dancer:
 
 - A modern `cargo` tool chain is required; we love [rustup](https://rustup.rs/)
 - A Momento API key is required. You can generate one using the [Momento Console](https://console.gomomento.com)
+- A Momento service endpoint is required. You can find a [list of them here](https://docs.momentohq.com/platform/regions)
 
 > :bulb: **Tip** When installing with `rustup`, which we recommend, ensure no other versions of the Rust toolchain are installed on your system (eg via package managers like homebrew). This can lead to puzzling issues with the `cargo` command. Check `which cargo` to ensure you are using the correct version. Uninstall any other versions of Rust if necessary (`brew uninstall rust`).
 
@@ -36,10 +37,10 @@ make build
 make lint
 
 # run all tests (unit, integration, and doctests)
-MOMENTO_API_KEY=<api key> make test
+V1_API_KEY=<v1 key> MOMENTO_API_KEY=<v2 key> MOMENTO_ENDPOINT=<endpoint> make test
 
 # shortcut to run all of the targets before committing:
-MOMENTO_API_KEY=<api key> make
+V1_API_KEY=<v1 key> MOMENTO_API_KEY=<v2 key> MOMENTO_ENDPOINT=<endpoint> make
 ```
 
 ## Development 🔨
@@ -59,7 +60,7 @@ an alternative, including but not limited to:
 Run this command to verify everything passes so that you can save yourself some time when our GitHub actions are ran against the commit:
 
 ```bash
-MOMENTO_API_KEY=<api key> make
+V1_API_KEY=<v1 key> MOMENTO_API_KEY=<v2 key> MOMENTO_ENDPOINT=<endpoint> make
 ```
 
 ### Tests
@@ -73,31 +74,31 @@ There are three different kinds of tests in this repo:
 To run all the tests you can do:
 
 ```
-MOMENTO_API_KEY=<api key> make test
+V1_API_KEY=<v1 key> MOMENTO_API_KEY=<v2 key> MOMENTO_ENDPOINT=<endpoint> make test
 ```
 
 To run only the unit tests:
 
 ```
-MOMENTO_API_KEY=<api key> make test-unit
+V1_API_KEY=<v1 key> MOMENTO_API_KEY=<v2 key> MOMENTO_ENDPOINT=<endpoint> make test-unit
 ```
 
 To run only the doc tests:
 
 ```
-MOMENTO_API_KEY=<api key> make test-doctests
+V1_API_KEY=<v1 key> MOMENTO_API_KEY=<v2 key> MOMENTO_ENDPOINT=<endpoint> make test-doctests
 ```
 
 To run only the integration tests:
 
 ```
-MOMENTO_API_KEY=<api key> make test-integration
+V1_API_KEY=<v1 key> MOMENTO_API_KEY=<v2 key> MOMENTO_ENDPOINT=<endpoint> make test-integration
 ```
 
 To run a single file of integration tests:
 
 ```
-MOMENTO_API_KEY=<api key> cargo test --test 'cache_sorted_set'
+V1_API_KEY=<v1 key> MOMENTO_API_KEY=<v2 key> MOMENTO_ENDPOINT=<endpoint> cargo test --test 'cache_sorted_set'
 ```
 
 #### Running through VSCode
@@ -105,7 +106,7 @@ MOMENTO_API_KEY=<api key> cargo test --test 'cache_sorted_set'
 If you're using VSCode, you would have been prompted to install certain extensions when you opened the project. If not, then navigate to the [extensions file](./.vscode/extensions.json) and install them. The Rust Analyzer extension displays a `Run Test | Debug` button above every test
 that's handy to run tests through the IDE and add breakpoints to debug request paths. 
 
-To configure required the environment variable, `MOMENTO_API_KEY`, for the Rust Analyzer, you'll need to update your VSCode `settings.json`. The repository includes a default settings file that you can use as a starting point. If you do not already have a `settings.json` file in your .vscode directory or if you don't have existing global settings that conflict, you can rename `settings.json.default` to `settings.json`. If you already have a `settings.json` file, consider merging the necessary configurations to preserve your existing settings. Note that changes to `settings.json` may require restarting VSCode to take effect.
+To configure required the environment variables, `V1_API_KEY`, `MOMENTO_API_KEY`, and `MOMENTO_ENDPOINT`, for the Rust Analyzer, you'll need to update your VSCode `settings.json`. The repository includes a default settings file that you can use as a starting point. If you do not already have a `settings.json` file in your .vscode directory or if you don't have existing global settings that conflict, you can rename `settings.json.default` to `settings.json`. If you already have a `settings.json` file, consider merging the necessary configurations to preserve your existing settings. Note that changes to `settings.json` may require restarting VSCode to take effect.
 
 ### How the integration tests are organized
 

@@ -29,7 +29,7 @@ type ChannelType = InterceptedService<Channel, HeaderInterceptor>;
 ///
 /// let auth_client = match AuthClient::builder()
 ///     .credential_provider(
-///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
+///         CredentialProvider::from_env_var("V1_API_KEY".to_string())
 ///             .expect("API key should be valid"),
 ///     )
 ///     .build()
@@ -64,7 +64,7 @@ impl AuthClient {
     ///
     /// let auth_client = match AuthClient::builder()
     ///     .credential_provider(
-    ///         CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
+    ///         CredentialProvider::from_env_var("V1_API_KEY".to_string())
     ///             .expect("API key should be valid"),
     ///     )
     ///     .build()

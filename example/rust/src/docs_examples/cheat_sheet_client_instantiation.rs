@@ -7,9 +7,7 @@ async fn main() -> Result<(), MomentoError> {
     let _cache_client = CacheClient::builder()
         .default_ttl(Duration::from_secs(60))
         .configuration(configurations::Laptop::latest())
-        .credential_provider(CredentialProvider::from_env_var(
-            "MOMENTO_API_KEY".to_string(),
-        )?)
+        .credential_provider(CredentialProvider::from_default_env_var_v2()?)
         .build()?;
     // ...
     Ok(())

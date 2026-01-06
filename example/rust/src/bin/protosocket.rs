@@ -12,8 +12,8 @@ async fn main() -> Result<(), MomentoError> {
     env_logger::init();
     info!("Starting Momento ProtosocketCacheClient example");
 
-    let credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string())
-        .expect("auth token should be valid");
+    let credential_provider =
+        CredentialProvider::from_default_env_var_v2().expect("auth token should be valid");
 
     let config = momento::protosocket::cache::Configuration::builder()
         .timeout(Duration::from_secs(60))

@@ -7,6 +7,9 @@ on:
 env:
   CARGO_TERM_COLOR: always
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  V1_API_KEY: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
+  MOMENTO_API_KEY: ${{ secrets.ALPHA_API_KEY_V2 }}
+  MOMENTO_ENDPOINT: "cell-alpha-dev.preprod.a.momentohq.com"
   TEST_CACHE_NAME: rust-integration-test-ci-cache-${{ github.sha }}
   TEST_AUTH_CACHE_NAME: rust-integration-test-ci-cache-auth-${{ github.sha }}
 
@@ -85,8 +88,6 @@ jobs:
 
   build_rust:
     runs-on: ubuntu-24.04
-    env:
-      MOMENTO_API_KEY: ${{ secrets.ALPHA_TEST_AUTH_TOKEN }}
 
     steps:
       - uses: actions/checkout@v3
