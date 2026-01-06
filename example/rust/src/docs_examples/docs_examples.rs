@@ -39,7 +39,7 @@ pub fn example_API_CredentialProviderFromString() {
 #[allow(deprecated)]
 #[allow(non_snake_case)]
 pub fn example_API_CredentialProviderFromEnvVar() {
-    let _credential_provider = CredentialProvider::from_env_var("MOMENTO_API_KEY".to_string());
+    let _credential_provider = CredentialProvider::from_env_var("V1_API_KEY".to_string());
 }
 
 #[allow(non_snake_case)]
@@ -705,7 +705,7 @@ pub async fn example_responsetypes_dictionary_with_try_into(cache_client: &Cache
 #[allow(non_snake_case)]
 pub fn example_API_InstantiateAuthClient() -> Result<(), MomentoError> {
     let _auth_client = AuthClient::builder()
-        .credential_provider(CredentialProvider::from_env_var("MOMENTO_API_KEY")?)
+        .credential_provider(CredentialProvider::from_env_var("V1_API_KEY")?)
         .build()?;
     Ok(())
 }
@@ -838,7 +838,7 @@ pub async fn main() -> Result<(), MomentoError> {
     #[allow(deprecated)]
     let auth_client = AuthClient::builder()
         .credential_provider(CredentialProvider::from_env_var(
-            "MOMENTO_API_KEY".to_string())?)
+            "V1_API_KEY".to_string())?)
             .build()?;
 
     example_API_GenerateDisposableToken(&auth_client).await?;
