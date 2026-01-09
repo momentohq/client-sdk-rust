@@ -73,6 +73,13 @@ pub async fn example_API_CredentialProviderFromApiKeyV2() -> MomentoResult<()> {
 #[allow(unused)]
 #[allow(non_snake_case)]
 pub async fn example_API_CredentialProviderFromEnvVarV2() -> MomentoResult<()> {
+    let credential_provider = CredentialProvider::from_env_var_v2("MOMENTO_API_KEY", "MOMENTO_ENDPOINT")?;
+    Ok(())
+}
+
+#[allow(unused)]
+#[allow(non_snake_case)]
+pub async fn example_API_CredentialProviderFromEnvVarV2Default() -> MomentoResult<()> {
     let credential_provider = CredentialProvider::from_default_env_var_v2()?;
     Ok(())
 }
@@ -796,6 +803,7 @@ pub async fn main() -> MomentoResult<()> {
     example_API_CredentialProviderFromEnvVar().await?;
     example_API_CredentialProviderFromApiKeyV2().await?;
     example_API_CredentialProviderFromEnvVarV2().await?;
+    example_API_CredentialProviderFromEnvVarV2Default().await?;
     example_API_CredentialProviderFromDisposableToken().await?;
     example_API_ConfigurationLaptop().await?;
     example_API_ConfigurationInRegionDefaultLatest().await?;

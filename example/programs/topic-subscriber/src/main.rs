@@ -18,10 +18,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // create a new Momento client
     let topic_client = TopicClient::builder()
         .configuration(momento::topics::configurations::Laptop::latest())
-        .credential_provider(
-            CredentialProvider::from_env_var("MOMENTO_API_KEY")
-                .expect("MOMENTO_API_KEY is required"),
-        )
+        .credential_provider(CredentialProvider::from_default_env_var_v2()?)
         .build()?;
 
     // variables for topic and cache are required

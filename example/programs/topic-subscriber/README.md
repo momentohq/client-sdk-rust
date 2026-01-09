@@ -14,6 +14,7 @@ This is Rust program can be taken into a container or run locally.
 
 - Follow the [installation guide](https://doc.rust-lang.org/cargo/getting-started/installation.html) to install Rust and Cargo.
 - To get started with Momento you will need a Momento API key. You can get one from the [Momento Console](https://console.gomomento.com).
+- A Momento service endpoint is required. You can find a [list of them here](https://docs.momentohq.com/platform/regions)
 
 ## Building and Running the Example
 
@@ -21,6 +22,7 @@ Several environment variables are required to be set before getting started.
 
 ```bash
 export MOMENTO_API_KEY=<Your API Key>
+export MOMENTO_ENDPOINT=<Your endpoint>
 export CACHE=<Name of your Momento Cache>
 export TOPIC=<Name of your Topic on the Cache>
 ```
