@@ -33,6 +33,12 @@ cargo add futures
 
 Note: you will only need to install `futures` if you use Momento Topics.
 
+## Prerequisites
+
+- Follow the [installation guide](https://doc.rust-lang.org/cargo/getting-started/installation.html) to install Rust and Cargo.
+- To get started with Momento you will need a Momento API key. You can get one from the [Momento Console](https://console.gomomento.com).
+- A Momento service endpoint is required. You can find a [list of them here](https://docs.momentohq.com/platform/regions)
+
 ## Usage
 
 Here is a quickstart you can use in your own project:
@@ -72,9 +78,6 @@ pub async fn main() -> Result<(), MomentoError> {
 }
 
 ```
-
-Note that the above code requires an environment variable named MOMENTO_API_KEY which must
-be set to a valid [Momento authentication token](https://docs.momentohq.com/cache/develop/authentication/api-keys).
 
 ## Getting Started and Documentation
 
