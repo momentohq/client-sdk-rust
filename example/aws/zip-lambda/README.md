@@ -14,6 +14,7 @@ The Lambda function is packaged as a zip file that you can upload via the AWS co
 - Follow the [installation guide](https://doc.rust-lang.org/cargo/getting-started/installation.html) to install Rust and Cargo.
 - You will also need the [cargo-lambda cargo extension](https://www.cargo-lambda.info/)
 - To get started with Momento you will need a Momento API key. You can get one from the [Momento Console](https://console.gomomento.com).
+- A Momento service endpoint is required. You can find a [list of them here](https://docs.momentohq.com/platform/regions)
 
 ## Creating your Lambda Function through the AWS console
 
@@ -23,6 +24,7 @@ Before building and deploying the Rust code, you'll need to create your lambda f
   the default values are fine for the remaining options.
 - After creating the function you'll need to go to the "Configuration" tab and add an environment variable called
   `MOMENTO_API_KEY`. Set the value to the Momento API key that you created in the Momento console.
+- Then create an environment variable called `MOMENTO_ENDPOINT` and set it to your chosen endpoint.
 
 ## Building the Lambda Function Rust code
 
