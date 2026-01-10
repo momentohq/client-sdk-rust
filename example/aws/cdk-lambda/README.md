@@ -16,6 +16,7 @@ The Lambda function is deployed using the AWS Cloud Development Kit (CDK).
 - The CDK code in this repo is written in TypeScript, so you will need `Node.js` version 16 or later, and a compatible
   version of `npm` installed. If you don't have these, we recommend [nodenv](https://github.com/nodenv/nodenv).
 - To get started with Momento you will need a Momento API key. You can get one from the [Momento Console](https://console.gomomento.com).
+- A Momento service endpoint is required. You can find a [list of them here](https://docs.momentohq.com/platform/regions)
 
 ## Building and Deploying the Lambda Function
 
@@ -25,7 +26,7 @@ To build and deploy the Lambda function, first make sure that your AWS credentia
 ```bash
 cd infrastructure
 npm ci
-npm run cdk -- deploy --parameters MomentoApiKey=<YOUR_MOMENTO_API_KEY>
+npm run cdk -- deploy --parameters MomentoApiKey=<YOUR_MOMENTO_API_KEY> --parameters MomentoEndpoint=<YOUR_MOMENTO_ENDPOINT>
 ```
 
 After the lambda is deployed, you can visit the AWS console and click the "Test" button to run it! The function will
