@@ -1,8 +1,8 @@
-use std::time::Duration;
-use serde_json::Value;
 use lambda_runtime::{run, service_fn, tracing, Error, LambdaEvent};
 use momento::cache::configurations::Lambda;
 use momento::{CacheClient, CredentialProvider};
+use serde_json::Value;
+use std::time::Duration;
 
 const DEFAULT_TTL: Duration = Duration::from_secs(60);
 
@@ -10,8 +10,8 @@ lazy_static::lazy_static! {
     static ref CACHE_CLIENT: CacheClient = CacheClient::builder()
     .default_ttl(DEFAULT_TTL)
     .configuration(Lambda::latest())
-    .credential_provider(CredentialProvider::from_env_var("MOMENTO_API_KEY")
-        .expect("Unable to construct Momento CredentialProvider using env var MOMENTO_API_KEY"))
+    .credential_provider(CredentialProvider::from_default_env_var_v2()
+        .expect("Unable to construct Momento CredentialProvider using env vars MOMENTO_API_KEY and MOMENTO_ENDPOINT"))
     .build()
     .expect("Unable to construct Momento CacheClient");
 }
@@ -24,20 +24,26 @@ lazy_static::lazy_static! {
 async fn function_handler(_event: LambdaEvent<Value>) -> Result<(), Error> {
     // Extract some useful information from the request
 
-    let set_result = CACHE_CLIENT.set("cache", "my-cache-key", "my-cache-value").await;
+    let set_result = CACHE_CLIENT
+        .set("cache", "my-cache-key", "my-cache-value")
+        .await;
     match set_result {
         Ok(_) => println!("Successfully set cache value for key my-cache-key!"),
         Err(e) => println!("Uh-oh. Failed to set cache key: {}", e),
     }
 
-    let get_result: String = CACHE_CLIENT.get("cache", "my-cache-key")
+    let get_result: String = CACHE_CLIENT
+        .get("cache", "my-cache-key")
         .await
         .expect("Failed to get cache value for key my-cache-key")
         .try_into()
         .expect("Failed to convert cache value to String");
-    
-    println!("Successfully retrieved cache value for key my-cache-key: {}", get_result);
-    
+
+    println!(
+        "Successfully retrieved cache value for key my-cache-key: {}",
+        get_result
+    );
+
     Ok(())
 }
 

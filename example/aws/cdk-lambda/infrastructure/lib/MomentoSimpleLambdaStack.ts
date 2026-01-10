@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as cdk from 'aws-cdk-lib';
-import {Construct} from 'constructs';
-import {RustFunction} from 'cargo-lambda-cdk';
+import { Construct } from 'constructs';
+import { RustFunction } from 'cargo-lambda-cdk';
 
 export class MomentoSimpleLambdaStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -13,6 +13,12 @@ export class MomentoSimpleLambdaStack extends cdk.Stack {
       noEcho: true,
     });
 
+    const endpointParam = new cdk.CfnParameter(this, 'MomentoEndpoint', {
+      type: 'String',
+      description: 'The Momento service endpoint to connect to.',
+      noEcho: true,
+    });
+
     new RustFunction(this, 'MomentoSimpleRustLambda', {
       functionName: 'MomentoSimpleRustLambda',
       runtime: 'provided.al2023',
@@ -21,6 +27,7 @@ export class MomentoSimpleLambdaStack extends cdk.Stack {
       memorySize: 128,
       environment: {
         MOMENTO_API_KEY: momentoApiKeyParam.valueAsString,
+        MOMENTO_ENDPOINT: endpointParam.valueAsString,
       },
     });
   }
