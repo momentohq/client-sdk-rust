@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.59.1](https://github.com/momentohq/client-sdk-rust/compare/v0.59.0...v0.59.1) (2026-02-04)
+
+
+### Bug Fixes
+
+* remove client-side expiry check on disposable tokens ([#519](https://github.com/momentohq/client-sdk-rust/issues/519)) ([7465df3](https://github.com/momentohq/client-sdk-rust/commit/7465df34b8e63b0543926f01c59251050db6ef7d))
+
+
+### Miscellaneous
+
+* more readme and example updates ([#518](https://github.com/momentohq/client-sdk-rust/issues/518)) ([0cea18c](https://github.com/momentohq/client-sdk-rust/commit/0cea18c0067a3c18d9f5025e36cd8eb36565e415))
+* swap away from pull_request_target for github actions ([#516](https://github.com/momentohq/client-sdk-rust/issues/516)) ([24a9947](https://github.com/momentohq/client-sdk-rust/commit/24a99478895063236c19f3cfb0d2aee48bc67da3))
+* update tests and examples for v2 keys ([#515](https://github.com/momentohq/client-sdk-rust/issues/515)) ([2e4a845](https://github.com/momentohq/client-sdk-rust/commit/2e4a845b2c89725060a2f381431c0035c22d3b3a))
+
 ## [0.59.0](https://github.com/momentohq/client-sdk-rust/compare/v0.58.1...v0.59.0) (2025-12-15)
 
 
