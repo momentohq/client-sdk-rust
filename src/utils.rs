@@ -115,13 +115,6 @@ pub(crate) fn is_disposable_token_expiry_valid(expires_in: ExpiresIn) -> Result<
             inner_error: None,
         });
     }
-    if expires_in.to_seconds() > 60 * 60 {
-        return Err(MomentoError {
-            message: "Disposable tokens must expire within 1 hour".into(),
-            error_code: MomentoErrorCode::InvalidArgumentError,
-            inner_error: None,
-        });
-    }
     Ok(())
 }
 
@@ -437,13 +430,7 @@ mod tests {
         let expires_in = ExpiresIn::hours(1);
         assert!(is_disposable_token_expiry_valid(expires_in).is_ok());
 
-        let expires_in = ExpiresIn::minutes(61);
-        assert!(is_disposable_token_expiry_valid(expires_in).is_err());
-
         let expires_in = ExpiresIn::seconds(0);
-        assert!(is_disposable_token_expiry_valid(expires_in).is_err());
-
-        let expires_in = ExpiresIn::days(1);
         assert!(is_disposable_token_expiry_valid(expires_in).is_err());
 
         let never_expires = ExpiresIn::never();
