@@ -430,6 +430,9 @@ mod tests {
         let expires_in = ExpiresIn::hours(1);
         assert!(is_disposable_token_expiry_valid(expires_in).is_ok());
 
+        let expires_in = ExpiresIn::hours(24);
+        assert!(is_disposable_token_expiry_valid(expires_in).is_ok());
+
         let expires_in = ExpiresIn::seconds(0);
         assert!(is_disposable_token_expiry_valid(expires_in).is_err());
 
