@@ -85,7 +85,7 @@ impl AuthClient {
     /// # Arguments
     ///
     /// * `scope` - The permission scope that the token will have.
-    /// * `expires_in` - The duration for which the token will be valid. Note: disposable tokens must expire within 1 hour.
+    /// * `expires_in` - The duration for which the token will be valid. Note: disposable tokens must expire within 25 hours.
     ///
     /// # Optional Arguments
     /// If you use [send_request](AuthClient::send_request) to generate a token using a
