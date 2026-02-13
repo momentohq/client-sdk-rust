@@ -107,6 +107,11 @@ impl CredentialProvider {
         &self.cache_http_endpoint
     }
 
+    /// Returns the user's auth token for momento HTTP apis
+    pub fn auth_token(&self) -> &str {
+        &self.auth_token
+    }
+
     /// Returns a Credential Provider from the provided API key
     ///
     /// # Arguments
