@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.60.0](https://github.com/momentohq/client-sdk-rust/compare/v0.59.1...v0.60.0) (2026-02-13)
+
+
+### Features
+
+* Add accessor for CredentialProvider::auth_token ([#523](https://github.com/momentohq/client-sdk-rust/issues/523)) ([4e59fe8](https://github.com/momentohq/client-sdk-rust/commit/4e59fe8010232bf57b8794030da4a733341db64b))
+
+
+### Miscellaneous
+
+* minor docs and unit test update for disposable token expiry ([#521](https://github.com/momentohq/client-sdk-rust/issues/521)) ([ff1f46c](https://github.com/momentohq/client-sdk-rust/commit/ff1f46cc61cf6269efa7e4a5892a000d335d8f68))
+
 ## [0.59.1](https://github.com/momentohq/client-sdk-rust/compare/v0.59.0...v0.59.1) (2026-02-04)
 
 
