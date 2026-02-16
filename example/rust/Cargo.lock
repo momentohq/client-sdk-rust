@@ -930,9 +930,9 @@ dependencies = [
 
 [[package]]
 name = "momento"
-version = "0.59.0"
+version = "0.60.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff79d00d89d9eb69aeaa14967649dd9814bc4d83a4e12c44b6a725df901b4117"
+checksum = "bbfa38e867bfaa85e3c3a37b0646234965434381551c7dfb367423e62135d8cc"
 dependencies = [
  "base64",
  "derive_more",
@@ -942,7 +942,7 @@ dependencies = [
  "hyper",
  "log",
  "momento-protos",
- "protosocket 0.12.1",
+ "protosocket",
  "protosocket-prost",
  "protosocket-rpc",
  "rand",
@@ -1122,20 +1122,6 @@ dependencies = [
 
 [[package]]
 name = "protosocket"
-version = "0.11.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6bffbeee0f00fa5d13b45edfe8919992ec56a6603128f409544bf690e8e1d768"
-dependencies = [
- "bytes",
- "futures",
- "log",
- "thiserror 1.0.61",
- "tokio",
- "tokio-util",
-]
-
-[[package]]
-name = "protosocket"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62d1f11b21e33dea20b9fd42f0832cdb13ab98f6fbf83bb38260027747f55dc5"
@@ -1157,7 +1143,7 @@ dependencies = [
  "bytes",
  "log",
  "prost",
- "protosocket 0.11.2",
+ "protosocket",
  "thiserror 1.0.61",
  "tokio",
 ]
@@ -1171,7 +1157,7 @@ dependencies = [
  "futures",
  "k-lock",
  "log",
- "protosocket 0.11.2",
+ "protosocket",
  "rand",
  "rustls-pki-types",
  "socket2 0.6.1",
