@@ -1077,9 +1077,9 @@ dependencies = [
 
 [[package]]
 name = "momento-protos"
-version = "0.127.4"
+version = "0.128.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30ee93d06065842efd655784f5fa78f75e0865038f78a6d385236ae6c6838b2c"
+checksum = "3b06b41c5c34c07bc99048f38cdf073467414460bb5fa6231fb45971d68dec06"
 dependencies = [
  "prost",
  "protosocket-rpc",
