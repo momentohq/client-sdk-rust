@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.61.0](https://github.com/momentohq/client-sdk-rust/compare/v0.60.0...v0.61.0) (2026-02-26)
+
+
+### Features
+
+* update protos to show a function's concurrency limit + when it was last updated ([#525](https://github.com/momentohq/client-sdk-rust/issues/525)) ([ef5ec4e](https://github.com/momentohq/client-sdk-rust/commit/ef5ec4e2b6cb90148f40c2e65be9d1497fa721b5))
+
 ## [0.60.0](https://github.com/momentohq/client-sdk-rust/compare/v0.59.1...v0.60.0) (2026-02-13)
 
 
