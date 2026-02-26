@@ -28,7 +28,7 @@ doc = false
 
 
 [dependencies]
-momento-protos = "0.127.4"
+momento-protos = "0.128.2"
 base64 = "0.22"
 derive_more = { version = "2.0.1", features = ["full"] }
 futures = "0"

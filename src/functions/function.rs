@@ -8,6 +8,8 @@ pub struct Function {
     function_id: String,
     version: u32,
     latest_version: u32,
+    concurrency_limit: u32,
+    last_updated_at: String,
 }
 impl Function {
     /// Name of the function.
@@ -34,6 +36,17 @@ impl Function {
     pub fn latest_version(&self) -> u32 {
         self.latest_version
     }
+
+    /// The allowed amount of concurrent invocations for this function
+    pub fn concurrency_limit(&self) -> u32 {
+        self.concurrency_limit
+    }
+
+    /// Human-readable timestamp for when the function was last modified.
+    /// Will return as a UTC timestamp in ISO 8601 format.
+    pub fn last_updated_at(&self) -> &str {
+        &self.last_updated_at
+    }
 }
 
 impl From<momento_protos::function_types::Function> for Function {
@@ -44,6 +57,8 @@ impl From<momento_protos::function_types::Function> for Function {
             function_id,
             current_version,
             latest_version,
+            concurrency_limit,
+            last_updated_at,
         } = proto;
         Self {
             name,
@@ -63,6 +78,8 @@ impl From<momento_protos::function_types::Function> for Function {
                 _ => u32::MAX,
             },
             latest_version,
+            concurrency_limit,
+            last_updated_at,
         }
     }
 }
