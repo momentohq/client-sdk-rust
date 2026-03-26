@@ -1,12 +1,14 @@
+use crate::cache::CollectionTtl;
+use crate::{
+    cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoError,
+    MomentoResult,
+};
+use momento_protos::cache_client::list_retain_response;
 use momento_protos::{
     cache_client::list_retain_request::{EndIndex, StartIndex},
     common::Unbounded,
 };
-
-use crate::cache::CollectionTtl;
-use crate::{
-    cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoResult,
-};
+use std::convert::TryFrom;
 
 /// Retains only slice of the list defined by the provided range. Items outside of this range will be dropped from the list.
 ///
@@ -106,12 +108,69 @@ impl<L: IntoBytes> MomentoRequest for ListRetainRequest<L> {
             },
         )?;
 
-        let _ = cache_client.next_data_client().list_retain(request).await?;
+        let response = cache_client
+            .next_data_client()
+            .list_retain(request)
+            .await?
+            .into_inner();
 
-        Ok(ListRetainResponse {})
+        match response.list {
+            Some(list_retain_response::List::Missing(_)) => Ok(ListRetainResponse::Miss),
+            Some(list_retain_response::List::Found(found)) => Ok(ListRetainResponse::Hit {
+                length: found.list_length,
+            }),
+            _ => Err(MomentoError::unknown_error(
+                "ListRetain",
+                Some(format!("{response:#?}")),
+            )),
+        }
     }
 }
 
-/// The response type for a successful list retain request.
+/// Response for a list retain operation.
+///
+/// If you'd like to handle misses you can simply match and handle your response:
+/// ```
+/// # use momento::MomentoResult;
+/// use momento::cache::ListRetainResponse;
+/// use std::convert::TryInto;
+/// # let response = ListRetainResponse::Hit { length: 5 };
+/// let length: u32 = match response {
+///     ListRetainResponse::Hit { length } => length.try_into().expect("Expected a list length!"),
+///     ListRetainResponse::Miss => return // probably you'll do something else here
+/// };
+/// ```
+///
+/// You can cast your result directly into a Result<u32, MomentoError> suitable for
+/// ?-propagation if you know you are expecting a ListRetainResponse::Hit.
+///
+/// Of course, a Miss in this case will be turned into an Error. If that's what you want, then
+/// this is what you're after:
+/// ```
+/// # use momento::MomentoResult;
+/// use momento::cache::ListRetainResponse;
+/// use std::convert::TryInto;
+/// # let response = ListRetainResponse::Hit { length: 5 };
+/// let length: MomentoResult<u32> = response.try_into();
+/// ```
 #[derive(Debug, PartialEq, Eq)]
-pub struct ListRetainResponse {}
+pub enum ListRetainResponse {
+    /// The list was found.
+    Hit {
+        /// The length of the list.
+        length: u32,
+    },
+    /// The list was not found.
+    Miss,
+}
+
+impl TryFrom<ListRetainResponse> for u32 {
+    type Error = MomentoError;
+
+    fn try_from(value: ListRetainResponse) -> Result<Self, Self::Error> {
+        match value {
+            ListRetainResponse::Hit { length } => Ok(length),
+            ListRetainResponse::Miss => Err(MomentoError::miss("ListRetain")),
+        }
+    }
+}

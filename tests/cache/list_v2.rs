@@ -663,7 +663,7 @@ mod list_retain {
             .list_retain(cache_name, list_name, Some(0), Some(999))
             .await?;
 
-        assert_eq!(result, ListRetainResponse {});
+        assert_eq!(result, ListRetainResponse::Miss {});
 
         Ok(())
     }
@@ -687,7 +687,7 @@ mod list_retain {
         let result = client
             .list_retain(cache_name, test_list.name(), None, None)
             .await?;
-        assert_eq!(result, ListRetainResponse {});
+        assert_eq!(result, ListRetainResponse::Hit { length: 2 });
 
         let result = client.list_length(cache_name, test_list.name()).await?;
         assert_eq!(result, ListLengthResponse::Hit { length: 2 });
@@ -696,7 +696,7 @@ mod list_retain {
         let result = client
             .list_retain(cache_name, test_list.name(), None, 1)
             .await?;
-        assert_eq!(result, ListRetainResponse {});
+        assert_eq!(result, ListRetainResponse::Hit { length: 1 });
 
         assert_list_eq(
             client.list_fetch(cache_name, test_list.name()).await?,
@@ -707,10 +707,39 @@ mod list_retain {
         let result = client
             .list_retain(cache_name, test_list.name(), 999, 1000)
             .await?;
-        assert_eq!(result, ListRetainResponse {});
+        assert_eq!(result, ListRetainResponse::Miss {});
 
         let result = client.list_length(cache_name, test_list.name()).await?;
         assert_eq!(result, ListLengthResponse::Miss {});
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn negative_indices() -> MomentoResult<()> {
+        let client = &CACHE_TEST_STATE.client_v2;
+        let cache_name = &CACHE_TEST_STATE.cache_name;
+        let test_list = TestList::default();
+
+        // Concatenates some values first
+        let result = client
+            .list_concatenate_back(cache_name, test_list.name(), test_list.values().to_vec())
+            .await?;
+        assert_eq!(result, ListConcatenateBackResponse {});
+
+        let result = client.list_length(cache_name, test_list.name()).await?;
+        assert_eq!(result, ListLengthResponse::Hit { length: 2 });
+
+        // Retain only the last element of the list
+        let result = client
+            .list_retain(cache_name, test_list.name(), -1, None)
+            .await?;
+        assert_eq!(result, ListRetainResponse::Hit { length: 1 });
+
+        assert_list_eq(
+            client.list_fetch(cache_name, test_list.name()).await?,
+            vec![test_list.values()[1].to_string()],
+        )?;
 
         Ok(())
     }

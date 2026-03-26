@@ -2703,7 +2703,10 @@ impl CacheClient {
     /// # cache_client.list_concatenate_front(&cache_name, list_name, vec!["value1", "value2"]).await;
     ///
     /// match cache_client.list_retain(cache_name, list_name, None, 1).await {
-    ///     Ok(ListRetainResponse {}) => println!("Successfully deleted values after the first"),
+    ///     Ok(response) => match response {
+    ///         ListRetainResponse::Hit { length } => println!("Retained {} elements", length),
+    ///         ListRetainResponse::Miss => println!("List must have been empty to start")
+    ///     },
     ///     Err(e) => eprintln!("Error retaining list: {:?}", e),
     /// }
     /// # Ok(())
