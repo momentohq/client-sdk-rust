@@ -125,6 +125,7 @@ pub use messages::data::list::list_push_front::{ListPushFrontRequest, ListPushFr
 pub use messages::data::list::list_remove_value::{
     ListRemoveValueRequest, ListRemoveValueResponse,
 };
+pub use messages::data::list::list_retain::{ListRetainRequest, ListRetainResponse};
 
 // Similar re-exporting with config::configuration and config::configurations
 // so import paths can be simpmlified to "momento::cache::Configuration" and

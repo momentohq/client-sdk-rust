@@ -16,3 +16,5 @@ pub mod list_push_back;
 pub mod list_push_front;
 /// Contains the request and response types for removing elements from a list.
 pub mod list_remove_value;
+/// Contains the request and response types for erasing all elements from a list outside the provided range.
+pub mod list_retain;
