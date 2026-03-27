@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.62.0](https://github.com/momentohq/client-sdk-rust/compare/v0.61.0...v0.62.0) (2026-03-27)
+
+
+### Features
+
+* Add list retain ([#528](https://github.com/momentohq/client-sdk-rust/issues/528)) ([b4a8616](https://github.com/momentohq/client-sdk-rust/commit/b4a861679fb86f71a3d9e6bba80ce1449e479648))
+
 ## [0.61.0](https://github.com/momentohq/client-sdk-rust/compare/v0.60.0...v0.61.0) (2026-02-26)
 
 
