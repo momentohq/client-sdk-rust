@@ -42,14 +42,14 @@ use crate::cache::{
 };
 use crate::grpc::header_interceptor::HeaderInterceptor;
 
+use super::IntoSortedSetUnionStoreSources;
 use crate::cache::cache_client_builder::{CacheClientBuilder, NeedsDefaultTtl};
+use crate::cache::messages::data::list::list_retain::{ListRetainRequest, ListRetainResponse};
 use crate::cache::messages::data::sorted_set::sorted_set_increment_score::{
     SortedSetIncrementScoreRequest, SortedSetIncrementScoreResponse,
 };
 use crate::utils::IntoBytesIterable;
 use crate::{utils, IntoBytes, MomentoResult};
-
-use super::IntoSortedSetUnionStoreSources;
 
 /// Client to work with Momento Cache, the serverless caching service.
 ///
@@ -2672,6 +2672,59 @@ impl CacheClient {
         value: impl IntoBytes,
     ) -> MomentoResult<ListPushFrontResponse> {
         let request = ListPushFrontRequest::new(cache_name, list_name, value);
+        request.send(self).await
+    }
+
+    /// Retains only slice of the list defined by the provided range. Items outside of this range will be dropped from the list.
+    ///
+    /// # Arguments
+    /// * `cache_name` - name of cache
+    /// * `list_name` - name of the list
+    /// * `start_index` - The starting inclusive element of the list to retain. Default is 0.
+    /// * `end_index` - The ending exclusive element of the list to retain. Default is up to and including end of list.
+    ///
+    /// # Optional Arguments
+    /// If you use [send_request](CacheClient::send_request) to retain a list using a [ListRetainRequest],
+    /// you can also provide the following optional arguments:
+    ///
+    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
+    ///
+    /// # Examples
+    /// Assumes that a CacheClient named `cache_client` has been created and is available.
+    /// ```
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_cache_client;
+    /// # tokio_test::block_on(async {
+    /// use std::convert::TryInto;
+    /// use momento::cache::ListRetainResponse;
+    /// use momento::MomentoErrorCode;
+    /// # let (cache_client, cache_name) = create_doctest_cache_client();
+    /// let list_name = "list-name";
+    /// # cache_client.list_concatenate_front(&cache_name, list_name, vec!["value1", "value2"]).await;
+    ///
+    /// match cache_client.list_retain(cache_name, list_name, None, 1).await {
+    ///     Ok(response) => match response {
+    ///         ListRetainResponse::Hit { length } => println!("Retained {} elements", length),
+    ///         ListRetainResponse::Miss => println!("List must have been empty to start")
+    ///     },
+    ///     Err(e) => eprintln!("Error retaining list: {:?}", e),
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](CacheClient::send_request) method to retain a list using a [ListRetainRequest]
+    /// which will allow you to set [optional arguments](ListRetainRequest#optional-arguments) as well.
+    pub async fn list_retain(
+        &self,
+        cache_name: impl Into<String>,
+        list_name: impl IntoBytes,
+        start_index: impl Into<Option<i32>>,
+        end_index: impl Into<Option<i32>>,
+    ) -> MomentoResult<ListRetainResponse> {
+        let request = ListRetainRequest::new(cache_name, list_name)
+            .start_index(start_index)
+            .end_index(end_index);
         request.send(self).await
     }
 
