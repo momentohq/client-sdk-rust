@@ -704,11 +704,10 @@ mod list_retain {
         )?;
 
         // Retain a range that doesn't exist. Should remove all values
-        let _ = client
+        let result = client
             .list_retain(cache_name, test_list.name(), 999, 1000)
             .await?;
-        //TODO: enable when retain returns a Miss if the list length is 0
-        // assert_eq!(result, ListRetainResponse::Miss {});
+        assert_eq!(result, ListRetainResponse::Hit { length: 0 });
 
         let result = client.list_length(cache_name, test_list.name()).await?;
         assert_eq!(result, ListLengthResponse::Miss {});
