@@ -3,7 +3,6 @@ use std::time::Duration;
 
 use momento::cache::CreateCacheResponse;
 use once_cell::sync::Lazy;
-use tokio::sync::watch::channel;
 
 use crate::test_utils::{get_test_auth_cache_name, get_v2_test_credential_provider};
 use crate::{get_test_cache_name, get_v1_test_credential_provider};
@@ -42,80 +41,90 @@ impl CacheTestState {
         let v2_credential_provider = get_v2_test_credential_provider();
 
         // The cache client must be created using a separate tokio runtime because each test
-        // creates it own runtime, and the client will stop running if its runtime is destroyed.
-        let runtime = tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .expect("test state tokio runtime failure");
-        let (sender, client_receiver) = channel(None);
-        let barrier = Arc::new(std::sync::Barrier::new(2));
-        let thread_barrier = barrier.clone();
-        runtime.spawn(async move {
-            let cache_client = CacheClient::builder()
-                .default_ttl(Duration::from_secs(5))
-                .configuration(configurations::Laptop::latest())
-                .credential_provider(v1_credential_provider.clone())
+        // creates its own runtime, and the client will stop running if its runtime is destroyed.
+        let (
+            runtime,
+            (
+                client,
+                client_v2,
+                leaderboard_client,
+                leaderboard_client_v2,
+                topic_client,
+                topic_client_v2,
+                auth_client,
+            ),
+        ) = std::thread::spawn(move || {
+            let runtime = tokio::runtime::Builder::new_multi_thread()
+                .enable_all()
                 .build()
-                .expect("Failed to create cache client");
+                .expect("test state tokio runtime failure");
 
-            match cache_client.clone().create_cache(thread_cache_name).await {
-                Ok(ok) => match ok {
-                    CreateCacheResponse::Created => println!("Cache created."),
-                    CreateCacheResponse::AlreadyExists => println!("Cache already exists."),
-                },
-                Err(e) => panic!("Failed to create cache: {e:?}"),
-            }
+            let clients = runtime.block_on(async move {
+                let cache_client = CacheClient::builder()
+                    .default_ttl(Duration::from_secs(5))
+                    .configuration(configurations::Laptop::latest())
+                    .credential_provider(v1_credential_provider.clone())
+                    .build()
+                    .expect("Failed to create cache client");
 
-            let cache_client_v2 = CacheClient::builder()
-                .default_ttl(Duration::from_secs(5))
-                .configuration(configurations::Laptop::latest())
-                .credential_provider(v2_credential_provider.clone())
-                .build()
-                .expect("Failed to create legacy cache client");
+                match cache_client.clone().create_cache(thread_cache_name).await {
+                    Ok(ok) => match ok {
+                        CreateCacheResponse::Created => println!("Cache created."),
+                        CreateCacheResponse::AlreadyExists => println!("Cache already exists."),
+                    },
+                    Err(e) => panic!("Failed to create cache: {e:?}"),
+                }
 
-            let leaderboard_client = momento::LeaderboardClient::builder()
-                .configuration(momento::leaderboard::configurations::Laptop::latest())
-                .credential_provider(v1_credential_provider.clone())
-                .build()
-                .expect("Failed to create leaderboard client");
+                let cache_client_v2 = CacheClient::builder()
+                    .default_ttl(Duration::from_secs(5))
+                    .configuration(configurations::Laptop::latest())
+                    .credential_provider(v2_credential_provider.clone())
+                    .build()
+                    .expect("Failed to create legacy cache client");
 
-            let leaderboard_client_v2 = momento::LeaderboardClient::builder()
-                .configuration(momento::leaderboard::configurations::Laptop::latest())
-                .credential_provider(v2_credential_provider.clone())
-                .build()
-                .expect("Failed to create leaderboard client");
+                let leaderboard_client = momento::LeaderboardClient::builder()
+                    .configuration(momento::leaderboard::configurations::Laptop::latest())
+                    .credential_provider(v1_credential_provider.clone())
+                    .build()
+                    .expect("Failed to create leaderboard client");
 
-            let topic_client = TopicClient::builder()
-                .configuration(momento::topics::configurations::Laptop::latest())
-                .credential_provider(v1_credential_provider.clone())
-                .build()
-                .expect("Failed to create topic client");
+                let leaderboard_client_v2 = momento::LeaderboardClient::builder()
+                    .configuration(momento::leaderboard::configurations::Laptop::latest())
+                    .credential_provider(v2_credential_provider.clone())
+                    .build()
+                    .expect("Failed to create leaderboard client");
 
-            let topic_client_v2 = TopicClient::builder()
-                .configuration(momento::topics::configurations::Laptop::latest())
-                .credential_provider(v2_credential_provider.clone())
-                .build()
-                .expect("Failed to create topic client");
+                let topic_client = TopicClient::builder()
+                    .configuration(momento::topics::configurations::Laptop::latest())
+                    .credential_provider(v1_credential_provider.clone())
+                    .build()
+                    .expect("Failed to create topic client");
 
-            let auth_client = AuthClient::builder()
-                .credential_provider(v1_credential_provider)
-                .build()
-                .expect("Failed to create auth client");
+                let topic_client_v2 = TopicClient::builder()
+                    .configuration(momento::topics::configurations::Laptop::latest())
+                    .credential_provider(v2_credential_provider.clone())
+                    .build()
+                    .expect("Failed to create topic client");
 
-            match cache_client
-                .clone()
-                .create_cache(thread_auth_cache_name)
-                .await
-            {
-                Ok(ok) => match ok {
-                    CreateCacheResponse::Created => println!("Auth cache created."),
-                    CreateCacheResponse::AlreadyExists => println!("Auth cache already exists."),
-                },
-                Err(e) => panic!("Failed to create cache: {e:?}"),
-            }
+                let auth_client = AuthClient::builder()
+                    .credential_provider(v1_credential_provider)
+                    .build()
+                    .expect("Failed to create auth client");
 
-            sender
-                .send(Some((
+                match cache_client
+                    .clone()
+                    .create_cache(thread_auth_cache_name)
+                    .await
+                {
+                    Ok(ok) => match ok {
+                        CreateCacheResponse::Created => println!("Auth cache created."),
+                        CreateCacheResponse::AlreadyExists => {
+                            println!("Auth cache already exists.")
+                        }
+                    },
+                    Err(e) => panic!("Failed to create cache: {e:?}"),
+                }
+                (
                     cache_client,
                     cache_client_v2,
                     leaderboard_client,
@@ -123,35 +132,22 @@ impl CacheTestState {
                     topic_client,
                     topic_client_v2,
                     auth_client,
-                )))
-                .expect("client should be sent to test state thread");
-            thread_barrier.wait();
-        });
-        barrier.wait();
+                )
+            });
 
-        // Retrieve the client from the runtime that created it.
-        let (
-            client,
-            client_v2,
-            leaderboard_client,
-            leaderboard_client_v2,
-            topic_client,
-            topic_client_v2,
-            auth_client,
-        ) = client_receiver
-            .borrow()
-            .as_ref()
-            .expect("Clients should already exist")
-            .clone();
+            (runtime, clients)
+        })
+        .join()
+        .expect("thread should not panic");
 
         CacheTestState {
-            client: Arc::new(client.clone()),
-            client_v2: Arc::new(client_v2.clone()),
-            leaderboard_client: Arc::new(leaderboard_client.clone()),
-            leaderboard_client_v2: Arc::new(leaderboard_client_v2.clone()),
-            topic_client: Arc::new(topic_client.clone()),
-            topic_client_v2: Arc::new(topic_client_v2.clone()),
-            auth_client: Arc::new(auth_client.clone()),
+            client: Arc::new(client),
+            client_v2: Arc::new(client_v2),
+            leaderboard_client: Arc::new(leaderboard_client),
+            leaderboard_client_v2: Arc::new(leaderboard_client_v2),
+            topic_client: Arc::new(topic_client),
+            topic_client_v2: Arc::new(topic_client_v2),
+            auth_client: Arc::new(auth_client),
             cache_name,
             runtime,
             auth_cache_name,
