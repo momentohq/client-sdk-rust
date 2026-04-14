@@ -59,6 +59,7 @@ impl From<momento_protos::function_types::Function> for Function {
             latest_version,
             concurrency_limit,
             last_updated_at,
+            function_limits: _, // TODO implement getter(s) for function limits
         } = proto;
         Self {
             name,
