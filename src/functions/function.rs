@@ -308,7 +308,7 @@ impl From<WasmSource> for momento_protos::function::put_function_request::WasmLo
 }
 
 /// The current version to use upon invocation of the Momento Function.
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CurrentFunctionVersion {
     /// The latest version
     Latest,
