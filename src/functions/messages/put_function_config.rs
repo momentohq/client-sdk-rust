@@ -26,12 +26,15 @@ use momento_protos::function_types::FunctionKey;
 /// use momento::functions::{CurrentFunctionVersion, PutFunctionConfigRequest};
 /// # use momento_test_util::echo_wasm;
 /// # let (function_client, cache_name) = momento_test_util::create_doctest_function_client();
-/// // load your wasm from a .wasm file compiled with wasm32-wasip2
+/// // put your function first
 /// let function_body = echo_wasm();
+/// let request = PutFunctionRequest::new(cache_name, "hello functions", function_body);
+/// let function = function_client.send(request).await?;
+/// println!("Created a function: {function:?}");
 ///
 /// let request = PutFunctionConfigRequest::from_function_name(cache_name, "hello functions").current_version(CurrentFunctionVersion::Pinned(0));
 /// let function = function_client.send(request).await?;
-/// println!("Updated a function's config: {function:?}");
+/// println!("Updated the function's config: {function:?}");
 /// # Ok(())
 /// # })
 /// # }
