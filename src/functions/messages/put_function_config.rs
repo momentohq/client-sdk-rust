@@ -24,11 +24,12 @@ use momento_protos::function_types::FunctionKey;
 /// # tokio_test::block_on(async {
 /// use momento::{CredentialProvider, FunctionClient};
 /// use momento::functions::{CurrentFunctionVersion, PutFunctionConfigRequest};
+/// use momento::functions::PutFunctionRequest;
 /// # use momento_test_util::echo_wasm;
 /// # let (function_client, cache_name) = momento_test_util::create_doctest_function_client();
 /// // put your function first
 /// let function_body = echo_wasm();
-/// let request = PutFunctionRequest::new(cache_name, "hello functions", function_body);
+/// let request = PutFunctionRequest::new(cache_name.clone(), "hello functions", function_body);
 /// let function = function_client.send(request).await?;
 /// println!("Created a function: {function:?}");
 ///
