@@ -29,7 +29,7 @@ use momento_protos::function_types::FunctionKey;
 /// // load your wasm from a .wasm file compiled with wasm32-wasip2
 /// let function_body = echo_wasm();
 ///
-/// let request = PutFunctionConfigRequest::new(cache_name, "hello functions").current_version(CurrentFunctionVersion::Pinned(0));
+/// let request = PutFunctionConfigRequest::new(cache_name).function_name("hello functions").current_version(CurrentFunctionVersion::Pinned(0));
 /// let function = function_client.send(request).await?;
 /// println!("Updated a function's config: {function:?}");
 /// # Ok(())
@@ -38,18 +38,33 @@ use momento_protos::function_types::FunctionKey;
 /// ```
 pub struct PutFunctionConfigRequest {
     cache_name: String,
-    function_name: String,
+    function_specifier: Option<FunctionSpecifier>,
     new_version: Option<momento_protos::function_types::CurrentFunctionVersion>,
 }
 
 impl PutFunctionConfigRequest {
     /// Create a new PutFunctionConfigRequest.
-    pub fn new(cache_name: impl Into<String>, function_name: impl Into<String>) -> Self {
+    pub fn new(cache_name: impl Into<String>) -> Self {
         Self {
             cache_name: cache_name.into(),
-            function_name: function_name.into(),
+            function_specifier: None,
             new_version: None,
         }
+    }
+
+    /// Specify the function by name.
+    pub fn function_name(mut self, function_name: impl Into<String>) -> Self {
+        self.function_specifier = Some(FunctionSpecifier::FunctionKey(FunctionKey {
+            cache_name: self.cache_name.clone(),
+            name: function_name.into(),
+        }));
+        self
+    }
+
+    /// Specify the function by ID.
+    pub fn function_id(mut self, function_id: impl Into<String>) -> Self {
+        self.function_specifier = Some(FunctionSpecifier::FunctionId(function_id.into()));
+        self
     }
 
     /// Choose the version to use upon invocation
@@ -67,10 +82,7 @@ impl MomentoRequest for PutFunctionConfigRequest {
             &self.cache_name.to_string(),
             Duration::from_secs(15),
             momento_protos::function::PutFunctionConfigRequest {
-                function_specifier: Some(FunctionSpecifier::FunctionKey(FunctionKey {
-                    cache_name: self.cache_name,
-                    name: self.function_name,
-                })),
+                function_specifier: self.function_specifier,
                 new_version: self.new_version,
             },
         )?;
