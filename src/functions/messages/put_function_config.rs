@@ -32,7 +32,8 @@ use momento_protos::function_types::FunctionKey;
 /// let function = function_client.send(request).await?;
 /// println!("Created a function: {function:?}");
 ///
-/// let request = PutFunctionConfigRequest::from_function_name(cache_name, "hello functions").current_version(CurrentFunctionVersion::Pinned(0));
+/// let request = PutFunctionConfigRequest::from_function_name(cache_name, "hello functions")
+///     .current_version(CurrentFunctionVersion::Pinned(0));
 /// let function = function_client.send(request).await?;
 /// println!("Updated the function's config: {function:?}");
 /// # Ok(())
