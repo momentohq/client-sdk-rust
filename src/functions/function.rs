@@ -313,7 +313,7 @@ pub enum CurrentFunctionVersion {
     /// The latest version
     Latest,
     /// A specific version number
-    Pinned(usize),
+    Pinned(u32),
 }
 
 impl From<CurrentFunctionVersion> for momento_protos::function_types::CurrentFunctionVersion {
@@ -333,7 +333,7 @@ impl From<CurrentFunctionVersion> for momento_protos::function_types::CurrentFun
                     version: Some(
                         momento_protos::function_types::current_function_version::Version::Pinned(
                             momento_protos::function_types::current_function_version::Pinned {
-                                pinned_version: pinned_version as u32,
+                                pinned_version,
                             },
                         ),
                     ),
