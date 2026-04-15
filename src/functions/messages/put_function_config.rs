@@ -1,13 +1,13 @@
 use std::time::Duration;
 
 use crate::{
-    functions::{Function, FunctionClient, MomentoRequest},
+    functions::{CurrentFunctionVersion, Function, FunctionClient, MomentoRequest},
     utils::prep_request_with_timeout,
     MomentoError, MomentoResult,
 };
 
 use momento_protos::function::put_function_config_request::FunctionSpecifier;
-use momento_protos::function_types::{CurrentFunctionVersion, FunctionKey};
+use momento_protos::function_types::FunctionKey;
 
 /// Update a Function's configuration.
 /// The cache is used as a namespace for your Functions.
@@ -23,18 +23,13 @@ use momento_protos::function_types::{CurrentFunctionVersion, FunctionKey};
 /// # fn main() -> anyhow::Result<()> {
 /// # tokio_test::block_on(async {
 /// use momento::{CredentialProvider, FunctionClient};
-/// use momento::functions::PutFunctionConfigRequest;
-/// use momento_protos::function_types::{current_function_version, CurrentFunctionVersion};
+/// use momento::functions::{CurrentFunctionVersion, PutFunctionConfigRequest};
 /// # use momento_test_util::echo_wasm;
 /// # let (function_client, cache_name) = momento_test_util::create_doctest_function_client();
 /// // load your wasm from a .wasm file compiled with wasm32-wasip2
 /// let function_body = echo_wasm();
 ///
-/// let request = PutFunctionConfigRequest::new(cache_name, "hello functions").current_version(CurrentFunctionVersion {
-///     version: Some(current_function_version::Version::Pinned(current_function_version::Pinned {
-///         pinned_version: 0
-///     }))
-/// });
+/// let request = PutFunctionConfigRequest::new(cache_name, "hello functions").current_version(CurrentFunctionVersion::Pinned(0));
 /// let function = function_client.send(request).await?;
 /// println!("Updated a function's config: {function:?}");
 /// # Ok(())
@@ -44,7 +39,7 @@ use momento_protos::function_types::{CurrentFunctionVersion, FunctionKey};
 pub struct PutFunctionConfigRequest {
     cache_name: String,
     function_name: String,
-    new_version: Option<CurrentFunctionVersion>,
+    new_version: Option<momento_protos::function_types::CurrentFunctionVersion>,
 }
 
 impl PutFunctionConfigRequest {
@@ -59,7 +54,7 @@ impl PutFunctionConfigRequest {
 
     /// Choose the version to use upon invocation
     pub fn current_version(mut self, current_version: CurrentFunctionVersion) -> Self {
-        self.new_version = Some(current_version);
+        self.new_version = Some(current_version.into());
         self
     }
 }
