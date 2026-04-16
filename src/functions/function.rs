@@ -1,4 +1,4 @@
-use momento_protos::function_types::{CurrentFunctionVersion, WasmId};
+use momento_protos::function_types::WasmId;
 
 /// Description of a Function in Momento.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -59,13 +59,14 @@ impl From<momento_protos::function_types::Function> for Function {
             latest_version,
             concurrency_limit,
             last_updated_at,
+            function_limits: _, // TODO implement getter(s) for function limits
         } = proto;
         Self {
             name,
             description,
             function_id,
             version: match current_version {
-                Some(CurrentFunctionVersion {
+                Some(momento_protos::function_types::CurrentFunctionVersion {
                     version: Some(version),
                 }) => match version {
                     momento_protos::function_types::current_function_version::Version::Latest(
@@ -302,6 +303,48 @@ impl From<WasmSource> for momento_protos::function::put_function_request::WasmLo
                 id: wasm_id,
                 version,
             }),
+        }
+    }
+}
+
+/// The current version to use upon invocation of the Momento Function.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CurrentFunctionVersion {
+    /// The latest version
+    Latest,
+    /// A specific version number
+    Pinned(u32),
+}
+
+impl From<u32> for CurrentFunctionVersion {
+    fn from(pinned_version: u32) -> Self {
+        CurrentFunctionVersion::Pinned(pinned_version)
+    }
+}
+
+impl From<CurrentFunctionVersion> for momento_protos::function_types::CurrentFunctionVersion {
+    fn from(value: CurrentFunctionVersion) -> Self {
+        match value {
+            CurrentFunctionVersion::Latest => {
+                momento_protos::function_types::CurrentFunctionVersion {
+                    version: Some(
+                        momento_protos::function_types::current_function_version::Version::Latest(
+                            momento_protos::function_types::current_function_version::Latest {},
+                        ),
+                    ),
+                }
+            }
+            CurrentFunctionVersion::Pinned(pinned_version) => {
+                momento_protos::function_types::CurrentFunctionVersion {
+                    version: Some(
+                        momento_protos::function_types::current_function_version::Version::Pinned(
+                            momento_protos::function_types::current_function_version::Pinned {
+                                pinned_version,
+                            },
+                        ),
+                    ),
+                }
+            }
         }
     }
 }
