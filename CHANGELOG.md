@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.63.0](https://github.com/momentohq/client-sdk-rust/compare/v0.62.0...v0.63.0) (2026-04-16)
+
+
+### Features
+
+* pin version with `PutFunctionConfigRequest` ([#530](https://github.com/momentohq/client-sdk-rust/issues/530)) ([e4dd11d](https://github.com/momentohq/client-sdk-rust/commit/e4dd11d7cf8fcb5f3efb98ae06ee123c20fc11b2))
+
 ## [0.62.0](https://github.com/momentohq/client-sdk-rust/compare/v0.61.0...v0.62.0) (2026-03-27)
 
 
