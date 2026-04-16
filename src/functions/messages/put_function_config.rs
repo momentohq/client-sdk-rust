@@ -44,7 +44,7 @@ use momento_protos::function_types::FunctionKey;
 pub struct PutFunctionConfigRequest {
     cache_name: String,
     function_specifier: FunctionSpecifier,
-    new_version: Option<momento_protos::function_types::CurrentFunctionVersion>,
+    new_version: Option<CurrentFunctionVersion>,
 }
 
 impl PutFunctionConfigRequest {
@@ -76,10 +76,7 @@ impl PutFunctionConfigRequest {
 
     /// Choose the version to use upon invocation
     pub fn current_version(mut self, current_version: impl Into<CurrentFunctionVersion>) -> Self {
-        let current_version: CurrentFunctionVersion = current_version.into();
-        let current_version: momento_protos::function_types::CurrentFunctionVersion =
-            current_version.into();
-        self.new_version = Some(current_version);
+        self.new_version = Some(current_version.into());
         self
     }
 }
@@ -93,7 +90,9 @@ impl MomentoRequest for PutFunctionConfigRequest {
             Duration::from_secs(15),
             momento_protos::function::PutFunctionConfigRequest {
                 function_specifier: Some(self.function_specifier),
-                new_version: self.new_version,
+                new_version: self
+                    .new_version
+                    .map(momento_protos::function_types::CurrentFunctionVersion::from),
             },
         )?;
 
