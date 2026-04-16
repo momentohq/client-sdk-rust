@@ -14,8 +14,10 @@ use momento_protos::function_types::FunctionKey;
 ///
 /// # Arguments
 ///
-/// * `cache_name` - The name of the cache to use as a namespace for the Function.
-/// * `function_name` - The name of the Function.
+/// * `cache_name` - The name of the cache being used a namespace for the Function.
+/// * `function_name` or `function_id` - The name or ID of the Function.
+/// * Fields that can be configured / updated:
+///     `current_version` - The current version to use upon invocation of the Function.
 ///
 /// # Example
 ///
