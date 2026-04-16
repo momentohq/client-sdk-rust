@@ -316,6 +316,12 @@ pub enum CurrentFunctionVersion {
     Pinned(u32),
 }
 
+impl From<u32> for CurrentFunctionVersion {
+    fn from(pinned_version: u32) -> Self {
+        CurrentFunctionVersion::Pinned(pinned_version)
+    }
+}
+
 impl From<CurrentFunctionVersion> for momento_protos::function_types::CurrentFunctionVersion {
     fn from(value: CurrentFunctionVersion) -> Self {
         match value {

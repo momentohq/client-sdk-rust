@@ -34,8 +34,7 @@ use momento_protos::function_types::FunctionKey;
 /// # let function = function_client.send(request).await?;
 /// # println!("Created a function: {function:?}");
 ///
-/// let request = PutFunctionConfigRequest::from_function_name(cache_name, "hello functions")
-///     .current_version(CurrentFunctionVersion::Pinned(0));
+/// let request = PutFunctionConfigRequest::from_function_name(cache_name, "hello functions").current_version(0);
 /// let function = function_client.send(request).await?;
 /// println!("Updated a function's config: {function:?}");
 /// # Ok(())
@@ -76,8 +75,11 @@ impl PutFunctionConfigRequest {
     }
 
     /// Choose the version to use upon invocation
-    pub fn current_version(mut self, current_version: CurrentFunctionVersion) -> Self {
-        self.new_version = Some(current_version.into());
+    pub fn current_version(mut self, current_version: impl Into<CurrentFunctionVersion>) -> Self {
+        let current_version: CurrentFunctionVersion = current_version.into();
+        let current_version: momento_protos::function_types::CurrentFunctionVersion =
+            current_version.into();
+        self.new_version = Some(current_version);
         self
     }
 }
