@@ -57,7 +57,7 @@ impl PutFunctionRequest {
         }
     }
 
-    /// Set the Function's description
+    /// Set the description for the Function or this specific version/implementation
     pub fn description(mut self, description: impl Into<String>) -> Self {
         self.description = description.into();
         self
