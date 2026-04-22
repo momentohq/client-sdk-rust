@@ -28,7 +28,7 @@ doc = false
 
 
 [dependencies]
-momento-protos = { path = "../client-protos/rust/momento-protos" }
+momento-protos = "0.130.0"
 base64 = "0.22"
 derive_more = { version = "2.0.1", features = ["full"] }
 futures = "0"
