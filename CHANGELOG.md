@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.64.0](https://github.com/momentohq/client-sdk-rust/compare/v0.63.0...v0.64.0) (2026-04-22)
+
+
+### Features
+
+* support `FunctionVersion` descriptions ([#532](https://github.com/momentohq/client-sdk-rust/issues/532)) ([a57dd69](https://github.com/momentohq/client-sdk-rust/commit/a57dd69c1eacb109441cb16ca71dddc8857e1334))
+
 ## [0.63.0](https://github.com/momentohq/client-sdk-rust/compare/v0.62.0...v0.63.0) (2026-04-16)
 
 
