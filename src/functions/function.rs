@@ -4,6 +4,7 @@ use momento_protos::function_types::WasmId;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Function {
     name: String,
+    /// TODO: deprecate this when we have fully migrated to FunctionVersion descriptions
     description: String,
     function_id: String,
     version: u32,
@@ -90,6 +91,8 @@ impl From<momento_protos::function_types::Function> for Function {
 pub struct FunctionVersion {
     /// The unique identifier for this function version.
     version_id: FunctionVersionId,
+    // The description of the function or this specific version/implementation.
+    description: String,
     /// The wasm ID this function uses.
     wasm_version_id: WasmVersionId,
     /// The environment variables available to this function via the WASI environment interface.
@@ -99,6 +102,11 @@ impl FunctionVersion {
     /// The unique identifier for this function version.
     pub fn version_id(&self) -> &FunctionVersionId {
         &self.version_id
+    }
+
+    /// Description of this function version.
+    pub fn description(&self) -> &str {
+        &self.description
     }
 
     /// The wasm ID this function uses.
@@ -116,6 +124,7 @@ impl From<momento_protos::function_types::FunctionVersion> for FunctionVersion {
     fn from(proto: momento_protos::function_types::FunctionVersion) -> Self {
         let momento_protos::function_types::FunctionVersion {
             id,
+            description,
             wasm_id,
             environment,
         } = proto;
@@ -126,6 +135,7 @@ impl From<momento_protos::function_types::FunctionVersion> for FunctionVersion {
                 id: id.id,
                 version: id.version,
             },
+            description,
             wasm_version_id: WasmVersionId {
                 id: wasm_id.id,
                 version: wasm_id.version,
