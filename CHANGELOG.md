@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.64.1](https://github.com/momentohq/client-sdk-rust/compare/v0.64.0...v0.64.1) (2026-04-23)
+
+
+### Miscellaneous
+
+* don't deprecate `Function` description ([#534](https://github.com/momentohq/client-sdk-rust/issues/534)) ([925c7b8](https://github.com/momentohq/client-sdk-rust/commit/925c7b8f557a7e00ff3a2f41f88d9d91e9897ebb))
+
 ## [0.64.0](https://github.com/momentohq/client-sdk-rust/compare/v0.63.0...v0.64.0) (2026-04-22)
 
 
