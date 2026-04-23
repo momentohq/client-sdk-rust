@@ -4,7 +4,6 @@ use momento_protos::function_types::WasmId;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Function {
     name: String,
-    /// TODO: deprecate this when we have fully migrated to FunctionVersion descriptions
     description: String,
     function_id: String,
     version: u32,
@@ -18,7 +17,7 @@ impl Function {
         &self.name
     }
 
-    /// Description of the function.
+    /// Current/active description of the function.
     pub fn description(&self) -> &str {
         &self.description
     }
@@ -91,7 +90,7 @@ impl From<momento_protos::function_types::Function> for Function {
 pub struct FunctionVersion {
     /// The unique identifier for this function version.
     version_id: FunctionVersionId,
-    // The description of the function or this specific version/implementation.
+    /// The description of the function or this specific version/implementation.
     description: String,
     /// The wasm ID this function uses.
     wasm_version_id: WasmVersionId,
@@ -104,7 +103,7 @@ impl FunctionVersion {
         &self.version_id
     }
 
-    /// Description of this function version.
+    /// The description of the function or this specific version/implementation.
     pub fn description(&self) -> &str {
         &self.description
     }
