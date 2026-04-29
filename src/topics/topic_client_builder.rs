@@ -29,6 +29,7 @@ pub struct ReadyToBuild {
 }
 
 impl TopicClientBuilder<NeedsConfiguration> {
+    /// Prebuilt configurations tuned for different environments are available in the [topics::configurations](crate::topics::configurations) module.
     pub fn configuration(
         self,
         configuration: impl Into<Configuration>,
@@ -40,6 +41,7 @@ impl TopicClientBuilder<NeedsConfiguration> {
 }
 
 impl TopicClientBuilder<NeedsCredentialProvider> {
+    /// A [CredentialProvider](crate::CredentialProvider) to use for authenticating with Momento.
     pub fn credential_provider(
         self,
         credential_provider: CredentialProvider,
