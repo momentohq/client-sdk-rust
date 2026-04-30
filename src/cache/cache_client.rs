@@ -92,11 +92,6 @@ static NEXT_DATA_CLIENT_INDEX: AtomicUsize = AtomicUsize::new(0);
 impl CacheClient {
     /// Constructs a CacheClient to use Momento Cache.
     ///
-    /// # Arguments
-    /// - `default_ttl` - Default time-to-live for items in the cache.
-    /// - `configuration` - Prebuilt configurations tuned for different environments are available in the [cache::configurations](crate::cache::configurations) module.
-    /// - `credential_provider` - A [CredentialProvider](crate::CredentialProvider) to use for authenticating with Momento.
-    ///
     /// # Example
     ///
     /// ```

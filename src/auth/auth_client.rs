@@ -52,9 +52,6 @@ impl AuthClient {
     ///
     /// Note: AuthClient does not take a configuration but this is subject to change.
     ///
-    /// # Arguments
-    /// - `credential_provider` - A [CredentialProvider](crate::CredentialProvider) to use for authenticating with Momento.
-    ///
     /// # Example
     ///
     /// ```

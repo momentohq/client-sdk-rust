@@ -57,6 +57,8 @@ pub struct ReadyToBuild {
 
 impl ProtosocketCacheClientBuilder<NeedsDefaultTtl> {
     /// Constructs a new CacheClientBuilder in the NeedsDefaultTtl state.
+    ///
+    /// Default time-to-live for items in the cache.
     pub fn default_ttl(
         self,
         default_ttl: Duration,
@@ -69,6 +71,8 @@ impl ProtosocketCacheClientBuilder<NeedsDefaultTtl> {
 
 impl ProtosocketCacheClientBuilder<NeedsConfiguration> {
     /// Constructs a new CacheClientBuilder in the NeedsConfiguration state.
+    ///
+    /// Prebuilt configurations tuned for different environments are available in the [protosocket::cache::configurations](crate::protosocket::cache::configurations) module.
     pub fn configuration(
         self,
         configuration: impl Into<Configuration>,
@@ -84,6 +88,8 @@ impl ProtosocketCacheClientBuilder<NeedsConfiguration> {
 
 impl ProtosocketCacheClientBuilder<NeedsCredentialProvider> {
     /// Constructs a new CacheClientBuilder in the NeedsCredentialProvider state.
+    ///
+    /// A [CredentialProvider](crate::CredentialProvider) to use for authenticating with Momento.
     pub fn credential_provider(
         self,
         credential_provider: CredentialProvider,
@@ -100,6 +106,8 @@ impl ProtosocketCacheClientBuilder<NeedsCredentialProvider> {
 
 impl ProtosocketCacheClientBuilder<NeedsRuntime> {
     /// Constructs a new CacheClientBuilder in the NeedsRuntime state.
+    ///
+    /// A [tokio::runtime::Handle] to use for running the client.
     pub fn runtime(
         self,
         runtime: tokio::runtime::Handle,

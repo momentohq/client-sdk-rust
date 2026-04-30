@@ -69,12 +69,6 @@ impl ProtosocketCacheClient {
 
     /// Constructs a ProtosocketCacheClient to use Momento Cache using the protosocket protocol.
     ///
-    /// # Arguments
-    /// - `default_ttl` - Default time-to-live for items in the cache.
-    /// - `configuration` - Prebuilt configurations tuned for different environments are available in the [protosocket::cache::configurations](crate::protosocket::cache::configurations) module.
-    /// - `credential_provider` - A [CredentialProvider](crate::CredentialProvider) to use for authenticating with Momento.
-    /// - `runtime` - A [tokio::runtime::Handle] to use for running the client.
-    ///
     /// # Example
     ///
     /// ```no_run

@@ -16,6 +16,9 @@ pub struct ReadyToBuild {
 }
 
 impl AuthClientBuilder<NeedsCredentialProvider> {
+    /// Constructs a new AuthClientBuilder in the NeedsCredentialProvider state.
+    ///
+    /// A [CredentialProvider](crate::CredentialProvider) to use for authenticating with Momento.
     pub fn credential_provider(
         self,
         credential_provider: CredentialProvider,
