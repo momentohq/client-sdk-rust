@@ -10,10 +10,6 @@ use crate::{
 
 /// Return the remaining ttl of an item in the cache
 ///
-/// # Arguments
-/// * `cache_name` - name of cache
-/// * `key` - the key of the item for which the remaining ttl is requested
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```

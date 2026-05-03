@@ -6,10 +6,6 @@ use crate::{utils, CacheClient, MomentoResult};
 
 /// Request to delete a cache
 ///
-/// # Arguments
-///
-/// * `name` - The name of the cache to be deleted.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```no_run

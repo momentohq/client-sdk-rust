@@ -4,10 +4,6 @@ use crate::{CacheClient, IntoBytes, MomentoError, MomentoResult};
 
 /// Request to check if a key exists in a cache.
 ///
-/// # Arguments
-/// * `cache_name` - name of cache
-/// * `key` - key to check for existence
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```

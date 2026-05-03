@@ -13,11 +13,6 @@ use crate::{
 
 /// Fetch the elements in the given set.
 ///
-/// # Arguments
-///
-/// * `cache_name` - The name of the cache containing the set.
-/// * `set_name` - The name of the set to fetch.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```

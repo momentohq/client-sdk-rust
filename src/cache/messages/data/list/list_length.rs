@@ -9,10 +9,6 @@ use crate::{
 
 /// Gets the number of elements in the given list.
 ///
-/// # Arguments
-/// * `cache_name` - name of cache
-/// * `list_name` - name of the list
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```

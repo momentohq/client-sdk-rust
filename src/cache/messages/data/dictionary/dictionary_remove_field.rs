@@ -8,11 +8,6 @@ use momento_protos::cache_client::{
 
 /// Remove a field from a dictionary.
 ///
-/// # Arguments
-/// * `cache_name` - The name of the cache containing the dictionary.
-/// * `dictionary_name` - The name of the dictionary to remove field from.
-/// * `field` - The field to remove.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```

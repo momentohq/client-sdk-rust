@@ -4,11 +4,6 @@ use crate::{
 
 /// Deletes an item in a Momento Cache
 ///
-/// # Arguments
-///
-/// * `cache_name` - name of cache
-/// * `key` - key of the item to delete
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```

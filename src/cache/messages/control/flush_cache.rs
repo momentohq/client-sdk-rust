@@ -6,10 +6,6 @@ use crate::{utils, CacheClient, MomentoResult};
 
 /// Request to flush a cache of its data
 ///
-/// # Arguments
-///
-/// * `name` - The name of the cache to be flushed.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```

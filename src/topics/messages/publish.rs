@@ -9,12 +9,6 @@ use crate::{
 /// The cache is used as a namespace for your topics, and it needs to exist.
 /// You don't create topics, you just start using them.
 ///
-/// # Arguments
-///
-/// * `cache_name` - The name of the cache to use as a namespace for the topic.
-/// * `topic` - The name of the topic to publish to.
-/// * `value` - The value to publish to the topic.
-///
 /// # Example
 ///
 /// ```

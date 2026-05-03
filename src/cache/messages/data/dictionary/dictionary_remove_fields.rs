@@ -9,11 +9,6 @@ use momento_protos::cache_client::{
 
 /// Remove multiple fields from a dictionary.
 ///
-/// # Arguments
-/// * `cache_name` - The name of the cache containing the dictionary.
-/// * `dictionary_name` - The name of the dictionary to remove fields from.
-/// * `fields` - The fields to remove.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
