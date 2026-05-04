@@ -60,7 +60,7 @@ impl GenerateDisposableTokenRequest {
         self
     }
 
-    /// Set the optional `token_id`` field of the optional DisposableTokenProps for the request.
+    /// Set the optional `token_id` field of the optional DisposableTokenProps for the request.
     pub fn token_id(mut self, token_id: String) -> Self {
         self.props = Some(DisposableTokenProps {
             token_id: Some(token_id),

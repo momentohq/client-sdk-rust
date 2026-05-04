@@ -169,7 +169,7 @@ impl ProtosocketCacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](ProtosocketCacheClient::send_request) method to get an item using a [SetRequest],
+    /// You can also use the [send_request](ProtosocketCacheClient::send_request) method to set an item using a [SetRequest],
     /// which will allow you to set optional fields like [ttl](SetRequest::ttl) as well.
     pub async fn set(
         &self,

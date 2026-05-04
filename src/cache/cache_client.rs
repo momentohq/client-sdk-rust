@@ -285,7 +285,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SetRequest],
+    /// You can also use the [send_request](CacheClient::send_request) method to set an item using a [SetRequest],
     /// which will allow you to set optional fields like [ttl](SetRequest::ttl) as well.
     pub async fn set(
         &self,
@@ -327,7 +327,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SetBatchRequest],
+    /// You can also use the [send_request](CacheClient::send_request) method to set items using a [SetBatchRequest],
     /// which will allow you to set optional fields like [ttl](SetBatchRequest::ttl) as well.
     ///
     /// For more examples of handling the response, see [SetBatchResponse].
@@ -920,7 +920,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SetAddElementsRequest],
+    /// You can also use the [send_request](CacheClient::send_request) method to add elements using a [SetAddElementsRequest],
     /// which will allow you to set optional fields like [ttl](SetAddElementsRequest::ttl) as well.
     pub async fn set_add_elements<E: IntoBytesIterable>(
         &self,
@@ -998,7 +998,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to fetch elements using a [SetRemoveElementsRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to remove elements using a [SetRemoveElementsRequest].
     pub async fn set_remove_elements<E: IntoBytes>(
         &self,
         cache_name: impl Into<String>,
@@ -1044,7 +1044,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetPutElementRequest],
+    /// You can also use the [send_request](CacheClient::send_request) method to put an element using a [SortedSetPutElementRequest],
     /// which will allow you to set optional fields like [ttl](SortedSetPutElementRequest::ttl) as well.
     pub async fn sorted_set_put_element(
         &self,
@@ -1216,7 +1216,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetFetchByScoreRequest]
+    /// You can also use the [send_request](CacheClient::send_request) method to fetch elements using a [SortedSetFetchByScoreRequest]
     /// which will allow you to set optional fields like [min_score](SortedSetFetchByScoreRequest::min_score),
     /// [max_score](SortedSetFetchByScoreRequest::max_score), [offset](SortedSetFetchByScoreRequest::offset), and
     /// [count](SortedSetFetchByScoreRequest::count) as well.
@@ -1467,7 +1467,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetIncrementScoreRequest]
+    /// You can also use the [send_request](CacheClient::send_request) method to increment a score using a [SortedSetIncrementScoreRequest]
     /// which will allow you to set optional fields like [ttl](SortedSetIncrementScoreRequest::ttl) as well.
     pub async fn sorted_set_increment_score(
         &self,
@@ -1514,7 +1514,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetLengthByScoreRequest]
+    /// You can also use the [send_request](CacheClient::send_request) method to get the length using a [SortedSetLengthByScoreRequest]
     /// which will allow you to set optional fields like [min_score](SortedSetLengthByScoreRequest::min_score) and
     /// [max_score](SortedSetLengthByScoreRequest::max_score) as well.
     ///
@@ -1565,7 +1565,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetUnionStoreRequest]
+    /// You can also use the [send_request](CacheClient::send_request) method to compute the union using a [SortedSetUnionStoreRequest]
     /// which will allow you to set optional fields like [aggregate](SortedSetUnionStoreRequest::aggregate) and
     /// [ttl](SortedSetUnionStoreRequest::ttl) as well.
     ///

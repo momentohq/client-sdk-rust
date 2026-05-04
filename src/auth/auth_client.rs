@@ -102,7 +102,7 @@ impl AuthClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](AuthClient::send_request) method to get an item using a [GenerateDisposableTokenRequest],
+    /// You can also use the [send_request](AuthClient::send_request) method to generate a token using a [GenerateDisposableTokenRequest],
     /// which will allow you to set optional fields like [token_id](GenerateDisposableTokenRequest::token_id) as well.
     pub async fn generate_disposable_token(
         &self,
