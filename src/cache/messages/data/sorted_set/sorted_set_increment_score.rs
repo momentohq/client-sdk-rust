@@ -7,17 +7,6 @@ use crate::{
 
 /// Increments the score of an element in a sorted set.
 ///
-/// # Arguments
-///
-/// * `cache_name` - The name of the cache containing the sorted set.
-/// * `sorted_set_name` - The name of the sorted set to add an element to.
-/// * `value` - the sorted set value to get the rank of
-/// * `amount` - the amount to increment the score by
-///
-/// # Optional Arguments
-///
-/// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -65,6 +54,8 @@ impl<S: IntoBytes, V: IntoBytes> SortedSetIncrementScoreRequest<S, V> {
     }
 
     /// Set the time-to-live for the collection.
+    ///
+    /// If not provided, the client's default time-to-live is used.
     pub fn ttl(mut self, collection_ttl: impl Into<Option<CollectionTtl>>) -> Self {
         self.collection_ttl = collection_ttl.into();
         self

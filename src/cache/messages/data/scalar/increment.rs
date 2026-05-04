@@ -8,15 +8,6 @@ use crate::{
 /// Adds the quantity if and only if the existing value is a UTF-8 string representing a base 10 integer.
 /// If the item does not exist, this method creates it and sets the item's value to the amount to increment by.
 ///
-/// # Arguments
-/// * `cache_name` - name of cache
-/// * `key` - the key to increment
-/// * `amount` - the quantity to add to the value. May be positive, negative, or zero. Defaults to 1.
-///
-/// # Optional Arguments
-///
-/// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -55,6 +46,9 @@ pub struct IncrementRequest<K: IntoBytes> {
 
 impl<K: IntoBytes> IncrementRequest<K> {
     /// Constructs a new IncrementRequest.
+    ///
+    /// The quantity/amount (to be added to the cache item's value)
+    /// may be positive, negative, or zero. Defaults to 1.
     pub fn new(cache_name: impl Into<String>, key: K, amount: i64) -> Self {
         let ttl = None;
         Self {
@@ -66,6 +60,8 @@ impl<K: IntoBytes> IncrementRequest<K> {
     }
 
     /// Set the time-to-live for the item.
+    ///
+    /// If not provided, the client's default time-to-live is used.
     pub fn ttl(mut self, ttl: impl Into<Option<Duration>>) -> Self {
         self.ttl = ttl.into();
         self

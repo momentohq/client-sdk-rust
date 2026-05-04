@@ -12,12 +12,6 @@ use crate::{
 
 /// Removes multiple elements from an existing set. If the set is emptied as a result, the set is deleted.
 ///
-/// # Arguments
-///
-/// * `cache_name` - The name of the cache containing the set.
-/// * `set_name` - The name of the set to remove elements from.
-/// * `elements` - The elements to remove. Must be able to be converted to a `Vec<u8>`.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -47,6 +41,8 @@ pub struct SetRemoveElementsRequest<S: IntoBytes, E: IntoBytes> {
 
 impl<S: IntoBytes, E: IntoBytes> SetRemoveElementsRequest<S, E> {
     /// Constructs a new SetRemoveElementsRequest.
+    ///
+    /// Each element must be able to be converted to a `Vec<u8>`.
     pub fn new(cache_name: impl Into<String>, set_name: S, elements: Vec<E>) -> Self {
         Self {
             cache_name: cache_name.into(),

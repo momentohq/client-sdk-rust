@@ -10,21 +10,6 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 
 /// Request to fetch the elements in a sorted set by their rank.
 ///
-/// # Arguments
-///
-/// * `cache_name` - The name of the cache containing the sorted set.
-/// * `sorted_set_name` - The name of the sorted set to add an element to.
-///
-/// # Optional Arguments
-///
-/// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
-///   Defaults to Ascending.
-/// * `start_rank` - The rank of the first element to fetch. Defaults to 0. This rank is
-///   inclusive, i.e. the element at this rank will be fetched.
-/// * `end_rank` - The rank of the last element to fetch. This rank is exclusive, i.e. the
-///   element at this rank will not be fetched. Defaults to -1, which fetches up until and
-///   including the last element.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -76,19 +61,27 @@ impl<S: IntoBytes> SortedSetFetchByRankRequest<S> {
         }
     }
 
-    /// Set the start rank of the request.
+    /// Set the rank of the first element to fetch.
+    ///
+    /// Defaults to 0. This rank is inclusive, i.e. the element at this rank will be fetched.
     pub fn start_rank(mut self, start_rank: impl Into<Option<i32>>) -> Self {
         self.start_rank = start_rank.into();
         self
     }
 
-    /// Set the end rank of the request.
+    /// Set the rank of the last element to fetch.
+    ///
+    /// This rank is exclusive, i.e. the element at this rank will not be fetched.
+    /// Defaults to -1, which fetches up until and including the last element.
     pub fn end_rank(mut self, end_rank: impl Into<Option<i32>>) -> Self {
         self.end_rank = end_rank.into();
         self
     }
 
-    /// Set the order of the request.
+    /// Set the order to sort the elements by.
+    ///
+    /// [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
+    /// Defaults to Ascending.
     pub fn order(mut self, order: impl Into<Option<SortedSetOrder>>) -> Self {
         self.order = order.into().unwrap_or(SortedSetOrder::Ascending);
         self

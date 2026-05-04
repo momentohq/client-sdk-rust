@@ -8,17 +8,6 @@ use crate::{CacheClient, IntoBytes, MomentoResult};
 /// Request to add an element to a sorted set. If the element already exists, its score is updated.
 /// Creates the sorted set if it does not exist.
 ///
-/// # Arguments
-///
-/// * `cache_name` - The name of the cache containing the sorted set.
-/// * `sorted_set_name` - The name of the sorted set to add an element to.
-/// * `value` - The value of the element to add. Must be able to be converted to a `Vec<u8>`.
-/// * `score` - The score of the element to add.
-///
-/// # Optional Arguments
-///
-/// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -53,6 +42,8 @@ pub struct SortedSetPutElementRequest<S: IntoBytes, V: IntoBytes> {
 
 impl<S: IntoBytes, V: IntoBytes> SortedSetPutElementRequest<S, V> {
     /// Constructs a new SortedSetPutElementRequest.
+    ///
+    /// The value must be able to be converted to a `Vec<u8>`.
     pub fn new(cache_name: impl Into<String>, sorted_set_name: S, value: V, score: f64) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
@@ -65,6 +56,8 @@ impl<S: IntoBytes, V: IntoBytes> SortedSetPutElementRequest<S, V> {
     }
 
     /// Set the time-to-live for the collection.
+    ///
+    /// If not provided, the client's default time-to-live is used.
     pub fn ttl(mut self, collection_ttl: impl Into<Option<CollectionTtl>>) -> Self {
         self.collection_ttl = collection_ttl.into();
         self

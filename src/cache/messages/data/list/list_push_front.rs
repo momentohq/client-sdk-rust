@@ -6,16 +6,6 @@ use crate::{
 
 /// Adds an element to the front of the given list. Creates the list if it does not already exist.
 ///
-/// # Arguments
-/// * `cache_name` - name of cache
-/// * `list_name` - name of the list
-/// * `value` - value to prepend to list
-///
-/// # Optional Arguments
-///
-/// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
-/// * `truncate_back_to_size` - If the list exceeds this length, remove excess from the back of the list.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -58,12 +48,14 @@ impl<L: IntoBytes, V: IntoBytes> ListPushFrontRequest<L, V> {
     }
 
     /// Set the time-to-live for the collection.
+    ///
+    /// If not provided, the client's default time-to-live is used.
     pub fn ttl(mut self, collection_ttl: impl Into<Option<CollectionTtl>>) -> Self {
         self.collection_ttl = collection_ttl.into();
         self
     }
 
-    /// If the list exceeds this length, remove excess from the front of the list.
+    /// If the list exceeds this length, remove excess from the back of the list.
     pub fn truncate_back_to_size(mut self, truncate_back_to_size: impl Into<Option<u32>>) -> Self {
         self.truncate_back_to_size = truncate_back_to_size.into();
         self

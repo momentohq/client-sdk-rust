@@ -12,15 +12,6 @@ use crate::cache::messages::data::scalar::set::SetResponse;
 
 /// Request to set a batch of items in a cache.
 ///
-/// # Arguments
-///
-/// * `cache_name` - name of the cache
-/// * `items` - HashMap of (key, value) pairs to set
-///
-/// # Optional Arguments
-///
-/// * `ttl` - The time-to-live for the items. If not provided, the client's default time-to-live is used.
-///
 /// # Example
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -68,6 +59,8 @@ impl<K: IntoBytes, V: IntoBytes> SetBatchRequest<K, V> {
     }
 
     /// Set the time-to-live for the batch of items.
+    ///
+    /// If not provided, the client's default time-to-live is used.
     pub fn ttl(mut self, ttl: impl Into<Option<Duration>>) -> Self {
         self.ttl = ttl.into();
         self

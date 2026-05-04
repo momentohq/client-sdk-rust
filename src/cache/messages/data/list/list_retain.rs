@@ -12,16 +12,6 @@ use std::convert::TryFrom;
 
 /// Retains only slice of the list defined by the provided range. Items outside of this range will be dropped from the list.
 ///
-/// # Arguments
-/// * `cache_name` - name of cache
-/// * `list_name` - name of the list
-///
-/// # Optional Arguments
-///
-/// * `start_index` - The starting inclusive element of the list to retain. Default is 0.
-/// * `end_index` - The ending exclusive element of the list to retain. Default is up to and including end of list.
-/// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -65,18 +55,24 @@ impl<L: IntoBytes> ListRetainRequest<L> {
     }
 
     /// Set the starting inclusive element of the list to retain.
+    ///
+    /// Default is 0.
     pub fn start_index(mut self, start_index: impl Into<Option<i32>>) -> Self {
         self.start_index = start_index.into();
         self
     }
 
     /// Set the ending exclusive element of the list to retain.
+    ///
+    /// Default is up to and including end of list.
     pub fn end_index(mut self, end_index: impl Into<Option<i32>>) -> Self {
         self.end_index = end_index.into();
         self
     }
 
     /// Set the time-to-live for the list.
+    ///
+    /// If not provided, the client's default time-to-live is used.
     pub fn ttl(mut self, collection_ttl: impl Into<Option<CollectionTtl>>) -> Self {
         self.collection_ttl = collection_ttl.into();
         self

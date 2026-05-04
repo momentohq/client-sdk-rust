@@ -8,16 +8,6 @@ use crate::{IntoBytes, IntoBytesIterable, MomentoResult};
 
 /// Request to add elements to the given set. Creates the set if it does not exist.
 ///
-/// # Arguments
-///
-/// * `cache_name` - The name of the cache containing the set.
-/// * `set_name` - The name of the set to add an element to.
-/// * `elements` - The elements to add. Must be able to be converted to a `Vec<u8>`.
-///
-/// # Optional Arguments
-///
-/// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -51,6 +41,8 @@ pub struct SetAddElementsRequest<S: IntoBytes, E: IntoBytesIterable> {
 
 impl<S: IntoBytes, E: IntoBytesIterable> SetAddElementsRequest<S, E> {
     /// Constructs a new SetAddElementsRequest.
+    ///
+    /// Each element must be able to be converted to a `Vec<u8>`.
     pub fn new(cache_name: impl Into<String>, set_name: S, elements: E) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
@@ -62,6 +54,8 @@ impl<S: IntoBytes, E: IntoBytesIterable> SetAddElementsRequest<S, E> {
     }
 
     /// Set the time-to-live for the collection.
+    ///
+    /// If not provided, the client's default time-to-live is used.
     pub fn ttl(mut self, collection_ttl: impl Into<Option<CollectionTtl>>) -> Self {
         self.collection_ttl = collection_ttl.into();
         self

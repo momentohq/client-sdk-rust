@@ -81,15 +81,6 @@ impl<S: IntoBytes> IntoSortedSetUnionStoreSources<S> for HashMap<S, f32> {
 
 /// Compute the union of multiple sorted sets and store the result in a destination sorted set.
 ///
-/// # Arguments
-/// * `cache_name` - name of cache
-/// * `sorted_set_name` - name of the destination sorted set. This set is not implicitly included as a source.
-/// * `sources` - the sorted sets to compute the union for.
-///
-/// # Optional Arguments
-/// * `aggregate` - the aggregate function to use to determine the final score for an element that exists in multiple source sets. Defaults to [SortedSetAggregateFunction::Sum].
-/// * `collection_ttl` - the time-to-live for the collection. If not provided, the client's default time-to-live is used.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -135,6 +126,8 @@ impl<S: IntoBytes, Z: IntoBytes, U: IntoSortedSetUnionStoreSources<Z>>
     SortedSetUnionStoreRequest<S, Z, U>
 {
     /// Constructs a new SortedSetUnionStoreRequest.
+    ///
+    /// Note: The destination set is not implicitly included as a source.
     pub fn new(cache_name: impl Into<String>, sorted_set_name: S, sources: U) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
@@ -147,13 +140,18 @@ impl<S: IntoBytes, Z: IntoBytes, U: IntoSortedSetUnionStoreSources<Z>>
         }
     }
 
-    /// Set the aggregate function of the request.
+    /// Set the aggregate function that determines the final score
+    /// for an element that exists in multiple source sets.
+    ///
+    /// Defaults to [SortedSetAggregateFunction::Sum].
     pub fn aggregate(mut self, aggregate: impl Into<Option<SortedSetAggregateFunction>>) -> Self {
         self.aggregate = aggregate.into().unwrap_or(SortedSetAggregateFunction::Sum);
         self
     }
 
     /// Set the time-to-live for the collection.
+    ///
+    /// If not provided, the client's default time-to-live is used.
     pub fn ttl(mut self, collection_ttl: impl Into<Option<CollectionTtl>>) -> Self {
         self.collection_ttl = collection_ttl.into();
         self

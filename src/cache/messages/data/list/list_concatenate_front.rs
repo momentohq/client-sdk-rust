@@ -9,16 +9,6 @@ use crate::{
 /// Prepends the supplied list to the front of a list. For example, if you have a list [1, 2, 3]
 /// and listConcatenateFront [4, 5, 6], you will create [4, 5, 6, 1, 2, 3].
 ///
-/// # Arguments
-/// * `cache_name` - name of cache
-/// * `list_name` - name of the list
-/// * `values` - list of values to add to the front of the list
-///
-/// # Optional Arguments
-///
-/// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
-/// * `truncate_back_to_size` - If the list exceeds this length, remove excess from the back of the list.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -61,6 +51,8 @@ impl<L: IntoBytes, V: IntoBytesIterable> ListConcatenateFrontRequest<L, V> {
     }
 
     /// Set the time-to-live for the collection.
+    ///
+    /// If not provided, the client's default time-to-live is used.
     pub fn ttl(mut self, collection_ttl: impl Into<Option<CollectionTtl>>) -> Self {
         self.collection_ttl = collection_ttl.into();
         self

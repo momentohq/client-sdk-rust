@@ -8,15 +8,6 @@ use crate::{
 /// The cache is used as a namespace for your topics, and it needs to exist.
 /// You don't create topics, you just start using them.
 ///
-/// # Arguments
-///
-/// * `cache_name` - The name of the cache to use as a namespace for the topic.
-/// * `topic` - The name of the topic to publish to.
-///
-/// # Optional Arguments
-///
-/// * `resume_at_topic_sequence_number` - The sequence number to resume from. If not provided, the subscription will start from the latest message or from zero if starting a new subscription.
-///
 /// # Example
 ///
 /// ```no_run
@@ -55,6 +46,10 @@ pub struct SubscribeRequest {
 
 impl SubscribeRequest {
     /// Create a new SubscribeRequest.
+    ///
+    /// If you don't set `resume_at_topic_sequence_number` or `resume_at_sequence_page`,
+    /// the subscription will start from the latest message
+    /// or from zero if starting a new subscription.
     pub fn new(
         cache_name: impl Into<String>,
         topic: impl Into<String>,

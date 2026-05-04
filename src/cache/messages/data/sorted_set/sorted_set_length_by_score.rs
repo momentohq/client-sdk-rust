@@ -13,18 +13,6 @@ use crate::{
 
 /// Get the number of entries in a sorted set that fall between a minimum and maximum score.
 ///
-/// # Arguments
-/// * `cache_name` - name of cache
-/// * `sorted_set_name` - name of the sorted set
-///
-/// # Optional Arguments
-/// * `min_score` - the minimum score of the elements to fetch. Defaults to negative
-///   infinity. Use [ScoreBound::Inclusive] or [ScoreBound::Exclusive] to specify whether
-///   the minimum score is inclusive or exclusive.
-/// * `max_score` - the maximum score of the elements to fetch. Defaults to positive
-///   infinity. Use [ScoreBound::Inclusive] or [ScoreBound::Exclusive] to specify whether
-///   the maximum score is inclusive or exclusive.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -66,13 +54,21 @@ impl<L: IntoBytes> SortedSetLengthByScoreRequest<L> {
         }
     }
 
-    /// Set the minimum score of the request.
+    /// Set the minimum score of the elements to fetch.
+    ///
+    /// Defaults to negative infinity.
+    /// Use [ScoreBound::Inclusive] or [ScoreBound::Exclusive]
+    /// to specify whether the minimum score is inclusive or exclusive.
     pub fn min_score(mut self, min_score: impl Into<Option<ScoreBound>>) -> Self {
         self.min_score = min_score.into();
         self
     }
 
     /// Set the maximum score of the request.
+    ///
+    /// Defaults to positive infinity.
+    /// Use [ScoreBound::Inclusive] or [ScoreBound::Exclusive]
+    /// to specify whether the maximum score is inclusive or exclusive.
     pub fn max_score(mut self, max_score: impl Into<Option<ScoreBound>>) -> Self {
         self.max_score = max_score.into();
         self

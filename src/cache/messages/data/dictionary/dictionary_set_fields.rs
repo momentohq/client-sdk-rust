@@ -53,16 +53,6 @@ impl<F: IntoBytes, V: IntoBytes> IntoDictionaryFieldValuePairs<F, V> for HashMap
 /// Request to set multiple fields in a dictionary. If the dictionary does not exist, it will be
 /// created. If the dictionary already exists, the fields will be updated.
 ///
-/// # Arguments
-///
-/// - `cache_name`: The name of the cache where the dictionary is stored.
-/// - `dictionary_name`: The name of the dictionary to set fields in.
-/// - `elements`: The fields and values to set in the dictionary.
-///
-/// # Optional Arguments
-///
-/// - `collection_ttl`: The time-to-live for the collection. If not provided, the client's default time-to-live is used.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -125,6 +115,8 @@ where
     }
 
     /// Set the time-to-live for the collection.
+    ///
+    /// If not provided, the client's default time-to-live is used.
     pub fn ttl(mut self, collection_ttl: impl Into<Option<CollectionTtl>>) -> Self {
         self.collection_ttl = collection_ttl.into();
         self

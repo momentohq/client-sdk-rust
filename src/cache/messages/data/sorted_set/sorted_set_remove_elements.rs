@@ -7,11 +7,6 @@ use crate::{CacheClient, IntoBytes, IntoBytesIterable, MomentoResult};
 
 /// Remove multiple elements from the sorted set.
 ///
-/// # Arguments
-/// * `cache_name` - The name of the cache containing the sorted set.
-/// * `sorted_set_name` - The name of the sorted set to remove elements from.
-/// * `values` - The values to remove. Must be able to be converted to a `Vec<u8>`.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -44,6 +39,8 @@ pub struct SortedSetRemoveElementsRequest<S: IntoBytes, V: IntoBytesIterable> {
 
 impl<S: IntoBytes, V: IntoBytesIterable> SortedSetRemoveElementsRequest<S, V> {
     /// Constructs a new SortedSetRemoveElementsRequest.
+    ///
+    /// Each value must be able to be converted to a `Vec<u8>`
     pub fn new(cache_name: impl Into<String>, sorted_set_name: S, values: V) -> Self {
         Self {
             cache_name: cache_name.into(),
