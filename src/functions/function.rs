@@ -17,7 +17,7 @@ impl Function {
         &self.name
     }
 
-    /// Current/active description of the function.
+    /// Currently active description of the function.
     pub fn description(&self) -> &str {
         &self.description
     }
