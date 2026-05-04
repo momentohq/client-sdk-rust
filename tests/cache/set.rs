@@ -87,12 +87,12 @@ mod set_add_elements {
     }
 
     #[tokio::test]
-    async fn happy_path_with_optional_arguments() -> MomentoResult<()> {
+    async fn happy_path_with_optional_fields() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client;
         let cache_name = &CACHE_TEST_STATE.cache_name;
         let test_set = TestSet::default();
 
-        // add elements with optional ttl argument
+        // add elements with optional ttl field
         let request =
             SetAddElementsRequest::new(cache_name, test_set.name(), test_set.value().to_vec())
                 .ttl(CollectionTtl::new(Some(Duration::from_secs(10)), false));
