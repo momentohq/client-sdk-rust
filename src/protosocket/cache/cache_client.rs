@@ -190,6 +190,8 @@ impl ProtosocketCacheClient {
     /// Lower-level API to send any type of MomentoProtosocketRequest to the server. This is used for cases when
     /// you want to set optional fields on a request that are not supported by the short-hand API for
     /// that request type.
+    ///
+    /// See [SetRequest] for an example of creating a request with optional fields, like [ttl](SetRequest::ttl).
     pub async fn send_request<R: MomentoProtosocketRequest>(
         &self,
         request: R,

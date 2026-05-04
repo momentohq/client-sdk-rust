@@ -121,7 +121,8 @@ impl AuthClient {
     /// you want to set optional fields on a request that are not supported by the short-hand API for
     /// that request type.
     ///
-    /// See [GenerateDisposableTokenRequest] for an example of creating a request with optional fields.
+    /// See [GenerateDisposableTokenRequest] for an example of creating a request with optional fields,
+    /// like [token_id](GenerateDisposableTokenRequest::token_id).
     pub async fn send_request<R: MomentoRequest>(&self, request: R) -> MomentoResult<R::Response> {
         request.send(self).await
     }

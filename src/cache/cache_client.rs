@@ -2579,7 +2579,9 @@ impl CacheClient {
     /// you want to set optional fields on a request that are not supported by the short-hand API for
     /// that request type.
     ///
-    /// See [SortedSetFetchByScoreRequest] for an example of creating a request with optional fields.
+    /// See [SortedSetFetchByScoreRequest] for an example of creating a request with optional fields
+    /// like [min_score](SortedSetFetchByScoreRequest::min_score), [max_score](SortedSetFetchByScoreRequest::max_score),
+    /// [offset](SortedSetFetchByScoreRequest::offset), and [count](SortedSetFetchByScoreRequest::count).
     pub async fn send_request<R: MomentoRequest>(&self, request: R) -> MomentoResult<R::Response> {
         request.send(self).await
     }
