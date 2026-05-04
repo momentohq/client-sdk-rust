@@ -64,7 +64,7 @@ impl<L: IntoBytes> SortedSetLengthByScoreRequest<L> {
         self
     }
 
-    /// Set the maximum score of the request.
+    /// Set the maximum score of the elements to fetch.
     ///
     /// Defaults to positive infinity.
     /// Use [ScoreBound::Inclusive] or [ScoreBound::Exclusive]

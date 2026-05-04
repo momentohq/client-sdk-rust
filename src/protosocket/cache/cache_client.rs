@@ -153,12 +153,6 @@ impl ProtosocketCacheClient {
     /// * `key` - key of the item whose value we are setting
     /// * `value` - data to stored in the cache item
     ///
-    /// # Optional Arguments
-    /// If you use [send_request](ProtosocketCacheClient::send_request) to set an item using a
-    /// [SetRequest], you can also provide the following optional arguments:
-    ///
-    /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
-    ///
     /// # Examples
     /// Assumes that a ProtosocketCacheClient named `cache_client` has been created and is available.
     /// ```no_run
@@ -181,8 +175,8 @@ impl ProtosocketCacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](ProtosocketCacheClient::send_request) method to get an item using a [SetRequest]
-    /// which will allow you to set [optional arguments](crate::cache::SetRequest#optional-arguments) as well.
+    /// You can also use the [send_request](ProtosocketCacheClient::send_request) method to get an item using a [SetRequest],
+    /// which will allow you to set optional fields like [ttl](SetRequest::ttl) as well.
     pub async fn set(
         &self,
         cache_name: impl Into<String>,
