@@ -6,15 +6,6 @@ use crate::{
 
 /// Adds an integer quantity to a field value.
 ///
-/// # Arguments
-/// * `cache_name` - name of cache
-/// * `field` - the field to increment
-/// * `amount` - the quantity to add to the value. May be positive, negative, or zero. Defaults to 1.
-///
-/// # Optional Arguments
-///
-/// * `collection_ttl`: The time-to-live for the collection. If not provided, the client's default time-to-live is used.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -56,6 +47,9 @@ pub struct DictionaryIncrementRequest<D: IntoBytes, F: IntoBytes> {
 
 impl<D: IntoBytes, F: IntoBytes> DictionaryIncrementRequest<D, F> {
     /// Constructs a new DictionaryIncrementRequest.
+    ///
+    /// The quantity/amount (to be added to the field's value)
+    /// may be positive, negative, or zero. Defaults to 1.
     pub fn new(cache_name: impl Into<String>, dictionary_name: D, field: F, amount: i64) -> Self {
         let collection_ttl = CollectionTtl::default();
         Self {
@@ -68,6 +62,8 @@ impl<D: IntoBytes, F: IntoBytes> DictionaryIncrementRequest<D, F> {
     }
 
     /// Set the time-to-live for the collection.
+    ///
+    /// If not provided, the client's default time-to-live is used.
     pub fn ttl(mut self, collection_ttl: impl Into<Option<CollectionTtl>>) -> Self {
         self.collection_ttl = collection_ttl.into();
         self

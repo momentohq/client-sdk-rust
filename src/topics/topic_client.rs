@@ -55,10 +55,6 @@ pub struct TopicClient {
 impl TopicClient {
     /// Constructs a TopicClient to use Momento Topics
     ///
-    /// # Arguments
-    /// - `configuration` - Prebuilt configurations tuned for different environments are available in the [topics::configurations](crate::topics::configurations) module.
-    /// - `credential_provider` - A [CredentialProvider](crate::CredentialProvider) to use for authenticating with Momento.
-    ///
     /// # Example
     ///
     /// ```

@@ -43,14 +43,16 @@ pub struct ReadyToBuild {
 }
 
 impl CacheClientBuilder<NeedsDefaultTtl> {
-    /// Constructs a new CacheClientBuilder in the NeedsDefaultTtl state.
+    /// Sets the default time-to-live for items in the cache.
     pub fn default_ttl(self, default_ttl: Duration) -> CacheClientBuilder<NeedsConfiguration> {
         CacheClientBuilder(NeedsConfiguration { default_ttl })
     }
 }
 
 impl CacheClientBuilder<NeedsConfiguration> {
-    /// Constructs a new CacheClientBuilder in the NeedsConfiguration state.
+    /// Sets the configuration for the CacheClient.
+    ///
+    /// Prebuilt configurations tuned for different environments are available in the [cache::configurations](crate::cache::configurations) module.
     pub fn configuration(
         self,
         configuration: impl Into<Configuration>,
@@ -63,7 +65,7 @@ impl CacheClientBuilder<NeedsConfiguration> {
 }
 
 impl CacheClientBuilder<NeedsCredentialProvider> {
-    /// Constructs a new CacheClientBuilder in the NeedsCredentialProvider state.
+    /// Sets the [CredentialProvider](crate::CredentialProvider) to use for authenticating with Momento.
     pub fn credential_provider(
         self,
         credential_provider: CredentialProvider,

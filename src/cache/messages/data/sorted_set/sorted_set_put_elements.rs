@@ -109,16 +109,6 @@ impl<V: IntoBytes> IntoSortedSetElements<V> for HashMap<V, f64> {
 /// Request to add elements to a sorted set. If an element already exists, its score is updated.
 /// Creates the sorted set if it does not exist.
 ///
-/// # Arguments
-///
-/// * `cache_name` - The name of the cache containing the sorted set.
-/// * `sorted_set_name` - The name of the sorted set to add an element to.
-/// * `elements` - The values and scores to add.
-///
-/// # Optional Arguments
-///
-/// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -166,6 +156,8 @@ impl<S: IntoBytes, V: IntoBytes, E: IntoSortedSetElements<V>> SortedSetPutElemen
     }
 
     /// Set the time-to-live for the collection.
+    ///
+    /// If not provided, the client's default time-to-live is used.
     pub fn ttl(mut self, collection_ttl: impl Into<Option<CollectionTtl>>) -> Self {
         self.collection_ttl = collection_ttl.into();
         self

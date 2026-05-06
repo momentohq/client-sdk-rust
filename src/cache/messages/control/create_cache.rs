@@ -7,10 +7,6 @@ use crate::{utils, CacheClient, MomentoResult};
 
 /// Request to create a cache.
 ///
-/// # Arguments
-///
-/// * `cache_name` - The name of the cache to create.
-///
 /// # Example
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```no_run

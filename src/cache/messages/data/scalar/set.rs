@@ -8,16 +8,6 @@ use std::time::Duration;
 
 /// Request to set a value in a cache.
 ///
-/// # Arguments
-///
-/// * `cache_name` - name of the cache
-/// * `key` - key of the item whose value we are setting
-/// * `value` - data to stored in the cache item
-///
-/// # Optional Arguments
-///
-/// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
-///
 /// # Example
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -67,6 +57,8 @@ impl<K: IntoBytes, V: IntoBytes> SetRequest<K, V> {
     }
 
     /// Set the time-to-live for the item.
+    ///
+    /// If not provided, the client's default time-to-live is used.
     pub fn ttl(mut self, ttl: impl Into<Option<Duration>>) -> Self {
         self.ttl = ttl.into();
         self

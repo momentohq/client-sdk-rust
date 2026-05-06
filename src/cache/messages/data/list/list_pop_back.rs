@@ -10,10 +10,6 @@ use crate::{
 
 /// Remove and return the last element from a list item.
 ///
-/// # Arguments
-/// * `cache_name` - name of cache
-/// * `list_name` - name of the list
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```

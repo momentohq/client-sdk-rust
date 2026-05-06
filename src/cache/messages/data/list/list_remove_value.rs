@@ -6,11 +6,6 @@ use crate::{
 
 /// Remove all elements in a list item equal to a particular value.
 ///
-/// # Arguments
-/// * `cache_name` - name of cache
-/// * `list_name` - name of the list
-/// * `value` - value to remove
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```

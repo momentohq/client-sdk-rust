@@ -8,12 +8,7 @@ use crate::{
     cache::MomentoRequest, utils::prep_request_with_timeout, CacheClient, IntoBytes, MomentoResult,
 };
 
-/// Increase the ttl of an item in the cache.
-///
-/// # Arguments
-/// * `cache_name` - name of cache
-/// * `key` - the key of the item for which ttl is requested
-/// * `ttl` - The time-to-live that should overwrite the current ttl. Should be greater than the current ttl.
+/// Increase the ttl (time-to-live) of an item in the cache.
 ///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.

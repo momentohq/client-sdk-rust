@@ -11,24 +11,13 @@ use super::{permissions_conversions::permissions_from_disposable_token_scope, Mo
 use base64::{engine::general_purpose, Engine as _};
 use momento_protos::token::generate_disposable_token_request::Expires;
 
-/// Optional arguments for generating a disposable token.
+/// Optional fields for generating a disposable token.
 pub struct DisposableTokenProps {
-    /// Currently, the only optional argument is the `token_id`,
-    /// which can be used to identify which token was used for
-    /// messages published on Momento Topics.
+    /// Identifies which token was used for messages published on Momento Topics.
     pub token_id: Option<String>,
 }
 
 /// Request to generate a new disposable, fine-grained access token.
-///
-/// # Arguments
-///
-/// * `scope` - The permission scope that the token will have.
-/// * `expires_in` - The duration for which the token will be valid.
-///
-/// # Optional Arguments
-///
-/// * `props` - A collection of optional arguments for the request. Currently contains only `token_id`, which can be used to identify which token was used for messages published on Momento Topics.
 ///
 /// # Examples
 /// Assumes that an AuthClient named `auth_client` has been created and is available.
@@ -71,7 +60,7 @@ impl GenerateDisposableTokenRequest {
         self
     }
 
-    /// Set the optional `token_id`` field of the optional DisposableTokenProps for the request.
+    /// Set the optional `token_id` field of the optional DisposableTokenProps for the request.
     pub fn token_id(mut self, token_id: String) -> Self {
         self.props = Some(DisposableTokenProps {
             token_id: Some(token_id),

@@ -10,17 +10,6 @@ use std::time::Duration;
 /// Request to associate the given key with the given value if the key does not already
 /// exist in the cache or the value in the cache is equal to the supplied `equal` value.
 ///
-/// # Arguments
-///
-/// * `cache_name` - The name of the cache to create.
-/// * `key` - key of the item whose value we are setting
-/// * `value` - data to store
-/// * `equal` - data to compare to the cached value
-///
-/// # Optional Arguments
-///
-/// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
-///
 /// # Example
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -76,6 +65,8 @@ impl<K: IntoBytes, V: IntoBytes, E: IntoBytes> SetIfAbsentOrEqualRequest<K, V, E
     }
 
     /// Set the time-to-live for the item.
+    ///
+    /// If not provided, the client's default time-to-live is used.
     pub fn ttl(mut self, ttl: impl Into<Option<Duration>>) -> Self {
         self.ttl = ttl.into();
         self

@@ -52,9 +52,6 @@ impl AuthClient {
     ///
     /// Note: AuthClient does not take a configuration but this is subject to change.
     ///
-    /// # Arguments
-    /// - `credential_provider` - A [CredentialProvider](crate::CredentialProvider) to use for authenticating with Momento.
-    ///
     /// # Example
     ///
     /// ```
@@ -87,12 +84,6 @@ impl AuthClient {
     /// * `scope` - The permission scope that the token will have.
     /// * `expires_in` - The duration for which the token will be valid. Note: disposable tokens must expire within 25 hours.
     ///
-    /// # Optional Arguments
-    /// If you use [send_request](AuthClient::send_request) to generate a token using a
-    /// [GenerateDisposableTokenRequest], you can also provide the following optional arguments:
-    ///
-    /// * `props` - A collection of optional arguments for the request. Currently contains only `token_id`, which can be used to identify which token was used for messages published on Momento Topics.
-    ///
     /// # Example
     /// Assumes that an AuthClient named `auth_client` has been created and is available.
     /// ```
@@ -111,7 +102,8 @@ impl AuthClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](AuthClient::send_request) method to get an item using a [GenerateDisposableTokenRequest].
+    /// You can also use the [send_request](AuthClient::send_request) method to generate a token using a [GenerateDisposableTokenRequest],
+    /// which will allow you to set optional fields like [token_id](GenerateDisposableTokenRequest::token_id) as well.
     pub async fn generate_disposable_token(
         &self,
         scope: DisposableTokenScope,
@@ -126,7 +118,8 @@ impl AuthClient {
     /// you want to set optional fields on a request that are not supported by the short-hand API for
     /// that request type.
     ///
-    /// See [GenerateDisposableTokenRequest] for an example of creating a request with optional fields.
+    /// See [GenerateDisposableTokenRequest] for an example of creating a request with optional fields,
+    /// like [token_id](GenerateDisposableTokenRequest::token_id).
     pub async fn send_request<R: MomentoRequest>(&self, request: R) -> MomentoResult<R::Response> {
         request.send(self).await
     }

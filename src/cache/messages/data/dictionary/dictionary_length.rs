@@ -11,10 +11,6 @@ use crate::{
 
 /// Gets the number of elements in the given dictionary.
 ///
-/// # Arguments
-/// * `cache_name` - name of cache
-/// * `dictionary_name` - name of the dictionary
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```

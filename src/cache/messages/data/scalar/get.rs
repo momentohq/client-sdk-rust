@@ -9,11 +9,6 @@ use std::convert::{TryFrom, TryInto};
 
 /// Request to get an item from a cache
 ///
-/// # Arguments
-///
-/// * `cache_name` - name of cache
-/// * `key` - key of entry within the cache.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```

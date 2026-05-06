@@ -92,11 +92,6 @@ static NEXT_DATA_CLIENT_INDEX: AtomicUsize = AtomicUsize::new(0);
 impl CacheClient {
     /// Constructs a CacheClient to use Momento Cache.
     ///
-    /// # Arguments
-    /// - `default_ttl` - Default time-to-live for items in the cache.
-    /// - `configuration` - Prebuilt configurations tuned for different environments are available in the [cache::configurations](crate::cache::configurations) module.
-    /// - `credential_provider` - A [CredentialProvider](crate::CredentialProvider) to use for authenticating with Momento.
-    ///
     /// # Example
     ///
     /// ```
@@ -268,12 +263,6 @@ impl CacheClient {
     /// * `key` - key of the item whose value we are setting
     /// * `value` - data to stored in the cache item
     ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to set an item using a
-    /// [SetRequest], you can also provide the following optional arguments:
-    ///
-    /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
-    ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
     /// ```
@@ -296,8 +285,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SetRequest]
-    /// which will allow you to set [optional arguments](SetRequest#optional-arguments) as well.
+    /// You can also use the [send_request](CacheClient::send_request) method to set an item using a [SetRequest],
+    /// which will allow you to set optional fields like [ttl](SetRequest::ttl) as well.
     pub async fn set(
         &self,
         cache_name: impl Into<String>,
@@ -314,12 +303,6 @@ impl CacheClient {
     ///
     /// * `cache_name` - name of cache
     /// * `items` - HashMap of items to set
-    ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to set an item using a
-    /// [SetBatchRequest], you can also provide the following optional arguments:
-    ///
-    /// * `ttl` - The time-to-live for the items. If not provided, the client's default time-to-live is used.
     ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -344,7 +327,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SetBatchRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to set items using a [SetBatchRequest],
+    /// which will allow you to set optional fields like [ttl](SetBatchRequest::ttl) as well.
     ///
     /// For more examples of handling the response, see [SetBatchResponse].
     pub async fn set_batch<K: IntoBytes, V: IntoBytes>(
@@ -821,12 +805,6 @@ impl CacheClient {
     /// * `field` - The field to set.
     /// * `value` - The value to set.
     ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to set a field using a
-    /// [DictionarySetFieldRequest], you can also provide the following optional arguments:
-    ///
-    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
-    ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
     /// ```
@@ -852,8 +830,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to set a field using a [DictionarySetFieldRequest]
-    /// which will allow you to set [optional arguments](DictionarySetFieldRequest#optional-arguments) as well.
+    /// You can also use the [send_request](CacheClient::send_request) method to set a field using a [DictionarySetFieldRequest],
+    /// which will allow you to set optional fields like [ttl](DictionarySetFieldRequest::ttl) as well.
     pub async fn dictionary_set_field(
         &self,
         cache_name: impl Into<String>,
@@ -872,12 +850,6 @@ impl CacheClient {
     /// * `cache_name` - The name of the cache containing the dictionary.
     /// * `dictionary_name` - The name of the dictionary to set fields in.
     /// * `elements` - The fields and values to set in the dictionary.
-    ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to set fields using a
-    /// [DictionarySetFieldsRequest], you can also provide the following optional arguments:
-    ///
-    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
     ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -903,7 +875,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to set fields using a [DictionarySetFieldsRequest]
+    /// You can also use the [send_request](CacheClient::send_request) method to set fields using a [DictionarySetFieldsRequest],
+    /// which will allow you to set optional fields like [ttl](DictionarySetFieldsRequest::ttl) as well.
     pub async fn dictionary_set_fields<F: IntoBytes, V: IntoBytes>(
         &self,
         cache_name: impl Into<String>,
@@ -921,12 +894,6 @@ impl CacheClient {
     /// * `cache_name` - The name of the cache containing the set.
     /// * `set_name` - The name of the set to add elements to.
     /// * `elements` - The elements to add. Must be able to be converted to a `Vec<u8>`.
-    ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to add an element using a
-    /// [SetAddElementsRequest], you can also provide the following optional arguments:
-    ///
-    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
     ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -953,8 +920,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SetAddElementsRequest]
-    /// which will allow you to set [optional arguments](SetAddElementsRequest#optional-arguments) as well.
+    /// You can also use the [send_request](CacheClient::send_request) method to add elements using a [SetAddElementsRequest],
+    /// which will allow you to set optional fields like [ttl](SetAddElementsRequest::ttl) as well.
     pub async fn set_add_elements<E: IntoBytesIterable>(
         &self,
         cache_name: impl Into<String>,
@@ -1031,7 +998,7 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to fetch elements using a [SetRemoveElementsRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to remove elements using a [SetRemoveElementsRequest].
     pub async fn set_remove_elements<E: IntoBytes>(
         &self,
         cache_name: impl Into<String>,
@@ -1051,12 +1018,6 @@ impl CacheClient {
     /// * `sorted_set_name` - The name of the sorted set to add an element to.
     /// * `value` - The value of the element to add. Must be able to be converted to a `Vec<u8>`.
     /// * `score` - The score of the element to add.
-    ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to add an element using a
-    /// [SortedSetPutElementRequest], you can also provide the following optional arguments:
-    ///
-    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
     ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -1083,8 +1044,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetPutElementRequest]
-    /// which will allow you to set [optional arguments](SortedSetPutElementRequest#optional-arguments) as well.
+    /// You can also use the [send_request](CacheClient::send_request) method to put an element using a [SortedSetPutElementRequest],
+    /// which will allow you to set optional fields like [ttl](SortedSetPutElementRequest::ttl) as well.
     pub async fn sorted_set_put_element(
         &self,
         cache_name: impl Into<String>,
@@ -1104,12 +1065,6 @@ impl CacheClient {
     /// * `cache_name` - The name of the cache containing the sorted set.
     /// * `sorted_set_name` - The name of the sorted set to add an element to.
     /// * `elements` - The values and scores to add. The values must be able to be converted to a `Vec<u8>`.
-    ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to add elements using a
-    /// [SortedSetPutElementsRequest], you can also provide the following optional arguments:
-    ///
-    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
     ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -1135,8 +1090,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to put elements using a [SortedSetPutElementsRequest]
-    /// which will allow you to set [optional arguments](SortedSetPutElementsRequest#optional-arguments) as well.
+    /// You can also use the [send_request](CacheClient::send_request) method to put elements using a [SortedSetPutElementsRequest],
+    /// which will allow you to set optional fields like [ttl](SortedSetPutElementsRequest::ttl) as well.
     pub async fn sorted_set_put_elements<V: IntoBytes>(
         &self,
         cache_name: impl Into<String>,
@@ -1227,21 +1182,6 @@ impl CacheClient {
     /// * `sorted_set_name` - The name of the sorted set to add an element to.
     /// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
     ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to fetch elements using a
-    /// [SortedSetFetchByScoreRequest], you can also provide the following optional arguments:
-    ///
-    /// * `min_score` - the minimum score of the elements to fetch. Defaults to negative
-    ///   infinity. Use [ScoreBound::Inclusive](crate::cache::ScoreBound::Inclusive) or [ScoreBound::Exclusive](crate::cache::ScoreBound::Exclusive) to specify whether
-    ///   the minimum score is inclusive or exclusive.
-    /// * `max_score` - the maximum score of the elements to fetch. Defaults to positive
-    ///   infinity. Use [ScoreBound::Inclusive](crate::cache::ScoreBound::Inclusive) or [ScoreBound::Exclusive](crate::cache::ScoreBound::Exclusive) to specify whether
-    ///   the maximum score is inclusive or exclusive.
-    /// * `offset` - The number of elements to skip before returning the first element. Defaults to
-    /// 0. Note: this is not the rank of the first element to return, but the number of elements of
-    ///    the result set to skip before returning the first element.
-    /// * `count` - The maximum number of elements to return. Defaults to all elements.
-    ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
     /// ```
@@ -1276,8 +1216,10 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetFetchByScoreRequest]
-    /// which will allow you to set [optional arguments](SortedSetFetchByScoreRequest#optional-arguments) as well.
+    /// You can also use the [send_request](CacheClient::send_request) method to fetch elements using a [SortedSetFetchByScoreRequest]
+    /// which will allow you to set optional fields like [min_score](SortedSetFetchByScoreRequest::min_score),
+    /// [max_score](SortedSetFetchByScoreRequest::max_score), [offset](SortedSetFetchByScoreRequest::offset), and
+    /// [count](SortedSetFetchByScoreRequest::count) as well.
     ///
     /// For more examples of handling the response, see [SortedSetFetchResponse].
     pub async fn sorted_set_fetch_by_score(
@@ -1376,13 +1318,6 @@ impl CacheClient {
     /// * `sorted_set_name` - name of the sorted set
     /// * `value` - the sorted set value to get the rank of
     ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to fetch elements using a
-    /// [SortedSetGetRankRequest], you can also provide the following optional arguments:
-    ///
-    /// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
-    ///   Defaults to [SortedSetOrder::Ascending].
-    ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
     /// ```
@@ -1403,7 +1338,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get the rank of an element using a [SortedSetGetRankRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to get the rank of an element using a [SortedSetGetRankRequest]
+    /// which will allow you to set optional fields like [order](SortedSetGetRankRequest::order) as well.
     ///
     /// For more examples of handling the response, see [SortedSetGetRankResponse].
     pub async fn sorted_set_get_rank(
@@ -1513,12 +1449,6 @@ impl CacheClient {
     /// * `value` - The value of the element to add. Must be able to be converted to a `Vec<u8>`.
     /// * `amount` - The amount to add to the score.
     ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to add an element using a
-    /// [SortedSetIncrementScoreRequest], you can also provide the following optional arguments:
-    ///
-    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
-    ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
     /// ```
@@ -1537,8 +1467,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetIncrementScoreRequest]
-    /// which will allow you to set [optional arguments](SortedSetIncrementScoreRequest#optional-arguments) as well.
+    /// You can also use the [send_request](CacheClient::send_request) method to increment a score using a [SortedSetIncrementScoreRequest]
+    /// which will allow you to set optional fields like [ttl](SortedSetIncrementScoreRequest::ttl) as well.
     pub async fn sorted_set_increment_score(
         &self,
         cache_name: impl Into<String>,
@@ -1557,17 +1487,6 @@ impl CacheClient {
     ///
     /// * `cache_name` - The name of the cache containing the sorted set.
     /// * `sorted_set_name` - The name of the sorted set to add an element to.
-    ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to fetch elements using a
-    /// [SortedSetLengthByScoreRequest], you can also provide the following optional arguments:
-    ///
-    /// * `min_score` - the minimum score of the elements to fetch. Defaults to negative
-    ///   infinity. Use [ScoreBound::Inclusive](crate::cache::ScoreBound::Inclusive) or [ScoreBound::Exclusive](crate::cache::ScoreBound::Exclusive) to specify whether
-    ///   the minimum score is inclusive or exclusive.
-    /// * `max_score` - the maximum score of the elements to fetch. Defaults to positive
-    ///   infinity. Use [ScoreBound::Inclusive](crate::cache::ScoreBound::Inclusive) or [ScoreBound::Exclusive](crate::cache::ScoreBound::Exclusive) to specify whether
-    ///   the maximum score is inclusive or exclusive.
     ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -1595,8 +1514,9 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetLengthByScoreRequest]
-    /// which will allow you to set [optional arguments](SortedSetLengthByScoreRequest#optional-arguments) as well.
+    /// You can also use the [send_request](CacheClient::send_request) method to get the length using a [SortedSetLengthByScoreRequest]
+    /// which will allow you to set optional fields like [min_score](SortedSetLengthByScoreRequest::min_score) and
+    /// [max_score](SortedSetLengthByScoreRequest::max_score) as well.
     ///
     /// For more examples of handling the response, see [SortedSetLengthByScoreResponse].
     pub async fn sorted_set_length_by_score(
@@ -1615,13 +1535,6 @@ impl CacheClient {
     /// * `cache_name` - The name of the cache containing the sorted set.
     /// * `sorted_set_name` - The name of the destination sorted set. This set is not implicitly included as a source.
     /// * `sources` - The sorted sets to compute the union for.
-    ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to fetch elements using a
-    /// [SortedSetUnionStoreRequest], you can also provide the following optional arguments:
-    ///
-    /// * `aggregate` - The aggregate function to use to determine the final score for an element that exists in multiple source sets. Defaults to [crate::cache::SortedSetAggregateFunction::Sum].
-    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
     ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -1652,8 +1565,9 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to get an item using a [SortedSetUnionStoreRequest]
-    /// which will allow you to set [optional arguments](SortedSetUnionStoreRequest#optional-arguments) as well.
+    /// You can also use the [send_request](CacheClient::send_request) method to compute the union using a [SortedSetUnionStoreRequest]
+    /// which will allow you to set optional fields like [aggregate](SortedSetUnionStoreRequest::aggregate) and
+    /// [ttl](SortedSetUnionStoreRequest::ttl) as well.
     ///
     /// For more examples of handling the response, see [SortedSetUnionStoreResponse].
     pub async fn sorted_set_union_store<
@@ -1752,12 +1666,6 @@ impl CacheClient {
     /// * `key` - the key to increment
     /// * `amount` - the quantity to add to the value. May be positive, negative, or zero. Defaults to 1.
     ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to increment a key using an
-    /// [IncrementRequest], you can also provide the following optional arguments:
-    ///
-    /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
-    ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
     /// ```
@@ -1781,7 +1689,7 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to increment an item using an [IncrementRequest]
-    /// which will allow you to set [optional arguments](IncrementRequest#optional-arguments) as well.
+    /// which will allow you to set optional fields like [ttl](IncrementRequest::ttl) as well.
     pub async fn increment(
         &self,
         cache_name: impl Into<String>,
@@ -1987,12 +1895,6 @@ impl CacheClient {
     /// * `key` - key of the item whose value we are setting
     /// * `value` - data to store
     ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to conditionally set an item using an
-    /// [SetIfAbsentRequest], you can also provide the following optional arguments:
-    ///
-    /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
-    ///
     /// # Example
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
     /// ```
@@ -2019,7 +1921,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to conditionally set an item using a [SetIfAbsentRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to conditionally set an item using a [SetIfAbsentRequest]
+    /// which will allow you to set optional fields like [ttl](SetIfAbsentRequest::ttl) as well.
     pub async fn set_if_absent(
         &self,
         cache_name: impl Into<String>,
@@ -2037,12 +1940,6 @@ impl CacheClient {
     /// * `cache_name` - The name of the cache to create.
     /// * `key` - key of the item whose value we are setting
     /// * `value` - data to store
-    ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to conditionally set an item using an
-    /// [SetIfPresentRequest], you can also provide the following optional arguments:
-    ///
-    /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
     ///
     /// # Example
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -2070,7 +1967,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to conditionally set an item using a [SetIfPresentRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to conditionally set an item using a [SetIfPresentRequest]
+    /// which will allow you to set optional fields like [ttl](SetIfPresentRequest::ttl) as well.
     pub async fn set_if_present(
         &self,
         cache_name: impl Into<String>,
@@ -2090,12 +1988,6 @@ impl CacheClient {
     /// * `key` - key of the item whose value we are setting
     /// * `value` - data to store
     /// * `equal` - data to compare to the cached value
-    ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to conditionally set an item using an
-    /// [SetIfEqualRequest], you can also provide the following optional arguments:
-    ///
-    /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
     ///
     /// # Example
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -2123,7 +2015,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to conditionally set an item using a [SetIfEqualRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to conditionally set an item using a [SetIfEqualRequest]
+    /// which will allow you to set optional fields like [ttl](SetIfEqualRequest::ttl) as well.
     pub async fn set_if_equal(
         &self,
         cache_name: impl Into<String>,
@@ -2144,12 +2037,6 @@ impl CacheClient {
     /// * `key` - key of the item whose value we are setting
     /// * `value` - data to store
     /// * `not_equal` - data to compare to the cached value
-    ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to conditionally set an item using an
-    /// [SetIfNotEqualRequest], you can also provide the following optional arguments:
-    ///
-    /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
     ///
     /// # Example
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -2177,7 +2064,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to conditionally set an item using a [SetIfNotEqualRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to conditionally set an item using a [SetIfNotEqualRequest]
+    /// which will allow you to set optional fields like [ttl](SetIfNotEqualRequest::ttl) as well.
     pub async fn set_if_not_equal(
         &self,
         cache_name: impl Into<String>,
@@ -2198,12 +2086,6 @@ impl CacheClient {
     /// * `key` - key of the item whose value we are setting
     /// * `value` - data to store
     /// * `not_equal` - data to compare to the cached value
-    ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to conditionally set an item using an
-    /// [SetIfPresentAndNotEqualRequest], you can also provide the following optional arguments:
-    ///
-    /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
     ///
     /// # Example
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -2231,7 +2113,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to conditionally set an item using a [SetIfPresentAndNotEqualRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to conditionally set an item using a [SetIfPresentAndNotEqualRequest]
+    /// which will allow you to set optional fields like [ttl](SetIfPresentAndNotEqualRequest::ttl) as well.
     pub async fn set_if_present_and_not_equal(
         &self,
         cache_name: impl Into<String>,
@@ -2252,12 +2135,6 @@ impl CacheClient {
     /// * `key` - key of the item whose value we are setting
     /// * `value` - data to store
     /// * `equal` - data to compare to the cached value
-    ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to conditionally set an item using an
-    /// [SetIfAbsentOrEqualRequest], you can also provide the following optional arguments:
-    ///
-    /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
     ///
     /// # Example
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -2285,7 +2162,8 @@ impl CacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](CacheClient::send_request) method to conditionally set an item using a [SetIfAbsentOrEqualRequest].
+    /// You can also use the [send_request](CacheClient::send_request) method to conditionally set an item using a [SetIfAbsentOrEqualRequest]
+    /// which will allow you to set optional fields like [ttl](SetIfAbsentOrEqualRequest::ttl) as well.
     pub async fn set_if_absent_or_equal(
         &self,
         cache_name: impl Into<String>,
@@ -2340,13 +2218,6 @@ impl CacheClient {
     /// * `list_name` - name of the list
     /// * `values` - list of values to add to the front of the list
     ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to add elements to the front of a list using a [ListConcatenateFrontRequest],
-    /// you can also provide the following optional arguments:
-    ///
-    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
-    /// * `truncate_back_to_size` - If the list exceeds this length, remove excess from the back of the list.
-    ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
     /// ```
@@ -2372,7 +2243,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to concatenate an item using a [ListConcatenateFrontRequest]
-    /// which will allow you to set [optional arguments](ListConcatenateFrontRequest#optional-arguments) as well.
+    /// which will allow you to set optional fields like [ttl](ListConcatenateFrontRequest::ttl) and
+    /// [truncate_back_to_size](ListConcatenateFrontRequest::truncate_back_to_size) as well.
     pub async fn list_concatenate_front(
         &self,
         cache_name: impl Into<String>,
@@ -2389,13 +2261,6 @@ impl CacheClient {
     /// * `cache_name` - name of cache
     /// * `list_name` - name of the list
     /// * `values` - list of values to add to the back of the list
-    ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to add elements to the back of a list using a [ListConcatenateBackRequest],
-    /// you can also provide the following optional arguments:
-    ///
-    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
-    /// * `truncate_front_to_size` - If the list exceeds this length, remove excess from the front of the list.
     ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -2422,7 +2287,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to concatenate an item using a [ListConcatenateBackRequest]
-    /// which will allow you to set [optional arguments](ListConcatenateBackRequest#optional-arguments) as well.
+    /// which will allow you to set optional fields like [ttl](ListConcatenateBackRequest::ttl) and
+    /// [truncate_front_to_size](ListConcatenateBackRequest::truncate_front_to_size) as well.
     pub async fn list_concatenate_back(
         &self,
         cache_name: impl Into<String>,
@@ -2438,13 +2304,6 @@ impl CacheClient {
     /// # Arguments
     /// * `cache_name` - name of cache
     /// * `list_name` - name of the list
-    ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to fetch a list using a [ListFetchRequest],
-    /// you can also provide the following optional arguments:
-    ///
-    /// * `start_index` - The starting inclusive element of the list to fetch. Default is 0.
-    /// * `end_index` - The ending exclusive element of the list to fetch. Default is end of list.
     ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -2465,7 +2324,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to fetch a list using a [ListFetchRequest]
-    /// which will allow you to set [optional arguments](ListFetchRequest#optional-arguments) as well.
+    /// which will allow you to set optional fields like [start_index](ListFetchRequest::start_index) and
+    /// [end_index](ListFetchRequest::end_index) as well.
     ///
     /// For more examples of handling the response, see [ListFetchResponse].
     pub async fn list_fetch(
@@ -2594,13 +2454,6 @@ impl CacheClient {
     /// * `list_name` - name of the list
     /// * `value` - value to append to list
     ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to add to a list using a [ListPushBackRequest],
-    /// you can also provide the following optional arguments:
-    ///
-    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
-    /// * `truncate_front_to_size` - If the list exceeds this length, remove excess from the front of the list.
-    ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
     /// ```
@@ -2620,7 +2473,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to add to a list using a [ListPushBackRequest]
-    /// which will allow you to set [optional arguments](ListPushBackRequest#optional-arguments) as well.
+    /// which will allow you to set optional fields like [ttl](ListPushBackRequest::ttl) and
+    /// [truncate_front_to_size](ListPushBackRequest::truncate_front_to_size) as well.
     pub async fn list_push_back(
         &self,
         cache_name: impl Into<String>,
@@ -2637,13 +2491,6 @@ impl CacheClient {
     /// * `cache_name` - name of cache
     /// * `list_name` - name of the list
     /// * `value` - value to prepend to list
-    ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to add to a list using a [ListPushFrontRequest],
-    /// you can also provide the following optional arguments:
-    ///
-    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
-    /// * `truncate_back_to_size` - If the list exceeds this length, remove excess from the back of the list.
     ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -2664,7 +2511,8 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to add to a list using a [ListPushFrontRequest]
-    /// which will allow you to set [optional arguments](ListPushFrontRequest#optional-arguments) as well.
+    /// which will allow you to set optional fields like [ttl](ListPushFrontRequest::ttl) and
+    /// [truncate_back_to_size](ListPushFrontRequest::truncate_back_to_size) as well.
     pub async fn list_push_front(
         &self,
         cache_name: impl Into<String>,
@@ -2682,12 +2530,6 @@ impl CacheClient {
     /// * `list_name` - name of the list
     /// * `start_index` - The starting inclusive element of the list to retain. Default is 0.
     /// * `end_index` - The ending exclusive element of the list to retain. Default is up to and including end of list.
-    ///
-    /// # Optional Arguments
-    /// If you use [send_request](CacheClient::send_request) to retain a list using a [ListRetainRequest],
-    /// you can also provide the following optional arguments:
-    ///
-    /// * `collection_ttl` - The time-to-live for the collection. If not provided, the client's default time-to-live is used.
     ///
     /// # Examples
     /// Assumes that a CacheClient named `cache_client` has been created and is available.
@@ -2714,7 +2556,7 @@ impl CacheClient {
     /// # }
     /// ```
     /// You can also use the [send_request](CacheClient::send_request) method to retain a list using a [ListRetainRequest]
-    /// which will allow you to set [optional arguments](ListRetainRequest#optional-arguments) as well.
+    /// which will allow you to set optional fields like [ttl](ListRetainRequest::ttl) as well.
     pub async fn list_retain(
         &self,
         cache_name: impl Into<String>,
@@ -2732,7 +2574,9 @@ impl CacheClient {
     /// you want to set optional fields on a request that are not supported by the short-hand API for
     /// that request type.
     ///
-    /// See [SortedSetFetchByScoreRequest] for an example of creating a request with optional fields.
+    /// See [SortedSetFetchByScoreRequest] for an example of creating a request with optional fields
+    /// like [min_score](SortedSetFetchByScoreRequest::min_score), [max_score](SortedSetFetchByScoreRequest::max_score),
+    /// [offset](SortedSetFetchByScoreRequest::offset), and [count](SortedSetFetchByScoreRequest::count).
     pub async fn send_request<R: MomentoRequest>(&self, request: R) -> MomentoResult<R::Response> {
         request.send(self).await
     }

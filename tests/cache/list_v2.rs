@@ -60,7 +60,7 @@ mod list_concatenate_back {
     }
 
     #[tokio::test]
-    async fn happy_path_with_optional_arguments() -> MomentoResult<()> {
+    async fn happy_path_with_optional_fields() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client_v2;
         let cache_name = &CACHE_TEST_STATE.cache_name;
         let test_list = TestList::default();
@@ -130,7 +130,7 @@ mod list_concatenate_front {
     }
 
     #[tokio::test]
-    async fn happy_path_with_optional_arguments() -> MomentoResult<()> {
+    async fn happy_path_with_optional_fields() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client_v2;
         let cache_name = &CACHE_TEST_STATE.cache_name;
         let test_list = TestList::default();
@@ -444,7 +444,7 @@ mod list_push_back {
     }
 
     #[tokio::test]
-    async fn happy_path_with_optional_arguments() -> MomentoResult<()> {
+    async fn happy_path_with_optional_fields() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client_v2;
         let cache_name = &CACHE_TEST_STATE.cache_name;
         let test_list = TestList::default();
@@ -523,7 +523,7 @@ mod list_push_front {
     }
 
     #[tokio::test]
-    async fn happy_path_with_optional_arguments() -> MomentoResult<()> {
+    async fn happy_path_with_optional_fields() -> MomentoResult<()> {
         let client = &CACHE_TEST_STATE.client_v2;
         let cache_name = &CACHE_TEST_STATE.cache_name;
         let test_list = TestList::default();

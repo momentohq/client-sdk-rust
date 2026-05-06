@@ -13,11 +13,6 @@ use std::fmt::Debug;
 
 /// Request to fetch a dictionary from a cache.
 ///
-/// # Arguments
-///
-/// * `cache_name` - The name of the cache containing the dictionary.
-/// * `dictionary_name` - The name of the dictionary to fetch.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```

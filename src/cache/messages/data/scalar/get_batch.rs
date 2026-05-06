@@ -14,11 +14,6 @@ use crate::cache::messages::data::scalar::get::{GetResponse, Value};
 
 /// Request to get a batch of items from a Momento Cache
 ///
-/// # Arguments
-///
-/// * `cache_name` - name of cache
-/// * `keys` - list of keys to fetch
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```

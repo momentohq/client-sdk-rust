@@ -12,11 +12,6 @@ use crate::{
 
 /// Get the score of a specific element in a sorted set.
 ///
-/// # Arguments
-/// * `cache_name` - name of cache
-/// * `sorted_set_name` - name of the sorted set
-/// * `value` - the sorted set value to get the score of
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```

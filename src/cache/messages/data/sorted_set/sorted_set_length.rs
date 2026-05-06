@@ -9,10 +9,6 @@ use crate::{
 
 /// Get the number of entries in a sorted set collection.
 ///
-/// # Arguments
-/// * `cache_name` - name of cache
-/// * `sorted_set_name` - name of the sorted set
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```

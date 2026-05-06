@@ -69,12 +69,6 @@ impl ProtosocketCacheClient {
 
     /// Constructs a ProtosocketCacheClient to use Momento Cache using the protosocket protocol.
     ///
-    /// # Arguments
-    /// - `default_ttl` - Default time-to-live for items in the cache.
-    /// - `configuration` - Prebuilt configurations tuned for different environments are available in the [protosocket::cache::configurations](crate::protosocket::cache::configurations) module.
-    /// - `credential_provider` - A [CredentialProvider](crate::CredentialProvider) to use for authenticating with Momento.
-    /// - `runtime` - A [tokio::runtime::Handle] to use for running the client.
-    ///
     /// # Example
     ///
     /// ```no_run
@@ -153,12 +147,6 @@ impl ProtosocketCacheClient {
     /// * `key` - key of the item whose value we are setting
     /// * `value` - data to stored in the cache item
     ///
-    /// # Optional Arguments
-    /// If you use [send_request](ProtosocketCacheClient::send_request) to set an item using a
-    /// [SetRequest], you can also provide the following optional arguments:
-    ///
-    /// * `ttl` - The time-to-live for the item. If not provided, the client's default time-to-live is used.
-    ///
     /// # Examples
     /// Assumes that a ProtosocketCacheClient named `cache_client` has been created and is available.
     /// ```no_run
@@ -181,8 +169,8 @@ impl ProtosocketCacheClient {
     /// # })
     /// # }
     /// ```
-    /// You can also use the [send_request](ProtosocketCacheClient::send_request) method to get an item using a [SetRequest]
-    /// which will allow you to set [optional arguments](crate::cache::SetRequest#optional-arguments) as well.
+    /// You can also use the [send_request](ProtosocketCacheClient::send_request) method to set an item using a [SetRequest],
+    /// which will allow you to set optional fields like [ttl](SetRequest::ttl) as well.
     pub async fn set(
         &self,
         cache_name: impl Into<String>,
@@ -196,6 +184,8 @@ impl ProtosocketCacheClient {
     /// Lower-level API to send any type of MomentoProtosocketRequest to the server. This is used for cases when
     /// you want to set optional fields on a request that are not supported by the short-hand API for
     /// that request type.
+    ///
+    /// See [SetRequest] for an example of creating a request with optional fields, like [ttl](SetRequest::ttl).
     pub async fn send_request<R: MomentoProtosocketRequest>(
         &self,
         request: R,

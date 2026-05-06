@@ -10,16 +10,6 @@ use momento_protos::cache_client::{
 
 /// Request to set a field in a dictionary.
 ///
-/// # Arguments
-///
-/// * `cache_name` - The name of the cache containing the dictionary.
-/// * `dictionary_name` - The name of the dictionary to set.
-/// * `field` - The field to set.
-/// * `value` - The value to set.
-///
-/// # Optional Arguments
-/// * `ttl` - The time-to-live for the dictionary. If not provided, the client's default time-to-live is used.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -77,6 +67,8 @@ where
     }
 
     /// Set the time-to-live for the dictionary.
+    ///
+    /// If not provided, the client's default time-to-live is used.
     pub fn ttl(mut self, collection_ttl: impl Into<Option<CollectionTtl>>) -> Self {
         self.collection_ttl = collection_ttl.into();
         self

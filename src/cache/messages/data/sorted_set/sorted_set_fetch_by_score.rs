@@ -12,26 +12,6 @@ use super::sorted_set_common::{ScoreBound, SortedSetOrder};
 
 /// Fetch the elements in the given sorted set by their score.
 ///
-/// # Arguments
-///
-/// * `cache_name` - The name of the cache containing the sorted set.
-/// * `sorted_set_name` - The name of the sorted set to add an element to.
-///
-/// # Optional Arguments
-///
-/// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
-///   Defaults to Ascending.
-/// * `min_score` - the minimum score of the elements to fetch. Defaults to negative
-///   infinity. Use [ScoreBound::Inclusive] or [ScoreBound::Exclusive] to specify whether
-///   the minimum score is inclusive or exclusive.
-/// * `max_score` - the maximum score of the elements to fetch. Defaults to positive
-///   infinity. Use [ScoreBound::Inclusive] or [ScoreBound::Exclusive] to specify whether
-///   the maximum score is inclusive or exclusive.
-/// * `offset` - The number of elements to skip before returning the first element. Defaults to
-/// 0. Note: this is not the rank of the first element to return, but the number of elements of
-///    the result set to skip before returning the first element.
-/// * `count` - The maximum number of elements to return. Defaults to all elements.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -87,31 +67,48 @@ impl<S: IntoBytes> SortedSetFetchByScoreRequest<S> {
         }
     }
 
-    /// Set the minimum score of the request.
+    /// Set the minimum score of the elements to fetch.
+    ///
+    /// Defaults to negative infinity.
+    /// Use [ScoreBound::Inclusive] or [ScoreBound::Exclusive]
+    /// to specify whether the minimum score is inclusive or exclusive.
     pub fn min_score(mut self, min_score: impl Into<Option<ScoreBound>>) -> Self {
         self.min_score = min_score.into();
         self
     }
 
-    /// Set the maximum score of the request.
+    /// Set the maximum score of the elements to fetch.
+    ///
+    /// Defaults to positive infinity.
+    /// Use [ScoreBound::Inclusive] or [ScoreBound::Exclusive]
+    /// to specify whether the maximum score is inclusive or exclusive.
     pub fn max_score(mut self, max_score: impl Into<Option<ScoreBound>>) -> Self {
         self.max_score = max_score.into();
         self
     }
 
-    /// Set the order of the request.
+    /// Set the order to sort the elements by.
+    ///
+    /// [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
+    /// Defaults to Ascending.
     pub fn order(mut self, order: impl Into<Option<SortedSetOrder>>) -> Self {
         self.order = order.into().unwrap_or(SortedSetOrder::Ascending);
         self
     }
 
-    /// Set the offset of the request.
+    /// Set the number of elements to skip before returning the first element.
+    ///
+    /// Defaults to 0.
+    /// Note: this is not the rank of the first element to return, but the number
+    /// of elements of the result set to skip before returning the first element.
     pub fn offset(mut self, offset: impl Into<Option<u32>>) -> Self {
         self.offset = offset.into();
         self
     }
 
-    /// Set the count of the request.
+    /// Set the maximum number of elements to return.
+    ///
+    /// Defaults to all elements.
     pub fn count(mut self, count: impl Into<Option<i32>>) -> Self {
         self.count = count.into();
         self

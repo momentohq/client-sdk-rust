@@ -10,16 +10,6 @@ use crate::{
 
 /// Get the rank (position) of a specific element in a sorted set.
 ///
-/// # Arguments
-/// * `cache_name` - name of cache
-/// * `sorted_set_name` - name of the sorted set
-/// * `value` - the sorted set value to get the rank of
-///
-/// # Optional Arguments
-///
-/// * `order` - The order to sort the elements by. [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
-///   Defaults to Ascending.
-///
 /// # Examples
 /// Assumes that a CacheClient named `cache_client` has been created and is available.
 /// ```
@@ -60,7 +50,10 @@ impl<L: IntoBytes, V: IntoBytes> SortedSetGetRankRequest<L, V> {
         }
     }
 
-    /// Set the rank order of the request.
+    /// Set the rank order to sort the elements by.
+    ///
+    /// [SortedSetOrder::Ascending] or [SortedSetOrder::Descending].
+    /// Defaults to Ascending.
     pub fn order(mut self, order: impl Into<Option<SortedSetOrder>>) -> Self {
         self.order = order.into().unwrap_or(SortedSetOrder::Ascending);
         self

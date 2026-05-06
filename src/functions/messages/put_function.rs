@@ -9,11 +9,6 @@ use crate::{
 /// Create or update a Function.
 /// The cache is used as a namespace for your Functions.
 ///
-/// # Arguments
-///
-/// * `cache_name` - The name of the cache to use as a namespace for the Function.
-/// * `function_name` - The name of the Function.
-///
 /// # Example
 ///
 /// ```rust
