@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.64.2](https://github.com/momentohq/client-sdk-rust/compare/v0.64.1...v0.64.2) (2026-05-06)
+
+
+### Bug Fixes
+
+* `SubscribeRequest::sequence_page` copy-paste typo ([#538](https://github.com/momentohq/client-sdk-rust/issues/538)) ([318e173](https://github.com/momentohq/client-sdk-rust/commit/318e1732fb82f5063a63f97592627261c7050a12))
+
 ## [0.64.1](https://github.com/momentohq/client-sdk-rust/compare/v0.64.0...v0.64.1) (2026-04-23)
 
 
