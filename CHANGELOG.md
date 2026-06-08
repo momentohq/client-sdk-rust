@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.65.0](https://github.com/momentohq/client-sdk-rust/compare/v0.64.2...v0.65.0) (2026-06-08)
+
+
+### Features
+
+* offer eager connection establishment on CacheClient ([#540](https://github.com/momentohq/client-sdk-rust/issues/540)) ([e3f77e6](https://github.com/momentohq/client-sdk-rust/commit/e3f77e67fe4cbe4fefd15fd059ad67cd95311197))
+
 ## [0.64.2](https://github.com/momentohq/client-sdk-rust/compare/v0.64.1...v0.64.2) (2026-05-06)
 
 
