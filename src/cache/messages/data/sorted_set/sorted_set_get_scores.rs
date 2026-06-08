@@ -125,8 +125,7 @@ impl<F: IntoBytesIterable + Clone> TryFrom<SortedSetGetScoresResponse<F>>
                 values, responses, ..
             } => {
                 let mut result = Vec::new();
-                for (value, response) in values.into_bytes().into_iter().zip(responses.into_iter())
-                {
+                for (value, response) in values.into_bytes().into_iter().zip(responses) {
                     match response {
                         SortedSetGetScoreResponse::Hit { score } => {
                             let ele = SortedSetElement { score, value };
@@ -158,9 +157,7 @@ impl<F: IntoBytesIterable + Clone> TryFrom<SortedSetGetScoresResponse<F>>
                 values, responses, ..
             } => {
                 let mut result = Vec::new();
-                for (bytes_value, response) in
-                    values.into_bytes().into_iter().zip(responses.into_iter())
-                {
+                for (bytes_value, response) in values.into_bytes().into_iter().zip(responses) {
                     match response {
                         SortedSetGetScoreResponse::Hit { score } => {
                             let value: String = parse_string(bytes_value)?;
