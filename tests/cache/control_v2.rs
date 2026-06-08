@@ -1,8 +1,11 @@
-use momento::cache::{CreateCacheResponse, FlushCacheResponse, GetResponse, SetResponse};
-use momento::MomentoErrorCode;
-use momento::MomentoResult;
-use momento_test_util::CACHE_TEST_STATE;
-use momento_test_util::{unique_cache_name, TestScalar};
+use momento::cache::{
+    configurations, CreateCacheResponse, FlushCacheResponse, GetResponse, SetResponse,
+};
+use momento::{CacheClient, MomentoErrorCode, MomentoResult};
+use momento_test_util::{
+    get_v1_test_credential_provider, unique_cache_name, TestScalar, CACHE_TEST_STATE,
+};
+use std::time::Duration;
 
 mod create_delete_list_cache {
     use super::*;
@@ -100,6 +103,23 @@ mod flush_cache {
         let delete_result = client.delete_cache(cache_name).await?;
         assert_eq!(delete_result, DeleteCacheResponse {});
 
+        Ok(())
+    }
+}
+
+mod build_and_connect {
+    use super::*;
+
+    #[tokio::test]
+    async fn creates_working_client() -> MomentoResult<()> {
+        let client = CacheClient::builder()
+            .default_ttl(Duration::from_secs(5))
+            .configuration(configurations::Laptop::latest())
+            .credential_provider(get_v1_test_credential_provider())
+            .build_and_connect()
+            .await
+            .expect("build_and_connect should succeed");
+        client.list_caches().await?;
         Ok(())
     }
 }

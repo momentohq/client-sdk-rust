@@ -1,6 +1,7 @@
 use crate::cache::Configuration;
 use crate::grpc::header_interceptor::HeaderInterceptor;
 use crate::{utils, CacheClient, CredentialProvider, MomentoResult};
+use futures::future::try_join_all;
 use std::time::Duration;
 use tonic::codegen::InterceptedService;
 
@@ -127,6 +128,82 @@ impl CacheClientBuilder<ReadyToBuild> {
                 .grpc_configuration
                 .clone(),
         )?;
+
+        let control_interceptor = InterceptedService::new(
+            control_channel,
+            HeaderInterceptor::new(&self.0.credential_provider.auth_token, agent_value),
+        );
+
+        let data_clients: Vec<ScsClient<InterceptedService<Channel, HeaderInterceptor>>> =
+            data_channels
+                .into_iter()
+                .map(|c| {
+                    let data_interceptor = InterceptedService::new(
+                        c,
+                        HeaderInterceptor::new(&self.0.credential_provider.auth_token, agent_value),
+                    );
+                    ScsClient::new(data_interceptor)
+                        .max_decoding_message_size(
+                            self.0
+                                .configuration
+                                .transport_strategy
+                                .grpc_configuration
+                                .max_receive_message_size
+                                .unwrap_or(DEFAULT_MAX_REQUEST_SIZE),
+                        )
+                        .max_encoding_message_size(
+                            self.0
+                                .configuration
+                                .transport_strategy
+                                .grpc_configuration
+                                .max_send_message_size
+                                .unwrap_or(DEFAULT_MAX_REQUEST_SIZE),
+                        )
+                })
+                .collect();
+        let control_client = ScsControlClient::new(control_interceptor);
+
+        Ok(CacheClient::new(
+            data_clients,
+            control_client,
+            self.0.configuration,
+            self.0.default_ttl,
+        ))
+    }
+
+    /// Like [`build`](Self::build), but eagerly establishes all gRPC connections before returning.
+    /// All data channels connect concurrently. Returns an error if any connection fails.
+    pub async fn build_and_connect(self) -> MomentoResult<CacheClient> {
+        let agent_value = &utils::user_agent("cache");
+
+        let data_channel_futs = (0..self
+            .0
+            .configuration
+            .transport_strategy
+            .grpc_configuration
+            .num_channels)
+            .map(|_| {
+                utils::connect_channel_eagerly_configurable(
+                    &self.0.credential_provider.cache_endpoint,
+                    self.0
+                        .configuration
+                        .transport_strategy
+                        .grpc_configuration
+                        .clone(),
+                )
+            });
+
+        let data_channels = try_join_all(data_channel_futs).await?;
+
+        let control_channel = utils::connect_channel_eagerly_configurable(
+            &self.0.credential_provider.control_endpoint,
+            self.0
+                .configuration
+                .transport_strategy
+                .grpc_configuration
+                .clone(),
+        )
+        .await?;
 
         let control_interceptor = InterceptedService::new(
             control_channel,

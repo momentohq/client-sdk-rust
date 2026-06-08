@@ -183,6 +183,25 @@ pub(crate) fn connect_channel_lazily_configurable(
     Ok(channel_builder.connect_lazy())
 }
 
+pub(crate) async fn connect_channel_eagerly_configurable(
+    uri_string: &str,
+    grpc_config: GrpcConfiguration,
+) -> Result<Channel, ChannelConnectError> {
+    let uri = Uri::try_from(uri_string)?;
+    let mut channel_builder =
+        Channel::builder(uri).tls_config(ClientTlsConfig::default().with_webpki_roots())?;
+    if let Some(keep_alive_while_idle) = grpc_config.keep_alive_while_idle {
+        channel_builder = channel_builder.keep_alive_while_idle(keep_alive_while_idle);
+    }
+    if let Some(keep_alive_interval) = grpc_config.keep_alive_interval {
+        channel_builder = channel_builder.http2_keep_alive_interval(keep_alive_interval);
+    }
+    if let Some(keep_alive_timeout) = grpc_config.keep_alive_timeout {
+        channel_builder = channel_builder.keep_alive_timeout(keep_alive_timeout);
+    }
+    Ok(channel_builder.connect().await?)
+}
+
 pub(crate) fn user_agent(user_agent_name: &str) -> String {
     format!("rust:{user_agent_name}:{VERSION}")
 }
@@ -364,6 +383,26 @@ mod tests {
         };
         let result = connect_channel_lazily_configurable(uri_string, grpc_config);
         assert!(result.is_ok(), "Expected Ok, but got {:?}", result);
+    }
+
+    #[tokio::test]
+    async fn test_connect_channel_eagerly_configurable_bad_uri() {
+        let grpc_config = GrpcConfiguration {
+            keep_alive_while_idle: Some(true),
+            keep_alive_interval: Some(Duration::from_secs(30)),
+            keep_alive_timeout: Some(Duration::from_secs(60)),
+            deadline: Duration::from_secs(30),
+            num_channels: 1,
+            max_send_message_size: None,
+            max_receive_message_size: None,
+        };
+        let result =
+            connect_channel_eagerly_configurable("http://invalid host:50051", grpc_config).await;
+        assert!(
+            matches!(result, Err(ChannelConnectError::BadUri(_))),
+            "Expected BadUri error, got {:?}",
+            result
+        );
     }
 
     #[test]
