@@ -205,8 +205,7 @@ impl<F: IntoBytesIterable> TryFrom<DictionaryGetFieldsResponse<F>> for HashMap<S
                 fields, responses, ..
             } => {
                 let mut result = HashMap::new();
-                for (field, response) in fields.into_bytes().into_iter().zip(responses.into_iter())
-                {
+                for (field, response) in fields.into_bytes().into_iter().zip(responses) {
                     match response {
                         DictionaryGetFieldResponse::Hit { value } => {
                             let key: String = parse_string(field.into_bytes())?;
@@ -233,8 +232,7 @@ impl<F: IntoBytesIterable> TryFrom<DictionaryGetFieldsResponse<F>> for HashMap<V
                 fields, responses, ..
             } => {
                 let mut result = HashMap::new();
-                for (field, response) in fields.into_bytes().into_iter().zip(responses.into_iter())
-                {
+                for (field, response) in fields.into_bytes().into_iter().zip(responses) {
                     match response {
                         DictionaryGetFieldResponse::Hit { value } => {
                             result.insert(field.into_bytes(), value.into());
