@@ -1,7 +1,7 @@
 use momento_protos::protosocket::cache::{CacheCommand, CacheResponse};
 use protosocket_rpc::client::{ConnectionPool, RpcClient};
 
-use crate::cache::{GetRequest, SetRequest};
+use crate::cache::{DeleteRequest, GetRequest, SetRequest};
 use crate::protosocket::cache::cache_client_builder::NeedsDefaultTtl;
 use crate::protosocket::cache::connection_manager::ProtosocketConnectionManager;
 use crate::protosocket::cache::{Configuration, MomentoProtosocketRequest};
@@ -178,6 +178,45 @@ impl ProtosocketCacheClient {
         value: impl IntoBytes,
     ) -> MomentoResult<crate::cache::SetResponse> {
         let request = SetRequest::new(cache_name, key, value);
+        request.send(self, self.request_timeout).await
+    }
+
+    /// Deletes an item in a Momento Cache
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_name` - name of cache
+    /// * `key` - key of the item to delete
+    ///
+    /// # Examples
+    /// Assumes that a ProtosocketCacheClient named `cache_client` has been created and is available.
+    /// ```no_run
+    /// # fn main() -> anyhow::Result<()> {
+    /// # use momento_test_util::create_doctest_protosocket_cache_client;
+    /// # tokio_test::block_on(async {
+    /// # let (cache_client, cache_name) = create_doctest_protosocket_cache_client().await;
+    /// use momento::cache::DeleteResponse;
+    /// use momento::MomentoErrorCode;
+    ///
+    /// match cache_client.delete(&cache_name, "key").await {
+    ///     Ok(_) => println!("DeleteResponse successful"),
+    ///     Err(e) => if let MomentoErrorCode::CacheNotFoundError = e.error_code {
+    ///         println!("Cache not found: {}", &cache_name);
+    ///     } else {
+    ///         eprintln!("Error deleting value in cache {}: {}", &cache_name, e);
+    ///     }
+    /// }
+    /// # Ok(())
+    /// # })
+    /// # }
+    /// ```
+    /// You can also use the [send_request](ProtosocketCacheClient::send_request) method to delete an item using a [DeleteRequest].
+    pub async fn delete(
+        &self,
+        cache_name: impl Into<String>,
+        key: impl IntoBytes,
+    ) -> MomentoResult<crate::cache::DeleteResponse> {
+        let request = DeleteRequest::new(cache_name, key);
         request.send(self, self.request_timeout).await
     }
 
