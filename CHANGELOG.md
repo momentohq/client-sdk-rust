@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.66.0](https://github.com/momentohq/client-sdk-rust/compare/v0.65.0...v0.66.0) (2026-06-12)
+
+
+### Features
+
+* update client protos with ability to set function metrics CW delivery ([#542](https://github.com/momentohq/client-sdk-rust/issues/542)) ([471645a](https://github.com/momentohq/client-sdk-rust/commit/471645ae0cffb43a71c20dfb8c452f2b7489218c))
+
 ## [0.65.0](https://github.com/momentohq/client-sdk-rust/compare/v0.64.2...v0.65.0) (2026-06-08)
 
 
