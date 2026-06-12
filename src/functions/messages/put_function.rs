@@ -1,7 +1,10 @@
 use std::{collections::HashMap, iter::FromIterator, time::Duration};
 
 use crate::{
-    functions::{EnvironmentValue, Function, FunctionClient, MomentoRequest, WasmSource},
+    functions::{
+        EnvironmentValue, Function, FunctionClient, FunctionMetricsConfigChange, MomentoRequest,
+        WasmSource,
+    },
     utils::prep_request_with_timeout,
     MomentoError, MomentoResult,
 };
@@ -34,6 +37,7 @@ pub struct PutFunctionRequest {
     description: String,
     environment: HashMap<String, EnvironmentValue>,
     wasm_source: WasmSource,
+    metrics_config: Option<FunctionMetricsConfigChange>,
 }
 
 impl PutFunctionRequest {
@@ -49,6 +53,7 @@ impl PutFunctionRequest {
             description: String::new(),
             environment: HashMap::new(),
             wasm_source: wasm_source.into(),
+            metrics_config: None,
         }
     }
 
@@ -88,6 +93,33 @@ impl PutFunctionRequest {
             .insert(key.into().unwrap_or_default().into(), value.into());
         self
     }
+
+    /// Change delivery of this function's metrics to your own CloudWatch account.
+    ///
+    /// Pass a [`FunctionMetricsConfig`](crate::functions::FunctionMetricsConfig) to configure
+    /// metrics for just this function, taking precedence over your account-wide default, or
+    /// [`FunctionMetricsConfigChange::Remove`](crate::functions::FunctionMetricsConfigChange::Remove)
+    /// to clear an existing configuration so the function follows your account-wide default. Omit it
+    /// to leave the account-wide default in place.
+    /// ```rust
+    /// # use momento::functions::{FunctionMetricsConfig, FunctionMetricsConfigChange, PutFunctionRequest};
+    /// # fn example(request: PutFunctionRequest) {
+    /// // Set the configuration for this function:
+    /// let request = request
+    ///     .metrics_config(FunctionMetricsConfig::enabled("arn:aws:iam::123456789012:role/my-momento-metrics-role"));
+    /// # }
+    /// # fn remove_example(request: PutFunctionRequest) {
+    /// // Or remove any configuration so the function follows your account-wide default:
+    /// let request = request.metrics_config(FunctionMetricsConfigChange::Remove);
+    /// # }
+    /// ```
+    pub fn metrics_config(
+        mut self,
+        metrics_config: impl Into<FunctionMetricsConfigChange>,
+    ) -> Self {
+        self.metrics_config = Some(metrics_config.into());
+        self
+    }
 }
 
 impl MomentoRequest for PutFunctionRequest {
@@ -106,6 +138,7 @@ impl MomentoRequest for PutFunctionRequest {
                     .into_iter()
                     .map(|(k, v)| (k, v.into()))
                     .collect(),
+                metrics_config: self.metrics_config.map(Into::into),
                 wasm_location: Some(self.wasm_source.into()),
             },
         )?;

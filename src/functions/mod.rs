@@ -6,8 +6,9 @@ mod function_client_builder;
 mod messages;
 
 pub use function::{
-    CurrentFunctionVersion, EnvironmentValue, Function, FunctionVersion, FunctionVersionId, Wasm,
-    WasmSource, WasmVersionId,
+    CurrentFunctionVersion, EnvironmentValue, Function, FunctionMetricsConfig,
+    FunctionMetricsConfigChange, FunctionVersion, FunctionVersionId, Wasm, WasmSource,
+    WasmVersionId,
 };
 pub use function_client::FunctionClient;
 pub use function_client_builder::FunctionClientBuilder;

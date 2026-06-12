@@ -10,6 +10,7 @@ pub struct Function {
     latest_version: u32,
     concurrency_limit: u32,
     last_updated_at: String,
+    metrics_config: Option<FunctionMetricsConfig>,
 }
 impl Function {
     /// Name of the function.
@@ -47,6 +48,15 @@ impl Function {
     pub fn last_updated_at(&self) -> &str {
         &self.last_updated_at
     }
+
+    /// Configuration for delivering this function's metrics to your own
+    /// CloudWatch account.
+    ///
+    /// Returns `None` when no configuration is set for this function, in which case it follows
+    /// your account-wide default.
+    pub fn metrics_config(&self) -> Option<&FunctionMetricsConfig> {
+        self.metrics_config.as_ref()
+    }
 }
 
 impl From<momento_protos::function_types::Function> for Function {
@@ -60,11 +70,13 @@ impl From<momento_protos::function_types::Function> for Function {
             concurrency_limit,
             last_updated_at,
             function_limits: _, // TODO implement getter(s) for function limits
+            metrics_config,
         } = proto;
         Self {
             name,
             description,
             function_id,
+            metrics_config: metrics_config.and_then(metrics_config_from_proto),
             version: match current_version {
                 Some(momento_protos::function_types::CurrentFunctionVersion {
                     version: Some(version),
@@ -81,6 +93,105 @@ impl From<momento_protos::function_types::Function> for Function {
             latest_version,
             concurrency_limit,
             last_updated_at,
+        }
+    }
+}
+
+/// Per-function configuration for delivering this function's metrics to your own
+/// CloudWatch account.
+///
+/// Set this on a [`PutFunctionRequest`](crate::functions::PutFunctionRequest) or
+/// [`PutFunctionConfigRequest`](crate::functions::PutFunctionConfigRequest) to configure metrics
+/// for just this function, taking precedence over your account-wide default. When read back from a
+/// [`Function`], `None` (an absent configuration) means the function follows your account-wide
+/// default.
+///
+/// Reach out to us at support@momentohq.com to get set up.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum FunctionMetricsConfig {
+    /// Do not deliver this function's metrics to your CloudWatch account.
+    Disabled,
+    /// Deliver this function's metrics to your CloudWatch account.
+    Enabled {
+        /// The IAM role Momento should assume to publish metrics into your account.
+        customer_iam_role: String,
+    },
+}
+
+impl FunctionMetricsConfig {
+    /// Enable metrics delivery, assuming the given IAM role to publish into your account.
+    pub fn enabled(customer_iam_role: impl Into<String>) -> Self {
+        FunctionMetricsConfig::Enabled {
+            customer_iam_role: customer_iam_role.into(),
+        }
+    }
+}
+
+impl From<FunctionMetricsConfig> for momento_protos::function_types::FunctionMetricsConfig {
+    fn from(value: FunctionMetricsConfig) -> Self {
+        use momento_protos::function_types::function_metrics_config::{Disabled, Enabled, Kind};
+        let kind = match value {
+            FunctionMetricsConfig::Disabled => Kind::Disabled(Disabled {}),
+            FunctionMetricsConfig::Enabled { customer_iam_role } => {
+                Kind::Enabled(Enabled { customer_iam_role })
+            }
+        };
+        Self { kind: Some(kind) }
+    }
+}
+
+/// Convert a wire-level metrics config into the SDK representation. Returns `None` when the
+/// config carries no configuration (an absent inner `kind`), meaning the function follows the
+/// account-wide default. A free function rather than a `From` impl because the orphan rule
+/// forbids implementing `From<_> for Option<_>` on a foreign source type.
+pub(crate) fn metrics_config_from_proto(
+    proto: momento_protos::function_types::FunctionMetricsConfig,
+) -> Option<FunctionMetricsConfig> {
+    use momento_protos::function_types::function_metrics_config::Kind;
+    match proto.kind {
+        Some(Kind::Disabled(_)) => Some(FunctionMetricsConfig::Disabled),
+        Some(Kind::Enabled(enabled)) => Some(FunctionMetricsConfig::Enabled {
+            customer_iam_role: enabled.customer_iam_role,
+        }),
+        None => None,
+    }
+}
+
+/// A change to a function's per-function metrics-delivery configuration, supplied to
+/// [`PutFunctionRequest`](crate::functions::PutFunctionRequest) or
+/// [`PutFunctionConfigRequest`](crate::functions::PutFunctionConfigRequest).
+///
+/// Setting a [`FunctionMetricsConfig`] (via the `From` conversion) configures metrics for just
+/// this function, taking precedence over your account-wide default;
+/// [`Remove`](FunctionMetricsConfigChange::Remove) clears any existing configuration so the
+/// function follows your account-wide default again.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum FunctionMetricsConfigChange {
+    /// Remove any per-function configuration so the function follows your account-wide default.
+    Remove,
+    /// Set an explicit per-function configuration (enabled or disabled).
+    Set(FunctionMetricsConfig),
+}
+
+impl From<FunctionMetricsConfig> for FunctionMetricsConfigChange {
+    fn from(config: FunctionMetricsConfig) -> Self {
+        FunctionMetricsConfigChange::Set(config)
+    }
+}
+
+impl From<FunctionMetricsConfigChange>
+    for momento_protos::function_types::FunctionMetricsConfigChange
+{
+    fn from(value: FunctionMetricsConfigChange) -> Self {
+        use momento_protos::function_types::function_metrics_config_change::{
+            Change, RemoveOverride,
+        };
+        let change = match value {
+            FunctionMetricsConfigChange::Remove => Change::RemoveOverride(RemoveOverride {}),
+            FunctionMetricsConfigChange::Set(config) => Change::MetricsConfig(config.into()),
+        };
+        Self {
+            change: Some(change),
         }
     }
 }
