@@ -1,6 +1,6 @@
 [package]
 name = "momento"
-version = "0.66.0"
+version = "0.67.0"
 authors = ["momento"]
 edition = "2018"
 description = "Client SDK for Momento services"

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.67.0](https://github.com/momentohq/client-sdk-rust/compare/v0.66.0...v0.67.0) (2026-06-17)
+
+
+### Features
+
+* add protosocket delete method ([#544](https://github.com/momentohq/client-sdk-rust/issues/544)) ([5975447](https://github.com/momentohq/client-sdk-rust/commit/59754476f130dc240e3660c3564f8997c8aa32d3))
+
 ## [0.66.0](https://github.com/momentohq/client-sdk-rust/compare/v0.65.0...v0.66.0) (2026-06-12)
 
 
