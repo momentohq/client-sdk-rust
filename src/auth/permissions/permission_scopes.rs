@@ -1,6 +1,6 @@
 use super::permission_scope::{
-    CachePermission, CacheRole, CacheSelector, Permission, PermissionScope, Permissions,
-    TopicPermission, TopicRole, TopicSelector,
+    CachePermission, CacheRole, CacheSelector, FunctionPermission, FunctionRole, FunctionSelector,
+    Permission, PermissionScope, Permissions, TopicPermission, TopicRole, TopicSelector,
 };
 
 /// A collection of convenience methods for creating permission scopes.
@@ -78,5 +78,68 @@ impl PermissionScopes {
                 topic: topic_selector.into(),
             })],
         })
+    }
+
+    /// Create a function invoke permission scope
+    pub fn function_invoke(
+        cache: impl Into<CacheSelector>,
+        func: impl Into<FunctionSelector>,
+    ) -> PermissionScope {
+        PermissionScope::Permissions(Permissions {
+            permissions: vec![Permission::FunctionPermission(FunctionPermission {
+                role: FunctionRole::FunctionInvoke,
+                cache: cache.into(),
+                func: func.into(),
+            })],
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_function_invoke_factory() {
+        let scope = PermissionScopes::function_invoke("my-cache", "my-function");
+
+        // Extract the inner Permissions
+        match scope {
+            PermissionScope::Permissions(perms) => {
+                assert_eq!(perms.permissions.len(), 1);
+                match &perms.permissions[0] {
+                    Permission::FunctionPermission(fp) => {
+                        assert_eq!(fp.role, FunctionRole::FunctionInvoke);
+                        assert_eq!(
+                            fp.cache,
+                            CacheSelector::CacheName {
+                                name: "my-cache".into()
+                            }
+                        );
+                        assert_eq!(
+                            fp.func,
+                            FunctionSelector::FunctionName {
+                                name: "my-function".into()
+                            }
+                        );
+                    }
+                    _ => panic!("Expected FunctionPermission"),
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_function_invoke_all_functions() {
+        let scope = PermissionScopes::function_invoke("my-cache", FunctionSelector::AllFunctions);
+
+        match scope {
+            PermissionScope::Permissions(perms) => match &perms.permissions[0] {
+                Permission::FunctionPermission(fp) => {
+                    assert_eq!(fp.func, FunctionSelector::AllFunctions);
+                }
+                _ => panic!("Expected FunctionPermission"),
+            },
+        }
     }
 }
