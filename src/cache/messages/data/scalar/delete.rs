@@ -32,8 +32,8 @@ use crate::{
 /// # }
 /// ```
 pub struct DeleteRequest<K: IntoBytes> {
-    cache_name: String,
-    key: K,
+    pub(crate) cache_name: String,
+    pub(crate) key: K,
 }
 
 impl<K: IntoBytes> DeleteRequest<K> {
