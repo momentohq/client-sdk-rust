@@ -1,10 +1,10 @@
-use crate::protosocket::cache::codec::{ProstDecoder, ProstSerializer};
 use crate::protosocket::cache::connection_manager::ProtosocketConnectionManager;
 use crate::protosocket::cache::Configuration;
 use crate::{CredentialProvider, MomentoResult, ProtosocketCacheClient};
 use momento_protos::protosocket::cache::CacheCommand;
 use momento_protos::protosocket::cache::CacheResponse;
 use protosocket::PooledEncoder;
+use protosocket_prost::{ProstDecoder, ProstSerializer};
 use protosocket_rpc::client::ConnectionPool;
 use std::time::Duration;
 

@@ -73,7 +73,7 @@ impl ProtosocketConnectionManager {
                     "protosocket_connection_manager::new",
                     Some(format!(
                         "Could not parse TLS endpoint: {}",
-                        &credential_provider.tls_cache_endpoint
+                        credential_provider.tls_cache_endpoint
                     )),
                 )
             })?;
@@ -167,7 +167,7 @@ impl ClientConnector for ProtosocketConnectionManager {
                             protosocket_rpc::Error::IoFailure(
                                 std::io::Error::other(format!(
                                     "could not parse address from endpoint: {}: {:?}",
-                                    &self.credential_provider.cache_endpoint, e
+                                    self.credential_provider.cache_endpoint, e
                                 ))
                                 .into(),
                             )
@@ -196,7 +196,7 @@ impl ClientConnector for ProtosocketConnectionManager {
                         protosocket_rpc::Error::IoFailure(
                             std::io::Error::other(format!(
                                 "could not parse address from endpoint: {}: {:?}",
-                                &self.credential_provider.cache_endpoint, e
+                                self.credential_provider.cache_endpoint, e
                             ))
                             .into(),
                         )
