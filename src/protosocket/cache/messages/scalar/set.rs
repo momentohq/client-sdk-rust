@@ -40,8 +40,7 @@ impl<K: IntoBytes, V: IntoBytes> SetRequest<K, V> {
                         ttl_milliseconds: client.expand_ttl_ms(self.ttl)?,
                     })),
                 })),
-            })
-            .await?;
+            })?;
         let response = completion.await?;
         match response.kind {
             Some(Kind::Set(SetResponse {})) => Ok(crate::cache::SetResponse {}),

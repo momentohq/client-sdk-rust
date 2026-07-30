@@ -40,8 +40,7 @@ impl<K: IntoBytes> GetRequest<K> {
                         key: self.key.into_bytes(),
                     })),
                 })),
-            })
-            .await?;
+            })?;
         let response = completion.await?;
         match response.kind {
             Some(Kind::Get(GetResponse { value })) => Ok(crate::cache::GetResponse::Hit {

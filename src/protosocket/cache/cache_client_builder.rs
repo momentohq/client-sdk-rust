@@ -3,11 +3,19 @@ use crate::protosocket::cache::Configuration;
 use crate::{CredentialProvider, MomentoResult, ProtosocketCacheClient};
 use momento_protos::protosocket::cache::CacheCommand;
 use momento_protos::protosocket::cache::CacheResponse;
-use protosocket_prost::ProstSerializer;
+use protosocket::PooledEncoder;
+use protosocket_prost::{ProstDecoder, ProstSerializer};
 use protosocket_rpc::client::ConnectionPool;
 use std::time::Duration;
 
-pub type Serializer = ProstSerializer<CacheResponse, CacheCommand>;
+/// protosocket 2.x splits the old combined `Serializer` into an encoder half and a
+/// decoder half; a `(Encoder, Decoder)` tuple implements `Codec`. The encoder is wrapped
+/// in `PooledEncoder` so outbound buffers are recycled rather than freshly allocated per
+/// message -- the bare `Serialize` blanket impl allocates a `Vec` for every command.
+pub type Codec = (
+    PooledEncoder<ProstSerializer<CacheCommand>>,
+    ProstDecoder<CacheResponse>,
+);
 
 /// The initial state of the ProtosocketCacheClientBuilder.
 #[derive(PartialEq, Eq, Clone, Debug)]

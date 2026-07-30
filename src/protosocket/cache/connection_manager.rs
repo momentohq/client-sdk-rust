@@ -1,6 +1,6 @@
 use crate::{
     credential_provider::EndpointSecurity,
-    protosocket::cache::{address_provider::AddressProvider, cache_client_builder::Serializer},
+    protosocket::cache::{address_provider::AddressProvider, cache_client_builder::Codec},
     CredentialProvider,
 };
 use http::Uri;
@@ -73,7 +73,7 @@ impl ProtosocketConnectionManager {
                     "protosocket_connection_manager::new",
                     Some(format!(
                         "Could not parse TLS endpoint: {}",
-                        &credential_provider.tls_cache_endpoint
+                        credential_provider.tls_cache_endpoint
                     )),
                 )
             })?;
@@ -167,7 +167,7 @@ impl ClientConnector for ProtosocketConnectionManager {
                             protosocket_rpc::Error::IoFailure(
                                 std::io::Error::other(format!(
                                     "could not parse address from endpoint: {}: {:?}",
-                                    &self.credential_provider.cache_endpoint, e
+                                    self.credential_provider.cache_endpoint, e
                                 ))
                                 .into(),
                             )
@@ -196,7 +196,7 @@ impl ClientConnector for ProtosocketConnectionManager {
                         protosocket_rpc::Error::IoFailure(
                             std::io::Error::other(format!(
                                 "could not parse address from endpoint: {}: {:?}",
-                                &self.credential_provider.cache_endpoint, e
+                                self.credential_provider.cache_endpoint, e
                             ))
                             .into(),
                         )
@@ -320,7 +320,7 @@ where
     C: protosocket_rpc::client::StreamConnector + Send + 'static,
 {
     log::debug!("connector: {:?}", connector);
-    let (client, connection) = protosocket_rpc::client::connect::<Serializer, Serializer, C>(
+    let (client, connection) = protosocket_rpc::client::connect::<Codec, C>(
         address,
         &protosocket_rpc::client::Configuration::new(connector),
     )
@@ -341,17 +341,15 @@ pub(crate) async fn authenticate_protosocket_client(
     credential_provider: CredentialProvider,
     message_id: u64,
 ) -> MomentoResult<protosocket_rpc::client::RpcClient<CacheCommand, CacheResponse>> {
-    let completion = client
-        .send_unary(CacheCommand {
-            message_id,
-            control_code: ProtosocketControlCode::Normal as u32,
-            rpc_kind: Some(RpcKind::Unary(Unary {
-                command: Some(Command::Auth(AuthenticateCommand {
-                    token: credential_provider.clone().auth_token,
-                })),
+    let completion = client.send_unary(CacheCommand {
+        message_id,
+        control_code: ProtosocketControlCode::Normal as u32,
+        rpc_kind: Some(RpcKind::Unary(Unary {
+            command: Some(Command::Auth(AuthenticateCommand {
+                token: credential_provider.clone().auth_token,
             })),
-        })
-        .await?;
+        })),
+    })?;
     let response = completion.await?;
     match response.kind {
         Some(Kind::Auth(AuthenticateResponse {})) => {
