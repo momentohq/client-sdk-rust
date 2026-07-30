@@ -8,6 +8,8 @@ mod config;
 pub use config::configuration::Configuration;
 pub use config::configurations;
 
+mod codec;
+
 mod connection_manager;
 
 mod address_provider;

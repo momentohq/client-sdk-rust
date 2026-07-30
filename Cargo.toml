@@ -28,17 +28,20 @@ doc = false
 
 
 [dependencies]
-momento-protos = "0.132.0"
+momento-protos = "0.133.1"
 base64 = "0.22"
+bytes = "1"
 derive_more = { version = "2.0.1", features = ["full"] }
 futures = "0"
 h2 = { version = "0.4" }
 http = { version = "1" }
 hyper = { version = "1.6" }
 log = "0.4"
-protosocket = "0.12.1"
-protosocket-prost = "0.12.1"
-protosocket-rpc = "0.12.1"
+# Must stay in lockstep with momento-protos' prost, or the generated types will
+# implement a different `prost::Message` than the codec in src/protosocket/cache/codec.rs.
+prost = "0.13"
+protosocket = "2.0.0"
+protosocket-rpc = "2.0.0"
 rand = "0.9"
 reqwest = { version = "0.12", default-features = false, features = [
     "http2",
