@@ -2,9 +2,16 @@ use std::{
     collections::HashMap,
     net::SocketAddr,
     sync::{Arc, Mutex},
+    time::Duration,
 };
 
 use crate::CredentialProvider;
+
+/// Bounds the TCP+TLS handshake for the `/endpoints` control-plane request.
+const HTTP_CONNECT_TIMEOUT: Duration = Duration::from_secs(2);
+
+/// Bounds the entire `/endpoints` request, connect through response body.
+const HTTP_REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Default)]
 pub(crate) struct Addresses {
@@ -94,6 +101,8 @@ impl AddressProvider {
         let client = reqwest::Client::builder()
             .tls_built_in_native_certs(true)
             .tls_built_in_root_certs(true)
+            .connect_timeout(HTTP_CONNECT_TIMEOUT)
+            .timeout(HTTP_REQUEST_TIMEOUT)
             .build()
             .expect("must be able to build client");
         Self {
