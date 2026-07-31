@@ -4,23 +4,20 @@ use std::{
     time::{Duration, Instant},
 };
 
-/// How long the local availability zone is skipped after its first connect failure.
+/// How long the local zone is skipped after its first connect failure.
 const BASE_WIDEN_MS: u64 = 500;
 
-/// The ceiling on that window.
+/// Ceiling on that window.
 const MAX_WIDEN_MS: u64 = 5_000;
 
-/// Tracks whether the local availability zone is currently reachable, so that
-/// [`AzAffinity::Preferred`](super::config::configuration::AzAffinity) can fall
-/// back to other zones instead of staying pinned to a zone it cannot reach.
+/// Tracks whether the local availability zone is currently reachable, so
+/// `az_id` preference can fall back to other zones instead of staying pinned
+/// to one it can't reach.
 ///
-/// This deliberately does *not* track health per address. The `/endpoints` API
-/// publishes healthy hosts, so per-host health is the control plane's job and
-/// duplicating it client-side would be both redundant and less informed. What
-/// the control plane cannot see is a fault visible only from this client's
-/// vantage point -- a degraded cross-zone link, or egress broken for one zone --
-/// where the published hosts really are healthy and we still cannot reach them.
-/// That is the one thing this covers.
+/// Deliberately doesn't track per-address health -- the `/endpoints` API
+/// already publishes healthy hosts, so that's the control plane's job. What it
+/// can't see is a fault visible only from this client (a degraded cross-zone
+/// link, broken egress for one zone), which is what this covers.
 #[derive(Debug)]
 pub(crate) struct AzCircuit {
     state: Mutex<State>,
@@ -62,8 +59,7 @@ impl AzCircuit {
             .is_some_and(|deadline| deadline > Instant::now())
     }
 
-    /// Record a failed connection attempt against an address in the local zone,
-    /// opening (or extending) the window during which the zone is skipped.
+    /// Record a local-zone connect failure, opening or extending the skip window.
     #[allow(clippy::expect_used)]
     pub fn record_local_failure(&self) {
         let mut state = self.state.lock().expect("local mutex must not be poisoned");
@@ -77,8 +73,7 @@ impl AzCircuit {
         );
     }
 
-    /// Record a successful connection against an address in the local zone,
-    /// closing the circuit and resetting the backoff.
+    /// Record a local-zone connect success, closing the circuit.
     #[allow(clippy::expect_used)]
     pub fn record_local_success(&self) {
         let mut state = self.state.lock().expect("local mutex must not be poisoned");
@@ -89,9 +84,8 @@ impl AzCircuit {
         state.consecutive_failures = 0;
     }
 
-    /// Exponential growth with jitter over the lower half of the window, so
-    /// that connections which failed together do not probe the local zone in
-    /// lockstep.
+    /// Exponential growth, jittered so connections that failed together don't
+    /// re-probe the local zone in lockstep.
     fn widen_window(&self, consecutive_failures: u32) -> Duration {
         let shift = consecutive_failures.saturating_sub(1).min(16);
         let ceiling = ((self.base.as_millis() as u64) << shift).min(self.cap.as_millis() as u64);

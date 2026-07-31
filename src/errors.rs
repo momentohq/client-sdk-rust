@@ -149,34 +149,23 @@ impl MomentoError {
 
     /// Classify a failure to obtain a connection from the protosocket pool.
     ///
-    /// The `io::ErrorKind` is the only channel available for typing a connect
-    /// failure, because `protosocket_rpc::Error` is a closed enum owned by that
-    /// crate. Kinds arrive from two places: address selection failures stamped
-    /// by the connection manager, and real transport kinds propagated up from
-    /// `protosocket_rpc::client::connect`.
+    /// `io::ErrorKind` is the only channel for typing a connect failure, since
+    /// `protosocket_rpc::Error` is a closed enum owned by that crate.
     pub(crate) fn protosocket_connect_error(error: protosocket_rpc::Error) -> Self {
         let error_code = match &error {
             protosocket_rpc::Error::IoFailure(io_error) => match io_error.kind() {
-                // Credentials were rejected; retrying will not help.
+                // Rejected credentials aren't worth retrying.
                 std::io::ErrorKind::PermissionDenied => MomentoErrorCode::AuthenticationError,
-                // Misconfiguration, such as an unparseable hostname. Also not
-                // worth retrying.
+                // Misconfiguration (e.g. an unparseable hostname) isn't worth retrying either.
                 std::io::ErrorKind::InvalidInput => MomentoErrorCode::InvalidArgumentError,
-                // AddrNotAvailable, ConnectionRefused, TimedOut, InvalidData, and
-                // every other transport-level failure: the server was not
-                // reachable or not usable. ServerUnavailable is the code callers
-                // already treat as retryable.
-                //
-                // TimedOut deliberately lands here rather than in TimeoutError.
-                // It represents a connect deadline, not a request deadline, and
-                // the right response is to retry against a different address --
-                // which ServerUnavailable gets us. TimeoutError is generally not
-                // treated as retryable, so "correcting" this mapping would
-                // quietly disable connect-time failover.
+                // Every other transport failure, including TimedOut: this is a connect
+                // deadline, not a request deadline, so it should retry against a
+                // different address like any other unreachable server. Mapping it to
+                // TimeoutError instead would quietly disable connect-time failover,
+                // since callers generally don't retry TimeoutError.
                 _ => MomentoErrorCode::ServerUnavailable,
             },
-            // A panicked connect task surfaces here rather than as an IoFailure:
-            // the connection pool maps a tokio JoinError to this variant.
+            // The connection pool maps a panicked connect task's JoinError here.
             protosocket_rpc::Error::ConnectionIsClosed => MomentoErrorCode::ServerUnavailable,
             protosocket_rpc::Error::CancelledRemotely => MomentoErrorCode::CancelledError,
             protosocket_rpc::Error::Finished => MomentoErrorCode::UnknownError,
@@ -550,11 +539,8 @@ mod tests {
 
     #[test]
     fn a_connect_timeout_is_server_unavailable_not_a_request_timeout() {
-        // This mapping looks wrong at a glance and is load-bearing. A connect
-        // deadline should send callers at a different address, and callers
-        // generally treat ServerUnavailable as retryable but TimeoutError as
-        // terminal. Flipping this to TimeoutError silently disables connect-time
-        // failover.
+        // Looks wrong at a glance, but is load-bearing: flipping this to
+        // TimeoutError would silently disable connect-time failover.
         let error = MomentoError::protosocket_connect_error(io_failure(ErrorKind::TimedOut));
         assert_eq!(error.error_code, MomentoErrorCode::ServerUnavailable);
         assert_ne!(error.error_code, MomentoErrorCode::TimeoutError);
@@ -562,8 +548,7 @@ mod tests {
 
     #[test]
     fn a_panicked_connect_task_is_retryable() {
-        // ConnectionPool maps a tokio JoinError to ConnectionIsClosed, so this
-        // arrives without an io::Error behind it.
+        // No io::Error here: ConnectionPool maps a panicked task's JoinError to this.
         let error =
             MomentoError::protosocket_connect_error(protosocket_rpc::Error::ConnectionIsClosed);
         assert_eq!(error.error_code, MomentoErrorCode::ServerUnavailable);
@@ -578,9 +563,7 @@ mod tests {
 
     #[test]
     fn the_underlying_error_kind_survives() {
-        // Regression test: the kind used to be destroyed by a `format!` on the
-        // way out of the connection manager, leaving callers unable to tell a
-        // refused connection from anything else.
+        // Regression test: this used to be lost to a `format!` on the way out.
         let error =
             MomentoError::protosocket_connect_error(io_failure(ErrorKind::ConnectionRefused));
 

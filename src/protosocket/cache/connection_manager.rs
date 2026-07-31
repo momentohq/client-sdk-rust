@@ -55,17 +55,15 @@ pub(crate) struct ProtosocketConnectionManager {
     address_provider: Arc<AddressProvider>,
     _background_address_loader: Option<Arc<BackgroundAddressLoader>>,
     az_id: Option<String>,
-    /// Shared across every pool slot, so one slot discovering the local zone is
-    /// unreachable steers the others too.
+    /// Shared across pool slots, so one slot's failure steers the others too.
     az_circuit: Arc<AzCircuit>,
     connection_sequence: Arc<AtomicUsize>,
     /// See [`Configuration::connect_timeout`](crate::protosocket::cache::Configuration::connect_timeout).
     connect_timeout: Duration,
 }
 
-/// Where a selected address came from. Log-only: this is deliberately not
-/// surfaced to callers, because the service already reports which availability
-/// zone traffic arrives in.
+/// Where a selected address came from. Log-only -- not surfaced to callers,
+/// since the service already reports which zone traffic arrives in.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum AzRouting {
     /// An address in the configured availability zone.
@@ -85,8 +83,8 @@ enum ConnectFailure {
 
 impl From<ConnectFailure> for protosocket_rpc::Error {
     fn from(failure: ConnectFailure) -> Self {
-        // protosocket_rpc::Error is a closed enum owned by that crate, so an
-        // io::ErrorKind is the only way to carry a type out of here.
+        // protosocket_rpc::Error is a closed enum, so io::ErrorKind is the only
+        // way to carry a type out of here.
         let (kind, message) = match failure {
             ConnectFailure::NoAddresses => (
                 std::io::ErrorKind::AddrNotAvailable,
@@ -103,9 +101,8 @@ impl From<ConnectFailure> for protosocket_rpc::Error {
 enum EstablishError {
     /// The endpoint did not answer, or answered unusably.
     Transport(protosocket_rpc::Error),
-    /// The endpoint answered and rejected our credentials. That says nothing
-    /// about the zone, so it must not open the circuit -- otherwise a bad API
-    /// key would push every client off its local zone.
+    /// The endpoint rejected our credentials -- not evidence about the zone,
+    /// so this must not open the circuit.
     Rejected(protosocket_rpc::Error),
 }
 
@@ -178,14 +175,8 @@ impl ProtosocketConnectionManager {
         })
     }
 
-    /// Choose the address for the next connection attempt.
-    ///
-    /// Preference for the configured availability zone is soft: when this client
-    /// cannot reach that zone, it moves to the others rather than staying pinned
-    /// to endpoints it has just failed to reach. Per-host health is deliberately
-    /// not tracked here -- the `/endpoints` API publishes healthy hosts, so that
-    /// is the control plane's job. What the control plane cannot see is a fault
-    /// visible only from this client, which is what the circuit covers.
+    /// Choose the address for the next connection attempt. AZ preference is
+    /// soft: see [`AzCircuit`] for when and why it gives way to other zones.
     async fn select_address(&self) -> Result<(SocketAddr, AzRouting), ConnectFailure> {
         let mut addresses = self.address_provider.get_addresses();
         if addresses.all().is_empty() {
@@ -237,10 +228,9 @@ impl ProtosocketConnectionManager {
 }
 
 /// Narrow the published addresses down to the ones worth trying, and report
-/// where they came from.
-///
-/// Split out from [`ProtosocketConnectionManager::select_address`] so it can be
-/// exercised against a fixed address map.
+/// where they came from. Split out from
+/// [`select_address`](ProtosocketConnectionManager::select_address) so it's
+/// testable against a fixed address map.
 fn choose_candidates(
     addresses: &Addresses,
     az_id: Option<&str>,
@@ -249,17 +239,15 @@ fn choose_candidates(
     let (candidates, routing) = match az_id {
         None => (addresses.all(), AzRouting::Unpinned),
 
-        // The local zone is unreachable. Escape it entirely rather than widening
-        // to every address, which would keep offering the very endpoints we are
-        // trying to avoid.
+        // Local zone is unreachable: escape it entirely rather than widening to
+        // every address, which would keep offering what we're trying to avoid.
         Some(az_id) if should_widen => (addresses.outside_az(az_id), AzRouting::Fallback),
 
         Some(az_id) => {
             let local = addresses.in_az(az_id);
             if local.is_empty() {
-                // Quiet degradation is the failure mode most worth avoiding
-                // here. This is usually an availability zone *name* passed where
-                // an ID belongs, or a zone with no cache hosts.
+                // Usually an AZ *name* passed where an ID belongs. Log loudly
+                // rather than degrade quietly.
                 log::warn!(
                     "az_id {az_id} is not present in the address map; connecting without zone preference"
                 );
@@ -270,8 +258,8 @@ fn choose_candidates(
         }
     };
 
-    // Escaping the local zone can leave nothing behind, if it is the only zone
-    // publishing addresses. A cross-zone connection beats no connection.
+    // If the local zone was the only one publishing addresses, escaping it
+    // leaves nothing -- a cross-zone connection beats no connection.
     if candidates.is_empty() {
         (addresses.all(), AzRouting::Unpinned)
     } else {
@@ -279,8 +267,8 @@ fn choose_candidates(
     }
 }
 
-/// Spread connections across the candidates. The candidate lists are sorted, so
-/// advancing the sequence reliably lands on a different address.
+/// Spread connections across the candidates. Lists are sorted, so advancing
+/// the sequence reliably lands on a different address.
 fn round_robin(candidates: &[SocketAddr], sequence: usize) -> Option<SocketAddr> {
     if candidates.is_empty() {
         return None;
@@ -288,9 +276,8 @@ fn round_robin(candidates: &[SocketAddr], sequence: usize) -> Option<SocketAddr>
     Some(candidates[sequence % candidates.len()])
 }
 
-/// Rejected credentials are a permanent failure that says nothing about the
-/// endpoint. A transport error during the handshake means the endpoint itself is
-/// suspect, and an unrecognized response means the connection is unusable.
+/// Rejected credentials say nothing about the endpoint; a transport error or an
+/// unrecognized response does.
 fn classify_auth_failure(address: SocketAddr, error: MomentoError) -> EstablishError {
     match error.inner_error {
         Some(ErrorSource::Protosocket(ProtosocketCacheError::CommandError { cause })) => {
@@ -317,10 +304,9 @@ fn classify_auth_failure(address: SocketAddr, error: MomentoError) -> EstablishE
 
 /// Resolve a `host:port` endpoint to a single socket address.
 ///
-/// Resolution failures are reported as `AddrNotAvailable` rather than
-/// `InvalidInput`: this call performs DNS, and a resolver blip is transient and
-/// worth retrying, whereas a genuinely malformed endpoint is indistinguishable
-/// from here. Erring toward retryable is the safer default.
+/// Failures are reported as `AddrNotAvailable`, not `InvalidInput`: a resolver
+/// blip is indistinguishable here from a malformed endpoint, and erring toward
+/// retryable is the safer default.
 fn resolve_endpoint(endpoint: &str) -> protosocket_rpc::Result<SocketAddr> {
     endpoint
         .to_socket_addrs()
@@ -359,8 +345,7 @@ impl ClientConnector for ProtosocketConnectionManager {
                 self.select_address().await?
             }
             EndpointSecurity::Tls => {
-                // Connect through the load balancer, which hides which zone the
-                // backend is in -- so zone preference does not apply here.
+                // Goes through the load balancer, which hides the backend's zone.
                 // Use the modified cache_endpoint with :9004 appended and https:// prefix removed
                 let mut cache_endpoint = self
                     .credential_provider
@@ -383,8 +368,7 @@ impl ClientConnector for ProtosocketConnectionManager {
 
         log::debug!("connecting over protosocket to {address} ({routing:?})");
 
-        // A hang has to become a failure, or none of the bookkeeping below ever
-        // runs. See `Configuration::set_connect_timeout`.
+        // A hang must become a failure, or the bookkeeping below never runs.
         let outcome = match tokio::time::timeout(self.connect_timeout, self.establish(address))
             .await
         {
@@ -415,8 +399,7 @@ impl ClientConnector for ProtosocketConnectionManager {
                 Ok(client)
             }
             Err(failure) => {
-                // Only a transport failure against the local zone is evidence
-                // that the zone is unreachable.
+                // Only a local-zone transport failure is evidence the zone is unreachable.
                 if routing == AzRouting::Local && matches!(failure, EstablishError::Transport(_)) {
                     self.az_circuit.record_local_failure();
                 }
@@ -449,10 +432,8 @@ async fn refresh_addresses_forever(
     }
 }
 
-/// Returns `protosocket_rpc::Result` rather than `MomentoResult` so that the
-/// `io::ErrorKind` from the transport survives. Converting to `MomentoError` and
-/// back would force the error through a string, and callers need the kind to
-/// tell a refused connection from a timeout from an unresolvable address.
+/// Returns `protosocket_rpc::Result`, not `MomentoResult`, so the transport's
+/// `io::ErrorKind` survives instead of being flattened through a string.
 async fn create_protosocket_connection(
     credential_provider: CredentialProvider,
     runtime: tokio::runtime::Handle,
@@ -483,10 +464,8 @@ async fn create_protosocket_connection(
     }
 }
 
-/// Build the TLS server name for a hostname.
-///
-/// An unusable hostname is a configuration problem rather than a transport one,
-/// so it is reported as `InvalidInput` and maps to a non-retryable error.
+/// Build the TLS server name for a hostname. An unusable one is a config
+/// problem, not a transport one, so it's reported as `InvalidInput`.
 fn server_name_for(hostname: &str) -> protosocket_rpc::Result<ServerName<'static>> {
     ServerName::try_from(hostname.to_string()).map_err(|e| {
         protosocket_rpc::Error::IoFailure(
@@ -557,8 +536,7 @@ mod tests {
         SocketAddr::from(([10, 0, 0, last_octet], 9004))
     }
 
-    /// Built by deserializing the `/endpoints` wire format, so these exercise
-    /// the real shape rather than a hand-assembled one.
+    /// Deserialized from the real `/endpoints` wire format, not hand-assembled.
     fn addresses(json: &str) -> Addresses {
         serde_json::from_str(json).expect("test fixture must parse")
     }
@@ -592,8 +570,7 @@ mod tests {
     fn an_unreachable_local_zone_is_escaped_entirely() {
         let (candidates, routing) = choose_candidates(&two_zones(), Some("usw2-az1"), true);
 
-        // Not merely widened: the local addresses must not reappear, or we would
-        // keep offering the endpoints we are trying to avoid.
+        // Not merely widened: the local addresses must not reappear.
         assert_eq!(candidates, vec![address(3)]);
         assert_eq!(routing, AzRouting::Fallback);
     }
@@ -608,8 +585,7 @@ mod tests {
 
     #[test]
     fn an_unknown_zone_connects_without_preference() {
-        // An availability zone *name* where an ID belongs is the likely cause,
-        // and it must not strand the client with nothing to connect to.
+        // Must not strand the client with nothing to connect to.
         let (candidates, routing) = choose_candidates(&two_zones(), Some("us-west-2a"), false);
 
         assert_eq!(candidates, vec![address(1), address(2), address(3)]);
