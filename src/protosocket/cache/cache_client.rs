@@ -1,13 +1,16 @@
+use arc_swap::ArcSwap;
 use momento_protos::protosocket::cache::{CacheCommand, CacheResponse};
 use protosocket_rpc::client::{ConnectionPool, RpcClient};
 
 use crate::cache::{DeleteRequest, GetRequest, SetRequest};
 use crate::protosocket::cache::cache_client_builder::NeedsDefaultTtl;
 use crate::protosocket::cache::connection_manager::ProtosocketConnectionManager;
+use crate::protosocket::cache::recovery_prober::BackgroundRecoveryProber;
 use crate::protosocket::cache::{Configuration, MomentoProtosocketRequest};
 use crate::{utils, IntoBytes, MomentoError, MomentoResult, ProtosocketCacheClientBuilder};
 use std::convert::TryInto;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
 use std::time::Duration;
 
 // TODO: remove `no_run` on doc examples to allow fully running them as doctests
@@ -47,20 +50,39 @@ use std::time::Duration;
 /// ```
 #[derive(Clone, Debug)]
 pub struct ProtosocketCacheClient {
-    client_pool: std::sync::Arc<ConnectionPool<ProtosocketConnectionManager>>,
+    client_pool: Arc<ArcSwap<ConnectionPool<ProtosocketConnectionManager>>>,
+    /// `None` when no availability zone preference is configured -- there's
+    /// nothing for the prober to actively recover toward. Held so it shuts
+    /// down when the last clone of this client is dropped.
+    _recovery_prober: Option<Arc<BackgroundRecoveryProber>>,
     message_id: std::sync::Arc<AtomicU64>,
     item_default_ttl: Duration,
     request_timeout: Duration,
 }
 
 impl ProtosocketCacheClient {
+    /// `client_connector` is a separate parameter from the already-built
+    /// `client_pool` (rather than deriving the pool from it here) because the
+    /// recovery prober needs its own long-lived clone to rebuild fresh pools
+    /// with, independent of the one used to build `client_pool` itself.
     pub(crate) fn new(
         client_pool: ConnectionPool<ProtosocketConnectionManager>,
+        client_connector: ProtosocketConnectionManager,
+        connection_count: usize,
+        runtime: &tokio::runtime::Handle,
         default_ttl: Duration,
         configuration: Configuration,
     ) -> Self {
+        let client_pool = Arc::new(ArcSwap::new(Arc::new(client_pool)));
+        let recovery_prober = BackgroundRecoveryProber::spawn(
+            runtime,
+            client_connector,
+            connection_count,
+            client_pool.clone(),
+        );
         Self {
-            client_pool: std::sync::Arc::new(client_pool),
+            client_pool,
+            _recovery_prober: recovery_prober.map(Arc::new),
             message_id: std::sync::Arc::new(AtomicU64::new(0)),
             item_default_ttl: default_ttl,
             request_timeout: configuration.timeout(),
@@ -241,6 +263,7 @@ impl ProtosocketCacheClient {
     ) -> MomentoResult<RpcClient<CacheCommand, CacheResponse>> {
         let pooled_client = self
             .client_pool
+            .load_full()
             .get_connection()
             .await
             .map_err(MomentoError::protosocket_connect_error)?;

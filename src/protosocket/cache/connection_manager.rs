@@ -225,6 +225,40 @@ impl ProtosocketConnectionManager {
         .await
         .map_err(|e| classify_auth_failure(address, e))
     }
+
+    /// Whether an availability zone preference is configured at all -- used to
+    /// decide whether the recovery prober has anything to do.
+    pub(crate) fn has_az_preference(&self) -> bool {
+        self.az_id.is_some()
+    }
+
+    /// Shared handle to this manager's circuit, for the recovery prober.
+    pub(crate) fn az_circuit(&self) -> Arc<AzCircuit> {
+        self.az_circuit.clone()
+    }
+
+    /// Verify the local zone is reachable with a single bounded connection,
+    /// without touching [`AzCircuit`]. A rejection still counts as reachable:
+    /// the endpoint answered, which is itself proof of reachability -- see
+    /// [`classify_auth_failure`]. Only a transport failure means still down.
+    pub(crate) async fn probe_local_zone(&self) -> bool {
+        let Some(az_id) = self.az_id.as_deref() else {
+            return false;
+        };
+        let local = self.address_provider.get_addresses().in_az(az_id);
+        let sequence = self
+            .connection_sequence
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let Some(address) = round_robin(&local, sequence) else {
+            return false;
+        };
+
+        match tokio::time::timeout(self.connect_timeout, self.establish(address)).await {
+            Ok(Ok(_)) => true,
+            Ok(Err(EstablishError::Rejected(_))) => true,
+            Ok(Err(EstablishError::Transport(_))) | Err(_) => false,
+        }
+    }
 }
 
 /// Narrow the published addresses down to the ones worth trying, and report
