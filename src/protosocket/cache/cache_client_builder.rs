@@ -138,6 +138,7 @@ impl ProtosocketCacheClientBuilder<ReadyToBuild> {
             credential_provider,
             runtime,
             configuration.az_id.clone(),
+            configuration.connect_timeout,
         )?;
 
         let client_pool = ConnectionPool::new(client_connector, configuration.connection_count());

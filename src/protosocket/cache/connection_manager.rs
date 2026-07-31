@@ -33,21 +33,6 @@ use std::{
 use crate::{ErrorSource, MomentoError, MomentoResult, ProtosocketCacheError};
 use std::net::ToSocketAddrs;
 
-/// How long a single connection attempt may take, covering the TCP connection,
-/// the TLS handshake, and the authentication round trip together.
-///
-/// None of those three has a deadline of its own. Without this, an endpoint that
-/// silently drops SYNs rather than refusing them hangs the connection pool slot
-/// for the operating system's TCP timeout -- roughly two minutes on Linux --
-/// while every later request for that slot waits on the same attempt, and the
-/// availability zone circuit never observes a failure to react to.
-///
-/// Seconds rather than milliseconds: callers apply their own per-request
-/// deadlines, but this connection outlives the request that triggered it and is
-/// still worth completing for later ones. A legitimate cross-zone TLS handshake
-/// plus authentication round trip can take a few hundred milliseconds.
-const CONNECT_TIMEOUT: Duration = Duration::from_secs(2);
-
 #[derive(Debug)]
 struct BackgroundAddressLoader {
     alive: Arc<AtomicBool>,
@@ -74,6 +59,8 @@ pub(crate) struct ProtosocketConnectionManager {
     /// unreachable steers the others too.
     az_circuit: Arc<AzCircuit>,
     connection_sequence: Arc<AtomicUsize>,
+    /// See [`Configuration::connect_timeout`](crate::protosocket::cache::Configuration::connect_timeout).
+    connect_timeout: Duration,
 }
 
 /// Where a selected address came from. Log-only: this is deliberately not
@@ -141,6 +128,7 @@ impl ProtosocketConnectionManager {
         credential_provider: CredentialProvider,
         runtime: tokio::runtime::Handle,
         az_id: Option<String>,
+        connect_timeout: Duration,
     ) -> MomentoResult<Self> {
         let hostname = Uri::from_str(&credential_provider.tls_cache_endpoint)
             .ok()
@@ -186,6 +174,7 @@ impl ProtosocketConnectionManager {
             az_id,
             az_circuit: Default::default(),
             connection_sequence: Default::default(),
+            connect_timeout,
         })
     }
 
@@ -395,16 +384,21 @@ impl ClientConnector for ProtosocketConnectionManager {
         log::debug!("connecting over protosocket to {address} ({routing:?})");
 
         // A hang has to become a failure, or none of the bookkeeping below ever
-        // runs. See CONNECT_TIMEOUT.
-        let outcome = match tokio::time::timeout(CONNECT_TIMEOUT, self.establish(address)).await {
+        // runs. See `Configuration::set_connect_timeout`.
+        let outcome = match tokio::time::timeout(self.connect_timeout, self.establish(address))
+            .await
+        {
             Ok(outcome) => outcome,
             Err(_elapsed) => {
-                log::warn!("connect to {address} timed out after {:?}", CONNECT_TIMEOUT);
+                log::warn!(
+                    "connect to {address} timed out after {:?}",
+                    self.connect_timeout
+                );
                 Err(EstablishError::Transport(
                     protosocket_rpc::Error::IoFailure(
                         std::io::Error::new(
                             std::io::ErrorKind::TimedOut,
-                            format!("connect to {} exceeded {:?}", address, CONNECT_TIMEOUT),
+                            format!("connect to {} exceeded {:?}", address, self.connect_timeout),
                         )
                         .into(),
                     ),
