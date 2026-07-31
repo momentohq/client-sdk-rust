@@ -12,5 +12,7 @@ mod connection_manager;
 
 mod address_provider;
 
+mod az_circuit;
+
 mod messages;
 pub use messages::MomentoProtosocketRequest;

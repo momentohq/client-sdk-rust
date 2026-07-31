@@ -239,9 +239,11 @@ impl ProtosocketCacheClient {
     pub(crate) async fn protosocket_connection(
         &self,
     ) -> MomentoResult<RpcClient<CacheCommand, CacheResponse>> {
-        let pooled_client = self.client_pool.get_connection().await.map_err(|e| {
-            MomentoError::unknown_error("protosocket_connection", Some(format!("{e:?}")))
-        })?;
+        let pooled_client = self
+            .client_pool
+            .get_connection()
+            .await
+            .map_err(MomentoError::protosocket_connect_error)?;
         Ok(pooled_client.clone())
     }
 

@@ -147,6 +147,47 @@ impl MomentoError {
         }
     }
 
+    /// Classify a failure to obtain a connection from the protosocket pool.
+    ///
+    /// The `io::ErrorKind` is the only channel available for typing a connect
+    /// failure, because `protosocket_rpc::Error` is a closed enum owned by that
+    /// crate. Kinds arrive from two places: address selection failures stamped
+    /// by the connection manager, and real transport kinds propagated up from
+    /// `protosocket_rpc::client::connect`.
+    pub(crate) fn protosocket_connect_error(error: protosocket_rpc::Error) -> Self {
+        let error_code = match &error {
+            protosocket_rpc::Error::IoFailure(io_error) => match io_error.kind() {
+                // Credentials were rejected; retrying will not help.
+                std::io::ErrorKind::PermissionDenied => MomentoErrorCode::AuthenticationError,
+                // Misconfiguration, such as an unparseable hostname. Also not
+                // worth retrying.
+                std::io::ErrorKind::InvalidInput => MomentoErrorCode::InvalidArgumentError,
+                // AddrNotAvailable, ConnectionRefused, TimedOut, InvalidData, and
+                // every other transport-level failure: the server was not
+                // reachable or not usable. ServerUnavailable is the code callers
+                // already treat as retryable.
+                //
+                // TimedOut deliberately lands here rather than in TimeoutError.
+                // It represents a connect deadline, not a request deadline, and
+                // the right response is to retry against a different address --
+                // which ServerUnavailable gets us. TimeoutError is generally not
+                // treated as retryable, so "correcting" this mapping would
+                // quietly disable connect-time failover.
+                _ => MomentoErrorCode::ServerUnavailable,
+            },
+            // A panicked connect task surfaces here rather than as an IoFailure:
+            // the connection pool maps a tokio JoinError to this variant.
+            protosocket_rpc::Error::ConnectionIsClosed => MomentoErrorCode::ServerUnavailable,
+            protosocket_rpc::Error::CancelledRemotely => MomentoErrorCode::CancelledError,
+            protosocket_rpc::Error::Finished => MomentoErrorCode::UnknownError,
+        };
+        Self {
+            message: format!("Failed to establish a connection to the cache: {error}"),
+            error_code,
+            inner_error: Some(ProtosocketCacheError::Protosocket { cause: error }.into()),
+        }
+    }
+
     /// Returns details about the internal grpc error if available
     pub fn details(&self) -> Option<MomentoGrpcErrorDetails> {
         if let Some(ErrorSource::TonicStatus(status)) = &self.inner_error {
@@ -462,6 +503,95 @@ impl From<protosocket_rpc::Error> for MomentoError {
             inner_error: Some(ErrorSource::Protosocket(
                 ProtosocketCacheError::Protosocket { cause: error },
             )),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::ErrorKind;
+
+    fn io_failure(kind: ErrorKind) -> protosocket_rpc::Error {
+        protosocket_rpc::Error::IoFailure(std::io::Error::new(kind, "test").into())
+    }
+
+    #[test]
+    fn rejected_credentials_are_not_retryable() {
+        let error =
+            MomentoError::protosocket_connect_error(io_failure(ErrorKind::PermissionDenied));
+        assert_eq!(error.error_code, MomentoErrorCode::AuthenticationError);
+    }
+
+    #[test]
+    fn misconfiguration_is_not_retryable() {
+        let error = MomentoError::protosocket_connect_error(io_failure(ErrorKind::InvalidInput));
+        assert_eq!(error.error_code, MomentoErrorCode::InvalidArgumentError);
+    }
+
+    #[test]
+    fn transport_failures_are_retryable() {
+        for kind in [
+            ErrorKind::ConnectionRefused,
+            ErrorKind::AddrNotAvailable,
+            ErrorKind::HostUnreachable,
+            ErrorKind::InvalidData,
+            ErrorKind::ConnectionReset,
+        ] {
+            let error = MomentoError::protosocket_connect_error(io_failure(kind));
+            assert_eq!(
+                error.error_code,
+                MomentoErrorCode::ServerUnavailable,
+                "{:?} should be retryable",
+                kind
+            );
+        }
+    }
+
+    #[test]
+    fn a_connect_timeout_is_server_unavailable_not_a_request_timeout() {
+        // This mapping looks wrong at a glance and is load-bearing. A connect
+        // deadline should send callers at a different address, and callers
+        // generally treat ServerUnavailable as retryable but TimeoutError as
+        // terminal. Flipping this to TimeoutError silently disables connect-time
+        // failover.
+        let error = MomentoError::protosocket_connect_error(io_failure(ErrorKind::TimedOut));
+        assert_eq!(error.error_code, MomentoErrorCode::ServerUnavailable);
+        assert_ne!(error.error_code, MomentoErrorCode::TimeoutError);
+    }
+
+    #[test]
+    fn a_panicked_connect_task_is_retryable() {
+        // ConnectionPool maps a tokio JoinError to ConnectionIsClosed, so this
+        // arrives without an io::Error behind it.
+        let error =
+            MomentoError::protosocket_connect_error(protosocket_rpc::Error::ConnectionIsClosed);
+        assert_eq!(error.error_code, MomentoErrorCode::ServerUnavailable);
+    }
+
+    #[test]
+    fn remote_cancellation_maps_to_cancelled() {
+        let error =
+            MomentoError::protosocket_connect_error(protosocket_rpc::Error::CancelledRemotely);
+        assert_eq!(error.error_code, MomentoErrorCode::CancelledError);
+    }
+
+    #[test]
+    fn the_underlying_error_kind_survives() {
+        // Regression test: the kind used to be destroyed by a `format!` on the
+        // way out of the connection manager, leaving callers unable to tell a
+        // refused connection from anything else.
+        let error =
+            MomentoError::protosocket_connect_error(io_failure(ErrorKind::ConnectionRefused));
+
+        match error.inner_error {
+            Some(ErrorSource::Protosocket(ProtosocketCacheError::Protosocket {
+                cause: protosocket_rpc::Error::IoFailure(io_error),
+            })) => assert_eq!(io_error.kind(), ErrorKind::ConnectionRefused),
+            other => panic!(
+                "expected the original io error to be preserved, got {:?}",
+                other
+            ),
         }
     }
 }
