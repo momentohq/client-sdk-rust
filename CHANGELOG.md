@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.68.0](https://github.com/momentohq/client-sdk-rust/compare/v0.67.0...v0.68.0) (2026-08-03)
+
+
+### Features
+
+* upgrade to protosocket v2 ([#546](https://github.com/momentohq/client-sdk-rust/issues/546)) ([785dbec](https://github.com/momentohq/client-sdk-rust/commit/785dbec96c6a6545fb17af8355fd0ff2dfee7ebc))
+
+
+### Bug Fixes
+
+* connection timeout and az fallback ([#548](https://github.com/momentohq/client-sdk-rust/issues/548)) ([fb2484a](https://github.com/momentohq/client-sdk-rust/commit/fb2484aac3ee41033f19992260957352f8adb93b))
+
 ## [0.67.0](https://github.com/momentohq/client-sdk-rust/compare/v0.66.0...v0.67.0) (2026-06-17)
 
 
