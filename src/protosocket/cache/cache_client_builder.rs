@@ -136,14 +136,19 @@ impl ProtosocketCacheClientBuilder<ReadyToBuild> {
         } = self.state;
         let client_connector = ProtosocketConnectionManager::new(
             credential_provider,
-            runtime,
+            runtime.clone(),
             configuration.az_id.clone(),
+            configuration.connect_timeout,
         )?;
 
-        let client_pool = ConnectionPool::new(client_connector, configuration.connection_count());
+        let connection_count = configuration.connection_count();
+        let client_pool = ConnectionPool::new(client_connector.clone(), connection_count);
 
         Ok(ProtosocketCacheClient::new(
             client_pool,
+            client_connector,
+            connection_count,
+            &runtime,
             default_ttl,
             configuration,
         ))

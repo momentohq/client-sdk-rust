@@ -1,5 +1,12 @@
 use std::time::Duration;
 
+/// Default for [`Configuration::connect_timeout`]. None of the TCP handshake,
+/// TLS handshake, or auth round trip has a deadline of its own, so without
+/// this an unreachable endpoint that drops packets instead of refusing them
+/// can hang a connection pool slot for the OS's TCP timeout (~2 minutes on
+/// Linux).
+pub(crate) const DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_secs(2);
+
 /// Configuration for a Momento ProtosocketCacheClient.
 ///
 /// Static, versioned configurations are provided for different environments:
@@ -28,6 +35,8 @@ pub struct Configuration {
     pub(crate) connection_count: usize,
     /// Optional availability zone ID to use for preferring connections to one az or another.
     pub(crate) az_id: Option<String>,
+    /// How long a single connection attempt may take before it is abandoned.
+    pub(crate) connect_timeout: Duration,
 }
 
 impl Configuration {
@@ -62,6 +71,19 @@ impl Configuration {
     /// Set the availability zone id hint to use for preferring connections to one az or another.
     pub fn set_az_id(&mut self, az_id: Option<String>) -> &mut Self {
         self.az_id = az_id;
+        self
+    }
+
+    /// Returns how long a single connection attempt may take before it is
+    /// abandoned and retried against a different address.
+    pub fn connect_timeout(&self) -> Duration {
+        self.connect_timeout
+    }
+
+    /// Set how long a single connection attempt may take before it is
+    /// abandoned and retried against a different address.
+    pub fn set_connect_timeout(&mut self, connect_timeout: Duration) -> &mut Self {
+        self.connect_timeout = connect_timeout;
         self
     }
 }
@@ -146,6 +168,7 @@ impl ConfigurationBuilder<ReadyToBuild> {
             timeout,
             connection_count,
             az_id,
+            connect_timeout: DEFAULT_CONNECT_TIMEOUT,
         }
     }
 }
@@ -153,5 +176,30 @@ impl ConfigurationBuilder<ReadyToBuild> {
 impl From<ConfigurationBuilder<ReadyToBuild>> for Configuration {
     fn from(builder: ConfigurationBuilder<ReadyToBuild>) -> Configuration {
         builder.build()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn config() -> Configuration {
+        Configuration::builder()
+            .timeout(Duration::from_secs(1))
+            .connection_count(1)
+            .az_id(None)
+            .build()
+    }
+
+    #[test]
+    fn connect_timeout_defaults_without_being_specified() {
+        assert_eq!(config().connect_timeout(), DEFAULT_CONNECT_TIMEOUT);
+    }
+
+    #[test]
+    fn connect_timeout_can_be_overridden_after_build() {
+        let mut config = config();
+        config.set_connect_timeout(Duration::from_millis(500));
+        assert_eq!(config.connect_timeout(), Duration::from_millis(500));
     }
 }
