@@ -38,9 +38,9 @@ h2 = { version = "0.4" }
 http = { version = "1" }
 hyper = { version = "1.6" }
 log = "0.4"
-protosocket = "2.0.0"
-protosocket-prost = "2.0.0"
-protosocket-rpc = "2.0.0"
+protosocket = "2.0.1"
+protosocket-prost = "2.0.1"
+protosocket-rpc = "2.0.1"
 rand = "0.9"
 reqwest = { version = "0.12", default-features = false, features = [
     "http2",
