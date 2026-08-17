@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.68.1](https://github.com/momentohq/client-sdk-rust/compare/v0.68.0...v0.68.1) (2026-08-17)
+
+
+### Bug Fixes
+
+* protosocket version bump for tls buffer flush fix ([#551](https://github.com/momentohq/client-sdk-rust/issues/551)) ([a660423](https://github.com/momentohq/client-sdk-rust/commit/a66042340843f8b7bcf5b46501b2011c19ebcc80))
+
+
+### Miscellaneous
+
+* retire the machine-user release token ([#549](https://github.com/momentohq/client-sdk-rust/issues/549)) ([d4bc47e](https://github.com/momentohq/client-sdk-rust/commit/d4bc47e3afe18fcfaf2ff79f0f9b4398738ff518))
+
 ## [0.68.0](https://github.com/momentohq/client-sdk-rust/compare/v0.67.0...v0.68.0) (2026-08-03)
 
 
