@@ -28,6 +28,7 @@ pub struct CredentialProvider {
     pub(crate) tls_cache_endpoint: String,
     pub(crate) control_endpoint: String,
     pub(crate) cache_endpoint: String,
+    pub(crate) valkey_hostname: String,
     pub(crate) cache_http_endpoint: String,
     pub(crate) token_endpoint: String,
     pub(crate) endpoint_security: EndpointSecurity,
@@ -102,9 +103,14 @@ impl CredentialProvider {
         decode_auth_token(token_to_process)
     }
 
-    /// Returns the hostname that can be used with momento HTTP apis
+    /// Returns the hostname/endpoint that can be used with momento HTTP apis
     pub fn cache_http_endpoint(&self) -> &str {
         &self.cache_http_endpoint
+    }
+
+    /// Returns the hostname/endpoint that can be used with valkey apis
+    pub fn valkey_hostname(&self) -> &str {
+        &self.valkey_hostname
     }
 
     /// Returns the user's auth token for momento HTTP apis
@@ -220,6 +226,7 @@ impl CredentialProvider {
             auth_token,
             tls_cache_endpoint: https_endpoint(get_cache_endpoint(&endpoint)),
             cache_endpoint: https_endpoint(get_cache_endpoint(&endpoint)),
+            valkey_hostname: get_cache_endpoint(&endpoint),
             cache_http_endpoint: https_endpoint(get_cache_http_endpoint(&endpoint)),
             control_endpoint: https_endpoint(get_control_endpoint(&endpoint)),
             token_endpoint: https_endpoint(get_token_endpoint(&endpoint)),
@@ -493,6 +500,7 @@ fn process_v1_token(auth_token_bytes: Vec<u8>) -> MomentoResult<CredentialProvid
         auth_token: json.api_key,
         tls_cache_endpoint: https_endpoint(get_cache_endpoint(&json.endpoint)),
         cache_endpoint: https_endpoint(get_cache_endpoint(&json.endpoint)),
+        valkey_hostname: get_cache_endpoint(&json.endpoint),
         cache_http_endpoint: https_endpoint(get_cache_http_endpoint(&json.endpoint)),
         control_endpoint: https_endpoint(get_control_endpoint(&json.endpoint)),
         token_endpoint: https_endpoint(get_token_endpoint(&json.endpoint)),
