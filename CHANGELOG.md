@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.68.2](https://github.com/momentohq/client-sdk-rust/compare/v0.68.1...v0.68.2) (2026-08-21)
+
+
+### Miscellaneous
+
+* provide hostname for the Valkey CLI ([#552](https://github.com/momentohq/client-sdk-rust/issues/552)) ([bff12a6](https://github.com/momentohq/client-sdk-rust/commit/bff12a6c5e0b676086909aa4faf4508daa264287))
+
 ## [0.68.1](https://github.com/momentohq/client-sdk-rust/compare/v0.68.0...v0.68.1) (2026-08-17)
 
 
