@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.68.3](https://github.com/momentohq/client-sdk-rust/compare/v0.68.2...v0.68.3) (2026-08-27)
+
+
+### Miscellaneous
+
+* bump crates for security advisories ([#554](https://github.com/momentohq/client-sdk-rust/issues/554)) ([829fdf9](https://github.com/momentohq/client-sdk-rust/commit/829fdf92170ac0fab34f6dd7215d0d9f987bbcdb))
+
 ## [0.68.2](https://github.com/momentohq/client-sdk-rust/compare/v0.68.1...v0.68.2) (2026-08-21)
 
 

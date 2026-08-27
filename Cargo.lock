@@ -1018,7 +1018,7 @@ dependencies = [
 
 [[package]]
 name = "momento"
-version = "0.68.2"
+version = "0.68.3"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -1066,7 +1066,7 @@ dependencies = [
 
 [[package]]
 name = "momento-test-util"
-version = "0.68.2"
+version = "0.68.3"
 dependencies = [
  "anyhow",
  "momento",
