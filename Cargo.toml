@@ -28,7 +28,7 @@ doc = false
 
 
 [dependencies]
-momento-protos = "0.133.2"
+momento-protos = "0.138.0"
 arc-swap = "1"
 base64 = "0.22"
 bytes = "1"
