@@ -1,0 +1,17 @@
+[package]
+name = "shared"
+version = "0.1.0"
+edition = "2021"
+authors = ["Benjamen Pyle"]
+
+[lib]
+
+[dependencies]
+thiserror = "1.0.57"
+tracing = "0.1.40"
+chrono = { version = "0.4.38", features = ["serde"] }
+uuid = { version = "1.11.0", features = ["v4", "fast-rng", "serde"] }
+serde = { version = "1.0.215", features = ["derive"] }
+serde_json = "1.0.133"
+random_name_generator = "0.3.6"
+sqlx = "0.8.2"
