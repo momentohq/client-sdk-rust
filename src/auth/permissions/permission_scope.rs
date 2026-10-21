@@ -122,6 +122,76 @@ impl std::fmt::Display for TopicPermission {
     }
 }
 
+/// A component of a [FunctionPermission].
+/// Type of access granted by the permission.
+#[derive(Debug, Display, Clone, PartialEq)]
+pub enum FunctionRole {
+    /// Allows invoking functions
+    FunctionInvoke,
+    /// Denies function invocation
+    FunctionPermitNone,
+}
+
+/// A component of a [FunctionPermission].
+/// A permission can be restricted to a specific function or to all functions.
+#[derive(Debug, Display, Clone, PartialEq)]
+pub enum FunctionSelector {
+    /// Apply permission to all functions
+    AllFunctions,
+    /// Apply permission to a specific function
+    FunctionName {
+        /// The name of the function
+        name: String,
+    },
+    /// Apply permission to functions with a name prefix
+    FunctionNamePrefix {
+        /// The function name prefix
+        prefix: String,
+    },
+}
+
+// A String can be passed in as a FunctionSelector::FunctionName
+impl From<String> for FunctionSelector {
+    fn from(name: String) -> Self {
+        FunctionSelector::FunctionName { name }
+    }
+}
+
+/// A string literal can be passed in as a FunctionSelector::FunctionName
+impl From<&str> for FunctionSelector {
+    fn from(name: &str) -> Self {
+        FunctionSelector::FunctionName {
+            name: name.to_string(),
+        }
+    }
+}
+
+/// Defines access permissions for function invocation in a cache.
+#[derive(Debug, Clone, PartialEq)]
+pub struct FunctionPermission {
+    /// The type of access granted by the permission.
+    pub role: FunctionRole,
+    /// The cache(s) to which the permission applies.
+    pub cache: CacheSelector,
+    /// The function(s) to which the permission applies.
+    pub func: FunctionSelector,
+}
+
+impl std::fmt::Display for FunctionPermission {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "FunctionPermission {{ role: {}, cache: {}, func: {} }}",
+            self.role, self.cache, self.func
+        )
+    }
+}
+
+/// Helper to check if a Permission is a FunctionPermission
+pub fn is_function_permission(p: &Permission) -> bool {
+    matches!(p, Permission::FunctionPermission(_))
+}
+
 /// A component of a [PermissionScope].
 #[derive(Debug, Display, Clone, PartialEq)]
 pub enum Permission {
@@ -129,6 +199,8 @@ pub enum Permission {
     CachePermission(CachePermission),
     /// Defines the permissions for a topic in a cache.
     TopicPermission(TopicPermission),
+    /// Defines the permissions for function invocation.
+    FunctionPermission(FunctionPermission),
 }
 
 /// Permissions object contains the set of permissions to be granted to a new API key.
@@ -179,8 +251,9 @@ impl From<Permissions> for PermissionScope {
 #[cfg(test)]
 mod tests {
     use crate::auth::{
-        CachePermission, CacheRole, CacheSelector, Permission, PermissionScope, PermissionScopes,
-        Permissions, TopicPermission, TopicRole, TopicSelector,
+        is_function_permission, CachePermission, CacheRole, CacheSelector, FunctionPermission,
+        FunctionRole, FunctionSelector, Permission, PermissionScope, PermissionScopes, Permissions,
+        TopicPermission, TopicRole, TopicSelector,
     };
 
     #[test]
@@ -664,6 +737,40 @@ mod tests {
             let perm_scope: PermissionScope =
                 PermissionScopes::topic_subscribe_only("my-cache", TopicSelector::AllTopics);
             assert_eq!(expected_scope, perm_scope);
+        }
+    }
+
+    mod function_permissions {
+        use super::*;
+
+        #[test]
+        fn test_function_permission_construction() {
+            let perm = FunctionPermission {
+                role: FunctionRole::FunctionInvoke,
+                cache: CacheSelector::CacheName {
+                    name: "my-cache".into(),
+                },
+                func: FunctionSelector::FunctionName {
+                    name: "my-function".into(),
+                },
+            };
+            assert_eq!(perm.role, FunctionRole::FunctionInvoke);
+            assert_eq!(
+                perm.cache,
+                CacheSelector::CacheName {
+                    name: "my-cache".into()
+                }
+            );
+        }
+
+        #[test]
+        fn test_is_function_permission() {
+            let perm = Permission::FunctionPermission(FunctionPermission {
+                role: FunctionRole::FunctionInvoke,
+                cache: CacheSelector::AllCaches,
+                func: FunctionSelector::AllFunctions,
+            });
+            assert!(is_function_permission(&perm));
         }
     }
 }
