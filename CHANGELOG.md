@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.70.0](https://github.com/momentohq/client-sdk-rust/compare/v0.69.0...v0.70.0) (2026-10-30)
+
+
+### Features
+
+* expose cache id on CacheInfo ([#557](https://github.com/momentohq/client-sdk-rust/issues/557)) ([4ba3e7e](https://github.com/momentohq/client-sdk-rust/commit/4ba3e7e0c58e0e9e0772401413427e51e0254828))
+
 ## [0.69.0](https://github.com/momentohq/client-sdk-rust/compare/v0.68.2...v0.69.0) (2026-09-30)
 
 
