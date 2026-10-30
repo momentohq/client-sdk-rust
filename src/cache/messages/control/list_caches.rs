@@ -74,6 +74,8 @@ pub struct TopicLimits {
 pub struct CacheInfo {
     /// The name of the cache.
     pub name: String,
+    /// Unique identifier for the cache.
+    pub cache_id: String,
     /// The limits for the cache.
     pub cache_limits: CacheLimits,
     /// The limits for topics in the cache.
@@ -105,6 +107,7 @@ impl ListCachesResponse {
             let topic_limits = cache.topic_limits.unwrap_or_default();
             caches.push(CacheInfo {
                 name: cache.cache_name,
+                cache_id: cache.cache_id,
                 cache_limits: CacheLimits {
                     max_traffic_rate: cache_limits.max_traffic_rate,
                     max_throughput_kbps: cache_limits.max_throughput_kbps,
