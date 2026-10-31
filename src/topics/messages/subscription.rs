@@ -8,6 +8,7 @@ use momento_protos::cache_client::pubsub::{self, pubsub_client::PubsubClient};
 use tonic::{codegen::InterceptedService, transport::Channel};
 
 use crate::grpc::header_interceptor::HeaderInterceptor;
+use crate::topics::topic_subscription_manager::StreamReservation;
 use crate::utils::parse_string;
 use crate::MomentoError;
 
@@ -82,6 +83,7 @@ pub struct Subscription {
     current_sequence_number: u64,
     current_sequence_page: u64,
     current_subscription: SubscriptionState,
+    _stream_reservation: Option<StreamReservation>,
 }
 
 type SubscriptionFuture = BoxFuture<
@@ -125,7 +127,13 @@ impl Subscription {
             current_sequence_number,
             current_sequence_page,
             current_subscription,
+            _stream_reservation: None,
         }
+    }
+
+    pub(crate) fn with_stream_reservation(mut self, reservation: StreamReservation) -> Self {
+        self._stream_reservation = Some(reservation);
+        self
     }
 
     /// Yeah this is a pain, but doing it here lets us yield a simpler-typed subscription stream.
