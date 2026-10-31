@@ -2,7 +2,10 @@ use tonic::transport::Channel;
 
 use crate::grpc::header_interceptor::HeaderInterceptor;
 use momento_protos::cache_client::pubsub::pubsub_client::PubsubClient;
-use std::sync::{atomic::AtomicUsize, Arc};
+use std::sync::{
+    atomic::{AtomicUsize, Ordering},
+    Arc,
+};
 use tonic::codegen::InterceptedService;
 
 pub const MAX_CONCURRENT_STREAMS_PER_CHANNEL: usize = 100;
@@ -11,6 +14,18 @@ pub const MAX_CONCURRENT_STREAMS_PER_CHANNEL: usize = 100;
 pub struct TopicSubscriptionManager {
     client: PubsubClient<InterceptedService<Channel, HeaderInterceptor>>,
     num_active_subscriptions: Arc<AtomicUsize>,
+}
+
+/// Releases channel capacity when a handshake or its resulting subscription ends.
+pub(crate) struct StreamReservation {
+    num_active_subscriptions: Arc<AtomicUsize>,
+}
+
+impl Drop for StreamReservation {
+    fn drop(&mut self) {
+        self.num_active_subscriptions
+            .fetch_sub(1, Ordering::Relaxed);
+    }
 }
 
 impl TopicSubscriptionManager {
@@ -26,14 +41,15 @@ impl TopicSubscriptionManager {
             .load(std::sync::atomic::Ordering::Relaxed)
     }
 
-    pub fn increment_num_active_subscriptions(&self) -> usize {
+    pub(crate) fn try_reserve(&self) -> Option<StreamReservation> {
         self.num_active_subscriptions
-            .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
-    }
-
-    pub fn decrement_num_active_subscriptions(&self) -> usize {
-        self.num_active_subscriptions
-            .fetch_sub(1, std::sync::atomic::Ordering::Relaxed)
+            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |active| {
+                (active < MAX_CONCURRENT_STREAMS_PER_CHANNEL).then_some(active + 1)
+            })
+            .ok()
+            .map(|_| StreamReservation {
+                num_active_subscriptions: Arc::clone(&self.num_active_subscriptions),
+            })
     }
 
     pub fn client(&self) -> &PubsubClient<InterceptedService<Channel, HeaderInterceptor>> {
