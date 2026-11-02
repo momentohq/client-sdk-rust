@@ -42,14 +42,23 @@ impl TopicSubscriptionManager {
     }
 
     pub(crate) fn try_reserve(&self) -> Option<StreamReservation> {
-        self.num_active_subscriptions
-            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |active| {
-                (active < MAX_CONCURRENT_STREAMS_PER_CHANNEL).then_some(active + 1)
-            })
-            .ok()
-            .map(|_| StreamReservation {
-                num_active_subscriptions: Arc::clone(&self.num_active_subscriptions),
-            })
+        let mut active = self.num_active_subscriptions.load(Ordering::Relaxed);
+        while active < MAX_CONCURRENT_STREAMS_PER_CHANNEL {
+            match self.num_active_subscriptions.compare_exchange_weak(
+                active,
+                active + 1,
+                Ordering::Relaxed,
+                Ordering::Relaxed,
+            ) {
+                Ok(_) => {
+                    return Some(StreamReservation {
+                        num_active_subscriptions: Arc::clone(&self.num_active_subscriptions),
+                    });
+                }
+                Err(current) => active = current,
+            }
+        }
+        None
     }
 
     pub fn client(&self) -> &PubsubClient<InterceptedService<Channel, HeaderInterceptor>> {
