@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.72.0](https://github.com/momentohq/client-sdk-rust/compare/v0.71.0...v0.72.0) (2026-11-03)
+
+
+### Features
+
+* add functions permissions to auth ([#497](https://github.com/momentohq/client-sdk-rust/issues/497)) ([815fa6f](https://github.com/momentohq/client-sdk-rust/commit/815fa6fa304e5149603714576d416fdc9fe4e3dd))
+
+
+### Bug Fixes
+
+* correct stream and channel counts in capacity error ([#562](https://github.com/momentohq/client-sdk-rust/issues/562)) ([b71d8b0](https://github.com/momentohq/client-sdk-rust/commit/b71d8b0cb843f6a93703f9c6fc367b701c8d7556))
+
 ## [0.71.0](https://github.com/momentohq/client-sdk-rust/compare/v0.70.0...v0.71.0) (2026-11-03)
 
 
