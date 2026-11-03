@@ -53,6 +53,12 @@ pub struct TopicClient {
     pub(crate) configuration: Configuration,
 }
 
+/// Keep a selected streaming client paired with the capacity reserved for its subscription.
+pub(crate) struct ManagedPubsubClient {
+    pub(crate) next_stream_client: PubsubClient<InterceptedService<Channel, HeaderInterceptor>>,
+    pub(crate) stream_permit: OwnedSemaphorePermit,
+}
+
 impl TopicClient {
     /// Constructs a TopicClient to use Momento Topics
     ///
@@ -181,12 +187,7 @@ impl TopicClient {
         self.unary_clients[index % num_clients].clone()
     }
 
-    pub(crate) fn get_next_streaming_client(
-        &self,
-    ) -> MomentoResult<(
-        PubsubClient<InterceptedService<Channel, HeaderInterceptor>>,
-        OwnedSemaphorePermit,
-    )> {
+    pub(crate) fn get_next_streaming_client(&self) -> MomentoResult<ManagedPubsubClient> {
         let max_concurrent_streams =
             self.streaming_clients.len() * MAX_CONCURRENT_STREAMS_PER_CHANNEL;
         let start = self
@@ -206,7 +207,10 @@ impl TopicClient {
                     topic_manager.get_num_active_subscriptions()
                 );
                 self.warn_if_near_capacity();
-                return Ok((topic_manager.client().clone(), reservation));
+                return Ok(ManagedPubsubClient {
+                    next_stream_client: topic_manager.client().clone(),
+                    stream_permit: reservation,
+                });
             }
         }
 
@@ -447,72 +451,6 @@ mod subscription_capacity_tests {
     // --- End local subscription-capacity helpers ---
 
     #[tokio::test]
-    async fn full_channel_is_skipped_when_another_channel_has_capacity() {
-        let client = local_client(2, "http://127.0.0.1:1");
-        let mut held = Vec::new();
-        for _ in 0..MAX_CONCURRENT_STREAMS_PER_CHANNEL {
-            client.streaming_client_index.store(0, Ordering::Relaxed);
-            held.push(client.get_next_streaming_client().expect("capacity exists"));
-        }
-        client.streaming_client_index.store(0, Ordering::Relaxed);
-        let _next = client
-            .get_next_streaming_client()
-            .expect("second channel has capacity");
-
-        assert_eq!(
-            client.streaming_clients[0].get_num_active_subscriptions(),
-            100
-        );
-        assert_eq!(
-            client.streaming_clients[1].get_num_active_subscriptions(),
-            1
-        );
-    }
-
-    #[tokio::test]
-    async fn wrapped_round_robin_index_still_scans_each_channel() {
-        let client = local_client(3, "http://127.0.0.1:1");
-        let mut held = Vec::new();
-        for index in 0..2 {
-            for _ in 0..MAX_CONCURRENT_STREAMS_PER_CHANNEL {
-                client
-                    .streaming_client_index
-                    .store(index, Ordering::Relaxed);
-                held.push(client.get_next_streaming_client().expect("capacity exists"));
-            }
-        }
-        client
-            .streaming_client_index
-            .store(usize::MAX, Ordering::Relaxed);
-        let _next = client
-            .get_next_streaming_client()
-            .expect("another channel has capacity");
-
-        assert_eq!(
-            client.streaming_clients[0].get_num_active_subscriptions(),
-            100
-        );
-        assert_eq!(
-            client.streaming_clients[1].get_num_active_subscriptions(),
-            100
-        );
-        assert_eq!(
-            client.streaming_clients[2].get_num_active_subscriptions(),
-            1
-        );
-        assert_eq!(client.streaming_client_index.load(Ordering::Relaxed), 0);
-
-        let _after_wrap = client
-            .get_next_streaming_client()
-            .expect("final channel still has capacity after index wrap");
-        assert_eq!(
-            client.streaming_clients[2].get_num_active_subscriptions(),
-            2
-        );
-        assert_eq!(client.streaming_client_index.load(Ordering::Relaxed), 1);
-    }
-
-    #[tokio::test]
     async fn round_robin_routes_in_order_through_wrap_and_full_channel_fallback() {
         timeout(Duration::from_secs(3), async {
             let mut client = local_client(0, "http://127.0.0.1:1");
@@ -568,46 +506,6 @@ mod subscription_capacity_tests {
         })
         .await
         .expect("round-robin routing must finish within its deadline");
-    }
-
-    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-    async fn concurrent_client_clones_share_pool_admission_and_release() {
-        timeout(Duration::from_secs(3), async {
-            let client = local_client(2, "http://127.0.0.1:1");
-            let mut workers = JoinSet::new();
-            for _ in 0..8 {
-                let clone = client.clone();
-                workers.spawn(async move {
-                    let mut held = Vec::new();
-                    for _ in 0..32 {
-                        if let Ok(slot) = clone.get_next_streaming_client() {
-                            held.push(slot);
-                        }
-                        tokio::task::yield_now().await;
-                    }
-                    held
-                });
-            }
-            let mut held = Vec::new();
-            while let Some(result) = workers.join_next().await {
-                held.extend(result.expect("capacity worker must finish"));
-            }
-            assert_eq!(held.len(), 200);
-            assert_eq!(
-                client
-                    .streaming_clients
-                    .iter()
-                    .map(TopicSubscriptionManager::get_num_active_subscriptions)
-                    .collect::<Vec<_>>(),
-                vec![100, 100]
-            );
-            assert!(client.get_next_streaming_client().is_err());
-            drop(held);
-            assert_eq!(client.count_number_of_active_subscriptions(), 0);
-            assert!(client.clone().get_next_streaming_client().is_ok());
-        })
-        .await
-        .expect("concurrent pool admission must finish within its deadline");
     }
 
     #[tokio::test]

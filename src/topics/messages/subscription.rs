@@ -84,8 +84,7 @@ pub struct Subscription {
     current_sequence_page: u64,
     current_subscription: SubscriptionState,
     // Kept after the stream state so dropping a subscription closes it before returning capacity.
-    // None preserves the public low-level constructor; managed construction requires a permit.
-    _stream_permit: Option<OwnedSemaphorePermit>,
+    _stream_permit: OwnedSemaphorePermit,
 }
 
 type SubscriptionFuture = BoxFuture<
@@ -113,38 +112,15 @@ enum MapKind {
 }
 
 impl Subscription {
-    /// Creates a new subscription outside a TopicClient's managed channel pool.
-    ///
-    /// This low-level constructor does not reserve pool capacity. Use
-    /// [TopicClient::subscribe](crate::TopicClient::subscribe) for managed subscriptions.
-    pub fn new(
+    /// Keep the handshake's permit for the entire subscription lifetime, including reconnects.
+    pub(crate) fn new(
         client: PubsubClient<ChannelType>,
         cache_name: String,
         topic: String,
         current_sequence_number: u64,
         current_sequence_page: u64,
         current_subscription: SubscriptionState,
-    ) -> Subscription {
-        Subscription {
-            client,
-            cache_name,
-            topic,
-            current_sequence_number,
-            current_sequence_page,
-            current_subscription,
-            _stream_permit: None,
-        }
-    }
-
-    /// Require the handshake's permit so managed subscriptions cannot omit pool accounting.
-    pub(crate) fn new_managed(
-        client: PubsubClient<ChannelType>,
-        cache_name: String,
-        topic: String,
-        current_sequence_number: u64,
-        current_sequence_page: u64,
-        current_subscription: SubscriptionState,
-        permit: OwnedSemaphorePermit,
+        stream_permit: OwnedSemaphorePermit,
     ) -> Self {
         Self {
             client,
@@ -153,7 +129,7 @@ impl Subscription {
             current_sequence_number,
             current_sequence_page,
             current_subscription,
-            _stream_permit: Some(permit),
+            _stream_permit: stream_permit,
         }
     }
 
