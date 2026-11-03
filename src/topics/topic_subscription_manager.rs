@@ -2,7 +2,8 @@ use tonic::transport::Channel;
 
 use crate::grpc::header_interceptor::HeaderInterceptor;
 use momento_protos::cache_client::pubsub::pubsub_client::PubsubClient;
-use std::sync::{atomic::AtomicUsize, Arc};
+use std::sync::Arc;
+use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 use tonic::codegen::InterceptedService;
 
 pub const MAX_CONCURRENT_STREAMS_PER_CHANNEL: usize = 100;
@@ -10,30 +11,23 @@ pub const MAX_CONCURRENT_STREAMS_PER_CHANNEL: usize = 100;
 #[derive(Clone, Debug)]
 pub struct TopicSubscriptionManager {
     client: PubsubClient<InterceptedService<Channel, HeaderInterceptor>>,
-    num_active_subscriptions: Arc<AtomicUsize>,
+    available_slots: Arc<Semaphore>,
 }
 
 impl TopicSubscriptionManager {
     pub fn new(client: PubsubClient<InterceptedService<Channel, HeaderInterceptor>>) -> Self {
         Self {
             client,
-            num_active_subscriptions: Arc::new(AtomicUsize::new(0)),
+            available_slots: Arc::new(Semaphore::new(MAX_CONCURRENT_STREAMS_PER_CHANNEL)),
         }
     }
 
     pub fn get_num_active_subscriptions(&self) -> usize {
-        self.num_active_subscriptions
-            .load(std::sync::atomic::Ordering::Relaxed)
+        MAX_CONCURRENT_STREAMS_PER_CHANNEL - self.available_slots.available_permits()
     }
 
-    pub fn increment_num_active_subscriptions(&self) -> usize {
-        self.num_active_subscriptions
-            .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
-    }
-
-    pub fn decrement_num_active_subscriptions(&self) -> usize {
-        self.num_active_subscriptions
-            .fetch_sub(1, std::sync::atomic::Ordering::Relaxed)
+    pub(crate) fn try_reserve(&self) -> Option<OwnedSemaphorePermit> {
+        Arc::clone(&self.available_slots).try_acquire_owned().ok()
     }
 
     pub fn client(&self) -> &PubsubClient<InterceptedService<Channel, HeaderInterceptor>> {

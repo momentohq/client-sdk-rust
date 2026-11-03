@@ -1,4 +1,5 @@
 use crate::{
+    topics::topic_client::ManagedPubsubClient,
     topics::{MomentoRequest, Subscription, SubscriptionState},
     utils::prep_request_with_timeout,
     MomentoResult, TopicClient,
@@ -82,7 +83,10 @@ impl MomentoRequest for SubscribeRequest {
             },
         )?;
 
-        let next_stream_client = topic_client.get_next_streaming_client()?;
+        let ManagedPubsubClient {
+            next_stream_client,
+            stream_permit,
+        } = topic_client.get_next_streaming_client()?;
         let stream = next_stream_client
             .clone()
             .subscribe(request)
@@ -95,6 +99,7 @@ impl MomentoRequest for SubscribeRequest {
             self.resume_at_topic_sequence_number.unwrap_or_default(),
             self.resume_at_sequence_page.unwrap_or_default(),
             SubscriptionState::Subscribed(stream),
+            stream_permit,
         ))
     }
 }

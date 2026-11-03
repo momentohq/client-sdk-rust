@@ -5,6 +5,7 @@ use futures::future::BoxFuture;
 use futures::{Future, FutureExt};
 use momento_protos::cache_client::pubsub::SubscriptionRequest;
 use momento_protos::cache_client::pubsub::{self, pubsub_client::PubsubClient};
+use tokio::sync::OwnedSemaphorePermit;
 use tonic::{codegen::InterceptedService, transport::Channel};
 
 use crate::grpc::header_interceptor::HeaderInterceptor;
@@ -82,6 +83,8 @@ pub struct Subscription {
     current_sequence_number: u64,
     current_sequence_page: u64,
     current_subscription: SubscriptionState,
+    // Kept after the stream state so dropping a subscription closes it before returning capacity.
+    _stream_permit: OwnedSemaphorePermit,
 }
 
 type SubscriptionFuture = BoxFuture<
@@ -109,22 +112,24 @@ enum MapKind {
 }
 
 impl Subscription {
-    /// Creates a new subscription.
-    pub fn new(
+    /// Keep the handshake's permit for the entire subscription lifetime, including reconnects.
+    pub(crate) fn new(
         client: PubsubClient<ChannelType>,
         cache_name: String,
         topic: String,
         current_sequence_number: u64,
         current_sequence_page: u64,
         current_subscription: SubscriptionState,
-    ) -> Subscription {
-        Subscription {
+        stream_permit: OwnedSemaphorePermit,
+    ) -> Self {
+        Self {
             client,
             cache_name,
             topic,
             current_sequence_number,
             current_sequence_page,
             current_subscription,
+            _stream_permit: stream_permit,
         }
     }
 
