@@ -5,10 +5,10 @@ use futures::future::BoxFuture;
 use futures::{Future, FutureExt};
 use momento_protos::cache_client::pubsub::SubscriptionRequest;
 use momento_protos::cache_client::pubsub::{self, pubsub_client::PubsubClient};
+use tokio::sync::OwnedSemaphorePermit;
 use tonic::{codegen::InterceptedService, transport::Channel};
 
 use crate::grpc::header_interceptor::HeaderInterceptor;
-use crate::topics::topic_subscription_manager::StreamReservation;
 use crate::utils::parse_string;
 use crate::MomentoError;
 
@@ -83,7 +83,9 @@ pub struct Subscription {
     current_sequence_number: u64,
     current_sequence_page: u64,
     current_subscription: SubscriptionState,
-    _stream_reservation: Option<StreamReservation>,
+    // Kept after the stream state so dropping a subscription closes it before returning capacity.
+    // None preserves the public low-level constructor; managed construction requires a permit.
+    _stream_permit: Option<OwnedSemaphorePermit>,
 }
 
 type SubscriptionFuture = BoxFuture<
@@ -111,7 +113,10 @@ enum MapKind {
 }
 
 impl Subscription {
-    /// Creates a new subscription.
+    /// Creates a new subscription outside a TopicClient's managed channel pool.
+    ///
+    /// This low-level constructor does not reserve pool capacity. Use
+    /// [TopicClient::subscribe](crate::TopicClient::subscribe) for managed subscriptions.
     pub fn new(
         client: PubsubClient<ChannelType>,
         cache_name: String,
@@ -127,13 +132,29 @@ impl Subscription {
             current_sequence_number,
             current_sequence_page,
             current_subscription,
-            _stream_reservation: None,
+            _stream_permit: None,
         }
     }
 
-    pub(crate) fn with_stream_reservation(mut self, reservation: StreamReservation) -> Self {
-        self._stream_reservation = Some(reservation);
-        self
+    /// Require the handshake's permit so managed subscriptions cannot omit pool accounting.
+    pub(crate) fn new_managed(
+        client: PubsubClient<ChannelType>,
+        cache_name: String,
+        topic: String,
+        current_sequence_number: u64,
+        current_sequence_page: u64,
+        current_subscription: SubscriptionState,
+        permit: OwnedSemaphorePermit,
+    ) -> Self {
+        Self {
+            client,
+            cache_name,
+            topic,
+            current_sequence_number,
+            current_sequence_page,
+            current_subscription,
+            _stream_permit: Some(permit),
+        }
     }
 
     /// Yeah this is a pain, but doing it here lets us yield a simpler-typed subscription stream.

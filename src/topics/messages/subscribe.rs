@@ -82,20 +82,20 @@ impl MomentoRequest for SubscribeRequest {
             },
         )?;
 
-        let (next_stream_client, reservation) = topic_client.get_next_streaming_client()?;
+        let (next_stream_client, permit) = topic_client.get_next_streaming_client()?;
         let stream = next_stream_client
             .clone()
             .subscribe(request)
             .await?
             .into_inner();
-        Ok(Subscription::new(
+        Ok(Subscription::new_managed(
             next_stream_client,
             self.cache_name,
             self.topic,
             self.resume_at_topic_sequence_number.unwrap_or_default(),
             self.resume_at_sequence_page.unwrap_or_default(),
             SubscriptionState::Subscribed(stream),
-        )
-        .with_stream_reservation(reservation))
+            permit,
+        ))
     }
 }
