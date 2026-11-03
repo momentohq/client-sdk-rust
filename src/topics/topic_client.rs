@@ -216,8 +216,8 @@ impl TopicClient {
 
         // If no more streams available, return an error
         Err(MomentoError::max_concurrent_streams_reached(
-            self.count_number_of_active_subscriptions(),
             self.streaming_clients.len(),
+            self.count_number_of_active_subscriptions(),
             max_concurrent_streams,
         ))
     }
@@ -521,6 +521,28 @@ mod subscription_capacity_tests {
 
         assert_eq!(clone.count_number_of_active_subscriptions(), 0);
         assert!(clone.get_next_streaming_client().is_ok());
+    }
+
+    #[tokio::test]
+    async fn capacity_error_reports_active_streams_and_channels() {
+        let client = local_client(2, "http://127.0.0.1:1");
+        let max_streams = 2 * MAX_CONCURRENT_STREAMS_PER_CHANNEL;
+        let _held: Vec<_> = (0..max_streams)
+            .map(|_| client.get_next_streaming_client().expect("capacity exists"))
+            .collect();
+
+        let error = client
+            .get_next_streaming_client()
+            .err()
+            .expect("client is at capacity");
+
+        assert!(
+            error.message.contains(&format!(
+                "Number of active streams: {max_streams}; number of grpc channels: 2;"
+            )),
+            "unexpected message: {}",
+            error.message
+        );
     }
 
     #[tokio::test]
