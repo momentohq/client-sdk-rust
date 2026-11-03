@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.71.0](https://github.com/momentohq/client-sdk-rust/compare/v0.70.0...v0.71.0) (2026-11-03)
+
+
+### Features
+
+* correct Topics subscription capacity accounting ([#559](https://github.com/momentohq/client-sdk-rust/issues/559)) ([71f91a2](https://github.com/momentohq/client-sdk-rust/commit/71f91a2574959e344fb3d6c159ca85949efec7d7))
+
 ## [0.70.0](https://github.com/momentohq/client-sdk-rust/compare/v0.69.0...v0.70.0) (2026-10-30)
 
 
